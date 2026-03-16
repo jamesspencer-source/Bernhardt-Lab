@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Bernhardt Lab icon">
+  <defs>
+    <path
+      id="cell-shape"
+      d="M18 18C24.5 18 25.8 23.6 32 23.6C38.2 23.6 39.5 18 46 18C52.6 18 56 24.1 56 32C56 39.9 52.6 46 46 46C39.5 46 38.2 40.4 32 40.4C25.8 40.4 24.5 46 18 46C11.4 46 8 39.9 8 32C8 24.1 11.4 18 18 18Z"
+    />
+    <clipPath id="cell-clip">
+      <use href="#cell-shape" />
+    </clipPath>
+    <linearGradient id="septum-band" x1="0" y1="16" x2="0" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#c74256" />
+      <stop offset="100%" stop-color="#8b1e30" />
+    </linearGradient>
+  </defs>
+
+  <rect width="64" height="64" rx="14" fill="#101217" />
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="13.25" fill="none" stroke="#252a35" stroke-width="1.5" />
+
+  <use href="#cell-shape" fill="#f3f4f8" />
+  <g clip-path="url(#cell-clip)">
+    <rect x="23.5" y="16" width="17" height="32" rx="8.5" fill="url(#septum-band)" />
+    <rect x="29.5" y="16" width="5" height="32" rx="2.5" fill="#3b8f95" />
+  </g>
+  <use href="#cell-shape" fill="none" stroke="#d9dfe8" stroke-width="1.5" />
+</svg>

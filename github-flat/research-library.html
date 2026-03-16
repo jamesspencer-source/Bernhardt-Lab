@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Imaging Source Library | Thomas Bernhardt Lab</title>
+    <meta
+      name="description"
+      content="Internal source library for microscopy and movie assets featured on the Thomas Bernhardt Lab website."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="alumni.css" />
+    <style>
+      .library { padding: 2rem 0 3rem; }
+      .library-grid { display:grid; gap:1rem; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+      .library-card { border:1px solid var(--line); border-radius:14px; background:#fff; box-shadow:var(--shadow-soft); overflow:hidden; display:grid; }
+      .library-card img { width:100%; aspect-ratio: 16 / 10; object-fit:cover; }
+      .library-card .body { padding:.85rem; display:grid; gap:.45rem; }
+      .library-card h3 { font-size:1.06rem; }
+      .library-card p { color:var(--muted); font-size:.88rem; }
+      .library-card a { color:var(--crimson); font-weight:700; text-decoration:none; font-size:.84rem; }
+      .library-card a:hover, .library-card a:focus-visible { text-decoration:underline; }
+      .note { margin-top:1rem; color:var(--muted); font-size:.9rem; }
+      .hero h1 { max-width:22ch; }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <header class="site-header">
+      <div class="container header-inner">
+        <a href="index.html" class="brand" aria-label="Thomas Bernhardt Lab home">
+          <span class="brand-lockup" aria-hidden="true"></span>
+          <span class="brand-text">
+            <strong>Thomas Bernhardt Lab</strong>
+            <small>Howard Hughes Medical Institute + Harvard Medical School</small>
+          </span>
+        </a>
+
+        <nav class="site-nav" aria-label="Main navigation">
+            <a href="index.html#about">About</a>
+            <a href="people.html">Team</a>
+            <a href="index.html#research">Research</a>
+            <a href="index.html#publications">Publications</a>
+            <a href="index.html#gallery">Gallery</a>
+            <a href="alumni.html">Alumni</a>
+            <a href="index.html#contact">Contact</a>
+          </nav>
+      </div>
+    </header>
+
+    <main id="main-content">
+      <section class="hero">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow">Imaging Source Library</p>
+            <h1>Microscopy and movie assets used on this website.</h1>
+            <p>
+              This page documents the internal media assets shown on the Bernhardt Lab site, with links to open-access
+              publications where relevant.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="library">
+        <div class="container">
+          <div class="library-grid">
+            <article class="library-card" id="mreb-trackmate">
+              <img src="mreb-trackmate.gif" alt="MreB trackmate movie" loading="lazy" />
+              <div class="body">
+                <h3>MreB TrackMate Time-lapse</h3>
+                <p>Live-cell movie used in the Research in Motion section.</p>
+                <a href="index.html#research">Back to research highlights</a>
+              </div>
+            </article>
+
+            <article class="library-card" id="pseudomonas-tem">
+              <img src="pseudomonas-tem.jpg" alt="Pseudomonas TEM" loading="lazy" />
+              <div class="body">
+                <h3>Pseudomonas TEM</h3>
+                <p>Transmission electron microscopy image of envelope architecture.</p>
+                <a href="index.html#research">Back to research highlights</a>
+              </div>
+            </article>
+
+            <article class="library-card" id="coryfdaa">
+              <img src="coryfdaa.png" alt="Corynebacterium fluorescent D-amino acid labeling" loading="lazy" />
+              <div class="body">
+                <h3>Corynebacterium FDAA Labeling</h3>
+                <p>Fluorescence pulse-labeling image used to visualize envelope growth patterns.</p>
+                <a href="index.html#research">Back to research highlights</a>
+              </div>
+            </article>
+
+            <article class="library-card" id="corynebacterium-phage">
+              <img src="corynebacterium-phage.jpg" alt="Corynebacterium phage image" loading="lazy" />
+              <div class="body">
+                <h3>Corynebacterium–Phage Imaging</h3>
+                <p>Image used in studies of Corynebacterium envelope biology and phage interactions.</p>
+                <a href="index.html#research">Back to research highlights</a>
+              </div>
+            </article>
+
+            <article class="library-card" id="species-envelope">
+              <img src="species-envelope.png" alt="Comparative bacterial morphology panel" loading="lazy" />
+              <div class="body">
+                <h3>Species-Spanning Envelope Phenotypes</h3>
+                <p>Comparative morphology panel used to illustrate species-diverse model systems.</p>
+                <a href="index.html#research">Back to research highlights</a>
+              </div>
+            </article>
+
+            <article class="library-card" id="fluorescence-envelope">
+              <img src="fluorescence-envelope.jpg" alt="Mosaic colony phenotype screen image" loading="lazy" />
+              <div class="body">
+                <h3>Mosaic Colony Phenotype Screen</h3>
+                <p>Colony imaging from a plasmid-loss screen associated with envelope phenotypes.</p>
+                <a href="index.html#research">Back to research highlights</a>
+              </div>
+            </article>
+
+            <article class="library-card" id="nmicro2022-divisome-fluorescence">
+              <img src="nmicro2022-divisome-fluorescence.jpg" alt="Division-site fluorescence architecture panel" loading="lazy" />
+              <div class="body">
+                <h3>Division-Site Fluorescence Architecture</h3>
+                <p>Microscopy panels from Nature Microbiology 2022 showing envelope dynamics in division mutants.</p>
+                <a href="https://pubmed.ncbi.nlm.nih.gov/36097171/" target="_blank" rel="noreferrer">Open article on PubMed</a>
+              </div>
+            </article>
+
+            <article class="library-card" id="nmicro2022-timelapse-rods">
+              <img src="nmicro2022-timelapse-rods.jpg" alt="Live-cell timelapse frame series" loading="lazy" />
+              <div class="body">
+                <h3>Live-Cell Time-lapse Frame Series</h3>
+                <p>Representative frames linked to the supplementary movie set in Nature Microbiology 2022.</p>
+                <a href="https://pubmed.ncbi.nlm.nih.gov/36097171/" target="_blank" rel="noreferrer">Open article on PubMed</a>
+              </div>
+            </article>
+
+            <article class="library-card" id="nmicro2022-cryo-tomography">
+              <img src="nmicro2022-cryo-tomography.jpg" alt="Cryo electron tomography workflow and representative micrographs" loading="lazy" />
+              <div class="body">
+                <h3>Cryo-ET / Cryo-FIB Envelope Workflow</h3>
+                <p>Cryo-electron tomography workflow and representative lamella imagery from open-access publication data.</p>
+                <a href="https://pubmed.ncbi.nlm.nih.gov/36097171/" target="_blank" rel="noreferrer">Open article on PubMed</a>
+              </div>
+            </article>
+
+            <article class="library-card" id="mbio2023-pcda-localization">
+              <img src="mbio2023-pcda-localization.jpg" alt="PcdA localization microscopy panel" loading="lazy" />
+              <div class="body">
+                <h3>PcdA Localization Panels</h3>
+                <p>Microscopy panels from mBio 2023 tracking PcdA organization across division states.</p>
+                <a href="https://pubmed.ncbi.nlm.nih.gov/37886572/" target="_blank" rel="noreferrer">Open article on PubMed</a>
+              </div>
+            </article>
+
+            <article class="library-card" id="mbio2023-division-maps">
+              <img src="mbio2023-division-maps.jpg" alt="Divisome-associated localization maps panel" loading="lazy" />
+              <div class="body">
+                <h3>Divisome Localization Maps</h3>
+                <p>Microscopy-rich mapping panel from mBio 2023 linking localization to septation geometry.</p>
+                <a href="https://pubmed.ncbi.nlm.nih.gov/37886572/" target="_blank" rel="noreferrer">Open article on PubMed</a>
+              </div>
+            </article>
+
+            <article class="library-card" id="mbio2023saur-facz-pg">
+              <img src="mbio2023saur-facz-pg.jpg" alt="FacZ peptidoglycan microscopy panel" loading="lazy" />
+              <div class="body">
+                <h3>FacZ / Peptidoglycan Patterning</h3>
+                <p>Fluorescence microscopy panel from mBio 2023 highlighting septal and peripheral patterning in <em class="species-name">S. aureus</em>.</p>
+                <a href="https://pubmed.ncbi.nlm.nih.gov/37162900/" target="_blank" rel="noreferrer">Open article on PubMed</a>
+              </div>
+            </article>
+          </div>
+
+          <p class="note">
+            Publication imagery on this page links to PubMed records. Additional in-lab visuals are served from
+            this website's local asset library.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <p>Thomas Bernhardt Lab | Howard Hughes Medical Institute + Harvard Medical School</p>
+        <div class="footer-links">
+          <a href="accessibility.html">Accessibility</a>
+          <a href="index.html">Back to main site</a>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
