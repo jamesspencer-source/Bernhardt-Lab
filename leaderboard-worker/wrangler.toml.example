@@ -1,0 +1,13 @@
+name = "bernhardt-lab-leaderboard"
+main = "worker.js"
+compatibility_date = "2025-01-15"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bernhardt_lab_leaderboard"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+[vars]
+# Comma-separated list of origins allowed to call this API.
+# Example: "https://bernhardtlab.com,https://www.bernhardtlab.com,https://<username>.github.io"
+ALLOWED_ORIGINS = ""

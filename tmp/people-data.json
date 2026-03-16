@@ -1,0 +1,170 @@
+[
+   {
+      "profile" : "/thomas-bernhardt",
+      "bio" : "The Bernhardt lab studies molecular mechanisms of bacterial growth and cell wall assembly to inform antibiotic discovery.",
+      "role" : "Professor, Department of Microbiology and Immunobiology. | Investigator, Howard Hughes Medical Institute",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1484845930851-CZKAGRIPRLNCPA9IF43Q/DSC_0104.JPG",
+      "email" : "",
+      "name" : "Thomas Bernhardt"
+   },
+   {
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1553173916977-5MWVESOJ7KKQ89GK4ORT/James_spencer.jpg",
+      "bio" : "As the lab manager, I am responsible for managing every aspect of lab operations, capital projects, and administration for a dynamic team of research technicians, graduate students,  postdoctoral trainees, and visiting scholars.",
+      "role" : "Howard Hughes Medical Institute",
+      "profile" : "/james",
+      "name" : "James Spencer",
+      "email" : "James_Spencer{at}hms.harvard.edu"
+   },
+   {
+      "email" : "ksuarez{at}g.harvard.edu",
+      "name" : "Kathy Suarez",
+      "role" : "BBS Graduate Student",
+      "bio" : "I am interested in examining the function of cell wall synthesis in E. coli.",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1598381898156-68II3HUTKXY1OF4U3R8C/kathy.jpg",
+      "profile" : "http://bernhardtlab.com/kathy-suarez"
+   },
+   {
+      "profile" : "http://bernhardtlab.com/betsy-hart",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1598383045751-ABC6TUB51HNGRQ2CUAJZ/betsy.jpg",
+      "role" : "Postdoctoral fellow",
+      "bio" : "I am interested in cell envelope biogenesis in Corynebacterium glutamicum.",
+      "email" : "Elizabeth_Hart{at}hms.harvard.edu",
+      "name" : "Betsy Hart"
+   },
+   {
+      "email" : "laurent_dubois{at}g.harvard.edu",
+      "name" : "Laurent Dubois",
+      "profile" : "http://bernhardtlab.com/laurent-dubois",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1598445312589-9VD4C326R73FUVCBHD2G/laurent.jpg",
+      "role" : "BBS Graduate Student",
+      "bio" : "The general goal of my research is to understand the mechanisms that regulate cell division and cell wall remodeling in E. coli."
+   },
+   {
+      "name" : "Johnathan Kepple",
+      "email" : "johnathankepple{at}g.harvard.edu",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1630526847138-E1T99QXT1Q4VOQUWKO0I/IMG_0508.jpg",
+      "bio" : "The general aim of my research is to understand the regulation of cell wall synthesis in the gram negative bacteria pseudomonas aeruginosa.",
+      "role" : "BPH Graduate Student",
+      "profile" : "http://bernhardtlab.com/johnathan-kepple"
+   },
+   {
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1675970682144-0PYVM1YRSI7X2YIC934I/55E89D77-D21C-419F-9D17-4DA257564722.jpg",
+      "role" : "Postdoctoral fellow, HHMI",
+      "bio" : "I am interested in cell wall biogenesis in Corynebacterium glutamicum.",
+      "profile" : "http://bernhardtlab.com/wanassa",
+      "name" : "Wanassa Beroual",
+      "email" : "Wanassa_Beroual{at}hms.harvard.edu"
+   },
+   {
+      "bio" : "I am interested in understanding the role mannosylation plays in the membrane of Corynebacterium glutamicum.",
+      "role" : "Howard Hughes Medical Institute",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1649110154642-G16R9VNOZ9VHWXFZXU6K/Screen+Shot+2022-04-04+at+6.00.55+PM.png",
+      "profile" : "http://bernhardtlab.com/anastacia-parks",
+      "email" : "Anastacia_Parks{at}hms.harvard.edu",
+      "name" : "Anastacia Parks"
+   },
+   {
+      "profile" : "http://www.bernhardtlab.com/tanner-dehart",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1661806098784-ZTUDXNCLO016KTO190CT/Screen+Shot+2022-08-29+at+4.32.58+PM.png",
+      "bio" : "I am interested in the biosynthesis of membrane lipids as well as characterizing proteases potentially involved in the regulation of E. coli cell wall synthesis",
+      "role" : "BBS Graduate Student",
+      "name" : "Tanner DeHart",
+      "email" : "tdehart{at}g.harvard.edu"
+   },
+   {
+      "name" : "Wilaysha Evans",
+      "email" : "wilayshaevans{at}g.harvard.edu",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1663796653002-8C0DEY29J50676GSPCWO/Screen+Shot+2022-09-21+at+12.49.48+PM.png",
+      "role" : "BBS Graduate Student",
+      "bio" : "I am most interested in understanding the mechanisms that underpin bacterial cell shape and division. More specifically, in the Bernhardt lab, I study some of the mechanisms by which cell wall integrity in Corynebacterium glutamicum is maintained.",
+      "profile" : "https://www.bernhardtlab.com/wilaysha-evans"
+   },
+   {
+      "profile" : "http://www.bernhardtlab.com/nilanjan-som",
+      "role" : "Postdoctoral fellow",
+      "bio" : "I am interested in understanding the regulatory mechanisms that drives Gram-negative bacterial cell envelope expansion.",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1694117450898-RG5K9AE1D78HLCU02FY2/Screenshot+2023-09-07+at+3.46.10+PM.png",
+      "name" : "Nilanjan Som",
+      "email" : "nilanjan_som{at}hms.harvard.edu"
+   },
+   {
+      "email" : "tien_nguyen{at}g.harvard.edu",
+      "name" : "Tien Nguyen",
+      "profile" : "http://www.bernhardtlab.com/tien-nguyen",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1694187388124-T15GTLGXMGLBKI3L31HZ/IMG_6820.jpg",
+      "role" : "MCO Graduate Student",
+      "bio" : "I am interested in elucidating the regulatory mechanisms of PG hydrolyses required for separation in Eschericia coli. My larger goals are to better understand the spatiotemporal coordination of the bacterial cell envelope for cell division"
+   },
+   {
+      "email" : "dburgin{at}g.harvard.edu",
+      "name" : "Dylan Burgin",
+      "bio" : "I am interested in studying the mechanisms that contribute to outer membrane integrity in Gram-negative bacteria.",
+      "role" : "BBS Graduate Student",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1718042442897-OA8ERMSFBA950VVYJ6MR/Screenshot+2024-06-10+at+2.00.29%E2%80%AFPM.png",
+      "profile" : "http://bernhardtlab.com/dylan-burgin"
+   },
+   {
+      "name" : "Shailab Shrestha",
+      "email" : "shailab_shrestha{at}hms.harvard.edu",
+      "role" : "Postdoctoral fellow",
+      "bio" : "I am interested in the biogenesis and maintenance of the Gram-negative cell envelope.",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1718134932686-SJ49CRIK1AN94PN32VQQ/Screenshot+2024-06-11+at+3.42.00%E2%80%AFPM.png",
+      "profile" : "http://bernhardtlab.com/shailab-shrestha"
+   },
+   {
+      "role" : "Postdoctoral Research Fellow | Funded by the Swiss National Science Foundation",
+      "bio" : "I work at the intersection of quantitative and fundamental microbiology. In that context, I\u00e2\u0080\u0099m currently implementing CRISPR interference techniques to study cell envelope biogenesis in Corynebacterium glutamicum.",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1739559732012-M2UO3CUH7CN7UEWSG9ED/20250214_lab2.jpeg",
+      "profile" : "http://www.bernhardtlab.com/vincentdebakker",
+      "name" : "Vincent de Bakker",
+      "email" : "vincent_debakker{at}hms.harvard.edu"
+   },
+   {
+      "name" : "Nazgul Sakenova",
+      "email" : "nazgul_sakenova{at}hms.harvard.edu",
+      "profile" : "https://www.bernhardtlab.com/nazgulsakenova",
+      "bio" : "I am interested in special protein localization and factors that determine it in Escherichia coli.",
+      "role" : "Postdoctoral Research Fellow",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1739559794418-P4JOP8A7Y1DMWJK4G658/IMG_3956.jpeg"
+   },
+   {
+      "email" : "josuerodriguez{at}college.harvard.edu",
+      "name" : "Abel Rodriguez",
+      "role" : "Undergraduate Researcher",
+      "bio" : "I am interested in determining novel players in mycolic acid transport.",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1745615239614-0ZK8CZU200D9EX2MNY97/IMG_2743.jpeg",
+      "profile" : "http://www.bernhardtlab.com/abel-rodriguez"
+   },
+   {
+      "name" : "Eleanor Rand",
+      "email" : "eleanor_rand{at}fas.harvard.edu",
+      "profile" : "http://www.bernhardtlab.com/eleanorrand",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1753710971082-GHTM0Q8G52VT1QVSP95Q/EllieHeadShot.JPG",
+      "bio" : "I am interested in using phages to learn more about their bacterial hosts. I also lead the Community Phages program (phages.hms.harvard.edu)!",
+      "role" : "Postdoctoral Research Fellow | Community Phages Internship Lead Instructor"
+   },
+   {
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1753711015525-A3BB6YM2L2XPTQZ31MH4/IMG_2325.jpg",
+      "role" : "Graduate Student",
+      "bio" : "I am interested in mycolic acid transport and regulation in Corynebacterium glutamicum.",
+      "profile" : "http://www.bernhardtlab.com/ophelialee",
+      "email" : "ophelia_lee{at}fas.harvard.edu",
+      "name" : "Ophelia Lee"
+   },
+   {
+      "profile" : "http://www.bernhardtlab.com/jameswarner",
+      "bio" : "I want to understand how the pathogen Staphylococcus aureus coordinates the synthesis of its cell envelope to escape antibiotic killing.",
+      "role" : "Postdoctoral Research Fellow",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1753711049360-LPZZ20HWBRAJ2NRJY5RP/Warner_2025.jpg",
+      "email" : "james_warner{at}hms.harvard.edu",
+      "name" : "James Warner"
+   },
+   {
+      "email" : "taran_bauer{at}g.harvard.edu",
+      "name" : "Taran Bauer",
+      "bio" : "I am interested in uncovering the downstream regulatory mechanisms of the envelope stress response and how this relates to lipid transport. My larger goal is to uncover novel functions of the envelope stress signal to characterize how E. coli and other species maintain membrane integrity.",
+      "role" : "BBS Graduate Student",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1757698060384-2J07FRUF9U6A4R8I4204/Screenshot%2B2025-09-12%2Bat%2B1.25.27%25E2%2580%25AFPM.png",
+      "profile" : "http://www.bernhardtlab.com/taran-bauer"
+   }
+]

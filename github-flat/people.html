@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Team | Thomas Bernhardt Lab</title>
+    <meta name="description" content="Current members of the Thomas Bernhardt Lab at Harvard Medical School and Howard Hughes Medical Institute." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="profile.css?v=20260221hf" />
+    <style>
+      .team-section { display: grid; gap: .9rem; }
+      .team-grid { display:grid; gap:.9rem; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
+      .person-card { border:1px solid var(--line-soft); border-radius:14px; background:linear-gradient(145deg, rgba(33,37,47,.95), rgba(26,30,39,.9)); overflow:hidden; box-shadow:var(--shadow-soft); transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
+      .person-card:hover { transform: translateY(-2px); border-color: rgba(114,196,203,.45); box-shadow: 0 18px 34px rgba(6,7,11,.46); }
+      .person-link-wrap { text-decoration:none; display:grid; height:100%; }
+      .person-link-wrap img { width:100%; aspect-ratio:4/5; object-fit:contain; object-position:center center; padding:.34rem; background:
+        radial-gradient(circle at 20% 18%, rgba(59,143,149,.2), transparent 48%),
+        radial-gradient(circle at 80% 80%, rgba(177,42,61,.18), transparent 46%),
+        #20242d; }
+      .person-body { padding:.82rem; display:grid; gap:.34rem; }
+      .person-body h2 { margin:0; font-size:1.15rem; font-family:"Fraunces", serif; }
+      .person-body p { margin:0; color:var(--text-mid); font-size:.84rem; }
+      .person-body span { margin-top:.2rem; width:fit-content; border:1px solid rgba(220,224,235,.24); color:var(--text-high); background:rgba(31,35,44,.76); border-radius:999px; padding:.24rem .58rem; font-size:.76rem; font-weight:700; }
+      @media (max-width:760px){
+        .team-grid { grid-template-columns:1fr; gap:.76rem; }
+        .person-link-wrap img { aspect-ratio:4/4.9; padding:.28rem; }
+        .person-body { padding:.74rem; }
+        .person-body h2 { font-size:1.04rem; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <div class="page">
+      <header class="topbar">
+        <div class="topbar-inner">
+          <a class="brand" href="index.html" aria-label="Thomas Bernhardt Lab home">
+            <span class="brand-text">
+              <strong>Thomas Bernhardt Lab</strong>
+              <small>Howard Hughes Medical Institute + Harvard Medical School</small>
+            </span>
+          </a>
+          <nav class="top-links" aria-label="Team navigation">
+            <a href="index.html#about">About</a>
+            <a href="people.html" aria-current="page">Team</a>
+            <a href="index.html#research">Research</a>
+            <a href="index.html#publications">Publications</a>
+            <a href="index.html#gallery">Gallery</a>
+            <a href="alumni.html">Alumni</a>
+            <a href="index.html#contact">Contact</a>
+          </nav>
+        </div>
+      </header>
+      <main id="main-content" class="main">
+        <section class="team-section">
+          <p class="eyebrow">Team</p>
+          <h1>Meet the team</h1>
+          <p class="bio">Profiles for current members of the Bernhardt Lab.</p>
+        </section>
+        <section class="team-grid">
+      <article class="person-card">
+        <a href="thomas-bernhardt.html" class="person-link-wrap">
+          <img src="thomas-bernhardt-hhmi-2025.png" alt="Thomas Bernhardt" loading="lazy" />
+          <div class="person-body">
+            <h2>Thomas Bernhardt</h2>
+            <p>Professor, Department of Microbiology | Howard Hughes Medical Institute</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="james-spencer.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1553173916977-5MWVESOJ7KKQ89GK4ORT/James_spencer.jpg" alt="James Spencer" loading="lazy" />
+          <div class="person-body">
+            <h2>James Spencer</h2>
+            <p>Laboratory Manager, Thomas Bernhardt Lab</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="kathy-suarez.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1598381898156-68II3HUTKXY1OF4U3R8C/kathy.jpg" alt="Kathy Suarez" loading="lazy" />
+          <div class="person-body">
+            <h2>Kathy Suarez</h2>
+            <p>BBS Graduate Student | NIH F31 Fellow</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="betsy-hart.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1598383045751-ABC6TUB51HNGRQ2CUAJZ/betsy.jpg" alt="Betsy Hart" loading="lazy" />
+          <div class="person-body">
+            <h2>Betsy Hart</h2>
+            <p>Postdoctoral Fellow | NIH K99/R00 Fellow | Former HHWF Fellow</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="johnathan-kepple.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1630526847138-E1T99QXT1Q4VOQUWKO0I/IMG_0508.jpg" alt="Johnathan Kepple" loading="lazy" />
+          <div class="person-body">
+            <h2>Johnathan Kepple</h2>
+            <p>BPH Graduate Student | NIH F31 Fellow</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="wanassa-beroual.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1675970682144-0PYVM1YRSI7X2YIC934I/55E89D77-D21C-419F-9D17-4DA257564722.jpg" alt="Wanassa Beroual" loading="lazy" />
+          <div class="person-body">
+            <h2>Wanassa Beroual</h2>
+            <p>Postdoctoral Fellow</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="anastacia-parks.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1649110154642-G16R9VNOZ9VHWXFZXU6K/Screen+Shot+2022-04-04+at+6.00.55+PM.png" alt="Anastacia Parks" loading="lazy" />
+          <div class="person-body">
+            <h2>Anastacia Parks</h2>
+            <p>Postdoctoral Fellow | NIH K99/R00 Fellow</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="tanner-dehart.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1661806098784-ZTUDXNCLO016KTO190CT/Screen+Shot+2022-08-29+at+4.32.58+PM.png" alt="Tanner DeHart" loading="lazy" />
+          <div class="person-body">
+            <h2>Tanner DeHart</h2>
+            <p>BBS Graduate Student</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="wilaysha-evans.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1663796653002-8C0DEY29J50676GSPCWO/Screen+Shot+2022-09-21+at+12.49.48+PM.png" alt="Wilaysha Evans" loading="lazy" />
+          <div class="person-body">
+            <h2>Wilaysha Evans</h2>
+            <p>ChemBio Graduate Student</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="nilanjan-som.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1694117450898-RG5K9AE1D78HLCU02FY2/Screenshot+2023-09-07+at+3.46.10+PM.png" alt="Nilanjan Som" loading="lazy" />
+          <div class="person-body">
+            <h2>Nilanjan Som</h2>
+            <p>Postdoctoral Fellow</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="tien-nguyen.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1694187388124-T15GTLGXMGLBKI3L31HZ/IMG_6820.jpg" alt="Tien Nguyen" loading="lazy" />
+          <div class="person-body">
+            <h2>Tien Nguyen</h2>
+            <p>MCO Graduate Student</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="dylan-burgin.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1718042442897-OA8ERMSFBA950VVYJ6MR/Screenshot+2024-06-10+at+2.00.29%E2%80%AFPM.png" alt="Dylan Burgin" loading="lazy" />
+          <div class="person-body">
+            <h2>Dylan Burgin</h2>
+            <p>BBS Graduate Student</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="shailab-shrestha.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1718134932686-SJ49CRIK1AN94PN32VQQ/Screenshot+2024-06-11+at+3.42.00%E2%80%AFPM.png" alt="Shailab Shrestha" loading="lazy" />
+          <div class="person-body">
+            <h2>Shailab Shrestha</h2>
+            <p>Postdoctoral Fellow | Life Sciences Research Foundation Fellow</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="vincent-de-bakker.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1739559732012-M2UO3CUH7CN7UEWSG9ED/20250214_lab2.jpeg" alt="Vincent de Bakker" loading="lazy" />
+          <div class="person-body">
+            <h2>Vincent de Bakker</h2>
+            <p>Postdoctoral Research Fellow | Funded by the Swiss National Science Foundation</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="nazgul-sakenova.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1739559794418-P4JOP8A7Y1DMWJK4G658/IMG_3956.jpeg" alt="Nazgul Sakenova" loading="lazy" />
+          <div class="person-body">
+            <h2>Nazgul Sakenova</h2>
+            <p>Postdoctoral Fellow | HHWF Fellow</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="abel-rodriguez.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1745615239614-0ZK8CZU200D9EX2MNY97/IMG_2743.jpeg" alt="Abel Rodriguez" loading="lazy" />
+          <div class="person-body">
+            <h2>Abel Rodriguez</h2>
+            <p>Undergraduate Researcher</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="eleanor-rand.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1753710971082-GHTM0Q8G52VT1QVSP95Q/EllieHeadShot.JPG" alt="Eleanor Rand" loading="lazy" />
+          <div class="person-body">
+            <h2>Eleanor Rand</h2>
+            <p>Postdoctoral Research Fellow | Community Phages Internship Lead Instructor</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="ophelia-lee.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1753711015525-A3BB6YM2L2XPTQZ31MH4/IMG_2325.jpg" alt="Ophelia Lee" loading="lazy" />
+          <div class="person-body">
+            <h2>Ophelia Lee</h2>
+            <p>BBS Graduate Student</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="james-warner.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1753711049360-LPZZ20HWBRAJ2NRJY5RP/Warner_2025.jpg" alt="James Warner" loading="lazy" />
+          <div class="person-body">
+            <h2>James Warner</h2>
+            <p>Postdoctoral Research Fellow</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+      <article class="person-card">
+        <a href="taran-bauer.html" class="person-link-wrap">
+          <img src="https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1757698060384-2J07FRUF9U6A4R8I4204/Screenshot%2B2025-09-12%2Bat%2B1.25.27%25E2%2580%25AFPM.png" alt="Taran Bauer" loading="lazy" />
+          <div class="person-body">
+            <h2>Taran Bauer</h2>
+            <p>BBS Graduate Student</p>
+            <span>View profile</span>
+          </div>
+        </a>
+      </article>
+        </section>
+      </main>
+      <footer class="site-footer">
+        <p>Thomas Bernhardt Lab | Harvard Medical School Department of Microbiology | Howard Hughes Medical Institute | <a href="accessibility.html">Accessibility</a></p>
+      </footer>
+    </div>
+  </body>
+</html>

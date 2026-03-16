@@ -1,0 +1,219 @@
+=== tmp/profiles/www.bernhardtlab.com_abel-rodriguez.html ===
+Abel Rodriguez
+Undergraduate Researcher
+Education
+A.B., Chemistry, Harvard College, MA
+Research Interest
+I am interested in determining novel players in mycolic acid transport.
+ 
+josuerodriguez{at}college.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_anastacia-parks.html ===
+Anastacia Parks
+Howard Hughes Medical Institute
+Education
+B.S. Microbiology, University of South Florida
+M.S. Microbiology, University of South Florida
+Ph.D. Microbiology, University of Georgia
+Research Interest
+I am interested in understanding the role mannosylation plays in the membrane of Corynebacterium glutamicum.
+ 
+Anastacia_Parks{at}hms.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_betsy-hart.html ===
+Betsy Hart
+Postdoctoral fellow
+Education
+BA, Biology and Anthropology, Williams College, Williamstown, MA
+Ph.D., Molecular Biology, Princeton University, Princeton, NJ
+Research interest
+I am interested in cell envelope biogenesis in Corynebacterium glutamicum. 
+Elizabeth_Hart{at}hms.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_dylan-burgin.html ===
+Dylan Burgin
+BBS Graduate Student
+Education
+B.S., Microbiology and Cell Science, University of Florida, Gainesville, FL
+Research interest
+I am interested in studying the mechanisms that contribute to outer membrane integrity in Gram-negative bacteria.
+ 
+dburgin{at}g.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_eleanorrand.html ===
+Eleanor Rand
+Postdoctoral Research Fellow
+Community Phages Internship Lead Instructor
+Education
+B.A. Biology, University of Pennsylvania
+ | M.S. Biotechnology, University of Pennsylvania
+ | Ph.D Systems Biology, Harvard University
+Research interest
+I am interested in using phages to learn more about their bacterial hosts. I also lead the Community Phages program (phages.hms.harvard.edu)!
+eleanor_rand{at}fas.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_james.html ===
+James M. SPENCER
+Howard Hughes Medical Institute
+Education
+BS, Science & Biochemistry, University of Massachusetts Amherst, MA
+Laboratory Manager
+As the lab manager, I am responsible for managing every aspect of lab operations, capital projects, and administration for a dynamic team of research technicians, graduate students,  postdoctoral trainees, and visiting scholars.
+ 
+James_Spencer{at}hms.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_jameswarner.html ===
+James Warner
+Postdoctoral Research Fellow
+Education
+B.A., Biology, University of Chicago, IL
+Ph.D., Genetics and Genomics, Harvard University, MA
+Research interest
+I want to understand how the pathogen Staphylococcus aureus coordinates the synthesis of its cell envelope to escape antibiotic killing.
+james_warner{at}hms.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_johnathan-kepple.html ===
+Johnathan Kepple
+BPH Graduate Student
+Education
+B.S., Microbiology & Immunology, University of Texas at San Antonio, San Antonio, TX
+Research interest
+The general aim of my research is to understand the regulation of cell wall synthesis in the gram negative bacteria pseudomonas aeruginosa.  
+ 
+johnathankepple{at}g.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_kathy-suarez.html ===
+Kathy Suarez
+BBS Graduate Student
+Education
+BS, Human Biology, University of California San Diego, La Jolla, CA
+Research interest
+I am interested in examining the function of cell wall synthesis in E. coli. 
+ 
+ksuarez{at}g.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_laurent-dubois.html ===
+Laurent Dubois
+BBS Graduate Student
+Education
+BS, Nanosciences, University of Basel, Switzerland
+MS, Nanosciences with Major in Molecular Biology, University of Basel, Switzerland
+Research interest
+The general goal of my research is to understand the mechanisms that regulate cell division and cell wall remodeling in E. coli.
+ 
+laurent_dubois{at}g.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_nazgulsakenova.html ===
+NAzgul Sakenova
+Postdoctoral Research Fellow
+Education
+B.S. Biological Sciences, Nazarbayev University, Astana, Kazakhstan
+M.S. Genomics and Bioinformatics, Paris-Saclay University, Paris, France
+Ph.D. Systems Biology and Microbiology, European Molecular Biology Laboratory, Heidelberg, Germany
+Research interest
+I am interested in special protein localization and factors that determine it in Escherichia coli.
+nazgul_sakenova{at}hms.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_nilanjan-som.html ===
+Nilanjan Som
+Postdoctoral fellow
+Education
+B.Sc., Physiology, City College, Calcutta University, India | M.Sc., Molecular Biology and Biotechnology, Tezpur University, India | Ph.D., Life Sciences, CSIR-Centre for Cellular and Molecular Biology (affiliated to Jawaharlal Nehru University), India
+Research interest
+I am interested in understanding the regulatory mechanisms that drives Gram-negative bacterial cell envelope expansion. 
+ 
+nilanjan_som{at}hms.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_ophelialee.html ===
+Ophelia Lee
+Graduate Student
+Education
+B.A. Molecular and Cell Biology, UC Berkeley
+Research interest
+I am interested in mycolic acid transport and regulation in Corynebacterium glutamicum.
+ophelia_lee{at}fas.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_shailab-shrestha.html ===
+Shailab Shrestha
+Postdoctoral fellow
+Education
+B.A. in Biology, Bard College, NY
+Ph.D. in Molecular Microbiology, Tufts University, MA
+Research interest
+I am interested in the biogenesis and maintenance of the Gram-negative cell envelope.
+ 
+shailab_shrestha{at}hms.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_tanner-dehart.html ===
+Tanner DeHart
+BBS Graduate Student
+Education
+B.S., Biochemistry, Virginia Polytechnic Institute and State University (2020), Blacksburg, Virginia
+M.S., Biochemistry, Virginia Polytechnic Institute and State University (2021), Blacksburg, Virginia
+Research Interest
+I am interested in the biosynthesis of membrane lipids as well as characterizing proteases potentially involved in the regulation of E. coli cell wall synthesis
+ 
+tdehart{at}g.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_taran-bauer.html ===
+Taran Bauer
+BBS Graduate Student
+Education
+B.S. Biological sciences, Cornell University, Ithaca, NY
+Research interest
+I am interested in uncovering the downstream regulatory mechanisms of the envelope stress response and how this relates to lipid transport. My larger goal is to uncover novel functions of the envelope stress signal to characterize how E. coli and other species maintain membrane integrity.
+ 
+taran_bauer{at}g.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_thomas-bernhardt.html ===
+Thomas Bernhardt
+Professor, Department of Microbiology and Immunobiology.
+Investigator, Howard Hughes Medical Institute
+Education
+BS in Chemistry, Millersville University, PA
+PhD in Biochemistry, Texas A&M University, TX
+Post doctoral training with Dr. Piet de Boer, Case Western Reserve University, OH
+
+=== tmp/profiles/www.bernhardtlab.com_tien-nguyen.html ===
+Tien Nguyen
+MCO Graduate Student
+Education
+B.S., Biology and Biotechnology, Worcester Polytechnic Institute. Worcester, Massachusetts
+Research interest
+I am interested in elucidating the regulatory mechanisms of PG hydrolyses required for separation in Eschericia coli. My larger goals are to better understand the spatiotemporal coordination of the bacterial cell envelope for cell division
+ 
+tien_nguyen{at}g.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_vincentdebakker.html ===
+Vincent De Bakker
+Postdoctoral Research Fellow
+Funded by the Swiss National Science Foundation
+Education
+B.S., Biology, Leiden University, Netherlands
+M.S. Biology, Leiden University, Netherlands
+M.S. Statistical Science, Leiden University, Netherlands
+Ph.D., Life Sciences, University of Lausanne, Switzerland
+Research interest
+I work at the intersection of quantitative and fundamental microbiology. In that context, I’m currently implementing CRISPR interference techniques to study cell envelope biogenesis in Corynebacterium glutamicum.
+vincent_debakker{at}hms.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_wanassa.html ===
+Wanassa Beroual
+Postdoctoral fellow, HHMI
+Education
+B.S., Cellular Biology, Aix-Marseille University, France | M.S. Microbiology, Aix-Marseille University, France
+Ph.D., Microbiology, Aix-Marseille University, France
+Research interest
+I am interested in cell wall biogenesis in Corynebacterium glutamicum.
+Wanassa_Beroual{at}hms.harvard.edu
+
+=== tmp/profiles/www.bernhardtlab.com_wilaysha-evans.html ===
+Wilaysha Evans
+BBS Graduate Student
+Education
+B.S., Biochemistry, State University of New York, Oneonta, New York
+Research Interest
+I am most interested in understanding the mechanisms that underpin bacterial cell shape and division. More specifically, in the Bernhardt lab, I study some of the mechanisms by which cell wall integrity in Corynebacterium glutamicum is maintained.
+ 
+wilayshaevans{at}g.harvard.edu
+

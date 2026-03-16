@@ -1,0 +1,38 @@
+name: Refresh Recent Publications
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "20 10 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Refresh top Bernhardt publications
+        run: python scripts/refresh_recent_publications.py --target 5 --retmax 120
+
+      - name: Commit refreshed publication feed
+        run: |
+          if git diff --quiet; then
+            echo "No publication feed changes detected."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/data/recent-publications.json github-flat/recent-publications.json
+          git commit -m "chore: refresh recent publications feed"
+          git push

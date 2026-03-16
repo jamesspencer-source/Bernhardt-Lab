@@ -1,0 +1,63 @@
+{
+  "generatedAt": "2026-02-22T13:16:46+00:00",
+  "source": "pubmed-search-last-author-filter",
+  "query": "Bernhardt TG[Author]",
+  "count": 5,
+  "items": [
+    {
+      "pmid": "39992125",
+      "doi": "10.1128/mbio.03950-24",
+      "title": "Using fluorescently labeled wheat germ agglutinin to track lipopolysaccharide transport to the outer membrane in Escherichia coli",
+      "journal": "mBio",
+      "year": "2025",
+      "pubDate": "mBio. 2025.",
+      "authorsShort": "Dubois L, et al.",
+      "articleUrl": "https://doi.org/10.1128/mbio.03950-24",
+      "sourceLabel": "PubMed (Bernhardt TG last author)"
+    },
+    {
+      "pmid": "39904311",
+      "doi": "10.1016/j.cub.2024.11.002",
+      "title": "The mycomembrane",
+      "journal": "Curr Biol",
+      "year": "2025",
+      "pubDate": "Curr Biol. 2025.",
+      "authorsShort": "Hart EM, et al.",
+      "articleUrl": "https://doi.org/10.1016/j.cub.2024.11.002",
+      "sourceLabel": "PubMed (Bernhardt TG last author)"
+    },
+    {
+      "pmid": "38829907",
+      "doi": "10.1371/journal.pgen.1011127",
+      "title": "The conserved \u03c3D envelope stress response monitors multiple aspects of envelope integrity in corynebacteria",
+      "journal": "PLoS Genet",
+      "year": "2024",
+      "pubDate": "PLoS Genet. 2024.",
+      "authorsShort": "Hart EM, et al.",
+      "articleUrl": "https://doi.org/10.1371/journal.pgen.1011127",
+      "sourceLabel": "PubMed (Bernhardt TG last author)"
+    },
+    {
+      "pmid": "38718542",
+      "doi": "10.1016/j.mib.2024.102479",
+      "title": "Co-ordinated assembly of the multilayered cell envelope of Gram-negative bacteria",
+      "journal": "Curr Opin Microbiol",
+      "year": "2024",
+      "pubDate": "Curr Opin Microbiol. 2024.",
+      "authorsShort": "Fivenson EM, et al.",
+      "articleUrl": "https://doi.org/10.1016/j.mib.2024.102479",
+      "sourceLabel": "PubMed (Bernhardt TG last author)"
+    },
+    {
+      "pmid": "38443581",
+      "doi": "10.1038/s41564-024-01607-y",
+      "title": "FacZ is a GpsB-interacting protein that prevents aberrant division-site placement in Staphylococcus aureus",
+      "journal": "Nat Microbiol",
+      "year": "2024",
+      "pubDate": "Nat Microbiol. 2024.",
+      "authorsShort": "Bartlett TM, et al.",
+      "articleUrl": "https://doi.org/10.1038/s41564-024-01607-y",
+      "sourceLabel": "PubMed (Bernhardt TG last author)"
+    }
+  ]
+}
