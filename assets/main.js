@@ -1307,7 +1307,6 @@ function setupSectionNavigationHighlight() {
     sections.forEach((section) => observer.observe(section));
   }
 
-  window.addEventListener("scroll", updateActiveLink, { passive: true });
   window.addEventListener("resize", updateActiveLink);
   updateActiveLink();
 }
@@ -1350,50 +1349,20 @@ function setupScrollDynamics() {
   const root = document.documentElement;
   const getScrollTop = () => window.scrollY || window.pageYOffset || 0;
   const getMaxScroll = () => Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
-  const applyValues = (scrollValue, velocity = 0) => {
+  const applyValues = (scrollValue) => {
     const maxScroll = getMaxScroll();
     const progress = Math.min(100, Math.max(0, (scrollValue / maxScroll) * 100));
     root.style.setProperty("--scroll-progress", `${progress}%`);
-    root.style.setProperty("--scroll-px", `${scrollValue.toFixed(1)}px`);
-    root.style.setProperty("--scroll-velocity", `${velocity.toFixed(3)}`);
     root.style.setProperty("--hero-shift", `${Math.min(44, scrollValue * 0.07).toFixed(1)}px`);
     document.body.classList.toggle("is-scrolled", scrollValue > 16);
   };
 
-  if (prefersReducedMotion) {
-    const updateStatic = () => {
-      const scrollTop = getScrollTop();
-      const maxScroll = getMaxScroll();
-      const progress = Math.min(100, Math.max(0, (scrollTop / maxScroll) * 100));
-      root.style.setProperty("--scroll-progress", `${progress}%`);
-      root.style.setProperty("--scroll-px", `${scrollTop.toFixed(1)}px`);
-      root.style.setProperty("--scroll-velocity", "0");
-      root.style.setProperty("--hero-shift", "0px");
-      document.body.classList.toggle("is-scrolled", scrollTop > 16);
-    };
-
-    updateStatic();
-    window.addEventListener("scroll", updateStatic, { passive: true });
-    window.addEventListener("resize", updateStatic);
-    return;
-  }
-
-  let targetScroll = getScrollTop();
-  let easedScroll = targetScroll;
+  let latestScroll = getScrollTop();
   let rafId = null;
 
   const renderFrame = () => {
-    const delta = targetScroll - easedScroll;
-    easedScroll += delta * 0.12;
-    if (Math.abs(delta) < 0.1) easedScroll = targetScroll;
-
-    applyValues(easedScroll, delta);
-
-    if (Math.abs(targetScroll - easedScroll) > 0.1) {
-      rafId = window.requestAnimationFrame(renderFrame);
-    } else {
-      rafId = null;
-    }
+    rafId = null;
+    applyValues(prefersReducedMotion ? 0 : latestScroll);
   };
 
   const requestFrame = () => {
@@ -1402,16 +1371,16 @@ function setupScrollDynamics() {
   };
 
   const onScroll = () => {
-    targetScroll = getScrollTop();
+    latestScroll = getScrollTop();
     requestFrame();
   };
 
   const onResize = () => {
-    targetScroll = getScrollTop();
+    latestScroll = getScrollTop();
     requestFrame();
   };
 
-  applyValues(targetScroll, 0);
+  applyValues(prefersReducedMotion ? 0 : latestScroll);
   window.addEventListener("scroll", onScroll, { passive: true });
   window.addEventListener("resize", onResize);
 }
