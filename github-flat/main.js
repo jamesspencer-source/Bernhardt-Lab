@@ -87,32 +87,32 @@ const galleryItems = [
   {
     title: "Tom's tenured gift from the lab",
     image:
-      "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1519155156853-6JPGDU0TF0T6BSWEFGQV/TGB_4.5x6.5.png"
+      "assets/images/imported/sqs-8c13d607-1519155156853-6jpgdu0t-tgb-4-5x6-5.png"
   },
   {
     title: "Lab group photo, October 2019",
     image:
-      "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1630095169803-FDQ8732FYB808X9S8F70/lab+group+picture.jpeg"
+      "assets/images/imported/sqs-7448dd08-1630095169803-fdq8732f-lab-group-picture.jpeg"
   },
   {
     title: "Super group meeting prep",
     image:
-      "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1568647681017-ZDHK61NCIIYSWYJTTY56/00100lPORTRAIT_00100_BURST20190816090154418_COVER.jpg"
+      "assets/images/imported/sqs-e7492e63-1568647681017-zdhk61nc-00100lportrait-00100-burst2019081609015441.jpg"
   },
   {
     title: "Axe throwing outing, winter 2021",
     image:
-      "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1698945095787-44TJG9RAKO5YBLSJG39F/lab+axe+throwing+outing.jpeg"
+      "assets/images/imported/sqs-9629645e-1698945095787-44tjg9ra-lab-axe-throwing-outing.jpeg"
   },
   {
     title: "2020 holiday gift swap",
     image:
-      "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1609953194732-RLR5U62CIKT7BL4LGHG7/IMG_2899.jpg"
+      "assets/images/imported/sqs-e99f28da-1609953194732-rlr5u62c-img-2899.jpg"
   },
   {
     title: "Virtual holiday party, December 2020",
     image:
-      "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1609952792110-6JQKNG9HXJNVDNQFWZFL/virtual%2Bparty%2Bbernhardt%2Blab.jpg"
+      "assets/images/imported/sqs-2d8760db-1609952792110-6jqkng9h-virtual-party-bernhardt-lab.jpg"
   },
   {
     title: "Apple orchard group photo, fall 2025",
@@ -126,7 +126,7 @@ const galleryItems = [
   {
     title: "Bernhardt lab beer hour, spring 2024",
     image:
-      "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1718043136035-KTWID89GUQY6IWW3D9YN/IMG_3814.jpg"
+      "assets/images/imported/sqs-55c77e59-1718043136035-ktwid89g-img-3814.jpg"
   }
 ];
 
@@ -243,7 +243,7 @@ const rawPeople = [
       "name" : "Thomas Bernhardt"
    },
    {
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1553173916977-5MWVESOJ7KKQ89GK4ORT/James_spencer.jpg",
+      "image" : "assets/images/imported/sqs-70fc315a-1553173916977-5mwvesoj-james-spencer.jpg",
       "bio" : "Research operations lead for the Bernhardt and Abraham HHMI labs at HMS, overseeing finance, hiring, procurement, compliance, and lab infrastructure, and supporting HMS Community Phages.",
       "role" : "Laboratory Manager, Thomas Bernhardt Lab",
       "profile" : "/james-spencer",
@@ -255,12 +255,12 @@ const rawPeople = [
       "name" : "Kathy Suarez",
       "role" : "BBS Graduate Student | NIH F31 Fellow",
       "bio" : "I am interested in examining the function of cell wall synthesis in E. coli.",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1598381898156-68II3HUTKXY1OF4U3R8C/kathy.jpg",
+      "image" : "assets/images/imported/sqs-15e89e9a-1598381898156-68ii3hut-kathy.jpg",
       "profile" : "/kathy-suarez"
    },
   {
       "profile" : "/betsy-hart",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1598383045751-ABC6TUB51HNGRQ2CUAJZ/betsy.jpg",
+      "image" : "assets/images/imported/sqs-f19664ad-1598383045751-abc6tub5-betsy.jpg",
       "role" : "Postdoctoral Fellow | NIH K99/R00 Fellow | Former HHWF Fellow",
       "bio" : "I am interested in cell envelope biogenesis in Corynebacterium glutamicum.",
       "email" : "Elizabeth_Hart{at}hms.harvard.edu",
@@ -269,13 +269,13 @@ const rawPeople = [
    {
       "name" : "Johnathan Kepple",
       "email" : "johnathankepple{at}g.harvard.edu",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1630526847138-E1T99QXT1Q4VOQUWKO0I/IMG_0508.jpg",
+      "image" : "assets/images/imported/sqs-18ddfbcf-1630526847138-e1t99qxt-img-0508.jpg",
       "bio" : "The general aim of my research is to understand the regulation of cell wall synthesis in the Gram-negative bacterium Pseudomonas aeruginosa.",
       "role" : "BPH Graduate Student | NIH F31 Fellow",
       "profile" : "/johnathan-kepple"
    },
    {
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1675970682144-0PYVM1YRSI7X2YIC934I/55E89D77-D21C-419F-9D17-4DA257564722.jpg",
+      "image" : "assets/images/imported/sqs-450561e3-1675970682144-0pyvm1yr-55e89d77-d21c-419f-9d17-4da257564722.jpg",
       "role" : "Postdoctoral Fellow",
       "bio" : "I am interested in cell wall biogenesis in Corynebacterium glutamicum.",
       "profile" : "/wanassa-beroual",
@@ -285,7 +285,7 @@ const rawPeople = [
    {
       "bio" : "I am interested in understanding the role mannosylation plays in the membrane of Corynebacterium glutamicum.",
       "role" : "Postdoctoral Fellow | NIH K99/R00 Fellow",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1649110154642-G16R9VNOZ9VHWXFZXU6K/Screen+Shot+2022-04-04+at+6.00.55+PM.png",
+      "image" : "assets/images/imported/sqs-da9350c8-1649110154642-g16r9vno-screen-shot-2022-04-04-at-6-00-55-pm.png",
       "profile" : "/anastacia-parks",
       "email" : "Anastacia_Parks{at}hms.harvard.edu",
       "name" : "Anastacia Parks"
@@ -293,7 +293,7 @@ const rawPeople = [
    {
       "name" : "Wilaysha Evans",
       "email" : "wilayshaevans{at}g.harvard.edu",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1663796653002-8C0DEY29J50676GSPCWO/Screen+Shot+2022-09-21+at+12.49.48+PM.png",
+      "image" : "assets/images/imported/sqs-ed7db1f4-1663796653002-8c0dey29-screen-shot-2022-09-21-at-12-49-48-pm.png",
       "role" : "ChemBio Graduate Student",
       "bio" : "I am most interested in understanding the mechanisms that underpin bacterial cell shape and division. More specifically, in the Bernhardt lab, I study some of the mechanisms by which cell wall integrity in Corynebacterium glutamicum is maintained.",
       "profile" : "/wilaysha-evans"
@@ -302,7 +302,7 @@ const rawPeople = [
       "profile" : "/nilanjan-som",
       "role" : "Postdoctoral Fellow",
       "bio" : "I am interested in understanding the regulatory mechanisms that drive Gram-negative bacterial cell envelope expansion.",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1694117450898-RG5K9AE1D78HLCU02FY2/Screenshot+2023-09-07+at+3.46.10+PM.png",
+      "image" : "assets/images/imported/sqs-63c0b913-1694117450898-rg5k9ae1-screenshot-2023-09-07-at-3-46-10-pm.png",
       "name" : "Nilanjan Som",
       "email" : "nilanjan_som{at}hms.harvard.edu"
    },
@@ -310,7 +310,7 @@ const rawPeople = [
       "email" : "tien_nguyen{at}g.harvard.edu",
       "name" : "Tien Nguyen",
       "profile" : "/tien-nguyen",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1694187388124-T15GTLGXMGLBKI3L31HZ/IMG_6820.jpg",
+      "image" : "assets/images/imported/sqs-1fdcc511-1694187388124-t15gtlgx-img-6820.jpg",
       "role" : "MCO Graduate Student",
       "bio" : "I am interested in studying the regulation of peptidoglycan hydrolysis during cell division in Escherichia coli, with a focus on mechanisms that control hydrolases and their activators for proper PG cleavage."
    },
@@ -319,7 +319,7 @@ const rawPeople = [
       "name" : "Dylan Burgin",
       "bio" : "I am interested in studying the mechanisms that contribute to outer membrane integrity in Gram-negative bacteria.",
       "role" : "BBS Graduate Student",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1718042442897-OA8ERMSFBA950VVYJ6MR/Screenshot+2024-06-10+at+2.00.29%E2%80%AFPM.png",
+      "image" : "assets/images/imported/sqs-4b8f41ca-1718042442897-oa8ermsf-screenshot-2024-06-10-at-2-00-29-pm.png",
       "profile" : "/dylan-burgin"
    },
    {
@@ -327,13 +327,13 @@ const rawPeople = [
       "email" : "shailab_shrestha{at}hms.harvard.edu",
       "role" : "Postdoctoral Fellow | Life Sciences Research Foundation Fellow",
       "bio" : "I am interested in the biogenesis and maintenance of the Gram-negative cell envelope.",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1718134932686-SJ49CRIK1AN94PN32VQQ/Screenshot+2024-06-11+at+3.42.00%E2%80%AFPM.png",
+      "image" : "assets/images/imported/sqs-854465e1-1718134932686-sj49crik-screenshot-2024-06-11-at-3-42-00-pm.png",
       "profile" : "/shailab-shrestha"
    },
    {
       "role" : "Postdoctoral Research Fellow | Funded by the Swiss National Science Foundation",
       "bio" : "I work at the intersection of quantitative and fundamental microbiology. In that context, I'm currently implementing CRISPR interference techniques to study cell envelope biogenesis in Corynebacterium glutamicum.",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1739559732012-M2UO3CUH7CN7UEWSG9ED/20250214_lab2.jpeg",
+      "image" : "assets/images/imported/sqs-fbcdc249-1739559732012-m2uo3cuh-20250214-lab2.jpeg",
       "profile" : "/vincent-de-bakker",
       "name" : "Vincent de Bakker",
       "email" : "vincent_debakker{at}hms.harvard.edu"
@@ -344,26 +344,26 @@ const rawPeople = [
       "profile" : "/nazgul-sakenova",
       "bio" : "I am interested in special protein localization and factors that determine it in Escherichia coli.",
       "role" : "Postdoctoral Fellow | HHWF Fellow",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1739559794418-P4JOP8A7Y1DMWJK4G658/IMG_3956.jpeg"
+      "image" : "assets/images/imported/sqs-660e354a-1739559794418-p4jop8a7-img-3956.jpeg"
    },
    {
       "email" : "josuerodriguez{at}college.harvard.edu",
       "name" : "Abel Rodriguez",
       "role" : "Undergraduate Researcher",
       "bio" : "I am interested in determining novel players in mycolic acid transport.",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1745615239614-0ZK8CZU200D9EX2MNY97/IMG_2743.jpeg",
+      "image" : "assets/images/imported/sqs-b5904c3a-1745615239614-0zk8czu2-img-2743.jpeg",
       "profile" : "/abel-rodriguez"
    },
    {
       "name" : "Eleanor Rand",
       "email" : "eleanor_rand{at}fas.harvard.edu",
       "profile" : "/eleanor-rand",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1753710971082-GHTM0Q8G52VT1QVSP95Q/EllieHeadShot.JPG",
+      "image" : "assets/images/imported/sqs-674e8ba7-1753710971082-ghtm0q8g-ellieheadshot.jpg",
       "bio" : "I am interested in using phages to learn more about their bacterial hosts. I also lead the Community Phages program (phages.hms.harvard.edu)!",
       "role" : "Postdoctoral Research Fellow | Community Phages Internship Lead Instructor"
    },
    {
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1753711015525-A3BB6YM2L2XPTQZ31MH4/IMG_2325.jpg",
+      "image" : "assets/images/imported/sqs-09ceb0cb-1753711015525-a3bb6ym2-img-2325.jpg",
       "role" : "BBS Graduate Student",
       "bio" : "I am interested in mycolic acid transport and regulation in Corynebacterium glutamicum.",
       "profile" : "/ophelia-lee",
@@ -374,7 +374,7 @@ const rawPeople = [
       "profile" : "/james-warner",
       "bio" : "I want to understand how the pathogen Staphylococcus aureus coordinates the synthesis of its cell envelope to escape antibiotic killing.",
       "role" : "Postdoctoral Research Fellow",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1753711049360-LPZZ20HWBRAJ2NRJY5RP/Warner_2025.jpg",
+      "image" : "assets/images/imported/sqs-85bf8dbf-1753711049360-lpzz20hw-warner-2025.jpg",
       "email" : "james_warner{at}hms.harvard.edu",
       "name" : "James Warner"
    },
@@ -383,7 +383,7 @@ const rawPeople = [
       "name" : "Taran Bauer",
       "bio" : "I am interested in uncovering the downstream regulatory mechanisms of the envelope stress response and how this relates to lipid transport. My larger goal is to uncover novel functions of the envelope stress signal to characterize how E. coli and other species maintain membrane integrity.",
       "role" : "BBS Graduate Student",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1757698060384-2J07FRUF9U6A4R8I4204/Screenshot%2B2025-09-12%2Bat%2B1.25.27%25E2%2580%25AFPM.png",
+      "image" : "assets/images/imported/sqs-b2906372-1757698060384-2j07fruf-screenshot-2025-09-12-at-1-25-27-e2-80-afp.png",
       "profile" : "/taran-bauer"
    }
 ]
@@ -882,7 +882,10 @@ function renderGallery() {
   let autoplayEnabled = !prefersReducedMotion;
 
   dots.innerHTML = galleryItems
-    .map((_, index) => `<button class="gallery-dot" type="button" data-index="${index}" aria-label="Go to slide ${index + 1}"></button>`)
+    .map(
+      (_, index) =>
+        `<button class="gallery-dot" type="button" data-index="${index}" aria-label="Go to slide ${index + 1}" aria-current="false"></button>`
+    )
     .join("");
 
   const setSlide = (nextIndex) => {
@@ -902,6 +905,7 @@ function renderGallery() {
 
     dots.querySelectorAll(".gallery-dot").forEach((dot, index) => {
       dot.classList.toggle("active", index === state.galleryIndex);
+      dot.setAttribute("aria-current", index === state.galleryIndex ? "true" : "false");
     });
   };
 
@@ -1031,7 +1035,10 @@ function renderAlumni() {
   let autoplayEnabled = !prefersReducedMotion;
 
   dots.innerHTML = alumniItems
-    .map((_, index) => `<button class="alumni-dot" type="button" data-index="${index}" aria-label="Show alumni profile ${index + 1}"></button>`)
+    .map(
+      (_, index) =>
+        `<button class="alumni-dot" type="button" data-index="${index}" aria-label="Show alumni profile ${index + 1}" aria-current="false"></button>`
+    )
     .join("");
 
   const setAlumni = (nextIndex) => {
@@ -1059,6 +1066,7 @@ function renderAlumni() {
 
     dots.querySelectorAll(".alumni-dot").forEach((dot, index) => {
       dot.classList.toggle("active", index === state.alumniIndex);
+      dot.setAttribute("aria-current", index === state.alumniIndex ? "true" : "false");
     });
   };
 
