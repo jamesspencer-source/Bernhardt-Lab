@@ -31,8 +31,6 @@
   --shadow-soft: var(--shadow-1);
   --shadow-strong: var(--shadow-2);
   --scroll-progress: 0%;
-  --scroll-px: 0px;
-  --scroll-velocity: 0;
   --hero-shift: 0px;
 }
 
@@ -136,8 +134,6 @@ p {
   filter: blur(0.2px);
   pointer-events: none;
   z-index: 0;
-  transform: translate3d(0, calc(var(--scroll-px, 0px) * -0.012), 0);
-  will-change: transform;
 }
 
 .section-light > .container {
@@ -333,7 +329,6 @@ body.is-scrolled .site-header {
     );
   pointer-events: none;
   z-index: 1;
-  background-position: calc(var(--scroll-px, 0px) * -0.03) 0;
 }
 
 .hero-overlay {
@@ -358,7 +353,6 @@ body.is-scrolled .site-header {
   opacity: 0.5;
   pointer-events: none;
   animation: float-orb 22s ease-in-out infinite alternate-reverse;
-  background-position: calc(var(--scroll-px, 0px) * -0.018) calc(var(--scroll-px, 0px) * -0.01);
 }
 
 .section-ink > .container {
