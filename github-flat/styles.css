@@ -1274,6 +1274,18 @@ body.is-scrolled .site-header {
   cursor: pointer;
 }
 
+.gallery-nav[aria-pressed="true"],
+.alumni-nav[aria-pressed="true"] {
+  border-color: rgba(143, 210, 215, 0.52);
+  background: rgba(14, 117, 125, 0.24);
+}
+
+.gallery-nav:disabled,
+.alumni-nav:disabled {
+  opacity: 0.72;
+  cursor: not-allowed;
+}
+
 .gallery-dots {
   display: inline-flex;
   gap: 0.33rem;

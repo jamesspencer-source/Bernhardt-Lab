@@ -204,7 +204,8 @@ function renderFilters() {
     .map((bucket) => {
       const active = bucket === state.bucket ? "active" : "";
       const count = bucket === "All" ? deduped.length : counts[bucket];
-      return `<button type="button" class="${active}" data-bucket="${bucket}">${bucket} (${count})</button>`;
+      const pressed = bucket === state.bucket ? "true" : "false";
+      return `<button type="button" class="${active}" data-bucket="${bucket}" aria-pressed="${pressed}" aria-controls="alumni-directory">${bucket} (${count})</button>`;
     })
     .join("");
 

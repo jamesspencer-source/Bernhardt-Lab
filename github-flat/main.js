@@ -780,7 +780,8 @@ function renderRoleFilters() {
     .map((group) => {
       const countLabel = group === "All" ? people.length : counts[group];
       const active = group === state.activeGroup ? "active" : "";
-      return `<button class="${active}" type="button" data-group="${escapeHtml(group)}">${escapeHtml(group)} (${countLabel})</button>`;
+      const pressed = group === state.activeGroup ? "true" : "false";
+      return `<button class="${active}" type="button" data-group="${escapeHtml(group)}" aria-pressed="${pressed}" aria-controls="people-grid">${escapeHtml(group)} (${countLabel})</button>`;
     })
     .join("");
 
@@ -867,6 +868,7 @@ function renderGallery() {
       <div class="gallery-nav-wrap">
         <button class="gallery-nav" type="button" id="gallery-prev">Previous</button>
         <button class="gallery-nav" type="button" id="gallery-next">Next</button>
+        <button class="gallery-nav" type="button" id="gallery-toggle" aria-pressed="false">Pause</button>
       </div>
     </div>
   `;
@@ -876,6 +878,8 @@ function renderGallery() {
   const dots = document.getElementById("gallery-dots");
   const prev = document.getElementById("gallery-prev");
   const next = document.getElementById("gallery-next");
+  const toggle = document.getElementById("gallery-toggle");
+  let autoplayEnabled = !prefersReducedMotion;
 
   dots.innerHTML = galleryItems
     .map((_, index) => `<button class="gallery-dot" type="button" data-index="${index}" aria-label="Go to slide ${index + 1}"></button>`)
@@ -908,8 +912,27 @@ function renderGallery() {
     }
   };
 
+  const updateToggle = () => {
+    if (!toggle) return;
+    if (prefersReducedMotion) {
+      toggle.disabled = true;
+      toggle.textContent = "Motion off";
+      toggle.setAttribute("aria-pressed", "true");
+      toggle.setAttribute(
+        "aria-label",
+        "Gallery rotation is off because reduced-motion is enabled in your system settings"
+      );
+      return;
+    }
+
+    const paused = !autoplayEnabled;
+    toggle.textContent = paused ? "Resume" : "Pause";
+    toggle.setAttribute("aria-pressed", String(paused));
+    toggle.setAttribute("aria-label", paused ? "Resume gallery rotation" : "Pause gallery rotation");
+  };
+
   const startAutoRotate = () => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion || !autoplayEnabled) return;
     stopAutoRotate();
     galleryTimer = setInterval(() => setSlide(state.galleryIndex + 1), 6000);
   };
@@ -927,9 +950,21 @@ function renderGallery() {
   dots.querySelectorAll(".gallery-dot").forEach((dot) => {
     dot.addEventListener("click", () => {
       setSlide(Number(dot.dataset.index));
-      startAutoRotate();
+      if (autoplayEnabled) startAutoRotate();
     });
   });
+
+  if (toggle && !prefersReducedMotion) {
+    toggle.addEventListener("click", () => {
+      autoplayEnabled = !autoplayEnabled;
+      updateToggle();
+      if (autoplayEnabled) {
+        startAutoRotate();
+      } else {
+        stopAutoRotate();
+      }
+    });
+  }
 
   activeImage.addEventListener("click", () => {
     openLightbox(activeImage.dataset.image, activeImage.dataset.title, activeImage.dataset.displayFilter || "none");
@@ -957,6 +992,7 @@ function renderGallery() {
     }
   });
   setSlide(0);
+  updateToggle();
   startAutoRotate();
 }
 
@@ -981,6 +1017,7 @@ function renderAlumni() {
         <div class="alumni-nav-wrap">
           <button class="alumni-nav" type="button" id="alumni-prev">Previous</button>
           <button class="alumni-nav" type="button" id="alumni-next">Next</button>
+          <button class="alumni-nav" type="button" id="alumni-toggle" aria-pressed="false">Pause</button>
         </div>
       </div>
     </div>
@@ -990,6 +1027,8 @@ function renderAlumni() {
   const dots = document.getElementById("alumni-dots");
   const prev = document.getElementById("alumni-prev");
   const next = document.getElementById("alumni-next");
+  const toggle = document.getElementById("alumni-toggle");
+  let autoplayEnabled = !prefersReducedMotion;
 
   dots.innerHTML = alumniItems
     .map((_, index) => `<button class="alumni-dot" type="button" data-index="${index}" aria-label="Show alumni profile ${index + 1}"></button>`)
@@ -1030,8 +1069,27 @@ function renderAlumni() {
     }
   };
 
+  const updateToggle = () => {
+    if (!toggle) return;
+    if (prefersReducedMotion) {
+      toggle.disabled = true;
+      toggle.textContent = "Motion off";
+      toggle.setAttribute("aria-pressed", "true");
+      toggle.setAttribute(
+        "aria-label",
+        "Featured alumni rotation is off because reduced-motion is enabled in your system settings"
+      );
+      return;
+    }
+
+    const paused = !autoplayEnabled;
+    toggle.textContent = paused ? "Resume" : "Pause";
+    toggle.setAttribute("aria-pressed", String(paused));
+    toggle.setAttribute("aria-label", paused ? "Resume featured alumni rotation" : "Pause featured alumni rotation");
+  };
+
   const startAutoRotate = () => {
-    if (prefersReducedMotion) return;
+    if (prefersReducedMotion || !autoplayEnabled) return;
     stopAutoRotate();
     alumniTimer = setInterval(() => setAlumni(state.alumniIndex + 1), 7000);
   };
@@ -1049,9 +1107,21 @@ function renderAlumni() {
   dots.querySelectorAll(".alumni-dot").forEach((dot) => {
     dot.addEventListener("click", () => {
       setAlumni(Number(dot.dataset.index));
-      startAutoRotate();
+      if (autoplayEnabled) startAutoRotate();
     });
   });
+
+  if (toggle && !prefersReducedMotion) {
+    toggle.addEventListener("click", () => {
+      autoplayEnabled = !autoplayEnabled;
+      updateToggle();
+      if (autoplayEnabled) {
+        startAutoRotate();
+      } else {
+        stopAutoRotate();
+      }
+    });
+  }
 
   root.addEventListener("mouseenter", stopAutoRotate);
   root.addEventListener("mouseleave", startAutoRotate);
@@ -1068,6 +1138,7 @@ function renderAlumni() {
     }
   });
   setAlumni(0);
+  updateToggle();
   startAutoRotate();
 }
 
