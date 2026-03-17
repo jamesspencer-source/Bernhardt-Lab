@@ -239,13 +239,6 @@ const rawAlumni =
       "lab_dates": "2011 – 2012"
    },
    {
-      "current_role": "",
-      "name": "Laurent Dubois",
-      "role_in_lab": "graduate student",
-      "source": "Bernhardt lab records",
-      "lab_dates": "2018 – 2025"
-   },
-   {
       "current_role": "Principal investigator, McMaster University, Hamilton, Ontario",
       "name": "Lindsey Marmont",
       "role_in_lab": "postdoctoral fellow",
