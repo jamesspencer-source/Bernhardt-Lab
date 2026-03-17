@@ -178,11 +178,11 @@ async function readTopScores(env) {
   const sql = caps.hasSpecies && caps.hasPlayedAt
     ? `SELECT name, score, created_at AS createdAt, species, played_at AS playedAt
        FROM leaderboard_scores
-       ORDER BY score DESC, played_at ASC
+       ORDER BY score DESC, played_at ASC, id ASC
        LIMIT 25`
     : `SELECT name, score, created_at AS createdAt
        FROM leaderboard_scores
-       ORDER BY score DESC, created_at ASC
+       ORDER BY score DESC, created_at ASC, id ASC
        LIMIT 25`;
   const { results } = await env.DB.prepare(sql).all();
 
@@ -198,23 +198,55 @@ async function readTopScores(env) {
   }));
 }
 
+async function countScores(env) {
+  const { results } = await env.DB.prepare(`SELECT COUNT(*) AS totalEntries FROM leaderboard_scores`).all();
+  return Math.max(0, Math.floor(Number(results?.[0]?.totalEntries) || 0));
+}
+
+async function computeRank(env, score, playedAt, rowId) {
+  const caps = await getSchemaCapabilities(env);
+  const normalizedScore = normalizeScore(score);
+  const normalizedPlayedAt = normalizePlayedAt(playedAt);
+  const normalizedRowId = Math.max(0, Math.floor(Number(rowId) || 0));
+
+  const sql = caps.hasPlayedAt
+    ? `SELECT COUNT(*) AS placement
+       FROM leaderboard_scores
+       WHERE score > ?1
+          OR (score = ?1 AND (played_at < ?2 OR (played_at = ?2 AND id <= ?3)))`
+    : `SELECT COUNT(*) AS placement
+       FROM leaderboard_scores
+       WHERE score > ?1 OR (score = ?1 AND id <= ?2)`;
+
+  const bound = caps.hasPlayedAt
+    ? env.DB.prepare(sql).bind(normalizedScore, normalizedPlayedAt, normalizedRowId)
+    : env.DB.prepare(sql).bind(normalizedScore, normalizedRowId);
+  const { results } = await bound.all();
+  return Math.max(1, Math.floor(Number(results?.[0]?.placement) || 1));
+}
+
 async function insertScore(env, name, score, species, playedAt) {
   const now = Date.now();
   const caps = await getSchemaCapabilities(env);
+  const normalizedPlayedAt = normalizePlayedAt(playedAt);
+  let insertedRowId = 0;
+
   if (caps.hasSpecies && caps.hasPlayedAt) {
-    await env.DB.prepare(
+    const result = await env.DB.prepare(
       `INSERT INTO leaderboard_scores (name, score, created_at, species, played_at)
        VALUES (?1, ?2, ?3, ?4, ?5)`
     )
-      .bind(name, score, now, normalizeSpecies(species), normalizePlayedAt(playedAt))
+      .bind(name, score, now, normalizeSpecies(species), normalizedPlayedAt)
       .run();
+    insertedRowId = Math.max(0, Math.floor(Number(result?.meta?.last_row_id) || 0));
   } else {
-    await env.DB.prepare(
+    const result = await env.DB.prepare(
       `INSERT INTO leaderboard_scores (name, score, created_at)
        VALUES (?1, ?2, ?3)`
     )
       .bind(name, score, now)
       .run();
+    insertedRowId = Math.max(0, Math.floor(Number(result?.meta?.last_row_id) || 0));
   }
 
   if (Math.random() < 0.1) {
@@ -228,6 +260,11 @@ async function insertScore(env, name, score, species, playedAt) {
        )`
     ).run();
   }
+
+  return {
+    rowId: insertedRowId,
+    playedAt: normalizedPlayedAt
+  };
 }
 
 export default {
@@ -251,7 +288,8 @@ export default {
 
     if (request.method === "GET") {
       const entries = await readTopScores(env);
-      return jsonResponse({ entries }, request, env, 200);
+      const totalEntries = await countScores(env);
+      return jsonResponse({ entries, totalEntries, updatedAt: Date.now() }, request, env, 200);
     }
 
     if (request.method === "POST") {
@@ -274,9 +312,11 @@ export default {
         return jsonResponse({ error: "Name unavailable", errorCode: "invalid_name" }, request, env, 422);
       }
 
-      await insertScore(env, name, score, species, playedAt);
+      const inserted = await insertScore(env, name, score, species, playedAt);
       const entries = await readTopScores(env);
-      return jsonResponse({ ok: true, entries }, request, env, 201);
+      const totalEntries = await countScores(env);
+      const rank = await computeRank(env, score, inserted.playedAt, inserted.rowId);
+      return jsonResponse({ ok: true, entries, rank, totalEntries, updatedAt: Date.now() }, request, env, 201);
     }
 
     return jsonResponse({ error: "Method not allowed" }, request, env, 405);

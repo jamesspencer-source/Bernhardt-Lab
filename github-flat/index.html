@@ -23,7 +23,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=20260307a" />
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=20260307a" />
     <link rel="stylesheet" href="styles.css?v=20260317d" />
-    <link rel="stylesheet" href="envelope-escape.css?v=20260223a" />
+    <link rel="stylesheet" href="envelope-escape.css?v=20260317d" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -579,6 +579,14 @@
               </select>
               <p id="envelope-model-note"></p>
             </div>
+            <div class="envelope-overlay-briefing" aria-label="Run overview">
+              <p id="envelope-overlay-status" class="envelope-overlay-status">Preparing ranked run intel…</p>
+              <ul class="envelope-overlay-points">
+                <li>Survive escalating sectors to earn milestone bonuses.</li>
+                <li>Chain clean pickups and tight dodges to grow your stability chain.</li>
+                <li>Species traits subtly change how each bacterium handles pressure.</li>
+              </ul>
+            </div>
             <div class="envelope-player-name">
               <label for="envelope-player-name">Leaderboard name</label>
               <input
@@ -617,6 +625,17 @@
           <article class="envelope-card">
             <span>Pressure State</span>
             <strong id="envelope-pressure">Calm</strong>
+            <small id="envelope-pressure-note">Next surge in --</small>
+          </article>
+          <article class="envelope-card">
+            <span>Stability Chain</span>
+            <strong id="envelope-combo">x1</strong>
+            <small id="envelope-combo-note">Build with pickups and clean dodges</small>
+          </article>
+          <article class="envelope-card">
+            <span>Sector</span>
+            <strong id="envelope-sector">Surface Patrol</strong>
+            <small id="envelope-sector-note">Milestone bonus at 0:45</small>
           </article>
           <article class="envelope-card envelope-card--meter">
             <span>Envelope Integrity</span>
@@ -641,6 +660,29 @@
             <button id="envelope-restart" class="envelope-secondary" type="button">New Run</button>
           </div>
           <p class="envelope-hint">Tip: drag/touch also works for movement.</p>
+          <section class="envelope-run-intel" aria-labelledby="envelope-run-intel-title">
+            <div class="envelope-run-intel-head">
+              <h3 id="envelope-run-intel-title">Run intel</h3>
+              <p id="envelope-network-pill" class="envelope-network-pill">Local leaderboard</p>
+            </div>
+            <div class="envelope-run-intel-grid">
+              <article class="envelope-intel-card">
+                <span>Species trait</span>
+                <strong id="envelope-trait-title">Balanced chassis</strong>
+                <p id="envelope-trait-copy">A reliable all-rounder for learning the flow of the run.</p>
+              </article>
+              <article class="envelope-intel-card">
+                <span>Current directive</span>
+                <strong id="envelope-directive-title">Awaiting launch</strong>
+                <p id="envelope-directive-copy">Start a ranked run to receive your first objective.</p>
+              </article>
+              <article class="envelope-intel-card">
+                <span>Last ranked result</span>
+                <strong id="envelope-rank-title">No score saved yet</strong>
+                <p id="envelope-rank-copy">Shared placement appears here after a ranked run.</p>
+              </article>
+            </div>
+          </section>
           <section class="envelope-precursor-key" aria-labelledby="envelope-precursor-key-title">
             <h3 id="envelope-precursor-key-title">Precursor key</h3>
             <ul id="envelope-precursor-key-list" class="envelope-precursor-key-list"></ul>
@@ -650,10 +692,11 @@
               <h3 id="envelope-leaderboard-title">Top 25 Scores</h3>
               <div class="envelope-leaderboard-meta-wrap">
                 <p id="envelope-leaderboard-meta">Local leaderboard</p>
-</div>
+              </div>
             </div>
+            <p id="envelope-rank-summary" class="envelope-rank-summary">Saved runs and placements will appear here.</p>
             <ol id="envelope-leaderboard-list" class="envelope-leaderboard-list"></ol>
-<form id="envelope-name-form" class="envelope-name-form" hidden>
+            <form id="envelope-name-form" class="envelope-name-form" hidden>
               <label for="envelope-name-input" id="envelope-name-label">New high score: enter your name</label>
               <p id="envelope-name-feedback" class="envelope-name-feedback" hidden></p>
               <div class="envelope-name-row">
@@ -685,7 +728,7 @@
     <script src="alumni-data.js"></script>
     <script src="site-freshness.js" data-freshness-path="site-freshness.json"></script>
     <script src="main.js?v=20260317d"></script>
-    <script src="envelope-escape-config.js?v=20260221af"></script>
-    <script src="envelope-escape.js?v=20260226c"></script>
+    <script src="envelope-escape-config.js?v=20260317b"></script>
+    <script src="envelope-escape.js?v=20260317d"></script>
   </body>
 </html>
