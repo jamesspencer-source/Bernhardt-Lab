@@ -746,3 +746,237 @@ p {
     box-shadow: none;
   }
 }
+
+/* Premium alumni directory polish */
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  text-rendering: optimizeLegibility;
+  line-height: 1.55;
+}
+
+.scroll-meter {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--scroll-progress, 0%);
+  height: 3px;
+  z-index: 120;
+  background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary));
+  box-shadow: 0 2px 12px rgba(6, 7, 11, 0.44);
+}
+
+.site-header {
+  border-bottom-color: rgba(220, 224, 235, 0.18);
+  background: rgba(14, 16, 22, 0.82);
+  box-shadow: 0 14px 34px rgba(6, 7, 11, 0.28);
+}
+
+body.is-scrolled .site-header {
+  background: rgba(14, 16, 22, 0.94);
+  box-shadow: 0 16px 36px rgba(6, 7, 11, 0.36);
+}
+
+.site-nav {
+  gap: 0.52rem;
+}
+
+.site-nav a {
+  min-height: 2.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.42rem 0.9rem;
+  border: 1px solid rgba(220, 224, 235, 0.16);
+  border-radius: 999px;
+  background: rgba(28, 32, 41, 0.68);
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.site-nav a:hover,
+.site-nav a:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(255, 214, 221, 0.5);
+  background: rgba(38, 43, 55, 0.94);
+  box-shadow: 0 8px 18px rgba(6, 7, 11, 0.24);
+}
+
+.site-nav a[aria-current="page"] {
+  color: #ffffff;
+  border-color: rgba(255, 214, 221, 0.22);
+  background: linear-gradient(135deg, rgba(177, 42, 61, 0.92), rgba(139, 30, 48, 0.92));
+  box-shadow: 0 10px 20px rgba(6, 7, 11, 0.32);
+}
+
+.nav-toggle {
+  display: none;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(220, 224, 235, 0.22);
+  border-radius: 999px;
+  background: rgba(28, 32, 41, 0.76);
+  color: var(--text-high);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hero-grid {
+  gap: 1.4rem;
+  align-items: stretch;
+}
+
+.hero-copy {
+  padding: clamp(1.15rem, 2vw, 1.5rem);
+  border: 1px solid rgba(220, 224, 235, 0.16);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at 14% 14%, rgba(143, 210, 215, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(17, 21, 28, 0.84), rgba(19, 24, 31, 0.76));
+  box-shadow: 0 22px 42px rgba(5, 7, 11, 0.32);
+  backdrop-filter: blur(12px) saturate(116%);
+}
+
+.hero h1 {
+  max-width: 12ch;
+}
+
+.hero p,
+.meta-strip p,
+.alumni-role,
+.alumni-current,
+.alumni-source,
+.alumni-noscript {
+  line-height: 1.68;
+}
+
+.meta-strip,
+.controls {
+  border-radius: 24px;
+  padding: 1rem;
+}
+
+.controls.directory-panel {
+  border: 1px solid rgba(220, 224, 235, 0.18);
+  background: linear-gradient(145deg, rgba(30, 34, 43, 0.9), rgba(24, 28, 36, 0.88));
+  box-shadow: 0 18px 34px rgba(6, 7, 11, 0.26);
+}
+
+.search-wrap span,
+.sort-wrap span {
+  color: var(--text-mid);
+}
+
+.search-wrap input,
+.sort-wrap select,
+.alumni-filters button {
+  min-height: 2.8rem;
+}
+
+.search-wrap input::placeholder {
+  color: rgba(166, 172, 187, 0.82);
+}
+
+.alumni-count {
+  margin-top: 0;
+  color: var(--text-low);
+  letter-spacing: 0.01em;
+}
+
+.alumni-grid {
+  gap: 1rem;
+}
+
+.alumni-card {
+  border-radius: 24px;
+  padding: 1.05rem;
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.alumni-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(220, 224, 235, 0.28);
+  box-shadow: 0 20px 38px rgba(6, 7, 11, 0.34);
+}
+
+.alumni-top {
+  min-height: 1.6rem;
+}
+
+.alumni-link {
+  min-height: 2.55rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.site-footer {
+  border-top-color: rgba(220, 224, 235, 0.14);
+  background: rgba(12, 14, 19, 0.96);
+}
+
+@media (max-width: 760px) {
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  .js .site-nav {
+    position: absolute;
+    top: calc(100% + 0.35rem);
+    right: 0.8rem;
+    left: 0.8rem;
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0.8rem;
+    border: 1px solid rgba(220, 224, 235, 0.22);
+    border-radius: 20px;
+    background: rgba(18, 20, 27, 0.96);
+    box-shadow: 0 14px 30px rgba(6, 7, 11, 0.4);
+    overflow: visible;
+    white-space: normal;
+  }
+
+  .js .site-nav.open {
+    display: flex;
+  }
+
+  .no-js .site-nav {
+    width: 100%;
+    gap: 0.76rem;
+    overflow-x: auto;
+    white-space: nowrap;
+    padding-bottom: 0.18rem;
+  }
+
+  .site-nav a {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .hero-copy,
+  .meta-strip,
+  .controls.directory-panel,
+  .alumni-card {
+    border-radius: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}

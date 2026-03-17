@@ -22,7 +22,7 @@
     <link rel="icon" type="image/svg+xml" href="assets/images/brands/favicon.svg?v=20260307a" />
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brands/favicon-32.png?v=20260307a" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/brands/apple-touch-icon.png?v=20260307a" />
-    <link rel="stylesheet" href="assets/styles.css?v=20260227j" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260317a" />
     <link rel="stylesheet" href="assets/envelope-escape.css?v=20260223a" />
   </head>
   <body>
@@ -63,10 +63,14 @@
             <p class="eyebrow">Department of Microbiology | Howard Hughes Medical Institute</p>
             <h1>Deciphering the molecular mechanisms of bacterial growth.</h1>
             <p>
-              The Bernhardt Lab studies how bacteria build and remodel their cell envelopes with the goal of enhancing
+              The Bernhardt lab studies how bacteria build and remodel their cell envelopes with the goal of enhancing
               our fundamental understanding of bacterial growth. The knowledge gained will enable the development of
-              novel antibiotics to combat the global threat of drug-resistant bacterial infections.
+              novel antibiotics to combat the global threat of drug-resistance bacterial infections.
             </p>
+            <div class="hero-actions">
+              <a class="button button-primary" href="#team">Meet the team</a>
+              <a class="button button-ghost" href="#publications">See publications</a>
+            </div>
             <div class="hero-slideshow-controls" role="group" aria-label="Hero background image controls">
               <button class="hero-control" id="hero-prev" type="button" aria-label="Show previous hero image">
                 <span class="hero-control-icon" aria-hidden="true">←</span>
@@ -92,9 +96,9 @@
           <aside class="hero-panel reveal" aria-label="Lab at a glance">
             <h2>Lab at a glance</h2>
             <ul>
-              <li>Focus: mechanistic analysis of bacterial cell surface biogenesis and the mode-of-action of cell wall targeting antibiotics</li>
+              <li>Focus: Mechanistic analysis of bacterial cell surface biogenesis and the mode-of-action of cell wall targeting antibiotics</li>
               <li>
-                Model organisms: <em class="species-name">E. coli</em>, <em class="species-name">C. glutamicum</em>,
+                Model Organisms: <em class="species-name">E. coli</em>, <em class="species-name">C. glutamicum</em>,
                 <em class="species-name">A. baumannii</em>, <em class="species-name">S. aureus</em>,
                 <em class="species-name">K. pneumoniae</em>, <em class="species-name">P. aeruginosa</em>
               </li>
@@ -205,48 +209,33 @@
             <a class="button button-primary team-directory-button" href="people/">Browse full team directory</a>
           </p>
 
-          <div class="directory-controls reveal">
-            <label class="search-wrap" for="people-search">
-              <span>Search team members by name, role, or research interest</span>
-              <input
-                id="people-search"
-                name="people-search"
-                type="search"
-                placeholder="Search team"
-                autocomplete="off"
-                aria-label="Search team members by name, role, or research interest"
-              />
-            </label>
-            <div id="role-filters" class="role-filters" role="tablist" aria-label="Filter team members"></div>
+          <div class="directory-panel reveal">
+            <div class="directory-controls">
+              <label class="search-wrap" for="people-search">
+                <span>Search team members by name, role, or research interest</span>
+                <input
+                  id="people-search"
+                  name="people-search"
+                  type="search"
+                  placeholder="Search team"
+                  autocomplete="off"
+                  aria-label="Search team members by name, role, or research interest"
+                />
+              </label>
+              <div id="role-filters" class="role-filters" role="tablist" aria-label="Filter team members"></div>
+            </div>
+            <p id="people-count" class="people-count" aria-live="polite"></p>
           </div>
 
           <div id="team-fallback" class="team-fallback reveal">
-            <p class="team-fallback-label">Quick team links</p>
-            <ul class="team-fallback-list">
-              <li><a href="thomas-bernhardt/">Thomas Bernhardt</a><span>Professor in the Department of Microbiology at Harvard Medical School and Investigator of the Howard Hughes Medical Institute.</span></li>
-              <li><a href="james-spencer/">James Spencer</a><span>Laboratory Manager, Thomas Bernhardt Lab</span></li>
-              <li><a href="kathy-suarez/">Kathy Suarez</a><span>BBS Graduate Student | NIH F31 Fellow</span></li>
-              <li><a href="betsy-hart/">Betsy Hart</a><span>Postdoctoral Fellow | NIH K99/R00 Fellow | Former HHWF Fellow</span></li>
-              <li><a href="johnathan-kepple/">Johnathan Kepple</a><span>BPH Graduate Student | NIH F31 Fellow</span></li>
-              <li><a href="wanassa-beroual/">Wanassa Beroual</a><span>Postdoctoral Fellow</span></li>
-              <li><a href="anastacia-parks/">Anastacia Parks</a><span>Postdoctoral Fellow | NIH K99/R00 Fellow</span></li>
-              <li><a href="wilaysha-evans/">Wilaysha Evans</a><span>ChemBio Graduate Student</span></li>
-              <li><a href="nilanjan-som/">Nilanjan Som</a><span>Postdoctoral Fellow</span></li>
-              <li><a href="tien-nguyen/">Tien Nguyen</a><span>MCO Graduate Student</span></li>
-              <li><a href="dylan-burgin/">Dylan Burgin</a><span>BBS Graduate Student</span></li>
-              <li><a href="shailab-shrestha/">Shailab Shrestha</a><span>Postdoctoral Fellow | Life Sciences Research Foundation Fellow</span></li>
-              <li><a href="vincent-de-bakker/">Vincent de Bakker</a><span>Postdoctoral Research Fellow | Funded by the Swiss National Science Foundation</span></li>
-              <li><a href="nazgul-sakenova/">Nazgul Sakenova</a><span>Postdoctoral Fellow | HHWF Fellow</span></li>
-              <li><a href="abel-rodriguez/">Abel Rodriguez</a><span>Undergraduate Researcher</span></li>
-              <li><a href="eleanor-rand/">Eleanor Rand</a><span>Postdoctoral Research Fellow | Community Phages Internship Lead Instructor</span></li>
-              <li><a href="ophelia-lee/">Ophelia Lee</a><span>BBS Graduate Student</span></li>
-              <li><a href="james-warner/">James Warner</a><span>Postdoctoral Research Fellow</span></li>
-              <li><a href="taran-bauer/">Taran Bauer</a><span>BBS Graduate Student</span></li>
-            </ul>
+            <p class="team-fallback-label">Team directory</p>
+            <p class="team-fallback-copy">Browse the full directory for current lab members, research interests, and profile pages.</p>
+            <p class="team-fallback-action">
+              <a class="button button-ghost" href="people/">Open the full team directory</a>
+            </p>
           </div>
 
-          <div id="people-grid" class="people-grid" aria-live="polite"></div>
-          <p id="people-count" class="people-count" aria-live="polite"></p>
+          <div id="people-grid" class="people-grid" data-people-view="landing" aria-live="polite"></div>
         </div>
       </section>
 
@@ -308,7 +297,7 @@
                   The featured examples span model organisms and clinically important pathogens, connecting basic
                   envelope biology to broader antimicrobial strategy and resistance-focused research.
                 </p>
-                <p class="video-transcript-meta">Transcript reviewed March 16, 2026.</p>
+                <p class="video-transcript-meta">Transcript reviewed <span data-freshness-key="transcriptReviewed">March 16, 2026</span>.</p>
               </div>
             </details>
             <div class="media-tags reveal" aria-label="Imaging modes">
@@ -409,58 +398,17 @@
             <p class="eyebrow">Featured Alumni</p>
             <h2>Where Bernhardt lab alumni are now.</h2>
           </div>
-          <div id="alumni-grid" class="alumni-grid">
-            <div class="alumni-fallback-grid" aria-label="Featured alumni fallback">
-              <article class="alumni-item">
-                <p class="alumni-role">Former postdoctoral fellow</p>
-                <h3>Catherine Paradis-Bleau</h3>
-                <p class="alumni-current">Assistant Professor, Department of Microbiology, Infectious Diseases and Immunology, Universite de Montreal</p>
-                <p class="alumni-source">Source: Universite de Montreal</p>
-                <div class="alumni-link-row">
-                  <a href="alumni-profiles/catherine-paradis-bleau.html">Open alumni profile</a>
-                  <a href="https://microbiologie.umontreal.ca/recherche/professeurs-chercheurs/catherine-paradis-bleau/" target="_blank" rel="noreferrer">Verified institutional profile</a>
-                </div>
-              </article>
-
-              <article class="alumni-item">
-                <p class="alumni-role">Former postdoctoral fellow</p>
-                <h3>Kate Hummels</h3>
-                <p class="alumni-current">Assistant Professor, Department of Microbiology, University of Georgia</p>
-                <p class="alumni-source">Source: University of Georgia (Hummels Lab)</p>
-                <div class="alumni-link-row">
-                  <a href="alumni-profiles/kate-hummels.html">Open alumni profile</a>
-                  <a href="https://research.franklin.uga.edu/lab/hummels-lab" target="_blank" rel="noreferrer">Verified institutional profile</a>
-                </div>
-              </article>
-
-              <article class="alumni-item">
-                <p class="alumni-role">Former postdoctoral fellow</p>
-                <h3>Thomas Bartlett</h3>
-                <p class="alumni-current">Principal Investigator and Senior Staff Scientist, Wadsworth Center</p>
-                <p class="alumni-source">Source: Wadsworth Center (Bartlett Lab)</p>
-                <div class="alumni-link-row">
-                  <a href="alumni-profiles/thomas-bartlett.html">Open alumni profile</a>
-                  <a href="https://www.wadsworth.org/research/laboratories/bartlett/people" target="_blank" rel="noreferrer">Verified institutional profile</a>
-                </div>
-              </article>
-
-              <article class="alumni-item">
-                <p class="alumni-role">Former postdoctoral fellow</p>
-                <h3>Lindsey Marmont</h3>
-                <p class="alumni-current">Assistant Professor, Department of Biochemistry and Biomedical Sciences, McMaster University</p>
-                <p class="alumni-source">Source: McMaster University</p>
-                <div class="alumni-link-row">
-                  <a href="alumni-profiles/lindsey-marmont.html">Open alumni profile</a>
-                  <a href="https://experts.mcmaster.ca/people/marmontl" target="_blank" rel="noreferrer">Verified institutional profile</a>
-                </div>
-              </article>
-            </div>
-          </div>
+          <div id="alumni-grid" class="alumni-grid" aria-live="polite"></div>
+          <noscript>
+            <p class="publication-footnote">
+              Featured alumni highlights require JavaScript. Browse the <a href="alumni/">full alumni directory</a>.
+            </p>
+          </noscript>
           <p class="alumni-actions reveal">
             <a class="button button-primary" href="alumni/">Browse Full Alumni Directory</a>
           </p>
           <p class="publication-footnote reveal">
-            Roles are based on Bernhardt lab records and public institutional profiles (updated March 16, 2026).
+            Roles are based on Bernhardt lab records and public institutional profiles (updated <span data-freshness-key="rolesUpdated">March 17, 2026</span>).
             <a
               href="mailto:James_Spencer@hms.harvard.edu?subject=Bernhardt%20Lab%20website%20update%2Fremoval%20request&body=Page%20URL%3A%20%0D%0AName%20(or%20entry)%3A%20%0D%0ARequested%20change%20(removal%2Fupdate)%3A%20%0D%0AProposed%20replacement%20text%20(if%20any)%3A%20%0D%0ASupporting%20link%20(if%20any)%3A%20%0D%0A"
               >Request an update or removal</a
@@ -725,7 +673,8 @@
     </dialog>
 
     <script src="assets/alumni-data.js"></script>
-    <script src="assets/main.js?v=20260227j"></script>
+    <script src="assets/site-freshness.js" data-freshness-path="assets/data/site-freshness.json"></script>
+    <script src="assets/main.js?v=20260317a"></script>
     <script src="assets/envelope-escape-config.js?v=20260221af"></script>
     <script src="assets/envelope-escape.js?v=20260226c"></script>
   </body>

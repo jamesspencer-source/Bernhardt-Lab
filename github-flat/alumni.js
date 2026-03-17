@@ -158,6 +158,8 @@ const alumniSearch = document.getElementById("alumni-search");
 const alumniFilters = document.getElementById("alumni-filters");
 const alumniCount = document.getElementById("alumni-count");
 const alumniSort = document.getElementById("alumni-sort");
+const navToggle = document.querySelector(".nav-toggle");
+const nav = document.getElementById("site-nav");
 
 function filteredAlumni() {
   const query = state.query.trim().toLowerCase();
@@ -218,10 +220,11 @@ function renderFilters() {
 function renderAlumniDirectory() {
   if (!alumniRoot || !alumniCount) return;
   const rows = filteredAlumni();
+  const label = rows.length === 1 ? "entry" : "entries";
 
   if (!rows.length) {
-    alumniRoot.innerHTML = `<div class="alumni-empty">No alumni match this search or filter.</div>`;
-    alumniCount.textContent = "0 alumni shown";
+    alumniRoot.innerHTML = `<div class="alumni-empty">No alumni matched that search or filter.</div>`;
+    alumniCount.textContent = "Showing 0 alumni entries";
     return;
   }
 
@@ -247,7 +250,55 @@ function renderAlumniDirectory() {
     )
     .join("");
 
-  alumniCount.textContent = `${rows.length} alumni shown`;
+  alumniCount.textContent = `Showing ${rows.length} alumni ${label}`;
+}
+
+function setupNavigation() {
+  if (!navToggle || !nav) return;
+
+  const closeNav = () => {
+    nav.classList.remove("open");
+    navToggle.setAttribute("aria-expanded", "false");
+  };
+
+  navToggle.addEventListener("click", () => {
+    const open = nav.classList.toggle("open");
+    navToggle.setAttribute("aria-expanded", String(open));
+  });
+
+  nav.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      closeNav();
+    });
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!nav.classList.contains("open")) return;
+    if (event.target === navToggle || navToggle.contains(event.target) || nav.contains(event.target)) return;
+    closeNav();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeNav();
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 760) closeNav();
+  });
+}
+
+function setupScrollMeter() {
+  const update = () => {
+    const root = document.documentElement;
+    const maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1);
+    const progress = Math.min(100, Math.max(0, (window.scrollY / maxScroll) * 100));
+    root.style.setProperty("--scroll-progress", `${progress}%`);
+    document.body.classList.toggle("is-scrolled", window.scrollY > 16);
+  };
+
+  update();
+  window.addEventListener("scroll", update, { passive: true });
+  window.addEventListener("resize", update);
 }
 
 if (alumniSearch) {
@@ -268,3 +319,6 @@ if (alumniRoot && alumniFilters && alumniCount) {
   renderFilters();
   renderAlumniDirectory();
 }
+
+setupNavigation();
+setupScrollMeter();
