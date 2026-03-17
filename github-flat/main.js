@@ -1,34 +1,3 @@
-const researchThemes = [
-  {
-    title: "Cell wall growth and division-site architecture",
-    text:
-      "We define how peptidoglycan synthesis, hydrolysis, and division machinery are coordinated so bacteria can grow and split reliably.",
-    image: "assets/images/research/fluorescence-envelope.jpg",
-    chips: ["Cell wall synthesis", "Division", "Peptidoglycan"]
-  },
-  {
-    title: "Envelope stress and membrane integrity",
-    text:
-      "We investigate how bacteria sense envelope stress and re-balance lipid and cell wall biogenesis to avoid structural failure.",
-    image: "assets/images/research/pseudomonas-tem.jpg",
-    chips: ["Stress signaling", "Outer membrane", "Lipid transport"]
-  },
-  {
-    title: "Species-spanning envelope biology",
-    text:
-      "The lab compares mechanisms across model and clinically important bacteria to identify conserved principles and species-specific vulnerabilities.",
-    image: "assets/images/research/species-envelope.png",
-    chips: ["E. coli", "P. aeruginosa", "S. aureus", "C. glutamicum", "K. pneumoniae", "A. baumannii"]
-  },
-  {
-    title: "Mechanism to medicine",
-    text:
-      "By resolving molecular mechanisms behind envelope assembly, we help illuminate targets and concepts for next-generation antibiotics.",
-    image: "assets/images/research/coryfdaa.png",
-    chips: ["Antibiotic targets", "Resistance", "Translational microbiology"]
-  }
-];
-
 const IS_FLAT_BUILD = !document.querySelector('link[href^="assets/styles.css"]');
 const YOUTUBE_VIDEO_ID = "RxHTaTmPlwQ";
 const YOUTUBE_VIEW_REFRESH_MS = 10 * 60 * 1000;
@@ -101,34 +70,6 @@ const curatedPublications = [
     journal: "Nature Microbiology",
     year: "2022",
     why: "Connects real-time synthesis and hydrolysis dynamics to division geometry and cell-shape control."
-  }
-];
-
-const bigQuestions = [
-  {
-    title: "How is septal cell wall synthesis precisely turned on and off?",
-    detail:
-      "Define the timing logic that couples divisome activation to local peptidoglycan insertion and remodeling."
-  },
-  {
-    title: "How do synthesis and hydrolysis stay balanced during constriction?",
-    detail:
-      "Resolve how envelope-building and -cleaving enzymes avoid both stalled cytokinesis and catastrophic rupture."
-  },
-  {
-    title: "Which stress-response circuits preserve membrane integrity?",
-    detail:
-      "Map the envelope stress pathways that reprogram lipid and wall biogenesis when cells are challenged."
-  },
-  {
-    title: "What principles generalize across diverse bacterial species?",
-    detail:
-      "Compare conserved vs species-specific envelope programs in both model organisms and high-priority pathogens."
-  },
-  {
-    title: "Which vulnerable nodes are most tractable for antibiotic strategy?",
-    detail:
-      "Connect molecular mechanism to experimentally actionable targets that can be exploited therapeutically."
   }
 ];
 
@@ -291,7 +232,7 @@ const rawPeople = [
       "profile" : "/thomas-bernhardt",
       "bio" : "The Bernhardt lab studies molecular mechanisms of bacterial growth and cell wall assembly to inform antibiotic discovery.",
       "role" : "Professor, Department of Microbiology | Howard Hughes Medical Institute",
-      "image" : "thomas-bernhardt-hhmi-2025.png",
+      "image" : "assets/images/team/thomas-bernhardt-hhmi-2025.png",
       "email" : "",
       "name" : "Thomas Bernhardt"
    },
@@ -586,7 +527,7 @@ function classifyGroup(role, name) {
 
 function prettifyRole(role, name) {
   if (name === "Thomas Bernhardt") {
-    return "Principal Investigator | Professor, Department of Microbiology, Harvard Medical School | Howard Hughes Medical Institute";
+    return "Professor in the Department of Microbiology at Harvard Medical School and Investigator of the Howard Hughes Medical Institute.";
   }
   if (name === "James Spencer") {
     return "Laboratory Manager, Thomas Bernhardt Lab";
@@ -596,7 +537,7 @@ function prettifyRole(role, name) {
 
 function landingTileRole(name, group, role) {
   if (name === "Thomas Bernhardt") {
-    return "Professor, Department of Microbiology | Howard Hughes Medical Institute";
+    return "Professor in the Department of Microbiology at Harvard Medical School and Investigator of the Howard Hughes Medical Institute.";
   }
   if (name === "James Spencer") {
     return "Laboratory Manager, Thomas Bernhardt Lab";
@@ -610,7 +551,7 @@ function landingTileRole(name, group, role) {
 
 function normalizeBio(name, bio) {
   if (name === "Thomas Bernhardt") {
-    return "Professor in the Department of Microbiology at Harvard Medical School and affiliated with the Howard Hughes Medical Institute. The lab studies bacterial cell wall assembly, growth, and division to inform antibiotic discovery.";
+    return "";
   }
 
   return cleanText(bio)
@@ -672,8 +613,7 @@ const state = {
   activeGroup: "All",
   query: "",
   galleryIndex: 0,
-  alumniIndex: 0,
-  questionIndex: 0
+  alumniIndex: 0
 };
 
 const navToggle = document.querySelector(".nav-toggle");
@@ -732,10 +672,6 @@ function formatSpeciesAwareText(value = "") {
   return applySpeciesItalicsToEscaped(escapeHtml(value));
 }
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, value));
-}
-
 function resolveImagePath(path) {
   const value = String(path || "").trim();
   if (!value) return "";
@@ -781,207 +717,6 @@ function renderRecentPublications() {
     </ol>
   `;
   observeRevealTargets(recentPublicationsRoot);
-}
-
-function renderResearch() {
-  const root = document.getElementById("research-grid");
-  if (!root) return;
-  root.innerHTML = researchThemes
-    .map(
-      (theme) => `
-      <article class="research-card reveal">
-        <img src="${escapeHtml(resolveImagePath(theme.image))}" alt="${escapeHtml(theme.title)}" loading="lazy" />
-        <div class="research-card-body">
-          <h3>${escapeHtml(theme.title)}</h3>
-          <p>${escapeHtml(theme.text)}</p>
-          <div class="research-chip-row">${theme.chips.map((chip) => `<span>${formatSpeciesAwareText(chip)}</span>`).join("")}</div>
-        </div>
-      </article>
-    `
-    )
-    .join("");
-  observeRevealTargets(root);
-}
-
-function renderBigQuestions() {
-  const root = document.getElementById("question-grid");
-  if (!root || !bigQuestions.length) return;
-
-  root.innerHTML = `
-    <article class="question-spotlight" aria-live="polite">
-      <p class="question-kicker" id="question-kicker">Question 01</p>
-      <h4 id="question-title"></h4>
-      <p id="question-detail"></p>
-      <div class="question-progress" role="presentation">
-        <span id="question-progress-fill"></span>
-      </div>
-      <div class="question-meta">
-        <span id="question-counter"></span>
-        <span>Active conceptual thread</span>
-      </div>
-    </article>
-    <div class="question-rail" role="listbox" aria-label="Research question selector">
-      ${bigQuestions
-        .map(
-          (item, index) => `
-        <button class="question-step${index === state.questionIndex ? " is-active" : ""}" data-index="${index}" type="button" role="option" aria-selected="${index === state.questionIndex ? "true" : "false"}" aria-label="Show question ${index + 1}">
-          <span class="question-step-index">Q${index + 1}</span>
-          <span class="question-step-title">${escapeHtml(item.title)}</span>
-        </button>
-      `
-        )
-        .join("")}
-    </div>
-  `;
-
-  const prevButton = document.getElementById("question-prev");
-  const nextButton = document.getElementById("question-next");
-  const toggleButton = document.getElementById("question-toggle");
-  const kicker = document.getElementById("question-kicker");
-  const title = document.getElementById("question-title");
-  const detail = document.getElementById("question-detail");
-  const counter = document.getElementById("question-counter");
-  const progressFill = document.getElementById("question-progress-fill");
-  const questionSteps = root.querySelectorAll(".question-step");
-  const rotationMs = 7400;
-  let autoRotate = !prefersReducedMotion;
-  let progressRaf = null;
-  let progressRatio = 0;
-  let phaseStart = 0;
-
-  const applyProgress = () => {
-    if (!progressFill) return;
-    progressFill.style.width = `${(progressRatio * 100).toFixed(1)}%`;
-  };
-
-  const setQuestion = (nextIndex) => {
-    const total = bigQuestions.length;
-    state.questionIndex = (nextIndex + total) % total;
-    const active = bigQuestions[state.questionIndex];
-
-    if (kicker) kicker.textContent = `Question ${String(state.questionIndex + 1).padStart(2, "0")}`;
-    if (title) title.textContent = active.title;
-    if (detail) detail.textContent = active.detail;
-    if (counter) counter.textContent = `${state.questionIndex + 1} / ${bigQuestions.length}`;
-
-    questionSteps.forEach((step, index) => {
-      const isActive = index === state.questionIndex;
-      step.classList.toggle("is-active", isActive);
-      step.setAttribute("aria-selected", String(isActive));
-    });
-  };
-
-  const stopRotation = () => {
-    if (progressRaf !== null) {
-      cancelAnimationFrame(progressRaf);
-      progressRaf = null;
-    }
-  };
-
-  const tickRotation = (now) => {
-    if (!autoRotate || prefersReducedMotion || bigQuestions.length < 2) {
-      progressRaf = null;
-      return;
-    }
-    progressRatio = clamp((now - phaseStart) / rotationMs, 0, 1);
-    applyProgress();
-    if (progressRatio >= 1) {
-      setQuestion(state.questionIndex + 1);
-      progressRatio = 0;
-      phaseStart = now;
-      applyProgress();
-    }
-    progressRaf = requestAnimationFrame(tickRotation);
-  };
-
-  const startRotation = (resume = false) => {
-    stopRotation();
-    if (!autoRotate || prefersReducedMotion || bigQuestions.length < 2) return;
-    const now = performance.now();
-    phaseStart = resume ? now - progressRatio * rotationMs : now;
-    progressRaf = requestAnimationFrame(tickRotation);
-  };
-
-  const updateToggle = () => {
-    if (!toggleButton) return;
-    if (prefersReducedMotion) {
-      toggleButton.disabled = true;
-      toggleButton.setAttribute("aria-pressed", "true");
-      toggleButton.textContent = "Motion off";
-      toggleButton.setAttribute(
-        "aria-label",
-        "Question rotation is off because reduced-motion is enabled in your system settings"
-      );
-      progressRatio = 1;
-      applyProgress();
-      return;
-    }
-    const paused = !autoRotate;
-    toggleButton.textContent = paused ? "Resume" : "Pause";
-    toggleButton.setAttribute("aria-pressed", String(paused));
-    toggleButton.setAttribute("aria-label", paused ? "Resume question rotation" : "Pause question rotation");
-  };
-
-  if (prevButton) {
-    prevButton.addEventListener("click", () => {
-      setQuestion(state.questionIndex - 1);
-      progressRatio = 0;
-      applyProgress();
-      if (autoRotate) startRotation(false);
-    });
-  }
-
-  if (nextButton) {
-    nextButton.addEventListener("click", () => {
-      setQuestion(state.questionIndex + 1);
-      progressRatio = 0;
-      applyProgress();
-      if (autoRotate) startRotation(false);
-    });
-  }
-
-  if (toggleButton && !prefersReducedMotion) {
-    toggleButton.addEventListener("click", () => {
-      autoRotate = !autoRotate;
-      updateToggle();
-      if (autoRotate) {
-        startRotation(true);
-      } else {
-        stopRotation();
-      }
-    });
-  }
-
-  questionSteps.forEach((step) => {
-    const index = Number(step.dataset.index || 0);
-    const activate = () => {
-      setQuestion(index);
-      progressRatio = 0;
-      applyProgress();
-      if (autoRotate) startRotation(false);
-    };
-    step.addEventListener("click", activate);
-    step.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        activate();
-      }
-    });
-  });
-
-  root.addEventListener("mouseenter", stopRotation);
-  root.addEventListener("mouseleave", () => startRotation(true));
-  root.addEventListener("focusin", stopRotation);
-  root.addEventListener("focusout", (event) => {
-    if (root.contains(event.relatedTarget)) return;
-    startRotation(true);
-  });
-
-  progressRatio = 0;
-  applyProgress();
-  updateToggle();
-  setQuestion(state.questionIndex);
-  startRotation(false);
 }
 
 function renderRoleFilters() {
@@ -1043,7 +778,7 @@ function renderPeople() {
         <div class="person-body">
           <p class="person-role">${escapeHtml(person.tileRole || person.role)}</p>
           <h3>${escapeHtml(person.name)}</h3>
-          <p class="person-bio">${formatSpeciesAwareText(person.bio)}</p>
+          ${person.bio ? `<p class="person-bio">${formatSpeciesAwareText(person.bio)}</p>` : ""}
           <div class="person-links">
             ${person.profile ? `<a class="person-link" href="${escapeHtml(person.profile)}">Profile page</a>` : ""}
           </div>
@@ -1837,8 +1572,6 @@ function setupYouTubeViewCounter() {
 
 async function initializePage() {
   applyInitialScrollPosition();
-  renderBigQuestions();
-  renderResearch();
   renderRecentPublications();
   renderRoleFilters();
   renderPeople();
