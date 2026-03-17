@@ -1,6 +1,13 @@
 const rawAlumni =
 [
    {
+      "name": "Laurent Dubois",
+      "role_in_lab": "graduate student",
+      "current_role": "Postdoctoral researcher, Massachusetts General Hospital",
+      "source": "Bernhardt lab records",
+      "lab_dates": "Mar 2018 – Dec 2025"
+   },
+   {
       "name": "Tanner DeHart",
       "role_in_lab": "graduate student",
       "current_role": "Planning to pursue a career in patent law",

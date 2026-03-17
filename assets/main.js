@@ -264,14 +264,6 @@ const rawPeople = [
       "name" : "Betsy Hart"
    },
    {
-      "email" : "laurent_dubois{at}g.harvard.edu",
-      "name" : "Laurent Dubois",
-      "profile" : "/laurent-dubois",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1598445312589-9VD4C326R73FUVCBHD2G/laurent.jpg",
-      "role" : "BBS Graduate Student",
-      "bio" : "The general goal of my research is to understand the mechanisms that regulate cell division and cell wall remodeling in E. coli."
-   },
-   {
       "name" : "Johnathan Kepple",
       "email" : "johnathankepple{at}g.harvard.edu",
       "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1630526847138-E1T99QXT1Q4VOQUWKO0I/IMG_0508.jpg",
@@ -399,7 +391,6 @@ const focusByName = {
   "James Spencer": { x: 0.519332627118644, y: 0.3333333333333333 },
   "Kathy Suarez": { x: 0.564329954954955, y: 0.46258503401360546 },
   "Betsy Hart": { x: 0.5192849099099099, y: 0.4557823129251701 },
-  "Laurent Dubois": { x: 0.5069444444444444, y: 0.4013605442176871 },
   "Johnathan Kepple": { x: 0.5515463917525774, y: 0.41496598639455784 },
   "Wanassa Beroual": { x: 0.4559487951807229, y: 0.41496598639455784 },
   "Anastacia Parks": { x: 0.536697247706422, y: 0.54421768707483 },
