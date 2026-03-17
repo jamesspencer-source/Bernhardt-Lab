@@ -46,7 +46,7 @@ OVERRIDES_PATH = ROOT / "scripts" / "research_motion_overrides.json"
 
 USER_AGENT = (
     "BernhardtLabResearchInMotionBot/2.0 "
-    "(https://github.com/jamesspencer-source/bernhardt-lab-website-demo)"
+    "(https://github.com/jamesspencer-source/Bernhardt-Lab)"
 )
 
 BLOCKED_ARTICLE_HOST_MARKERS = (
