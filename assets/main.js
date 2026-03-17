@@ -1,12 +1,15 @@
-const IS_FLAT_BUILD = !document.querySelector('link[href^="assets/styles.css"]');
+const MAIN_SCRIPT = document.currentScript;
+const MAIN_SCRIPT_SRC = MAIN_SCRIPT?.getAttribute("src") || "";
+const IS_FLAT_BUILD = !/assets\/main\.js(?:\?|$)/.test(MAIN_SCRIPT_SRC);
+const SITE_ROOT_PREFIX = !IS_FLAT_BUILD && MAIN_SCRIPT_SRC.startsWith("../assets/") ? "../" : "";
 const YOUTUBE_VIDEO_ID = "RxHTaTmPlwQ";
 const YOUTUBE_VIEW_REFRESH_MS = 10 * 60 * 1000;
 const YOUTUBE_VIEW_STATS_PATH = IS_FLAT_BUILD
   ? "youtube-video-stats.json"
-  : "assets/data/youtube-video-stats.json";
+  : `${SITE_ROOT_PREFIX}assets/data/youtube-video-stats.json`;
 const PUBLICATIONS_FEED_PATH = IS_FLAT_BUILD
   ? "recent-publications.json"
-  : "assets/data/recent-publications.json";
+  : `${SITE_ROOT_PREFIX}assets/data/recent-publications.json`;
 const curatedPublications = [
   {
     pmid: "39992125",
@@ -416,6 +419,19 @@ function cleanText(value = "") {
     .trim();
 }
 
+function resolveSitePath(path = "") {
+  const value = String(path || "").trim();
+  if (!value) return "";
+  if (/^(https?:)?\/\//i.test(value) || value.startsWith("data:") || value.startsWith("#")) return value;
+
+  const normalized = value.replace(/^\.?\//, "").replace(/^\/+/, "");
+  if (IS_FLAT_BUILD) {
+    const segments = normalized.split("/").filter(Boolean);
+    return segments[segments.length - 1] || normalized;
+  }
+  return `${SITE_ROOT_PREFIX}${normalized}`;
+}
+
 function toAbsoluteProfile(url = "") {
   return cleanText(url || "");
 }
@@ -438,7 +454,7 @@ function profileSlug(url = "", name = "") {
 
 function alumniProfilePath(slug) {
   if (IS_FLAT_BUILD) return `alumni-${slug}.html`;
-  return `alumni-profiles/${slug}.html`;
+  return `${SITE_ROOT_PREFIX}alumni-profiles/${slug}.html`;
 }
 
 function isFeaturedAlumniRoleEligible(role = "") {
@@ -569,7 +585,7 @@ const people = rawPeople.map((person) => {
     tileRole: landingTileRole(name, group, role),
     bio: normalizeBio(name, person.bio || ""),
     email: cleanText(person.email || "").replace(/\{at\}/gi, "@"),
-    profile: IS_FLAT_BUILD ? `./${slug}.html` : `./${slug}/`,
+    profile: IS_FLAT_BUILD ? `./${slug}.html` : `${SITE_ROOT_PREFIX}${slug}/`,
     profileSource: sourceProfile,
     slug,
     image: cleanText(person.image || ""),
@@ -667,12 +683,7 @@ function formatSpeciesAwareText(value = "") {
 }
 
 function resolveImagePath(path) {
-  const value = String(path || "").trim();
-  if (!value) return "";
-  if (/^(https?:)?\/\//i.test(value) || value.startsWith("data:")) return value;
-  if (!IS_FLAT_BUILD) return value;
-  const segments = value.split("/").filter(Boolean);
-  return segments[segments.length - 1] || value;
+  return resolveSitePath(path);
 }
 
 function openLightbox(imageUrl, title, displayFilter = "none") {
@@ -798,39 +809,41 @@ function renderPeople() {
     teamFallback.setAttribute("hidden", "");
   }
   const matches = filteredPeople();
+  const peopleView = peopleGrid.dataset.peopleView === "directory" ? "directory" : "landing";
+  const memberLabel = matches.length === 1 ? "member" : "members";
 
   if (matches.length === 0) {
-    peopleGrid.innerHTML = `<div class="people-empty">No matches found. Try a shorter search phrase or choose a different group.</div>`;
-    peopleCount.textContent = "0 people shown";
+    peopleGrid.innerHTML = `<div class="people-empty">No current lab members matched that search. Try a shorter phrase or choose a different group.</div>`;
+    peopleCount.textContent = "Showing 0 current lab members";
     return;
   }
 
   peopleGrid.innerHTML = matches
     .map(
-      (person, index) => `
-      <article class="person-card" style="--index:${index};">
+      (person, index) => {
+        const roleLabel = peopleView === "directory" ? person.role : person.tileRole || person.role;
+        const bioClass = peopleView === "directory" ? "person-bio person-bio--directory" : "person-bio person-bio--compact";
+        const profileLabel = peopleView === "directory" ? "View full profile" : "View profile";
+        return `
+      <article class="person-card person-card--${peopleView}" style="--index:${index};">
         <div class="person-photo-wrap">
-          <img class="person-photo" src="${escapeHtml(person.image)}" alt="${escapeHtml(person.name)}" style="--focus-x:${escapeHtml(person.focusX)};--focus-y:${escapeHtml(person.focusY)};" loading="lazy" />
+          <img class="person-photo" src="${escapeHtml(resolveImagePath(person.image))}" alt="${escapeHtml(person.name)}" style="--focus-x:${escapeHtml(person.focusX)};--focus-y:${escapeHtml(person.focusY)};" loading="lazy" />
         </div>
         <div class="person-body">
-          <p class="person-role">${escapeHtml(person.tileRole || person.role)}</p>
+          <p class="person-role">${escapeHtml(roleLabel)}</p>
           <h3>${escapeHtml(person.name)}</h3>
-          ${person.bio ? `<p class="person-bio">${formatSpeciesAwareText(person.bio)}</p>` : ""}
+          ${person.bio ? `<p class="${bioClass}">${formatSpeciesAwareText(person.bio)}</p>` : ""}
           <div class="person-links">
-            ${person.profile ? `<a class="person-link" href="${escapeHtml(person.profile)}">Profile page</a>` : ""}
+            ${person.profile ? `<a class="person-link" href="${escapeHtml(person.profile)}">${profileLabel}</a>` : ""}
           </div>
-          ${
-            person.email
-              ? `<p class="person-email">${escapeHtml(person.email.replace(/\{at\}/gi, "@"))}</p>`
-              : ""
-          }
         </div>
       </article>
-    `
+    `;
+      }
     )
     .join("");
 
-  peopleCount.textContent = `${matches.length} people shown`;
+  peopleCount.textContent = `Showing ${matches.length} current lab ${memberLabel}`;
 }
 
 function renderGallery() {
@@ -1158,6 +1171,74 @@ function setupNavigation() {
   window.addEventListener("resize", () => {
     if (window.innerWidth > 760) closeNav();
   });
+}
+
+function setupSectionNavigationHighlight() {
+  const sectionLinks = Array.from(document.querySelectorAll('.site-nav a[href^="#"]')).filter((link) => {
+    const href = link.getAttribute("href") || "";
+    return href.length > 1;
+  });
+  if (!sectionLinks.length) return;
+
+  const linkById = new Map();
+  const sections = sectionLinks
+    .map((link) => {
+      const id = decodeURIComponent((link.getAttribute("href") || "").slice(1));
+      const section = document.getElementById(id);
+      if (section) linkById.set(id, link);
+      return section;
+    })
+    .filter(Boolean);
+
+  if (!sections.length) return;
+
+  const setActiveLink = (id) => {
+    sectionLinks.forEach((link) => link.removeAttribute("aria-current"));
+    const activeLink = linkById.get(id);
+    if (activeLink) activeLink.setAttribute("aria-current", "location");
+  };
+
+  const updateActiveLink = () => {
+    const headerHeight = document.querySelector(".site-header")?.getBoundingClientRect().height || 0;
+    const checkpoint = headerHeight + Math.min(window.innerHeight * 0.28, 220);
+    let activeId = sections[0].id;
+
+    sections.forEach((section) => {
+      if (section.getBoundingClientRect().top <= checkpoint) {
+        activeId = section.id;
+      }
+    });
+
+    setActiveLink(activeId);
+  };
+
+  sectionLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      const id = decodeURIComponent((link.getAttribute("href") || "").slice(1));
+      if (id) setActiveLink(id);
+    });
+  });
+
+  if (typeof IntersectionObserver === "function") {
+    const headerHeight = document.querySelector(".site-header")?.offsetHeight || 0;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          updateActiveLink();
+        }
+      },
+      {
+        rootMargin: `-${headerHeight + 12}px 0px -55% 0px`,
+        threshold: [0.16, 0.4, 0.72]
+      }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+  }
+
+  window.addEventListener("scroll", updateActiveLink, { passive: true });
+  window.addEventListener("resize", updateActiveLink);
+  updateActiveLink();
 }
 
 function setupSearch() {
@@ -1616,6 +1697,7 @@ async function initializePage() {
   renderAlumni();
   setupNavigation();
   setupAnchorNavigation();
+  setupSectionNavigationHighlight();
   setupSearch();
   setupRevealObserver();
   setupScrollDynamics();
