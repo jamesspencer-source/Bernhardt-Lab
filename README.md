@@ -37,6 +37,7 @@ The game supports a global leaderboard that persists across all visitors and fut
    - `https://<your-worker-domain>/leaderboard`
 
 If this endpoint is empty, the game falls back to browser-local leaderboard mode.
+When the endpoint is live, players also receive their overall placement after each ranked run.
 
 ## Where to edit content
 

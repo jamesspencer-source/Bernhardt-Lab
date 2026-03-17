@@ -11,6 +11,7 @@ This adds a shared Top 25 leaderboard for `Envelope Escape` across all visitors.
 ## What this API provides
 - `GET /leaderboard` returns the global top 25.
 - `POST /leaderboard` submits `{ "name": "...", "score": 123, "species": "ecoli", "playedAt": 1739999999999 }`.
+- `GET` and `POST` responses now also include `totalEntries`, and `POST` returns the submitted run's `rank`.
 - Name submissions are moderated (disallowed names are rejected).
 
 ## Deploy steps
@@ -56,3 +57,4 @@ window.ENVELOPE_LEADERBOARD_URL = "https://<your-worker-subdomain>/leaderboard";
 3. Deploy/publish your site.
 
 When the URL is set, the game leaderboard becomes global.
+Players will also see their latest overall placement after each ranked run.
