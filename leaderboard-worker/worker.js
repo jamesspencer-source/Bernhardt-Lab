@@ -250,15 +250,22 @@ async function insertScore(env, name, score, species, playedAt) {
   }
 
   if (Math.random() < 0.1) {
-    await env.DB.prepare(
-      `DELETE FROM leaderboard_scores
-       WHERE id NOT IN (
-         SELECT id
-         FROM leaderboard_scores
-         ORDER BY score DESC, created_at ASC
-         LIMIT 500
-       )`
-    ).run();
+    const cleanupSql = caps.hasPlayedAt
+      ? `DELETE FROM leaderboard_scores
+         WHERE id NOT IN (
+           SELECT id
+           FROM leaderboard_scores
+           ORDER BY score DESC, played_at ASC, id ASC
+           LIMIT 500
+         )`
+      : `DELETE FROM leaderboard_scores
+         WHERE id NOT IN (
+           SELECT id
+           FROM leaderboard_scores
+           ORDER BY score DESC, created_at ASC, id ASC
+           LIMIT 500
+         )`;
+    await env.DB.prepare(cleanupSql).run();
   }
 
   return {
