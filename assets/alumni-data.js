@@ -1,6 +1,13 @@
 const rawAlumni =
 [
    {
+      "name": "Tanner DeHart",
+      "role_in_lab": "graduate student",
+      "current_role": "Planning to pursue a career in patent law",
+      "source": "Bernhardt lab records",
+      "lab_dates": "Aug 2022 – Mar 2026"
+   },
+   {
       "current_role": "",
       "name": "Alison Forchoh",
       "role_in_lab": "undergraduate research assistant",
