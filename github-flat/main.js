@@ -296,14 +296,6 @@ const rawPeople = [
       "name" : "Anastacia Parks"
    },
    {
-      "profile" : "/tanner-dehart",
-      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1661806098784-ZTUDXNCLO016KTO190CT/Screen+Shot+2022-08-29+at+4.32.58+PM.png",
-      "bio" : "I am interested in the biosynthesis of membrane lipids as well as characterizing proteases potentially involved in the regulation of E. coli cell wall synthesis.",
-      "role" : "BBS Graduate Student",
-      "name" : "Tanner DeHart",
-      "email" : "tdehart{at}g.harvard.edu"
-   },
-   {
       "name" : "Wilaysha Evans",
       "email" : "wilayshaevans{at}g.harvard.edu",
       "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1663796653002-8C0DEY29J50676GSPCWO/Screen+Shot+2022-09-21+at+12.49.48+PM.png",
@@ -411,7 +403,6 @@ const focusByName = {
   "Johnathan Kepple": { x: 0.5515463917525774, y: 0.41496598639455784 },
   "Wanassa Beroual": { x: 0.4559487951807229, y: 0.41496598639455784 },
   "Anastacia Parks": { x: 0.536697247706422, y: 0.54421768707483 },
-  "Tanner DeHart": { x: 0.5, y: 0.5 },
   "Wilaysha Evans": { x: 0.5271899606299213, y: 0.5374149659863946 },
   "Nilanjan Som": { x: 0.7153409090909091, y: 0.4217687074829932 },
   "Tien Nguyen": { x: 0.5511363636363636, y: 0.4965986394557823 },
