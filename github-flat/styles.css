@@ -3296,6 +3296,79 @@ body.is-scrolled .site-header {
   max-width: 18ch;
 }
 
+.alumni-controls {
+  margin-top: 1rem;
+  padding: 0.72rem 0.82rem;
+  border: 1px solid rgba(220, 224, 235, 0.16);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(17, 21, 29, 0.92), rgba(22, 27, 37, 0.88));
+}
+
+.alumni-nav-wrap {
+  gap: 0.5rem;
+}
+
+.alumni-nav {
+  min-width: 5.8rem;
+  padding-inline: 0.98rem;
+  border-color: rgba(220, 224, 235, 0.26);
+  background: linear-gradient(145deg, rgba(244, 247, 252, 0.14), rgba(225, 231, 240, 0.08));
+  color: #f7fbff;
+  font-size: 0.83rem;
+  letter-spacing: 0.01em;
+  box-shadow: 0 8px 16px rgba(6, 7, 11, 0.2);
+}
+
+.alumni-nav:hover,
+.alumni-nav:focus-visible {
+  border-color: rgba(255, 214, 221, 0.58);
+  background: linear-gradient(145deg, rgba(177, 42, 61, 0.34), rgba(139, 30, 48, 0.28));
+  color: #ffffff;
+  box-shadow: 0 12px 22px rgba(6, 7, 11, 0.28);
+}
+
+.alumni-nav[aria-pressed="true"] {
+  border-color: rgba(143, 210, 215, 0.48);
+  background: linear-gradient(145deg, rgba(14, 117, 125, 0.34), rgba(59, 143, 149, 0.22));
+  color: #ffffff;
+}
+
+.alumni-dots {
+  gap: 0.48rem;
+  padding: 0.34rem 0.42rem;
+  border: 1px solid rgba(220, 224, 235, 0.14);
+  border-radius: 999px;
+  background: rgba(10, 14, 20, 0.46);
+}
+
+.alumni-dot {
+  width: 14px;
+  height: 14px;
+  border: 1px solid rgba(220, 224, 235, 0.28);
+  background: rgba(214, 220, 231, 0.28);
+  box-shadow: inset 0 0 0 1px rgba(8, 10, 14, 0.18);
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.alumni-dot:hover,
+.alumni-dot:focus-visible {
+  transform: scale(1.08);
+  border-color: rgba(255, 255, 255, 0.74);
+  background: rgba(241, 245, 252, 0.54);
+}
+
+.alumni-dot.active {
+  background: linear-gradient(135deg, #b12a3d 0%, #e07b8c 100%);
+  border-color: rgba(255, 236, 240, 0.78);
+  box-shadow:
+    0 0 0 3px rgba(177, 42, 61, 0.2),
+    0 6px 12px rgba(6, 7, 11, 0.24);
+}
+
 .alumni-link-row a {
   min-height: 2.55rem;
   display: inline-flex;
@@ -3403,6 +3476,16 @@ body.is-scrolled .site-header {
 
   .hero-panel ul {
     font-size: 0.76rem;
+  }
+
+  .alumni-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .alumni-dots {
+    width: 100%;
+    justify-content: center;
   }
 
   .publication-archive-item {
