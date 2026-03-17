@@ -4,6 +4,9 @@ const YOUTUBE_VIEW_REFRESH_MS = 10 * 60 * 1000;
 const YOUTUBE_VIEW_STATS_PATH = IS_FLAT_BUILD
   ? "youtube-video-stats.json"
   : "assets/data/youtube-video-stats.json";
+const PUBLICATIONS_FEED_PATH = IS_FLAT_BUILD
+  ? "recent-publications.json"
+  : "assets/data/recent-publications.json";
 const curatedPublications = [
   {
     pmid: "39992125",
@@ -252,13 +255,21 @@ const rawPeople = [
       "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1598381898156-68II3HUTKXY1OF4U3R8C/kathy.jpg",
       "profile" : "/kathy-suarez"
    },
-   {
+  {
       "profile" : "/betsy-hart",
       "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1598383045751-ABC6TUB51HNGRQ2CUAJZ/betsy.jpg",
       "role" : "Postdoctoral Fellow | NIH K99/R00 Fellow | Former HHWF Fellow",
       "bio" : "I am interested in cell envelope biogenesis in Corynebacterium glutamicum.",
       "email" : "Elizabeth_Hart{at}hms.harvard.edu",
       "name" : "Betsy Hart"
+   },
+   {
+      "email" : "laurent_dubois{at}g.harvard.edu",
+      "name" : "Laurent Dubois",
+      "profile" : "/laurent-dubois",
+      "image" : "https://images.squarespace-cdn.com/content/v1/569e68a1e0327c41cdab78de/1598445312589-9VD4C326R73FUVCBHD2G/laurent.jpg",
+      "role" : "BBS Graduate Student",
+      "bio" : "The general goal of my research is to understand the mechanisms that regulate cell division and cell wall remodeling in E. coli."
    },
    {
       "name" : "Johnathan Kepple",
@@ -396,6 +407,7 @@ const focusByName = {
   "James Spencer": { x: 0.519332627118644, y: 0.3333333333333333 },
   "Kathy Suarez": { x: 0.564329954954955, y: 0.46258503401360546 },
   "Betsy Hart": { x: 0.5192849099099099, y: 0.4557823129251701 },
+  "Laurent Dubois": { x: 0.5069444444444444, y: 0.4013605442176871 },
   "Johnathan Kepple": { x: 0.5515463917525774, y: 0.41496598639455784 },
   "Wanassa Beroual": { x: 0.4559487951807229, y: 0.41496598639455784 },
   "Anastacia Parks": { x: 0.536697247706422, y: 0.54421768707483 },
@@ -694,21 +706,64 @@ function openLightbox(imageUrl, title, displayFilter = "none") {
   lightbox.showModal();
 }
 
-function renderRecentPublications() {
+const publicationFallbackWhy = curatedPublications.reduce((acc, item) => {
+  const why = cleanText(item.why || "");
+  if (!why) return acc;
+  if (item.doi) acc[`doi:${cleanText(item.doi).toLowerCase()}`] = why;
+  if (item.pmid) acc[`pmid:${cleanText(item.pmid)}`] = why;
+  return acc;
+}, {});
+
+const journalLabelMap = {
+  "current biology : cb": "Current Biology",
+  "current opinion in microbiology": "Current Opinion in Microbiology",
+  "nature microbiology": "Nature Microbiology",
+  "plos genetics": "PLOS Genetics"
+};
+
+function normalizeJournalLabel(value = "") {
+  const text = cleanText(value);
+  if (!text) return "";
+  return journalLabelMap[text.toLowerCase()] || text;
+}
+
+function publicationLink(item = {}) {
+  const doi = cleanText(item.doi || "");
+  if (doi) return `https://doi.org/${doi}`;
+  const pmid = cleanText(item.pmid || "");
+  return pmid ? `https://pubmed.ncbi.nlm.nih.gov/${pmid}/` : "#";
+}
+
+function publicationWhy(item = {}) {
+  const doi = cleanText(item.doi || "").toLowerCase();
+  const pmid = cleanText(item.pmid || "");
+  return publicationFallbackWhy[`doi:${doi}`] || publicationFallbackWhy[`pmid:${pmid}`] || cleanText(item.authorsShort || "");
+}
+
+async function loadRecentPublications() {
+  const payload = await requestJson(`${PUBLICATIONS_FEED_PATH}?t=${Date.now()}`);
+  if (Array.isArray(payload?.items) && payload.items.length) {
+    return payload.items;
+  }
+  return curatedPublications;
+}
+
+async function renderRecentPublications() {
   if (!recentPublicationsRoot) return;
+  const publications = await loadRecentPublications();
 
   recentPublicationsRoot.innerHTML = `
     <ol class="publication-archive-list reveal">
-      ${curatedPublications
+      ${publications
         .map(
           (item) => `
         <li class="publication-archive-item">
-          <a class="publication-archive-title" href="${escapeHtml(item.doi ? `https://doi.org/${item.doi}` : `https://pubmed.ncbi.nlm.nih.gov/${item.pmid}/`)}" target="_blank" rel="noreferrer">
+          <a class="publication-archive-title" href="${escapeHtml(publicationLink(item))}" target="_blank" rel="noreferrer">
             ${formatSpeciesAwareText(item.title)}
           </a>
-          <p class="publication-archive-why">${formatSpeciesAwareText(item.why)}</p>
+          <p class="publication-archive-why">${formatSpeciesAwareText(publicationWhy(item))}</p>
           <p class="publication-archive-citation">
-            ${formatSpeciesAwareText(item.journal)}${item.year ? ` (${escapeHtml(item.year)})` : ""}
+            ${formatSpeciesAwareText(normalizeJournalLabel(item.journal))}${item.year ? ` (${escapeHtml(item.year)})` : ""}
           </p>
         </li>
       `
@@ -1572,7 +1627,7 @@ function setupYouTubeViewCounter() {
 
 async function initializePage() {
   applyInitialScrollPosition();
-  renderRecentPublications();
+  await renderRecentPublications();
   renderRoleFilters();
   renderPeople();
   renderGallery();
