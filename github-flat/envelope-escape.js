@@ -1045,6 +1045,7 @@
   }
 
   async function addLeaderboardEntry(name, score) {
+    const previousBest = Math.floor(state.best);
     const playedAt = Date.now();
     const entry = {
       name: sanitizeName(name) || "Anonymous",
@@ -1074,7 +1075,7 @@
           scope: "global",
           rank: Math.max(0, Math.floor(Number(payload?.rank) || 0)) || null,
           totalEntries: Math.max(state.leaderboard.length, Math.floor(Number(payload?.totalEntries) || 0)),
-          isBest: entry.score >= state.best
+          isBest: entry.score > previousBest
         };
       } catch (error) {
         if (error && error.code === "invalid_name") {
@@ -1098,7 +1099,7 @@
           scope: "fallback",
           rank: computeLocalRank(state.leaderboard, entry),
           totalEntries: state.leaderboard.length,
-          isBest: entry.score >= state.best
+          isBest: entry.score > previousBest
         };
       }
     } else {
@@ -1117,7 +1118,7 @@
         scope: "local",
         rank: computeLocalRank(state.leaderboard, entry),
         totalEntries: state.leaderboard.length,
-        isBest: entry.score >= state.best
+        isBest: entry.score > previousBest
       };
     }
 
@@ -1521,7 +1522,7 @@
 
   function computeLocalRank(entries, candidate) {
     const normalizedCandidate = normalizeLeaderboardEntry(candidate);
-    const ranked = normalizeLeaderboardEntries([normalizedCandidate, ...(Array.isArray(entries) ? entries : [])]);
+    const ranked = normalizeLeaderboardEntries(Array.isArray(entries) ? entries : []);
     const index = ranked.findIndex(
       (entry) =>
         entry.name === normalizedCandidate.name &&
