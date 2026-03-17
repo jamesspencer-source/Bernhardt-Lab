@@ -424,6 +424,23 @@ p {
   color: var(--muted);
 }
 
+.no-js .controls.directory-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.no-js .controls .search-wrap,
+.no-js .controls #alumni-filters,
+.no-js .controls .sort-wrap {
+  display: none;
+}
+
+.no-js .controls .alumni-count {
+  margin-bottom: 0.9rem;
+}
+
 .alumni-empty {
   border: 1px dashed var(--line);
   border-radius: var(--radius-md);
