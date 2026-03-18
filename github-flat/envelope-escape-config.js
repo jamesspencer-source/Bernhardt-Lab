@@ -6,7 +6,7 @@
 // Set `hardcodedEndpoint` to your deployed Cloudflare Worker public route to
 // enable one persistent leaderboard for all site visitors.
 (function configureEnvelopeLeaderboard() {
-  const hardcodedEndpoint = "";
+  const hardcodedEndpoint = "https://bernhardt-lab-leaderboard.jmspencer1996.workers.dev/leaderboard";
   const META_NAME = "bernhardt-leaderboard-url";
 
   const cleanUrl = (value) => {
