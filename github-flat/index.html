@@ -23,7 +23,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png?v=20260307a" />
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=20260307a" />
     <link rel="stylesheet" href="styles.css?v=20260317d" />
-    <link rel="stylesheet" href="envelope-escape.css?v=20260317e" />
+    <link rel="stylesheet" href="envelope-escape.css?v=20260317f" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -564,7 +564,7 @@
             <h3 id="envelope-overlay-title">Envelope Escape</h3>
             <p id="envelope-overlay-copy">
               Steer a model bacterium through phage blooms, antibiotic fronts, and cell-wall stress. Assemble the
-              right envelope modules to stay intact long enough to climb the global board.
+              right envelope modules, choose sector adaptations, and stay intact long enough to climb the global board.
             </p>
             <div class="envelope-model-picker">
               <label for="envelope-model-select">Choose a model bacterium</label>
@@ -583,9 +583,13 @@
               <p id="envelope-overlay-status" class="envelope-overlay-status">Preparing ranked run intel…</p>
               <ul class="envelope-overlay-points">
                 <li>Complete assembly queues to trigger envelope fortification bursts.</li>
-                <li>Each sector changes the stress regimen and slowly raises the difficulty.</li>
+                <li>Each sector changes the stress regimen and offers one adaptation choice.</li>
                 <li>Species traits subtly change how each bacterium handles pressure and recovery.</li>
               </ul>
+            </div>
+            <div id="envelope-draft" class="envelope-draft" hidden>
+              <p class="envelope-draft-label">Choose one adaptation</p>
+              <div id="envelope-draft-options" class="envelope-draft-options"></div>
             </div>
             <div class="envelope-player-name">
               <label for="envelope-player-name">Leaderboard name</label>
@@ -687,6 +691,11 @@
                 <p id="envelope-forecast-copy">The next sector forecast appears here when the run spins up.</p>
               </article>
               <article class="envelope-intel-card">
+                <span>Active adaptations</span>
+                <strong id="envelope-upgrade-title">No adaptations yet</strong>
+                <p id="envelope-upgrade-copy">Sector rewards will offer one adaptation choice each transition.</p>
+              </article>
+              <article class="envelope-intel-card">
                 <span>Last ranked result</span>
                 <strong id="envelope-rank-title">No score saved yet</strong>
                 <p id="envelope-rank-copy">Shared placement appears here after a ranked run.</p>
@@ -746,6 +755,6 @@
     <script src="site-freshness.js" data-freshness-path="site-freshness.json"></script>
     <script src="main.js?v=20260317d"></script>
     <script src="envelope-escape-config.js?v=20260318a"></script>
-    <script src="envelope-escape.js?v=20260317e"></script>
+    <script src="envelope-escape.js?v=20260317f"></script>
   </body>
 </html>

@@ -377,6 +377,77 @@
   box-shadow: 0 0 0 3px rgba(120, 206, 220, 0.14);
 }
 
+.envelope-draft {
+  width: min(42rem, 100%);
+  display: grid;
+  gap: 0.72rem;
+  padding: 0.94rem;
+  border-radius: 16px;
+  border: 1px solid rgba(143, 210, 215, 0.3);
+  background:
+    linear-gradient(160deg, rgba(185, 239, 246, 0.12), rgba(185, 239, 246, 0) 46%),
+    rgba(6, 18, 34, 0.66);
+  box-shadow: 0 16px 38px rgba(3, 10, 20, 0.28);
+}
+
+.envelope-draft-label {
+  margin: 0;
+  color: rgba(228, 246, 255, 0.96);
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.envelope-draft-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.62rem;
+}
+
+.envelope-draft-option {
+  appearance: none;
+  border: 1px solid rgba(143, 210, 215, 0.28);
+  border-radius: 14px;
+  background:
+    linear-gradient(160deg, rgba(177, 238, 246, 0.1), rgba(177, 238, 246, 0) 52%),
+    rgba(8, 24, 42, 0.54);
+  color: #edf9ff;
+  text-align: left;
+  padding: 0.82rem 0.84rem;
+  display: grid;
+  gap: 0.38rem;
+  cursor: pointer;
+  min-height: 8.7rem;
+  transition: transform 180ms ease, border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.envelope-draft-option strong {
+  font-size: 0.96rem;
+  line-height: 1.28;
+  color: #f5fcff;
+}
+
+.envelope-draft-option span {
+  color: rgba(203, 236, 248, 0.9);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.envelope-draft-option:hover {
+  transform: translateY(-2px);
+  border-color: rgba(170, 235, 237, 0.56);
+  background:
+    linear-gradient(160deg, rgba(160, 255, 198, 0.14), rgba(160, 255, 198, 0) 58%),
+    rgba(10, 28, 49, 0.7);
+  box-shadow: 0 14px 28px rgba(5, 20, 34, 0.32);
+}
+
+.envelope-draft-option:focus-visible {
+  outline: 3px solid rgba(143, 210, 215, 0.74);
+  outline-offset: 2px;
+}
+
 .envelope-start-actions {
   display: inline-flex;
   align-items: center;
@@ -1071,6 +1142,14 @@
 
   .envelope-overlay-briefing {
     width: 100%;
+  }
+
+  .envelope-draft {
+    width: 100%;
+  }
+
+  .envelope-draft-options {
+    grid-template-columns: 1fr;
   }
 
   .envelope-assembly-slots {
