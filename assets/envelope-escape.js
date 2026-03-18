@@ -52,6 +52,12 @@
   const traitCopyEl = document.getElementById("envelope-trait-copy");
   const directiveTitleEl = document.getElementById("envelope-directive-title");
   const directiveCopyEl = document.getElementById("envelope-directive-copy");
+  const assemblyTitleEl = document.getElementById("envelope-assembly-title");
+  const assemblyCopyEl = document.getElementById("envelope-assembly-copy");
+  const assemblyStatusEl = document.getElementById("envelope-assembly-status");
+  const assemblySlotsEl = document.getElementById("envelope-assembly-slots");
+  const forecastTitleEl = document.getElementById("envelope-forecast-title");
+  const forecastCopyEl = document.getElementById("envelope-forecast-copy");
   const rankTitleEl = document.getElementById("envelope-rank-title");
   const rankCopyEl = document.getElementById("envelope-rank-copy");
   const rankSummaryEl = document.getElementById("envelope-rank-summary");
@@ -410,42 +416,129 @@
     }
   };
 
+  const MODEL_ASSEMBLY_PLANS = {
+    ecoli: {
+      title: "Gram-negative envelope build",
+      copy: "Balance peptidoglycan, outer membrane glycoconjugates, and phospholipids to keep the barrier intact.",
+      priority: ["lipidII", "lps", "phospholipid"]
+    },
+    paeruginosa: {
+      title: "Outer-membrane resilience build",
+      copy: "Refresh peptidoglycan and LPS while feeding the membrane through phospholipid supply.",
+      priority: ["lipidII", "lps", "phospholipid"]
+    },
+    kpneumoniae: {
+      title: "Capsule-armored build",
+      copy: "Rebuild wall, capsule, and outer-membrane layers before the next stress pulse arrives.",
+      priority: ["lipidII", "capsule", "lps", "phospholipid"]
+    },
+    abaumannii: {
+      title: "Barrier scavenger build",
+      copy: "Patch the sacculus and outer barrier while harvesting LOS and capsule material under pressure.",
+      priority: ["lipidII", "los", "capsule", "phospholipid"]
+    },
+    saureus: {
+      title: "Gram-positive wall build",
+      copy: "Reinforce peptidoglycan with wall and lipoteichoic acid inputs to thicken the protective shell.",
+      priority: ["lipidII", "wta", "lta", "phospholipid"]
+    },
+    spneumoniae: {
+      title: "Diplococcal surface build",
+      copy: "Coordinate peptidoglycan, choline-rich teichoic acid, and capsule assembly to hold shape.",
+      priority: ["lipidII", "cholineTa", "capsule"]
+    },
+    cglutamicum: {
+      title: "Mycomembrane coat build",
+      copy: "Layer peptidoglycan, arabinogalactan, and mycolic acids into a robust Corynebacterial envelope.",
+      priority: ["lipidII", "arabinogalactan", "mycolic", "phospholipid"]
+    }
+  };
+
   const RUN_SECTORS = [
     {
-      id: "surface-patrol",
-      title: "Surface Patrol",
+      id: "envelope-initiation",
+      title: "Envelope Initiation",
       startsAt: 0,
-      endsAt: 45,
-      bonus: 450,
+      endsAt: 55,
+      bonus: 380,
       directivePool: ["collect_precursor", "collect_shield", "collect_boost", "survive_window"],
-      targets: { precursor: 4, shield: 1, boost: 1, nearMiss: 2, survive: 18 }
+      targets: { precursor: 4, shield: 1, boost: 1, nearMiss: 2, survive: 20 },
+      assemblySize: 2,
+      threatLevel: 0.88,
+      phagePressure: 0.84,
+      pulsePressure: 0.78,
+      frontPressure: 0,
+      resourcePressure: 1.12,
+      forecastTitle: "Baseline biosynthesis",
+      forecastCopy: "Traffic is still light. Lock in your first envelope build before the regimen tightens."
     },
     {
-      id: "stress-corridor",
-      title: "Stress Corridor",
-      startsAt: 45,
-      endsAt: 95,
-      bonus: 700,
+      id: "septal-stress-test",
+      title: "Septal Stress Test",
+      startsAt: 55,
+      endsAt: 125,
+      bonus: 620,
       directivePool: ["collect_precursor", "near_miss", "survive_window", "collect_boost"],
-      targets: { precursor: 5, shield: 1, boost: 1, nearMiss: 4, survive: 22 }
+      targets: { precursor: 5, shield: 1, boost: 1, nearMiss: 4, survive: 24 },
+      assemblySize: 3,
+      threatLevel: 1.02,
+      phagePressure: 0.96,
+      pulsePressure: 0.94,
+      frontPressure: 0.58,
+      resourcePressure: 1.02,
+      forecastTitle: "Division inhibitors incoming",
+      forecastCopy: "Telegraphed inhibitor fronts start appearing. Move early into the safe lane and keep rebuilding."
+    },
+    {
+      id: "antibiotic-gauntlet",
+      title: "Antibiotic Gauntlet",
+      startsAt: 125,
+      endsAt: 210,
+      bonus: 860,
+      directivePool: ["near_miss", "survive_window", "collect_boost", "collect_precursor"],
+      targets: { precursor: 6, shield: 2, boost: 1, nearMiss: 5, survive: 28 },
+      assemblySize: 3,
+      threatLevel: 1.18,
+      phagePressure: 1.06,
+      pulsePressure: 1.2,
+      frontPressure: 0.94,
+      resourcePressure: 0.96,
+      forecastTitle: "Cell-wall drugs intensify",
+      forecastCopy: "Antibiotic rings and inhibitor fronts start to overlap. Assembly bursts become your recovery window."
     },
     {
       id: "phage-bloom",
       title: "Phage Bloom",
-      startsAt: 95,
-      endsAt: 155,
-      bonus: 950,
+      startsAt: 210,
+      endsAt: 300,
+      bonus: 1100,
       directivePool: ["near_miss", "survive_window", "surge_end", "collect_precursor"],
-      targets: { precursor: 6, shield: 2, boost: 1, nearMiss: 5, survive: 26 }
+      targets: { precursor: 7, shield: 2, boost: 1, nearMiss: 6, survive: 32 },
+      assemblySize: 3,
+      threatLevel: 1.34,
+      phagePressure: 1.26,
+      pulsePressure: 1.08,
+      frontPressure: 1.06,
+      resourcePressure: 0.9,
+      forecastTitle: "Bloom conditions",
+      forecastCopy: "Phage swarms thicken and safe windows shrink. Clean dodges matter as much as raw collection."
     },
     {
-      id: "last-stand",
-      title: "Last Stand",
-      startsAt: 155,
+      id: "collapse-cascade",
+      title: "Collapse Cascade",
+      startsAt: 300,
       endsAt: Number.POSITIVE_INFINITY,
-      bonus: 1250,
+      bonus: 1420,
       directivePool: ["surge_end", "near_miss", "survive_window", "collect_precursor"],
-      targets: { precursor: 7, shield: 2, boost: 1, nearMiss: 6, survive: 30 }
+      targets: { precursor: 8, shield: 2, boost: 1, nearMiss: 7, survive: 36 },
+      assemblySize: 4,
+      threatLevel: 1.52,
+      phagePressure: 1.36,
+      pulsePressure: 1.22,
+      frontPressure: 1.22,
+      resourcePressure: 0.86,
+      forecastTitle: "Failure cascade",
+      forecastCopy: "Everything stacks here. Only crisp lane changes and efficient envelope rebuilding keep you alive."
     }
   ];
 
@@ -456,7 +549,15 @@
     endsAt: Number.POSITIVE_INFINITY,
     bonus: 0,
     directivePool: [],
-    targets: { precursor: 3, shield: 1, boost: 1, nearMiss: 1, survive: 12 }
+    targets: { precursor: 3, shield: 1, boost: 1, nearMiss: 1, survive: 12 },
+    assemblySize: 2,
+    threatLevel: 0.5,
+    phagePressure: 0.44,
+    pulsePressure: 0.4,
+    frontPressure: 0,
+    resourcePressure: 1.28,
+    forecastTitle: "Practice conditions",
+    forecastCopy: "Use the route to learn assembly, pickups, and dodges without ranking pressure."
   };
 
   const state = {
@@ -481,6 +582,7 @@
     flowShiftIn: random(7, 12),
     phageSpawnIn: 1.45,
     pulseSpawnIn: 5.4,
+    frontSpawnIn: 11.5,
     resourceSpawnIn: 1.2,
     surgeIn: 64,
     surgeTimer: 0,
@@ -498,6 +600,7 @@
     particles: [],
     phages: [],
     pulses: [],
+    fronts: [],
     resources: [],
     bursts: [],
     floaters: [],
@@ -518,6 +621,10 @@
     modelId: readModelChoice(),
     sectorId: RUN_SECTORS[0].id,
     directive: null,
+    assemblyQueue: null,
+    assembliesCompleted: 0,
+    directivesCompleted: 0,
+    bestCombo: 0,
     surgesCleared: 0,
     player: {
       x: 0,
@@ -791,8 +898,8 @@
   function updateTutorialNote() {
     if (!tutorialNoteEl) return;
     tutorialNoteEl.textContent = state.tutorialSeen
-      ? "Need a refresher? Tutorial Mode is easier and does not affect the leaderboard."
-      : "First time? Try Tutorial Mode (easier, not ranked).";
+      ? "Need a refresher? Practice Route is easier and does not affect the leaderboard."
+      : "First time? Try Practice Route (easier, not ranked).";
   }
 
   function setLeaderboardMeta(mode) {
@@ -1247,6 +1354,7 @@
       modelNoteEl.innerHTML = `${formatSpeciesAwareHtml(model.label)} · ${escapeHtml(model.morphology)} · Envelope inputs: ${escapeHtml(getPrecursorLabels(state.modelId).join(", "))} · Trait: ${escapeHtml(trait.title)}`;
     }
     renderPrecursorKey();
+    renderAssemblyQueue();
     updateRunIntel();
   }
 
@@ -1255,6 +1363,7 @@
     state.modelId = next;
     if (persist) writeModelChoice(next);
     applyModelGeometry();
+    state.assemblyQueue = buildAssemblyQueue(next, getCurrentSector());
     updateModelUi();
   }
 
@@ -1278,6 +1387,110 @@
 
   function getModelTraitData(modelId = state.modelId) {
     return MODEL_TRAITS[modelId] || MODEL_TRAITS.ecoli;
+  }
+
+  function getAssemblyPlan(modelId = state.modelId) {
+    return MODEL_ASSEMBLY_PLANS[modelId] || MODEL_ASSEMBLY_PLANS.ecoli;
+  }
+
+  function buildAssemblyQueue(modelId = state.modelId, sector = getCurrentSector()) {
+    const plan = getAssemblyPlan(modelId);
+    const desiredSize = clamp(Number(sector?.assemblySize) || 2, 2, Math.max(2, plan.priority.length));
+    const steps = [];
+    const seen = new Set();
+    const offset = state.assembliesCompleted % plan.priority.length;
+
+    for (let i = 0; i < plan.priority.length * 2 && steps.length < desiredSize; i += 1) {
+      const precursorId = plan.priority[(offset + i) % plan.priority.length];
+      if (seen.has(precursorId)) continue;
+      seen.add(precursorId);
+      steps.push({
+        id: precursorId,
+        label: getPrecursorDefinition(precursorId).shortLabel || getPrecursorDefinition(precursorId).label,
+        completed: false
+      });
+    }
+
+    return {
+      modelId,
+      sectorId: sector?.id || "tutorial",
+      title: plan.title,
+      description: plan.copy,
+      rewardScore: Math.round((Number(sector?.bonus) || 300) * (steps.length >= 4 ? 0.34 : 0.28)) + steps.length * 60,
+      rewardShield: steps.length >= 4 ? 16 : 12,
+      rewardIntegrity: steps.length >= 4 ? 14 : 10,
+      rewardBoost: steps.length >= 4 ? 3.1 : 2.4,
+      steps
+    };
+  }
+
+  function setAssemblyQueue(queue = state.assemblyQueue) {
+    state.assemblyQueue = queue;
+    renderAssemblyQueue();
+    updateRunIntel();
+  }
+
+  function renderAssemblyQueue() {
+    if (!assemblySlotsEl) return;
+    const queue = state.assemblyQueue;
+    assemblySlotsEl.innerHTML = "";
+
+    if (!queue || !Array.isArray(queue.steps) || !queue.steps.length) {
+      const empty = document.createElement("p");
+      empty.className = "envelope-assembly-empty";
+      empty.textContent = "Assembly queue will appear when the run begins.";
+      assemblySlotsEl.append(empty);
+      return;
+    }
+
+    queue.steps.forEach((step) => {
+      const chip = document.createElement("div");
+      chip.className = "envelope-assembly-chip";
+      if (step.completed) chip.classList.add("is-complete");
+
+      const label = document.createElement("strong");
+      label.textContent = step.label;
+      const status = document.createElement("span");
+      status.textContent = step.completed ? "Installed" : "Needed";
+
+      chip.append(label, status);
+      assemblySlotsEl.append(chip);
+    });
+  }
+
+  function completeAssemblyQueue() {
+    const queue = state.assemblyQueue;
+    if (!queue) return;
+
+    state.assembliesCompleted += 1;
+    state.score += queue.rewardScore;
+    state.integrity = clamp(state.integrity + queue.rewardIntegrity, 0, 100);
+    state.shield = clamp(state.shield + queue.rewardShield, 0, 100);
+    state.boostTimer = clamp(state.boostTimer + queue.rewardBoost, 0, 12);
+    state.combo = clamp(state.combo + 1, 0, 14);
+    state.bestCombo = Math.max(state.bestCombo, state.combo);
+    addFloater(state.width * 0.5, 72, `${queue.title} fortified +${queue.rewardScore}`, "#c7f6ff");
+    addBurst(state.width * 0.5, 82, "#a3efff", 20);
+
+    const nextQueue = buildAssemblyQueue(state.modelId, getCurrentSector());
+    setAssemblyQueue(nextQueue);
+  }
+
+  function advanceAssemblyProgress(precursorId) {
+    const queue = state.assemblyQueue;
+    if (!queue || !Array.isArray(queue.steps)) return;
+
+    const step = queue.steps.find((candidate) => candidate.id === precursorId && !candidate.completed);
+    if (!step) return;
+
+    step.completed = true;
+    addFloater(state.player.x, state.player.y - 18, `${step.label} installed`, "#d8fbff");
+    renderAssemblyQueue();
+    updateRunIntel();
+
+    if (queue.steps.every((candidate) => candidate.completed)) {
+      completeAssemblyQueue();
+    }
   }
 
   function getSectorForElapsed(elapsed, mode = state.runMode) {
@@ -1418,10 +1631,12 @@
 
     directive.completed = true;
     directive.progress = directive.target;
+    state.directivesCompleted += 1;
     state.score += directive.rewardScore;
     state.integrity = clamp(state.integrity + directive.rewardIntegrity, 0, 100);
     state.shield = clamp(state.shield + directive.rewardShield, 0, 100);
-    state.combo = clamp(state.combo + 1, 0, 12);
+    state.combo = clamp(state.combo + 1, 0, 14);
+    state.bestCombo = Math.max(state.bestCombo, state.combo);
     addFloater(state.width * 0.5, 78, `${directive.title} +${directive.rewardScore}`, "#d0f6ff");
     addBurst(state.width * 0.5, 90, "#a9efff", 18);
     updateRunIntel();
@@ -1442,6 +1657,7 @@
     state.sectorId = sector.id;
     state.surgesCleared = 0;
     assignDirectiveForSector(sector, true);
+    setAssemblyQueue(buildAssemblyQueue(state.modelId, sector));
   }
 
   function updateDirectiveTimer(dt) {
@@ -1464,6 +1680,7 @@
     const isTransition = !force && state.runMode === "ranked" && nextSector.id !== state.sectorId;
     state.sectorId = nextSector.id;
     assignDirectiveForSector(nextSector, true);
+    setAssemblyQueue(buildAssemblyQueue(state.modelId, nextSector));
 
     if (isTransition) {
       state.score += nextSector.bonus;
@@ -1502,9 +1719,9 @@
     }
     return {
       label: "Local leaderboard",
-      overlay: "Practice board on this device only. Deploy the worker to make scores global.",
+      overlay: "This copy of the game is only saving scores on this device.",
       pill: "Local only",
-      rankSummary: "Scores are only visible in this browser until the shared backend is deployed.",
+      rankSummary: "Scores are only visible in this browser until the shared leaderboard connection is available.",
       className: ""
     };
   }
@@ -1537,8 +1754,11 @@
     const trait = getModelTraitData(state.modelId);
     const sector = getCurrentSector();
     const directive = state.directive;
+    const assemblyQueue = state.assemblyQueue;
     const status = getLeaderboardStatusDescriptor(state.leaderboardMode);
     const placement = formatPlacement();
+    const assemblyCompleted = assemblyQueue?.steps?.filter((step) => step.completed).length || 0;
+    const assemblyTotal = assemblyQueue?.steps?.length || 0;
 
     if (traitTitleEl) traitTitleEl.textContent = trait.title;
     if (traitCopyEl) traitCopyEl.textContent = trait.copy;
@@ -1550,6 +1770,28 @@
       directiveCopyEl.textContent = directive
         ? `${directive.description} ${directive.type === "tutorial" ? "" : `(${getDirectiveProgressText(directive)})`}`.trim()
         : "Start a ranked run to receive your first objective.";
+    }
+
+    if (assemblyTitleEl) {
+      assemblyTitleEl.textContent = assemblyQueue ? assemblyQueue.title : "Queue calibrating";
+    }
+    if (assemblyCopyEl) {
+      assemblyCopyEl.textContent = assemblyQueue
+        ? `${assemblyQueue.description} (${assemblyCompleted}/${assemblyTotal} installed · next burst grants shield, integrity, and catalytic tempo.)`
+        : "Collect the required envelope modules to trigger a fortification burst.";
+    }
+    if (assemblyStatusEl) {
+      assemblyStatusEl.textContent = assemblyQueue
+        ? `${assemblyCompleted}/${assemblyTotal} installed · ${state.assembliesCompleted} fortified`
+        : "Queue calibrating";
+    }
+
+    if (forecastTitleEl) {
+      forecastTitleEl.textContent = sector.forecastTitle || sector.title;
+    }
+    if (forecastCopyEl) {
+      const surgePrefix = state.surgeTimer > 0 ? "Surge active now. " : "";
+      forecastCopyEl.textContent = `${surgePrefix}${sector.forecastCopy || "Pressure profile updating."}`.trim();
     }
 
     if (rankTitleEl) {
@@ -1607,15 +1849,19 @@
   }
 
   function getDifficultyProfile() {
+    const sector = getCurrentSector();
     if (state.runMode === "tutorial") {
-      const ramp = smoothstep(state.elapsed / 220);
+      const ramp = smoothstep(state.elapsed / 180);
       return {
-        intensity: 0.32 + ramp * 0.48,
-        phageSpeedMul: 0.5 + ramp * 0.3,
-        pulseSpeedMul: 0.42 + ramp * 0.26,
-        phageSpawnMul: 0.36 + ramp * 0.52,
-        pulseSpawnMul: 0.34 + ramp * 0.46,
-        resourceSpawnMul: 2.02 - ramp * 0.26,
+        intensity: (0.34 + ramp * 0.42) * (sector.threatLevel || 1),
+        phageSpeedMul: 0.5 + ramp * 0.26,
+        pulseSpeedMul: 0.42 + ramp * 0.24,
+        frontSpeedMul: 0.54 + ramp * 0.2,
+        phageSpawnMul: (0.34 + ramp * 0.5) * (sector.phagePressure || 1),
+        pulseSpawnMul: (0.32 + ramp * 0.42) * (sector.pulsePressure || 1),
+        frontSpawnMul: (0.3 + ramp * 0.28) * (sector.frontPressure || 1),
+        resourceSpawnMul: (2.08 - ramp * 0.22) * (sector.resourcePressure || 1),
+        frontGapScale: 0.84,
         darterChance: 0.02 + ramp * 0.08,
         damageMul: 0.46 + ramp * 0.22,
         surgeCooldownMul: 2.5,
@@ -1624,19 +1870,22 @@
       };
     }
 
-    const ramp = smoothstep(state.elapsed / 480);
+    const ramp = smoothstep(state.elapsed / 310);
     return {
-      intensity: 0.58 + ramp * 1.82,
-      phageSpeedMul: 0.82 + ramp * 0.95,
-      pulseSpeedMul: 0.78 + ramp * 1.0,
-      phageSpawnMul: 0.68 + ramp * 1.78,
-      pulseSpawnMul: 0.64 + ramp * 1.44,
-      resourceSpawnMul: 1.26 - ramp * 0.42,
-      darterChance: 0.1 + ramp * 0.34,
-      damageMul: 0.88 + ramp * 0.44,
-      surgeCooldownMul: 1.32 - ramp * 0.44,
-      surgeDurationMul: 0.9 + ramp * 0.34,
-      surgeCadenceMul: 0.92 + ramp * 0.4
+      intensity: (0.56 + ramp * 1.38) * (sector.threatLevel || 1),
+      phageSpeedMul: 0.8 + ramp * 0.72,
+      pulseSpeedMul: 0.74 + ramp * 0.82,
+      frontSpeedMul: 0.82 + ramp * 0.58,
+      phageSpawnMul: (0.64 + ramp * 1.08) * (sector.phagePressure || 1),
+      pulseSpawnMul: (0.58 + ramp * 0.98) * (sector.pulsePressure || 1),
+      frontSpawnMul: (0.42 + ramp * 0.86) * (sector.frontPressure || 1),
+      resourceSpawnMul: (1.24 - ramp * 0.32) * (sector.resourcePressure || 1),
+      frontGapScale: 1 + ramp * 0.26,
+      darterChance: 0.08 + ramp * 0.28,
+      damageMul: 0.84 + ramp * 0.4,
+      surgeCooldownMul: 1.4 - ramp * 0.42,
+      surgeDurationMul: 0.88 + ramp * 0.36,
+      surgeCadenceMul: 0.9 + ramp * 0.44
     };
   }
 
@@ -1747,6 +1996,7 @@
     state.flowShiftIn = random(6.8, 10.6);
     state.phageSpawnIn = 1.45;
     state.pulseSpawnIn = 5.4;
+    state.frontSpawnIn = 11.5;
     state.resourceSpawnIn = 1.2;
     state.surgeIn = state.runMode === "tutorial" ? 9999 : random(58, 86);
     state.surgeTimer = 0;
@@ -1763,10 +2013,14 @@
     state.lysisShockwaves = [];
     state.phages = [];
     state.pulses = [];
+    state.fronts = [];
     state.resources = [];
     state.bursts = [];
     state.floaters = [];
     state.trails = [];
+    state.assembliesCompleted = 0;
+    state.directivesCompleted = 0;
+    state.bestCombo = 0;
     buildAmbientParticles();
     placePlayerCenter();
     initializeRunProgress();
@@ -1808,6 +2062,7 @@
     const shieldPct = clamp(state.shield, 0, 100);
     const boostPct = clamp((state.boostTimer / 7.2) * 100, 0, 100);
     const nextSurgeCountdown = state.runMode === "tutorial" ? null : state.surgeTimer > 0 ? 0 : Math.ceil(state.surgeIn);
+    const telegraphedFront = state.fronts.some((front) => front.telegraph > 0);
 
     if (scoreEl) scoreEl.textContent = String(Math.floor(state.score));
     if (bestEl) bestEl.textContent = String(Math.floor(state.best));
@@ -1829,6 +2084,8 @@
           ? "Practice pacing"
           : state.surgeTimer > 0
             ? `Surge active · ${Math.ceil(state.surgeTimer)}s left`
+            : telegraphedFront
+              ? "Inhibitor front incoming"
             : `Next surge in ${formatDuration(nextSurgeCountdown || 0)}`;
     }
     if (comboEl) comboEl.textContent = `x${state.combo + 1}`;
@@ -1871,9 +2128,9 @@
     }
 
     resizeCanvas();
+    state.runMode = "ranked";
     resetSimulation();
     hideNameForm();
-    state.runMode = "ranked";
     state.running = false;
     state.paused = false;
     pauseButton.textContent = "Pause";
@@ -1887,8 +2144,8 @@
 
     showOverlay(
       "Envelope Escape",
-      "Survive escalating sectors, chain clean pickups and dodges, and see where your bacterium lands on the leaderboard.",
-      "Start Ranked Run",
+      "Assemble the right envelope modules, survive gradually intensifying stress regimens, and see where your bacterium lands on the leaderboard.",
+      "Start Ranked Trial",
       "start"
     );
 
@@ -1953,10 +2210,24 @@
     pauseButton.textContent = "Resume";
     showOverlay(
       "Paused",
-      "Dodge phages and antibiotic waves, then complete directives to stack bigger milestone bonuses.",
+      "Dodge phages, antibiotic fronts, and expanding drug waves while you finish directives and envelope builds.",
       "Resume",
       "resume"
     );
+  }
+
+  function buildRunSummaryText(finalScore) {
+    const reachedSector = getCurrentSector();
+    const comboValue = Math.max(1, state.bestCombo + 1);
+    const parts = [
+      `Final score: ${finalScore}.`,
+      `Best score: ${Math.floor(state.best)}.`,
+      `Reached ${reachedSector.title}.`,
+      `${state.assembliesCompleted} envelope build${state.assembliesCompleted === 1 ? "" : "s"} completed.`,
+      `${state.directivesCompleted} directive${state.directivesCompleted === 1 ? "" : "s"} cleared.`,
+      `Best clean chain: x${comboValue}.`
+    ];
+    return parts.join(" ");
   }
 
   function endSimulation() {
@@ -1967,11 +2238,12 @@
     const savedName = state.playerName || "Anonymous";
 
     if (state.runMode === "tutorial") {
+      const tutorialSummary = buildRunSummaryText(finalScore);
       hideNameForm();
       showOverlay(
         "Tutorial complete",
-        `Tutorial score: ${finalScore}. Tutorial runs are practice only and are not submitted to the leaderboard.`,
-        "Start Ranked Run",
+        `${tutorialSummary} Tutorial runs are practice only and are not submitted to the leaderboard.`,
+        "Start Ranked Trial",
         "start"
       );
       state.runMode = "ranked";
@@ -1985,6 +2257,8 @@
       writeBestScore(state.best);
     }
 
+    const baseSummary = buildRunSummaryText(finalScore);
+
     updateHud();
     renderLeaderboard();
 
@@ -1992,7 +2266,7 @@
 
     showOverlay(
       "Envelope collapsed",
-      `Final score: ${finalScore}. Best score: ${Math.floor(state.best)}. Saving to leaderboard...`,
+      `${baseSummary} Saving to leaderboard...`,
       "Play Again",
       "restart"
     );
@@ -2000,7 +2274,7 @@
     if (finalScore <= 0) {
       showOverlay(
         "Envelope collapsed",
-        `Final score: ${finalScore}. Best score: ${Math.floor(state.best)}.`,
+        baseSummary,
         "Play Again",
         "restart"
       );
@@ -2013,7 +2287,7 @@
         const placement = formatPlacement();
         showOverlay(
           "Envelope collapsed",
-          `Final score: ${finalScore}. Best score: ${Math.floor(state.best)}. Saved as ${savedName}.${placement ? ` Placement: ${placement}.` : ""}`,
+          `${baseSummary} Saved as ${savedName}.${placement ? ` Placement: ${placement}.` : ""}`,
           "Play Again",
           "restart"
         );
@@ -2026,7 +2300,7 @@
         const placement = formatPlacement();
         showOverlay(
           "Envelope collapsed",
-          `Final score: ${finalScore}. Best score: ${Math.floor(state.best)}. Saved as Anonymous.${placement ? ` Placement: ${placement}.` : ""}`,
+          `${baseSummary} Saved as Anonymous.${placement ? ` Placement: ${placement}.` : ""}`,
           "Play Again",
           "restart"
         );
@@ -2035,7 +2309,7 @@
 
       showOverlay(
         "Envelope collapsed",
-        `Final score: ${finalScore}. Best score: ${Math.floor(state.best)}.`,
+        baseSummary,
         "Play Again",
         "restart"
       );
@@ -2095,6 +2369,33 @@
       maxR: Math.max(state.width, state.height) * random(0.52, 0.82),
       hitLock: 0,
       nearScored: false
+    });
+  }
+
+  function spawnFront() {
+    const sector = getCurrentSector();
+    const profile = getDifficultyProfile();
+    if ((sector.frontPressure || 0) <= 0.05) return;
+
+    const orientation = Math.random() < 0.5 ? "vertical" : "horizontal";
+    const axisSpan = orientation === "vertical" ? state.width : state.height;
+    const crossSpan = orientation === "vertical" ? state.height : state.width;
+    const thickness = clamp(random(34, 48) * (0.94 + profile.intensity * 0.08), 30, 62);
+    const gapSize = clamp(crossSpan * random(0.22, 0.29) / (profile.frontGapScale || 1), 96, 210);
+    const direction = Math.random() < 0.5 ? 1 : -1;
+    const position = direction > 0 ? -thickness : axisSpan + thickness;
+
+    state.fronts.push({
+      orientation,
+      position,
+      direction,
+      thickness,
+      gapCenter: random(gapSize * 0.6, crossSpan - gapSize * 0.6),
+      gapSize,
+      speed: random(112, 156) * profile.frontSpeedMul,
+      telegraph: 0.9,
+      hitLock: 0,
+      grazed: false
     });
   }
 
@@ -2171,9 +2472,9 @@
     if (state.runMode !== "tutorial") return;
 
     const hints = [
-      { at: 1.2, text: "Collect precursors to rebuild your envelope." },
+      { at: 1.2, text: "Collect the highlighted precursors to build your envelope queue." },
       { at: 6.2, text: "Avoid phages and pink antibiotic waves." },
-      { at: 12.2, text: "Blue shields absorb incoming damage." },
+      { at: 12.2, text: "Blue shields absorb damage while assembly bursts refill them." },
       { at: 18.2, text: "Catalytic boosts raise speed and score gain." }
     ];
 
@@ -2296,6 +2597,7 @@
     state.shake = 14;
     state.phages = [];
     state.pulses = [];
+    state.fronts = [];
     state.resources = [];
     state.trails = [];
     state.lysisFragments = [];
@@ -2483,9 +2785,11 @@
       );
       addBurst(resource.x, resource.y, precursor.burstColor || "#89ffca", 12);
       advanceDirectiveProgress("collect_precursor", 1);
+      advanceAssemblyProgress(precursor.id);
     }
 
-    state.combo = clamp(state.combo + 1, 0, 12);
+    state.combo = clamp(state.combo + 1, 0, 14);
+    state.bestCombo = Math.max(state.bestCombo, state.combo);
     state.resources.splice(index, 1);
   }
 
@@ -2529,6 +2833,20 @@
     if (Math.hypot(state.player.vx, state.player.vy) > 1) {
       state.player.angle = Math.atan2(state.player.vy, state.player.vx);
     }
+  }
+
+  function getFrontPlayerSnapshot(front) {
+    const axisCoord = front.orientation === "vertical" ? state.player.x : state.player.y;
+    const crossCoord = front.orientation === "vertical" ? state.player.y : state.player.x;
+    const axisDistance = Math.abs(axisCoord - front.position);
+    const gapHalf = front.gapSize * 0.5;
+    const crossDistance = Math.abs(crossCoord - front.gapCenter);
+    return {
+      axisDistance,
+      crossDistance,
+      inGap: crossDistance <= gapHalf + state.player.radius * 0.35,
+      nearGapEdge: crossDistance >= gapHalf - state.player.radius * 0.92
+    };
   }
 
   function updateSimulation(dt) {
@@ -2591,6 +2909,7 @@
 
     state.phageSpawnIn -= dt;
     state.pulseSpawnIn -= dt;
+    state.frontSpawnIn -= dt;
     state.resourceSpawnIn -= dt;
 
     if (state.phageSpawnIn <= 0) {
@@ -2602,6 +2921,11 @@
     if (state.pulseSpawnIn <= 0) {
       spawnPulse();
       state.pulseSpawnIn = clamp((random(3.6, 6.2) / profile.pulseSpawnMul) * pulsePressure, 1.05, 6.6);
+    }
+
+    if (state.frontSpawnIn <= 0) {
+      spawnFront();
+      state.frontSpawnIn = clamp(random(11.8, 18.2) / Math.max(0.2, profile.frontSpawnMul || 0.2), 5.8, 18.5);
     }
 
     if (state.resourceSpawnIn <= 0) {
@@ -2655,6 +2979,8 @@
         state.nearMissCooldown = 0.18;
         const nearBonus = Math.floor((24 + state.combo * 4) * (trait.modifiers?.nearMissScoreMul || 1));
         state.score += nearBonus;
+        state.combo = clamp(state.combo + 1, 0, 14);
+        state.bestCombo = Math.max(state.bestCombo, state.combo);
         addFloater(phage.x, phage.y - 12, `Near miss +${nearBonus}`, "#9eeeff");
         addBurst(phage.x, phage.y, "#8cefff", 8);
         advanceDirectiveProgress("near_miss", 1);
@@ -2683,12 +3009,54 @@
         pulse.nearScored = true;
         const pulseBonus = Math.floor((18 + state.combo * 3) * (trait.modifiers?.nearMissScoreMul || 1));
         state.score += pulseBonus;
+        state.combo = clamp(state.combo + 1, 0, 14);
+        state.bestCombo = Math.max(state.bestCombo, state.combo);
         addFloater(state.player.x, state.player.y - 28, `Tight dodge +${pulseBonus}`, "#b0d8ff");
         advanceDirectiveProgress("near_miss", 1);
       }
 
       if (pulse.r > pulse.maxR) {
         state.pulses.splice(i, 1);
+      }
+    }
+
+    for (let i = state.fronts.length - 1; i >= 0; i -= 1) {
+      const front = state.fronts[i];
+      front.hitLock = Math.max(0, front.hitLock - dt);
+
+      if (front.telegraph > 0) {
+        front.telegraph = Math.max(0, front.telegraph - dt);
+      } else {
+        front.position += front.speed * dt * front.direction;
+      }
+
+      const snapshot = getFrontPlayerSnapshot(front);
+      const activeBand = snapshot.axisDistance < front.thickness * 0.5 + state.player.radius * 0.6;
+
+      if (front.telegraph <= 0 && activeBand && !snapshot.inGap && front.hitLock <= 0) {
+        applyDamage(13.5, "Inhibitor front", "pulse");
+        front.hitLock = 0.5;
+      }
+
+      if (
+        front.telegraph <= 0 &&
+        activeBand &&
+        snapshot.inGap &&
+        snapshot.nearGapEdge &&
+        !front.grazed
+      ) {
+        front.grazed = true;
+        const frontBonus = Math.floor((26 + state.combo * 3) * (trait.modifiers?.nearMissScoreMul || 1));
+        state.score += frontBonus;
+        state.combo = clamp(state.combo + 1, 0, 14);
+        state.bestCombo = Math.max(state.bestCombo, state.combo);
+        addFloater(state.player.x, state.player.y - 24, `Lane thread +${frontBonus}`, "#d0e4ff");
+        advanceDirectiveProgress("near_miss", 1);
+      }
+
+      const axisSpan = front.orientation === "vertical" ? state.width : state.height;
+      if (front.position < -front.thickness * 1.8 || front.position > axisSpan + front.thickness * 1.8) {
+        state.fronts.splice(i, 1);
       }
     }
 
@@ -2878,6 +3246,45 @@
     ctx.beginPath();
     ctx.arc(pulse.x, pulse.y, pulse.r, 0, Math.PI * 2);
     ctx.stroke();
+  }
+
+  function drawFront(front, time) {
+    const pulse = 0.55 + 0.45 * Math.sin(time * 0.012);
+    const telegraphAlpha = front.telegraph > 0 ? 0.18 + pulse * 0.16 : 0.28 + pulse * 0.08;
+    const activeAlpha = front.telegraph > 0 ? telegraphAlpha : telegraphAlpha + 0.12;
+    const gapHalf = front.gapSize * 0.5;
+    const gapStart = front.gapCenter - gapHalf;
+    const gapEnd = front.gapCenter + gapHalf;
+
+    ctx.save();
+
+    if (front.orientation === "vertical") {
+      const x = front.position - front.thickness * 0.5;
+      ctx.fillStyle = `rgba(255, 139, 183, ${activeAlpha.toFixed(3)})`;
+      ctx.fillRect(x, 0, front.thickness, Math.max(0, gapStart));
+      ctx.fillRect(x, Math.min(state.height, gapEnd), front.thickness, Math.max(0, state.height - gapEnd));
+
+      ctx.fillStyle = `rgba(162, 241, 255, ${(activeAlpha * 0.34).toFixed(3)})`;
+      ctx.fillRect(x, Math.max(0, gapStart), front.thickness, Math.max(0, gapEnd - gapStart));
+
+      ctx.strokeStyle = `rgba(221, 246, 255, ${(activeAlpha * 0.86).toFixed(3)})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x + 1, Math.max(0, gapStart), Math.max(0, front.thickness - 2), Math.max(0, gapEnd - gapStart));
+    } else {
+      const y = front.position - front.thickness * 0.5;
+      ctx.fillStyle = `rgba(255, 139, 183, ${activeAlpha.toFixed(3)})`;
+      ctx.fillRect(0, y, Math.max(0, gapStart), front.thickness);
+      ctx.fillRect(Math.min(state.width, gapEnd), y, Math.max(0, state.width - gapEnd), front.thickness);
+
+      ctx.fillStyle = `rgba(162, 241, 255, ${(activeAlpha * 0.34).toFixed(3)})`;
+      ctx.fillRect(Math.max(0, gapStart), y, Math.max(0, gapEnd - gapStart), front.thickness);
+
+      ctx.strokeStyle = `rgba(221, 246, 255, ${(activeAlpha * 0.86).toFixed(3)})`;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(Math.max(0, gapStart), y + 1, Math.max(0, gapEnd - gapStart), Math.max(0, front.thickness - 2));
+    }
+
+    ctx.restore();
   }
 
   function drawPhage(phage) {
@@ -3687,6 +4094,7 @@
 
     drawBackground(timestamp);
     state.pulses.forEach(drawPulse);
+    state.fronts.forEach((front) => drawFront(front, timestamp));
     state.resources.forEach((resource) => drawResource(resource, timestamp));
     state.phages.forEach(drawPhage);
     drawTrails();
