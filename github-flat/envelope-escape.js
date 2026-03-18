@@ -10,6 +10,12 @@
   const overlay = document.getElementById("envelope-overlay");
   const overlayTitle = document.getElementById("envelope-overlay-title");
   const overlayCopy = document.getElementById("envelope-overlay-copy");
+  const modelPickerWrapEl = overlay ? overlay.querySelector(".envelope-model-picker") : null;
+  const overlayBriefingEl = overlay ? overlay.querySelector(".envelope-overlay-briefing") : null;
+  const playerNameWrapEl = overlay ? overlay.querySelector(".envelope-player-name") : null;
+  const startActionsWrapEl = overlay ? overlay.querySelector(".envelope-start-actions") : null;
+  const draftEl = document.getElementById("envelope-draft");
+  const draftOptionsEl = document.getElementById("envelope-draft-options");
 
   if (!trigger || !modal || !closeButton || !startButton || !pauseButton || !restartButton || !canvas || !overlay) {
     return;
@@ -58,6 +64,8 @@
   const assemblySlotsEl = document.getElementById("envelope-assembly-slots");
   const forecastTitleEl = document.getElementById("envelope-forecast-title");
   const forecastCopyEl = document.getElementById("envelope-forecast-copy");
+  const upgradeTitleEl = document.getElementById("envelope-upgrade-title");
+  const upgradeCopyEl = document.getElementById("envelope-upgrade-copy");
   const rankTitleEl = document.getElementById("envelope-rank-title");
   const rankCopyEl = document.getElementById("envelope-rank-copy");
   const rankSummaryEl = document.getElementById("envelope-rank-summary");
@@ -454,6 +462,189 @@
     }
   };
 
+  const ADAPTATION_MODULES = [
+    {
+      id: "mreb-lanes",
+      title: "MreB lane sensing",
+      copy: "Sharper lateral steering helps you line up cleanly through inhibitor fronts.",
+      modifiers: {
+        moveSpeedMul: 1.08,
+        frontGapMul: 1.08
+      }
+    },
+    {
+      id: "sigmae-buffer",
+      title: "SigmaE buffering",
+      copy: "Shields arrive fuller and each run starts with a little more reserve protection.",
+      modifiers: {
+        shieldGainBonus: 12,
+        startingShield: 10
+      }
+    },
+    {
+      id: "lipid-routing",
+      title: "Lipid II routing",
+      copy: "Precursor pickups score higher and complete envelope builds pay out harder.",
+      modifiers: {
+        precursorScoreMul: 1.12,
+        assemblyRewardMul: 1.12
+      }
+    },
+    {
+      id: "capsule-slipstream",
+      title: "Capsule slipstream",
+      copy: "Near-miss windows widen slightly, making tight dodges easier to convert into chain value.",
+      modifiers: {
+        nearMissWindowMul: 1.1,
+        nearMissScoreMul: 1.08
+      }
+    },
+    {
+      id: "divisome-tuning",
+      title: "Divisome tuning",
+      copy: "Inhibitor fronts move more slowly and give you a slightly wider safe lane.",
+      modifiers: {
+        frontSpeedMul: 0.88,
+        frontGapMul: 1.12
+      }
+    },
+    {
+      id: "efflux-breathing-room",
+      title: "Efflux breathing room",
+      copy: "Antibiotic pulses hit softer and overall hazard tempo eases slightly.",
+      modifiers: {
+        pulseDamageMul: 0.82,
+        hazardSpeedMul: 0.94
+      }
+    },
+    {
+      id: "phage-decoy-net",
+      title: "Phage decoy net",
+      copy: "Phages track a little less aggressively and surges take longer to return.",
+      modifiers: {
+        phageSpeedMul: 0.9,
+        surgeCooldownMul: 1.12
+      }
+    },
+    {
+      id: "scavenger-metabolism",
+      title: "Scavenger metabolism",
+      copy: "Pickups remain on screen longer so you can convert more of the arena into value.",
+      modifiers: {
+        resourceLifeMul: 1.28,
+        boostDurationMul: 1.08
+      }
+    },
+    {
+      id: "stress-memory",
+      title: "Stress memory",
+      copy: "Repairs patch more integrity and post-hit invulnerability lasts a little longer.",
+      modifiers: {
+        precursorRepairBonus: 2,
+        invulnerabilityBonus: 0.12
+      }
+    },
+    {
+      id: "surge-harvest",
+      title: "Surge harvest",
+      copy: "Phage blooms become more profitable, rewarding players who survive the hardest windows.",
+      modifiers: {
+        surgeScoreMul: 1.18,
+        assemblyRewardMul: 1.08
+      }
+    },
+    {
+      id: "sensor-array",
+      title: "Envelope sensor array",
+      copy: "Assembly queues complete into bigger payouts and the best queues are easier to read under pressure.",
+      modifiers: {
+        assemblyRewardMul: 1.16,
+        frontGapMul: 1.06
+      }
+    },
+    {
+      id: "burst-catalysis",
+      title: "Burst catalysis",
+      copy: "Catalytic boosts last longer and movement under boost feels more explosive.",
+      modifiers: {
+        boostDurationMul: 1.18,
+        moveSpeedMul: 1.05
+      }
+    }
+  ];
+
+  const BREAKTHROUGH_PROTOCOLS = [
+    {
+      id: "sigmae-triage",
+      title: "SigmaE triage",
+      copy: "Rapid envelope repair restores integrity and shield in a single burst.",
+      floater: "SigmaE triage",
+      apply() {
+        state.integrity = clamp(state.integrity + 28, 0, 100);
+        state.shield = clamp(state.shield + 34, 0, 100);
+        addBurst(state.player.x, state.player.y, "#87f5ff", 22);
+      }
+    },
+    {
+      id: "crispr-sweep",
+      title: "CRISPR sweep",
+      copy: "A defensive sweep strips phages from the field and buys you a short invulnerability window.",
+      floater: "CRISPR sweep",
+      apply() {
+        const cleared = state.phages.length;
+        state.phages = [];
+        state.score += cleared * 28;
+        state.invulnerable = Math.max(state.invulnerable, 2.1);
+        addBurst(state.player.x, state.player.y, "#cfe9ff", 24);
+      }
+    },
+    {
+      id: "tol-pal-reroute",
+      title: "Tol-Pal reroute",
+      copy: "Clears active fronts and pulses so you can reposition before the next wave arrives.",
+      floater: "Tol-Pal reroute",
+      apply() {
+        const cleared = state.fronts.length + state.pulses.length;
+        state.fronts = [];
+        state.pulses = [];
+        state.score += cleared * 34;
+        addBurst(state.player.x, state.player.y, "#b0ecff", 24);
+      }
+    },
+    {
+      id: "fast-track-assembly",
+      title: "Fast-track assembly",
+      copy: "Instantly installs pending queue pieces and kicks catalytic tempo higher.",
+      floater: "Fast-track assembly",
+      apply() {
+        if (state.assemblyQueue?.steps?.length) {
+          const pending = state.assemblyQueue.steps.filter((step) => !step.completed).slice(0, 2);
+          pending.forEach((step) => {
+            step.completed = true;
+            addFloater(state.player.x, state.player.y - 10, `${step.label} installed`, "#defbff");
+          });
+          renderAssemblyQueue();
+          if (state.assemblyQueue.steps.every((step) => step.completed)) {
+            completeAssemblyQueue();
+          } else {
+            updateRunIntel();
+          }
+        }
+        state.boostTimer = clamp(state.boostTimer + 4.2, 0, 12);
+      }
+    },
+    {
+      id: "sos-slowfield",
+      title: "SOS slowdown",
+      copy: "Temporarily slows hazard tempo, creating a precious breather in the middle of heavy pressure.",
+      floater: "SOS slowdown",
+      apply() {
+        state.slowFieldTimer = Math.max(state.slowFieldTimer, 8.5);
+        addBurst(state.player.x, state.player.y, "#ffd8a6", 22);
+      }
+    }
+  ];
+
   const RUN_SECTORS = [
     {
       id: "envelope-initiation",
@@ -583,10 +774,12 @@
     phageSpawnIn: 1.45,
     pulseSpawnIn: 5.4,
     frontSpawnIn: 11.5,
+    breakthroughSpawnIn: 28,
     resourceSpawnIn: 1.2,
     surgeIn: 64,
     surgeTimer: 0,
     surgePulseIn: 0.44,
+    slowFieldTimer: 0,
     nearMissCooldown: 0,
     collapseActive: false,
     collapseTimer: 0,
@@ -625,6 +818,9 @@
     assembliesCompleted: 0,
     directivesCompleted: 0,
     bestCombo: 0,
+    upgrades: [],
+    draftChoices: [],
+    pendingDraftSectorId: "",
     surgesCleared: 0,
     player: {
       x: 0,
@@ -1303,7 +1499,7 @@
     const seen = new Set();
     const entries = [];
     const pool = getPrecursorPool(modelId);
-    const trait = getModelTraitData(modelId);
+    const modifiers = getActiveRunModifiers(modelId);
 
     pool.forEach((entry) => {
       const def = getPrecursorDefinition(entry.id);
@@ -1314,7 +1510,7 @@
         label: key,
         points: Math.max(
           1,
-          Math.floor((Number(def.points) || 100) * (trait.modifiers?.precursorScoreMul || 1))
+          Math.floor((Number(def.points) || 100) * modifiers.precursorScoreMul)
         )
       });
     });
@@ -1389,12 +1585,94 @@
     return MODEL_TRAITS[modelId] || MODEL_TRAITS.ecoli;
   }
 
+  function getAdaptationModule(moduleId) {
+    return ADAPTATION_MODULES.find((module) => module.id === moduleId) || null;
+  }
+
+  function getBreakthroughProtocol(protocolId) {
+    return BREAKTHROUGH_PROTOCOLS.find((protocol) => protocol.id === protocolId) || BREAKTHROUGH_PROTOCOLS[0];
+  }
+
+  function getActiveRunModifiers(modelId = state.modelId) {
+    const trait = getModelTraitData(modelId);
+    const modifiers = {
+      precursorRepairBonus: 0,
+      shieldGainBonus: 0,
+      startingShield: 0,
+      precursorScoreMul: 1,
+      surgeScoreMul: 1,
+      nearMissWindowMul: 1,
+      nearMissScoreMul: 1,
+      pulseDamageMul: 1,
+      boostDurationMul: 1,
+      moveSpeedMul: 1,
+      frontGapMul: 1,
+      frontSpeedMul: 1,
+      hazardSpeedMul: 1,
+      assemblyRewardMul: 1,
+      surgeCooldownMul: 1,
+      phageSpeedMul: 1,
+      resourceLifeMul: 1,
+      invulnerabilityBonus: 0
+    };
+
+    const applyModifierSet = (set) => {
+      if (!set) return;
+      if (set.precursorRepairBonus) modifiers.precursorRepairBonus += set.precursorRepairBonus;
+      if (set.shieldGainBonus) modifiers.shieldGainBonus += set.shieldGainBonus;
+      if (set.startingShield) modifiers.startingShield += set.startingShield;
+      if (set.invulnerabilityBonus) modifiers.invulnerabilityBonus += set.invulnerabilityBonus;
+      if (set.precursorScoreMul) modifiers.precursorScoreMul *= set.precursorScoreMul;
+      if (set.surgeScoreMul) modifiers.surgeScoreMul *= set.surgeScoreMul;
+      if (set.nearMissWindowMul) modifiers.nearMissWindowMul *= set.nearMissWindowMul;
+      if (set.nearMissScoreMul) modifiers.nearMissScoreMul *= set.nearMissScoreMul;
+      if (set.pulseDamageMul) modifiers.pulseDamageMul *= set.pulseDamageMul;
+      if (set.boostDurationMul) modifiers.boostDurationMul *= set.boostDurationMul;
+      if (set.moveSpeedMul) modifiers.moveSpeedMul *= set.moveSpeedMul;
+      if (set.frontGapMul) modifiers.frontGapMul *= set.frontGapMul;
+      if (set.frontSpeedMul) modifiers.frontSpeedMul *= set.frontSpeedMul;
+      if (set.hazardSpeedMul) modifiers.hazardSpeedMul *= set.hazardSpeedMul;
+      if (set.assemblyRewardMul) modifiers.assemblyRewardMul *= set.assemblyRewardMul;
+      if (set.surgeCooldownMul) modifiers.surgeCooldownMul *= set.surgeCooldownMul;
+      if (set.phageSpeedMul) modifiers.phageSpeedMul *= set.phageSpeedMul;
+      if (set.resourceLifeMul) modifiers.resourceLifeMul *= set.resourceLifeMul;
+    };
+
+    applyModifierSet(trait.modifiers);
+    state.upgrades.forEach((moduleId) => {
+      applyModifierSet(getAdaptationModule(moduleId)?.modifiers);
+    });
+
+    if (state.slowFieldTimer > 0) {
+      modifiers.hazardSpeedMul *= 0.8;
+      modifiers.frontSpeedMul *= 0.84;
+      modifiers.phageSpeedMul *= 0.88;
+    }
+
+    return modifiers;
+  }
+
+  function buildDraftChoices(count = 3) {
+    const owned = new Set(state.upgrades);
+    const pool = ADAPTATION_MODULES.filter((module) => !owned.has(module.id));
+    const source = pool.length >= count ? [...pool] : [...ADAPTATION_MODULES];
+    const choices = [];
+
+    while (source.length && choices.length < count) {
+      const index = Math.floor(Math.random() * source.length);
+      choices.push(source.splice(index, 1)[0]);
+    }
+
+    return choices;
+  }
+
   function getAssemblyPlan(modelId = state.modelId) {
     return MODEL_ASSEMBLY_PLANS[modelId] || MODEL_ASSEMBLY_PLANS.ecoli;
   }
 
   function buildAssemblyQueue(modelId = state.modelId, sector = getCurrentSector()) {
     const plan = getAssemblyPlan(modelId);
+    const modifiers = getActiveRunModifiers(modelId);
     const desiredSize = clamp(Number(sector?.assemblySize) || 2, 2, Math.max(2, plan.priority.length));
     const steps = [];
     const seen = new Set();
@@ -1416,7 +1694,8 @@
       sectorId: sector?.id || "tutorial",
       title: plan.title,
       description: plan.copy,
-      rewardScore: Math.round((Number(sector?.bonus) || 300) * (steps.length >= 4 ? 0.34 : 0.28)) + steps.length * 60,
+      rewardScore:
+        Math.round(((Number(sector?.bonus) || 300) * (steps.length >= 4 ? 0.34 : 0.28) + steps.length * 60) * modifiers.assemblyRewardMul),
       rewardShield: steps.length >= 4 ? 16 : 12,
       rewardIntegrity: steps.length >= 4 ? 14 : 10,
       rewardBoost: steps.length >= 4 ? 3.1 : 2.4,
@@ -1456,6 +1735,74 @@
       chip.append(label, status);
       assemblySlotsEl.append(chip);
     });
+  }
+
+  function updateOverlayLayout(mode = overlayMode) {
+    const startMode = mode === "start";
+    const draftMode = mode === "draft";
+    const showStartActions = mode === "start" || mode === "resume" || mode === "restart";
+
+    if (modelPickerWrapEl) modelPickerWrapEl.hidden = !startMode;
+    if (playerNameWrapEl) playerNameWrapEl.hidden = !startMode;
+    if (tutorialNoteEl) tutorialNoteEl.hidden = !startMode;
+    if (startActionsWrapEl) startActionsWrapEl.hidden = !showStartActions;
+    if (tutorialStartButton) tutorialStartButton.hidden = mode !== "start";
+    if (draftEl) draftEl.hidden = !draftMode;
+    if (overlayBriefingEl) overlayBriefingEl.hidden = false;
+  }
+
+  function renderDraftOptions() {
+    if (!draftOptionsEl) return;
+    draftOptionsEl.innerHTML = "";
+
+    state.draftChoices.forEach((choice) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "envelope-draft-option";
+      button.dataset.moduleId = choice.id;
+
+      const title = document.createElement("strong");
+      title.textContent = choice.title;
+      const copy = document.createElement("span");
+      copy.textContent = choice.copy;
+
+      button.append(title, copy);
+      draftOptionsEl.append(button);
+    });
+  }
+
+  function applyAdaptationChoice(moduleId) {
+    const module = getAdaptationModule(moduleId);
+    if (!module) return;
+    if (!state.upgrades.includes(module.id)) {
+      state.upgrades.push(module.id);
+    }
+    state.draftChoices = [];
+    state.pendingDraftSectorId = "";
+    addFloater(state.width * 0.5, 60, module.title, "#d9f7ff");
+    addBurst(state.width * 0.5, 72, "#c7f0ff", 20);
+    state.paused = false;
+    pauseButton.textContent = "Pause";
+    hideOverlay();
+    updateModelUi();
+    updateRunIntel();
+    lastFrame = performance.now();
+    ensureLoop();
+  }
+
+  function openAdaptationDraft(sector) {
+    state.draftChoices = buildDraftChoices(3);
+    if (!state.draftChoices.length) return;
+    state.pendingDraftSectorId = sector.id;
+    state.paused = true;
+    pauseButton.textContent = "Continue";
+    renderDraftOptions();
+    showOverlay(
+      `${sector.title} adaptation`,
+      "Choose one lab adaptation before the next pressure regime locks in.",
+      "",
+      "draft"
+    );
   }
 
   function completeAssemblyQueue() {
@@ -1686,6 +2033,7 @@
       state.score += nextSector.bonus;
       addFloater(state.width * 0.5, 52, `${nextSector.title} +${nextSector.bonus}`, "#9feeff");
       addBurst(state.width * 0.5, 62, "#9befff", 20);
+      openAdaptationDraft(nextSector);
     }
     updateRunIntel();
   }
@@ -1790,8 +2138,24 @@
       forecastTitleEl.textContent = sector.forecastTitle || sector.title;
     }
     if (forecastCopyEl) {
-      const surgePrefix = state.surgeTimer > 0 ? "Surge active now. " : "";
+      const surgePrefix = state.surgeTimer > 0 ? "Surge active now. " : state.slowFieldTimer > 0 ? "SOS slowdown active. " : "";
       forecastCopyEl.textContent = `${surgePrefix}${sector.forecastCopy || "Pressure profile updating."}`.trim();
+    }
+
+    if (upgradeTitleEl) {
+      upgradeTitleEl.textContent = state.upgrades.length
+        ? `${state.upgrades.length} active · ${getAdaptationModule(state.upgrades[state.upgrades.length - 1])?.title || "Adapted"}`
+        : "No adaptations yet";
+    }
+    if (upgradeCopyEl) {
+      const latestUpgrade = getAdaptationModule(state.upgrades[state.upgrades.length - 1]);
+      const stack = state.upgrades
+        .slice(-3)
+        .map((moduleId) => getAdaptationModule(moduleId)?.title || "Adaptation")
+        .join(" · ");
+      upgradeCopyEl.textContent = state.upgrades.length
+        ? `${latestUpgrade?.copy || "Adaptation active."} Active stack: ${stack}.`
+        : "Sector rewards will offer one adaptation choice each transition.";
     }
 
     if (rankTitleEl) {
@@ -1980,11 +2344,11 @@
   }
 
   function resetSimulation() {
-    const trait = getModelTraitData(state.modelId);
+    const modifiers = getActiveRunModifiers(state.modelId);
     state.elapsed = 0;
     state.score = 0;
     state.integrity = 100;
-    state.shield = clamp(trait.modifiers?.startingShield || 0, 0, 100);
+    state.shield = clamp(modifiers.startingShield || 0, 0, 100);
     state.boostTimer = 0;
     state.combo = 0;
     state.invulnerable = 0;
@@ -2021,6 +2385,11 @@
     state.assembliesCompleted = 0;
     state.directivesCompleted = 0;
     state.bestCombo = 0;
+    state.upgrades = [];
+    state.draftChoices = [];
+    state.pendingDraftSectorId = "";
+    state.slowFieldTimer = 0;
+    state.breakthroughSpawnIn = random(24, 34);
     buildAmbientParticles();
     placePlayerCenter();
     initializeRunProgress();
@@ -2045,8 +2414,7 @@
     overlayTitle.textContent = title;
     overlayCopy.textContent = copy;
     startButton.textContent = actionText;
-    if (tutorialStartButton) tutorialStartButton.hidden = mode !== "start";
-    if (tutorialNoteEl) tutorialNoteEl.hidden = mode !== "start";
+    updateOverlayLayout(mode);
     overlay.classList.remove("is-hidden");
   }
 
@@ -2082,6 +2450,8 @@
       pressureNoteEl.textContent =
         state.runMode === "tutorial"
           ? "Practice pacing"
+          : state.slowFieldTimer > 0
+            ? `SOS slowdown · ${Math.ceil(state.slowFieldTimer)}s left`
           : state.surgeTimer > 0
             ? `Surge active · ${Math.ceil(state.surgeTimer)}s left`
             : telegraphedFront
@@ -2144,7 +2514,7 @@
 
     showOverlay(
       "Envelope Escape",
-      "Assemble the right envelope modules, survive gradually intensifying stress regimens, and see where your bacterium lands on the leaderboard.",
+      "Assemble the right envelope modules, choose sector adaptations, grab rare response protocols, and survive long enough to climb the leaderboard.",
       "Start Ranked Trial",
       "start"
     );
@@ -2225,6 +2595,7 @@
       `Reached ${reachedSector.title}.`,
       `${state.assembliesCompleted} envelope build${state.assembliesCompleted === 1 ? "" : "s"} completed.`,
       `${state.directivesCompleted} directive${state.directivesCompleted === 1 ? "" : "s"} cleared.`,
+      `${state.upgrades.length} adaptation${state.upgrades.length === 1 ? "" : "s"} installed.`,
       `Best clean chain: x${comboValue}.`
     ];
     return parts.join(" ");
@@ -2337,9 +2708,10 @@
     }
 
     const profile = getDifficultyProfile();
+    const modifiers = getActiveRunModifiers(state.modelId);
     const baseSpeed = random(70, 96) * profile.phageSpeedMul + profile.intensity * 7;
     const isDarter = kind === "darter";
-    const speed = isDarter ? baseSpeed * random(1.12, 1.27) : baseSpeed;
+    const speed = (isDarter ? baseSpeed * random(1.12, 1.27) : baseSpeed) * modifiers.phageSpeedMul * modifiers.hazardSpeedMul;
     const angle = Math.atan2(state.player.y - y, state.player.x - x) + random(-0.35, 0.35);
 
     state.phages.push({
@@ -2360,12 +2732,16 @@
   function spawnPulse() {
     const profile = getDifficultyProfile();
     const margin = 64;
+    const modifiers = getActiveRunModifiers(state.modelId);
     state.pulses.push({
       x: random(margin, state.width - margin),
       y: random(margin, state.height - margin),
       r: random(10, 26),
       thickness: random(11, 16),
-      speed: (random(68, 98) * profile.pulseSpeedMul + profile.intensity * 9) * (state.surgeTimer > 0 ? 1.08 : 1),
+      speed:
+        (random(68, 98) * profile.pulseSpeedMul + profile.intensity * 9) *
+        (state.surgeTimer > 0 ? 1.08 : 1) *
+        modifiers.hazardSpeedMul,
       maxR: Math.max(state.width, state.height) * random(0.52, 0.82),
       hitLock: 0,
       nearScored: false
@@ -2375,13 +2751,14 @@
   function spawnFront() {
     const sector = getCurrentSector();
     const profile = getDifficultyProfile();
+    const modifiers = getActiveRunModifiers(state.modelId);
     if ((sector.frontPressure || 0) <= 0.05) return;
 
     const orientation = Math.random() < 0.5 ? "vertical" : "horizontal";
     const axisSpan = orientation === "vertical" ? state.width : state.height;
     const crossSpan = orientation === "vertical" ? state.height : state.width;
     const thickness = clamp(random(34, 48) * (0.94 + profile.intensity * 0.08), 30, 62);
-    const gapSize = clamp(crossSpan * random(0.22, 0.29) / (profile.frontGapScale || 1), 96, 210);
+    const gapSize = clamp(crossSpan * random(0.22, 0.29) * modifiers.frontGapMul / (profile.frontGapScale || 1), 96, 230);
     const direction = Math.random() < 0.5 ? 1 : -1;
     const position = direction > 0 ? -thickness : axisSpan + thickness;
 
@@ -2392,10 +2769,23 @@
       thickness,
       gapCenter: random(gapSize * 0.6, crossSpan - gapSize * 0.6),
       gapSize,
-      speed: random(112, 156) * profile.frontSpeedMul,
+      speed: random(112, 156) * profile.frontSpeedMul * modifiers.frontSpeedMul * modifiers.hazardSpeedMul,
       telegraph: 0.9,
       hitLock: 0,
       grazed: false
+    });
+  }
+
+  function spawnBreakthrough() {
+    const protocol = BREAKTHROUGH_PROTOCOLS[Math.floor(Math.random() * BREAKTHROUGH_PROTOCOLS.length)] || BREAKTHROUGH_PROTOCOLS[0];
+    state.resources.push({
+      x: random(34, state.width - 34),
+      y: random(34, state.height - 34),
+      r: 13,
+      kind: "breakthrough",
+      protocol,
+      phase: random(0, Math.PI * 2),
+      life: 0
     });
   }
 
@@ -2458,9 +2848,10 @@
       return;
     }
     const profile = getDifficultyProfile();
+    const modifiers = getActiveRunModifiers(state.modelId);
     state.surgeTimer = random(4.8, 7.1) * profile.surgeDurationMul;
     state.surgePulseIn = random(0.28, 0.44) / profile.surgeCadenceMul;
-    state.surgeIn = random(16, 24) * profile.surgeCooldownMul;
+    state.surgeIn = random(16, 24) * profile.surgeCooldownMul * modifiers.surgeCooldownMul;
     state.shake = Math.max(state.shake, 6.5);
     addFloater(state.width * 0.5, 48, "Phage surge", "#98f0ff");
     addBurst(state.width * 0.5, 62, "#8eefff", 20);
@@ -2732,10 +3123,10 @@
   function applyDamage(amount, label, source = "generic") {
     if (state.collapseActive || state.invulnerable > 0) return;
     const profile = getDifficultyProfile();
-    const trait = getModelTraitData(state.modelId);
+    const modifiers = getActiveRunModifiers(state.modelId);
     let scaledAmount = amount * profile.damageMul;
     if (source === "pulse") {
-      scaledAmount *= trait.modifiers?.pulseDamageMul || 1;
+      scaledAmount *= modifiers.pulseDamageMul;
     }
 
     if (state.shield > 0) {
@@ -2749,33 +3140,41 @@
       addBurst(state.player.x, state.player.y, "#ff7b9b", 12);
     }
 
-    state.invulnerable = 0.42;
+    state.invulnerable = 0.42 + modifiers.invulnerabilityBonus;
     state.shake = 9;
     state.combo = 0;
   }
 
   function collectResource(resource, index) {
-    const trait = getModelTraitData(state.modelId);
+    const modifiers = getActiveRunModifiers(state.modelId);
     if (resource.kind === "shield") {
-      state.shield = clamp(state.shield + 42 + (trait.modifiers?.shieldGainBonus || 0), 0, 100);
+      state.shield = clamp(state.shield + 42 + modifiers.shieldGainBonus, 0, 100);
       state.integrity = clamp(state.integrity + 5, 0, 100);
       state.score += 190 + state.combo * 12;
       addFloater(resource.x, resource.y, "SigmaE shield", "#86f5ff");
       addBurst(resource.x, resource.y, "#86f5ff", 16);
       advanceDirectiveProgress("collect_shield", 1);
     } else if (resource.kind === "boost") {
-      state.boostTimer = clamp(state.boostTimer + 7.2 * (trait.modifiers?.boostDurationMul || 1), 0, 12);
+      state.boostTimer = clamp(state.boostTimer + 7.2 * modifiers.boostDurationMul, 0, 12);
       state.score += 140 + state.combo * 14;
       addFloater(resource.x, resource.y, "Catalytic boost", "#c3dcff");
       addBurst(resource.x, resource.y, "#b9d5ff", 16);
       advanceDirectiveProgress("collect_boost", 1);
+    } else if (resource.kind === "breakthrough") {
+      const protocol = resource.protocol || BREAKTHROUGH_PROTOCOLS[0];
+      protocol.apply();
+      state.score += 220 + state.combo * 18;
+      state.combo = clamp(state.combo + 1, 0, 14);
+      state.bestCombo = Math.max(state.bestCombo, state.combo);
+      addFloater(resource.x, resource.y, protocol.floater, "#fff1c7");
+      addBurst(resource.x, resource.y, "#ffe4b0", 18);
     } else {
       const precursor = resource.precursor || ENVELOPE_PRECURSORS.lipidII;
       const precursorPoints = Math.max(
         1,
-        Math.floor((Number(precursor.points) || 100) * (trait.modifiers?.precursorScoreMul || 1))
+        Math.floor((Number(precursor.points) || 100) * modifiers.precursorScoreMul)
       );
-      state.integrity = clamp(state.integrity + 8 + (trait.modifiers?.precursorRepairBonus || 0), 0, 100);
+      state.integrity = clamp(state.integrity + 8 + modifiers.precursorRepairBonus, 0, 100);
       state.score += precursorPoints + state.combo * 16;
       addFloater(
         resource.x,
@@ -2795,8 +3194,9 @@
 
   function updatePlayer(dt) {
     const moveSpeedBase = clamp(state.height * 0.68, 210, 360);
+    const modifiers = getActiveRunModifiers(state.modelId);
     const boostFactor = state.boostTimer > 0 ? 1.32 : 1;
-    const moveSpeed = moveSpeedBase * boostFactor;
+    const moveSpeed = moveSpeedBase * boostFactor * modifiers.moveSpeedMul;
     const flowX = Math.cos(state.flowAngle) * state.flowStrength;
     const flowY = Math.sin(state.flowAngle) * state.flowStrength;
     let inputX = 0;
@@ -2852,14 +3252,14 @@
   function updateSimulation(dt) {
     state.elapsed += dt;
     const profile = getDifficultyProfile();
-    const trait = getModelTraitData(state.modelId);
+    const modifiers = getActiveRunModifiers(state.modelId);
     maybeShowTutorialHints();
     handleSectorTransition();
     updateDirectiveTimer(dt);
     updateFlowField(dt, profile);
     const surgeStrength = state.surgeTimer > 0 ? 1.35 : 1;
     const boostScoreMul = state.boostTimer > 0 ? 1.22 : 1;
-    const traitSurgeScoreMul = state.surgeTimer > 0 ? trait.modifiers?.surgeScoreMul || 1 : 1;
+    const traitSurgeScoreMul = state.surgeTimer > 0 ? modifiers.surgeScoreMul : 1;
     state.score += dt * (16 + state.elapsed * 0.22 + state.combo * 0.8) * surgeStrength * boostScoreMul * traitSurgeScoreMul;
 
     state.invulnerable = Math.max(0, state.invulnerable - dt);
@@ -2867,6 +3267,7 @@
     state.shield = Math.max(0, state.shield - dt * 1.8);
     state.boostTimer = Math.max(0, state.boostTimer - dt);
     state.nearMissCooldown = Math.max(0, state.nearMissCooldown - dt);
+    state.slowFieldTimer = Math.max(0, state.slowFieldTimer - dt);
 
     state.surgeIn -= dt;
     if (state.surgeIn <= 0 && !state.collapseActive) {
@@ -2910,6 +3311,7 @@
     state.phageSpawnIn -= dt;
     state.pulseSpawnIn -= dt;
     state.frontSpawnIn -= dt;
+    state.breakthroughSpawnIn -= dt;
     state.resourceSpawnIn -= dt;
 
     if (state.phageSpawnIn <= 0) {
@@ -2926,6 +3328,11 @@
     if (state.frontSpawnIn <= 0) {
       spawnFront();
       state.frontSpawnIn = clamp(random(11.8, 18.2) / Math.max(0.2, profile.frontSpawnMul || 0.2), 5.8, 18.5);
+    }
+
+    if (state.breakthroughSpawnIn <= 0) {
+      spawnBreakthrough();
+      state.breakthroughSpawnIn = random(28, 42);
     }
 
     if (state.resourceSpawnIn <= 0) {
@@ -2973,11 +3380,11 @@
         continue;
       }
 
-      const nearBand = phage.r + state.player.radius * 1.15 * (trait.modifiers?.nearMissWindowMul || 1);
+      const nearBand = phage.r + state.player.radius * 1.15 * modifiers.nearMissWindowMul;
       if (!phage.nearScored && dist < nearBand && state.nearMissCooldown <= 0) {
         phage.nearScored = true;
         state.nearMissCooldown = 0.18;
-        const nearBonus = Math.floor((24 + state.combo * 4) * (trait.modifiers?.nearMissScoreMul || 1));
+        const nearBonus = Math.floor((24 + state.combo * 4) * modifiers.nearMissScoreMul);
         state.score += nearBonus;
         state.combo = clamp(state.combo + 1, 0, 14);
         state.bestCombo = Math.max(state.bestCombo, state.combo);
@@ -3003,11 +3410,11 @@
 
       if (
         !pulse.nearScored &&
-        ringGap < pulse.thickness + state.player.radius * 1.25 * (trait.modifiers?.nearMissWindowMul || 1) &&
+        ringGap < pulse.thickness + state.player.radius * 1.25 * modifiers.nearMissWindowMul &&
         ringGap > pulse.thickness + state.player.radius * 0.28
       ) {
         pulse.nearScored = true;
-        const pulseBonus = Math.floor((18 + state.combo * 3) * (trait.modifiers?.nearMissScoreMul || 1));
+        const pulseBonus = Math.floor((18 + state.combo * 3) * modifiers.nearMissScoreMul);
         state.score += pulseBonus;
         state.combo = clamp(state.combo + 1, 0, 14);
         state.bestCombo = Math.max(state.bestCombo, state.combo);
@@ -3046,7 +3453,7 @@
         !front.grazed
       ) {
         front.grazed = true;
-        const frontBonus = Math.floor((26 + state.combo * 3) * (trait.modifiers?.nearMissScoreMul || 1));
+        const frontBonus = Math.floor((26 + state.combo * 3) * modifiers.nearMissScoreMul);
         state.score += frontBonus;
         state.combo = clamp(state.combo + 1, 0, 14);
         state.bestCombo = Math.max(state.bestCombo, state.combo);
@@ -3067,7 +3474,7 @@
       resource.y += Math.sin(resource.phase) * 7 * dt;
       resource.x = clamp(resource.x + flowX * dt * 0.08, 22, state.width - 22);
 
-      if (resource.life > 15) {
+      if (resource.life > 15 * modifiers.resourceLifeMul) {
         state.resources.splice(i, 1);
         continue;
       }
@@ -3590,6 +3997,41 @@
 
       ctx.strokeStyle = "rgba(234, 242, 255, 0.84)";
       ctx.lineWidth = 1.15;
+      ctx.stroke();
+    } else if (resource.kind === "breakthrough") {
+      const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, resource.r * 2.4);
+      glow.addColorStop(0, "rgba(255, 235, 176, 0.94)");
+      glow.addColorStop(1, "rgba(255, 186, 124, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(0, 0, resource.r * 2.4, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(255, 238, 204, 0.95)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, resource.r * 0.96, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(255, 222, 148, 0.96)";
+      ctx.beginPath();
+      for (let i = 0; i < 6; i += 1) {
+        const angle = (Math.PI / 3) * i - Math.PI / 2;
+        const outer = resource.r * 0.78;
+        const inner = resource.r * 0.34;
+        const outerX = Math.cos(angle) * outer;
+        const outerY = Math.sin(angle) * outer;
+        const innerX = Math.cos(angle + Math.PI / 6) * inner;
+        const innerY = Math.sin(angle + Math.PI / 6) * inner;
+        if (i === 0) ctx.moveTo(outerX, outerY);
+        else ctx.lineTo(outerX, outerY);
+        ctx.lineTo(innerX, innerY);
+      }
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(255, 248, 232, 0.92)";
+      ctx.lineWidth = 1.2;
       ctx.stroke();
     } else {
       const precursor = resource.precursor || ENVELOPE_PRECURSORS.lipidII;
@@ -4132,6 +4574,7 @@
 
     if (value && key === " " && state.running) {
       event.preventDefault();
+      if (overlayMode === "draft") return;
       if (state.paused) resumeSimulation();
       else pauseSimulation();
     }
@@ -4170,6 +4613,7 @@
 
   pauseButton.addEventListener("click", () => {
     if (!state.running) return;
+    if (overlayMode === "draft") return;
     if (state.paused) resumeSimulation();
     else pauseSimulation();
   });
@@ -4214,6 +4658,16 @@
           "restart"
         );
       }
+    });
+  }
+
+  if (draftOptionsEl) {
+    draftOptionsEl.addEventListener("click", (event) => {
+      const button = event.target.closest(".envelope-draft-option");
+      if (!button) return;
+      const moduleId = button.getAttribute("data-module-id") || "";
+      if (!moduleId) return;
+      applyAdaptationChoice(moduleId);
     });
   }
 
