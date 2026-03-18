@@ -23,7 +23,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brands/favicon-32.png?v=20260307a" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/brands/apple-touch-icon.png?v=20260307a" />
     <link rel="stylesheet" href="assets/styles.css?v=20260317d" />
-    <link rel="stylesheet" href="assets/envelope-escape.css?v=20260317d" />
+    <link rel="stylesheet" href="assets/envelope-escape.css?v=20260317e" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -563,8 +563,8 @@
           <div id="envelope-overlay" class="envelope-overlay">
             <h3 id="envelope-overlay-title">Envelope Escape</h3>
             <p id="envelope-overlay-copy">
-              Guide your bacterium through phage attacks and antibiotic waves. Collect species-specific envelope
-              precursors to stay intact.
+              Steer a model bacterium through phage blooms, antibiotic fronts, and cell-wall stress. Assemble the
+              right envelope modules to stay intact long enough to climb the global board.
             </p>
             <div class="envelope-model-picker">
               <label for="envelope-model-select">Choose a model bacterium</label>
@@ -582,9 +582,9 @@
             <div class="envelope-overlay-briefing" aria-label="Run overview">
               <p id="envelope-overlay-status" class="envelope-overlay-status">Preparing ranked run intel…</p>
               <ul class="envelope-overlay-points">
-                <li>Survive escalating sectors to earn milestone bonuses.</li>
-                <li>Chain clean pickups and tight dodges to grow your stability chain.</li>
-                <li>Species traits subtly change how each bacterium handles pressure.</li>
+                <li>Complete assembly queues to trigger envelope fortification bursts.</li>
+                <li>Each sector changes the stress regimen and slowly raises the difficulty.</li>
+                <li>Species traits subtly change how each bacterium handles pressure and recovery.</li>
               </ul>
             </div>
             <div class="envelope-player-name">
@@ -600,11 +600,11 @@
               <p id="envelope-player-name-feedback" hidden></p>
             </div>
             <p id="envelope-tutorial-note" class="envelope-tutorial-note">
-              First time? Try Tutorial Mode (easier, not ranked).
+              First time? Try Practice Route (easier, not ranked).
             </p>
             <div class="envelope-start-actions">
-              <button id="envelope-start" class="envelope-action" type="button">Start Run</button>
-              <button id="envelope-tutorial-start" class="envelope-secondary" type="button">Tutorial Mode</button>
+              <button id="envelope-start" class="envelope-action" type="button">Start Ranked Trial</button>
+              <button id="envelope-tutorial-start" class="envelope-secondary" type="button">Practice Route</button>
             </div>
           </div>
         </div>
@@ -634,8 +634,8 @@
           </article>
           <article class="envelope-card">
             <span>Sector</span>
-            <strong id="envelope-sector">Surface Patrol</strong>
-            <small id="envelope-sector-note">Milestone bonus at 0:45</small>
+            <strong id="envelope-sector">Envelope Initiation</strong>
+            <small id="envelope-sector-note">Milestone bonus at 0:55</small>
           </article>
           <article class="envelope-card envelope-card--meter">
             <span>Envelope Integrity</span>
@@ -663,7 +663,7 @@
           <section class="envelope-run-intel" aria-labelledby="envelope-run-intel-title">
             <div class="envelope-run-intel-head">
               <h3 id="envelope-run-intel-title">Run intel</h3>
-              <p id="envelope-network-pill" class="envelope-network-pill">Local leaderboard</p>
+              <p id="envelope-network-pill" class="envelope-network-pill">Loading leaderboard…</p>
             </div>
             <div class="envelope-run-intel-grid">
               <article class="envelope-intel-card">
@@ -677,11 +677,28 @@
                 <p id="envelope-directive-copy">Start a ranked run to receive your first objective.</p>
               </article>
               <article class="envelope-intel-card">
+                <span>Assembly queue</span>
+                <strong id="envelope-assembly-title">Queue calibrating</strong>
+                <p id="envelope-assembly-copy">Collect the required envelope modules to trigger a fortification burst.</p>
+              </article>
+              <article class="envelope-intel-card">
+                <span>Hazard forecast</span>
+                <strong id="envelope-forecast-title">Stress map pending</strong>
+                <p id="envelope-forecast-copy">The next sector forecast appears here when the run spins up.</p>
+              </article>
+              <article class="envelope-intel-card">
                 <span>Last ranked result</span>
                 <strong id="envelope-rank-title">No score saved yet</strong>
                 <p id="envelope-rank-copy">Shared placement appears here after a ranked run.</p>
               </article>
             </div>
+          </section>
+          <section class="envelope-assembly-board" aria-labelledby="envelope-assembly-board-title">
+            <div class="envelope-assembly-board-head">
+              <h3 id="envelope-assembly-board-title">Envelope assembly</h3>
+              <p id="envelope-assembly-status" class="envelope-assembly-status">Queue calibrating</p>
+            </div>
+            <div id="envelope-assembly-slots" class="envelope-assembly-slots" aria-live="polite"></div>
           </section>
           <section class="envelope-precursor-key" aria-labelledby="envelope-precursor-key-title">
             <h3 id="envelope-precursor-key-title">Precursor key</h3>
@@ -691,7 +708,7 @@
             <div class="envelope-leaderboard-head">
               <h3 id="envelope-leaderboard-title">Top 25 Scores</h3>
               <div class="envelope-leaderboard-meta-wrap">
-                <p id="envelope-leaderboard-meta">Local leaderboard</p>
+                <p id="envelope-leaderboard-meta">Loading leaderboard…</p>
               </div>
             </div>
             <p id="envelope-rank-summary" class="envelope-rank-summary">Saved runs and placements will appear here.</p>
@@ -729,6 +746,6 @@
     <script src="assets/site-freshness.js" data-freshness-path="assets/data/site-freshness.json"></script>
     <script src="assets/main.js?v=20260317d"></script>
     <script src="assets/envelope-escape-config.js?v=20260318a"></script>
-    <script src="assets/envelope-escape.js?v=20260317d"></script>
+    <script src="assets/envelope-escape.js?v=20260317e"></script>
   </body>
 </html>
