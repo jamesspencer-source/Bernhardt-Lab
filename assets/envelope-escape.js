@@ -74,8 +74,8 @@
   const SPECIES = {
     ecoli: {
       label: "Escherichia coli",
-      passiveTitle: "Balanced repair",
-      passiveCopy: "Repair fragments build the stress response a little faster.",
+      passiveTitle: "Envelope homeostasis",
+      passiveCopy: "Envelope factors charge the stress-response meter a little faster.",
       speedMul: 1,
       responseGainMul: 1.12,
       damageMul: 1,
@@ -134,8 +134,8 @@
     },
     spneumoniae: {
       label: "Streptococcus pneumoniae",
-      passiveTitle: "Capsule rebound",
-      passiveCopy: "Completed repairs grant a longer, stronger stabilization burst.",
+      passiveTitle: "Capsule buffering",
+      passiveCopy: "Completed assembly cycles grant a longer, stronger recovery pulse.",
       speedMul: 0.98,
       responseGainMul: 1,
       damageMul: 1,
@@ -174,8 +174,8 @@
     },
     kpneumoniae: {
       label: "Klebsiella pneumoniae",
-      passiveTitle: "Capsule dragnet",
-      passiveCopy: "Repair fragments begin drifting toward the cell a little earlier.",
+      passiveTitle: "Capsule retention",
+      passiveCopy: "Envelope factors begin drifting toward the cell a little earlier.",
       speedMul: 0.97,
       responseGainMul: 1,
       damageMul: 1,
@@ -195,7 +195,7 @@
     abaumannii: {
       label: "Acinetobacter baumannii",
       passiveTitle: "Stress tolerant",
-      passiveCopy: "The stress response meter charges faster from survival and pickups.",
+      passiveCopy: "The stress-response meter charges faster from survival and factor uptake.",
       speedMul: 1.02,
       responseGainMul: 1.18,
       damageMul: 1,
@@ -219,7 +219,7 @@
       id: "settling",
       start: 0,
       title: "Onset stress",
-      note: "Sparse hazards. Build rhythm and collect repair fragments.",
+      note: "Sparse hazards. Build rhythm and collect envelope factors.",
       rates: { fragment: 1.12, phage: 0.68, wave: 0.52, rupture: 0.45 },
       tintA: "rgba(21, 93, 112, 0.22)",
       tintB: "rgba(28, 128, 149, 0.1)"
@@ -228,7 +228,7 @@
       id: "antibiotic",
       start: 60,
       title: "Antibiotic sweep",
-      note: "Broad drug fronts arrive more often and cut off easy routes.",
+      note: "Cell-wall-active drug pulses arrive more often and cut off easy routes.",
       rates: { fragment: 1.02, phage: 0.9, wave: 0.92, rupture: 0.62 },
       tintA: "rgba(24, 116, 129, 0.28)",
       tintB: "rgba(52, 156, 176, 0.13)"
@@ -237,7 +237,7 @@
       id: "mixed",
       start: 150,
       title: "Mixed assault",
-      note: "Phages, waves, and rupture fronts begin to overlap more aggressively.",
+      note: "Phages, drug pulses, and autolysin breaches begin to overlap more aggressively.",
       rates: { fragment: 0.97, phage: 1.16, wave: 1.08, rupture: 0.92 },
       tintA: "rgba(53, 132, 160, 0.28)",
       tintB: "rgba(120, 183, 211, 0.14)"
@@ -245,8 +245,8 @@
     {
       id: "critical",
       start: 240,
-      title: "Critical rupture",
-      note: "The envelope is failing fast. Repair cycles buy only brief breathing room.",
+      title: "Lytic crisis",
+      note: "Envelope failure is accelerating. Completed assembly cycles buy only brief breathing room.",
       rates: { fragment: 0.93, phage: 1.36, wave: 1.22, rupture: 1.18 },
       tintA: "rgba(91, 142, 172, 0.3)",
       tintB: "rgba(177, 214, 235, 0.18)"
@@ -257,33 +257,33 @@
     {
       id: "phage-bloom",
       name: "Phage Bloom",
-      subtitle: "More phages, faster stress-response gain.",
+      subtitle: "More phages and faster envelope-stress signaling.",
       modifiers: { phage: 1.35, wave: 0.92, rupture: 0.95, fragment: 1.08, response: 1.2, score: 1.08, repairNeeded: 4 }
     },
     {
       id: "beta-lactam-surge",
       name: "Beta-Lactam Surge",
-      subtitle: "Denser antibiotic waves with slightly richer fragment spawns.",
+      subtitle: "Denser beta-lactam pulses with slightly richer factor spawns.",
       modifiers: { phage: 0.98, wave: 1.34, rupture: 0.94, fragment: 1.14, response: 1, score: 1.1, repairNeeded: 4 }
     },
     {
-      id: "Rupture Field",
-      name: "Rupture Field",
-      subtitle: "More shear fronts. Positioning matters more than raw speed.",
+      id: "autolysin-breach",
+      name: "Autolysin Breach",
+      subtitle: "More autolysin breaches. Positioning matters more than raw speed.",
       modifiers: { phage: 0.95, wave: 1.02, rupture: 1.42, fragment: 1.06, response: 1, score: 1.12, repairNeeded: 4 }
     },
     {
       id: "repair-rationing",
       name: "Repair Rationing",
-      subtitle: "Repair fragments are rarer, but each completed cycle pays out more.",
+      subtitle: "Envelope factors are rarer, but each completed assembly cycle pays out more.",
       modifiers: { phage: 1.08, wave: 1.06, rupture: 1.08, fragment: 0.84, response: 1.08, score: 1.18, repairNeeded: 5 }
     }
   ];
 
   const FRAGMENT_TYPES = [
-    { id: "mesh", label: "PG mesh", color: "#a8ffd2", halo: "rgba(168, 255, 210, 0.34)" },
-    { id: "sealant", label: "Membrane sealant", color: "#9fe7ff", halo: "rgba(159, 231, 255, 0.34)" },
-    { id: "chaperone", label: "Stress chaperone", color: "#ffdca0", halo: "rgba(255, 220, 160, 0.34)" }
+    { id: "pg-precursor", label: "PG precursor", color: "#a8ffd2", halo: "rgba(168, 255, 210, 0.34)" },
+    { id: "lipid-ii", label: "Lipid II", color: "#9fe7ff", halo: "rgba(159, 231, 255, 0.34)" },
+    { id: "hydrolase-control", label: "Hydrolase control", color: "#ffdca0", halo: "rgba(255, 220, 160, 0.34)" }
   ];
 
   const state = createState();
@@ -668,8 +668,8 @@
     if (mode === "start") {
       overlayTitle.textContent = "Keep the envelope intact.";
       overlayCopy.textContent =
-        "Collect repair fragments, stabilize the cell, and outlast escalating envelope stress.";
-      overlayStatus.textContent = "Collect 4 fragments, then trigger the stress response when the meter is full.";
+        "Collect envelope biogenesis factors, restore PG assembly, and outlast escalating envelope stress.";
+      overlayStatus.textContent = "Collect 4 envelope factors, then induce the stress response when the meter is full.";
       setOverlayPoints(["Difficulty rises slowly, so clean movement matters more than memorizing patterns."]);
       startButton.textContent = "Start Classic Run";
       dailyStartButton.textContent = "Play Daily Challenge";
@@ -680,8 +680,8 @@
         state.integrity
       )}% integrity remaining.`;
       setOverlayPoints([
-        `${state.repairProgress} of ${state.repairNeeded} repair fragments collected.`,
-        "Use the stress response proactively when lanes start collapsing."
+        `${state.repairProgress} of ${state.repairNeeded} envelope factors collected.`,
+        "Induce the stress response proactively when drug pulses and breaches start overlapping."
       ]);
       startButton.textContent = "Resume Run";
       dailyStartButton.textContent = "Restart Run";
@@ -796,7 +796,7 @@
     state.paused = false;
     state.lastFrame = 0;
     hideOverlay();
-    setBanner("Envelope initiated", "Collect repair fragments to trigger your first stabilization burst.");
+    setBanner("Surveillance engaged", "Collect envelope factors to complete your first cycle.");
     refreshLeaderboard(state.currentBoard);
     updateHud(true);
     updateControlState();
@@ -852,7 +852,7 @@
       color: species.palette.pulse,
       life: 0.62
     });
-    setBanner("Envelope stabilized", "Nearby stressors were cleared by a successful repair cycle.");
+    setBanner("Assembly complete", "A productive cycle cleared nearby stressors.");
     addFloater(state.player.x, state.player.y - 36, `+${scoreBonus}`, "#b9ffd4");
   }
 
@@ -874,8 +874,8 @@
       life: 0.74
     });
     state.score += 120;
-    setBanner("Stress response", "A short safe window is active. Reposition before pressure closes again.");
-    addFloater(state.player.x, state.player.y - 40, "Stress response", "#d7fbff");
+    setBanner("Response induced", "A protected window is active. Reposition now.");
+    addFloater(state.player.x, state.player.y - 40, "Response induced", "#d7fbff");
     updateControlState();
   }
 
@@ -1544,8 +1544,8 @@
 
   function drawBanner() {
     if (!state.banner) return;
-    const width = 360;
-    const height = 74;
+    const width = 420;
+    const height = 78;
     const x = (canvas.width - width) * 0.5;
     const y = 28;
     ctx.save();

@@ -326,7 +326,7 @@
 .envelope-response-button {
   right: 1rem;
   bottom: 1rem;
-  min-width: 12.8rem;
+  min-width: 13.8rem;
 }
 
 .envelope-response-button.is-ready {
@@ -683,7 +683,7 @@
   .envelope-response-button {
     right: 0.8rem;
     bottom: 0.8rem;
-    min-width: 11.8rem;
+    min-width: 12.8rem;
   }
 
   .envelope-overlay {
