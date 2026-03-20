@@ -334,6 +334,7 @@
       ruptures: [],
       pulses: [],
       floaters: [],
+      playerTrail: [],
       backgroundMotes: seedBackgroundMotes(),
       spawnTimers: { fragment: 0.3, phage: 1.4, wave: 4.4, rupture: 5.2 },
       player: createPlayer(selectedSpeciesId)
@@ -870,6 +871,7 @@
     state.ruptures = [];
     state.pulses = [];
     state.floaters = [];
+    state.playerTrail = [];
     state.player = createPlayer(state.speciesId);
     state.spawnTimers = { fragment: 0.2, phage: 1.3, wave: 4.8, rupture: 5.6 };
     spawnInitialFragments();
@@ -1187,6 +1189,20 @@
     if (Math.abs(state.player.vx) + Math.abs(state.player.vy) > 12) {
       state.player.angle = Math.atan2(state.player.vy, state.player.vx);
     }
+    const speed = Math.hypot(state.player.vx, state.player.vy);
+    if (speed > 16) {
+      state.playerTrail.unshift({
+        x: state.player.x,
+        y: state.player.y,
+        angle: state.player.angle,
+        speciesId: state.speciesId,
+        life: 0.42,
+        strength: clamp(speed / 320, 0.3, 1)
+      });
+      if (state.playerTrail.length > 9) {
+        state.playerTrail.length = 9;
+      }
+    }
   }
 
   function updateFragments(dt) {
@@ -1317,6 +1333,14 @@
       floater.y += floater.vy * dt;
       if (floater.life <= 0) {
         state.floaters.splice(index, 1);
+      }
+    }
+
+    for (let index = state.playerTrail.length - 1; index >= 0; index -= 1) {
+      const ghost = state.playerTrail[index];
+      ghost.life -= dt;
+      if (ghost.life <= 0) {
+        state.playerTrail.splice(index, 1);
       }
     }
 
@@ -1495,6 +1519,53 @@
     }
   }
 
+  function drawAtmosphereOverlay() {
+    const phase = getPhaseForElapsed(state.elapsed);
+    const beamGradient = ctx.createLinearGradient(canvas.width * 0.5, 0, canvas.width * 0.5, canvas.height * 0.72);
+    beamGradient.addColorStop(0, "rgba(194, 241, 246, 0.12)");
+    beamGradient.addColorStop(0.35, "rgba(194, 241, 246, 0.05)");
+    beamGradient.addColorStop(1, "rgba(194, 241, 246, 0)");
+
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.fillStyle = beamGradient;
+    ctx.beginPath();
+    ctx.moveTo(canvas.width * 0.34 + state.camera.x * 0.4, 0);
+    ctx.lineTo(canvas.width * 0.46 + state.camera.x * 0.28, 0);
+    ctx.lineTo(canvas.width * 0.62 + state.camera.x * 0.1, canvas.height * 0.74);
+    ctx.lineTo(canvas.width * 0.22 + state.camera.x * 0.2, canvas.height * 0.74);
+    ctx.closePath();
+    ctx.fill();
+
+    const phaseGlow = ctx.createRadialGradient(
+      canvas.width * 0.78,
+      canvas.height * 0.14,
+      20,
+      canvas.width * 0.78,
+      canvas.height * 0.14,
+      canvas.width * 0.34
+    );
+    phaseGlow.addColorStop(0, phase.tintB.replace(/0\.\d+\)/, "0.22)"));
+    phaseGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = phaseGlow;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+
+    const vignette = ctx.createRadialGradient(
+      canvas.width * 0.5,
+      canvas.height * 0.52,
+      canvas.width * 0.2,
+      canvas.width * 0.5,
+      canvas.height * 0.52,
+      canvas.width * 0.82
+    );
+    vignette.addColorStop(0, "rgba(4, 9, 17, 0)");
+    vignette.addColorStop(0.72, "rgba(4, 9, 17, 0.1)");
+    vignette.addColorStop(1, "rgba(4, 9, 17, 0.42)");
+    ctx.fillStyle = vignette;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+
   function drawFragments() {
     state.fragments.forEach((fragment) => {
       const bob = Math.sin(fragment.pulse) * 4;
@@ -1638,6 +1709,23 @@
       ctx.beginPath();
       ctx.arc(pulse.x, pulse.y, pulse.radius * 0.72, 0, TAU);
       ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawPlayerTrail() {
+    state.playerTrail.forEach((ghost, index) => {
+      const species = getSpecies(ghost.speciesId);
+      const depth = getDepthScale(ghost.y) * lerp(0.92, 0.68, index / Math.max(1, state.playerTrail.length));
+      const alpha = clamp(ghost.life / 0.42, 0, 1) * 0.2 * ghost.strength;
+      drawGroundShadow(ghost.x, ghost.y + 16, 20 * depth, 8 * depth, alpha * 0.9);
+      ctx.save();
+      ctx.translate(ghost.x, ghost.y);
+      ctx.rotate(ghost.angle);
+      ctx.scale(depth, depth);
+      ctx.globalAlpha = alpha;
+      ctx.filter = prefersReducedMotion ? "none" : "blur(1.6px)";
+      drawCellGlyph(species, 0);
       ctx.restore();
     });
   }
@@ -1856,6 +1944,7 @@
 
   function render() {
     drawBackground();
+    drawAtmosphereOverlay();
     ctx.save();
     applyWorldTransform();
     drawWaves();
@@ -1863,6 +1952,7 @@
     drawFragments();
     drawPhages();
     drawPulses();
+    drawPlayerTrail();
     drawPlayer();
     drawFloaters();
     ctx.restore();
