@@ -668,21 +668,18 @@
     if (mode === "start") {
       overlayTitle.textContent = "Keep the envelope intact.";
       overlayCopy.textContent =
-        "Collect repair fragments, trigger stabilization bursts, and survive phages, antibiotic waves, and rupture fronts long enough to climb the board.";
-      overlayStatus.textContent = "Repair the cell envelope before stress overwhelms the bacterium.";
-      setOverlayPoints([
-        "Collect 4 repair fragments to trigger a stabilization burst.",
-        "Use your stress response when the meter is full for a short safe window.",
-        "Difficulty rises slowly, so smart movement matters more than memorizing patterns."
-      ]);
+        "Collect repair fragments, stabilize the cell, and outlast escalating envelope stress.";
+      overlayStatus.textContent = "Collect 4 fragments, then trigger the stress response when the meter is full.";
+      setOverlayPoints(["Difficulty rises slowly, so clean movement matters more than memorizing patterns."]);
       startButton.textContent = "Start Classic Run";
       dailyStartButton.textContent = "Play Daily Challenge";
     } else if (mode === "paused") {
       overlayTitle.textContent = "Run paused";
       overlayCopy.textContent = `${state.currentBoardLabel}. Resume when you are ready to keep the bacterium intact.`;
-      overlayStatus.textContent = `Current score ${Math.round(state.score)} after ${formatDuration(state.elapsed)}.`;
+      overlayStatus.textContent = `Score ${Math.round(state.score)} after ${formatDuration(state.elapsed)} with ${Math.round(
+        state.integrity
+      )}% integrity remaining.`;
       setOverlayPoints([
-        `${Math.round(state.integrity)}% integrity remaining.`,
         `${state.repairProgress} of ${state.repairNeeded} repair fragments collected.`,
         "Use the stress response proactively when lanes start collapsing."
       ]);
@@ -696,9 +693,8 @@
       )} points.`;
       overlayStatus.textContent = state.lastPlacement
         ? state.lastPlacement.summary
-        : "Score saved. Use a different strain or jump into the daily challenge for a new rhythm.";
+        : "Score saved. Try another strain or jump into the daily challenge for a new rhythm.";
       setOverlayPoints([
-        `${Math.round(state.integrity)}% integrity at collapse.`,
         `Personal best on this board: ${best}.`,
         `Species used: ${getSpecies().label}.`
       ]);
@@ -731,7 +727,7 @@
     if (!dailyNote) return;
     const challenge = state.dailyChallenge;
     const species = getSpecies(challenge.speciesId);
-    dailyNote.textContent = `${challenge.dateLabel} daily challenge: ${challenge.profile.name}. Locked to ${species.label}. ${challenge.profile.subtitle}`;
+    dailyNote.textContent = `Daily challenge: ${challenge.profile.name} with ${species.label}. ${challenge.profile.subtitle}`;
   }
 
   function getPhaseForElapsed(elapsedSeconds) {
