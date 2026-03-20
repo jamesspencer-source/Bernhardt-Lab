@@ -3,6 +3,7 @@ const MIN_SCORE = 1;
 const MAX_SCORE = 2000000000;
 const MIN_PLAYED_AT = Date.UTC(2000, 0, 1);
 const MAX_CLOCK_SKEW_MS = 10 * 60 * 1000;
+const BOARD_PATTERN = /^(classic|daily-\d{4}-\d{2}-\d{2})$/;
 const SPECIES_CODES = new Set([
   "ecoli",
   "paeruginosa",
@@ -117,6 +118,13 @@ function normalizePlayedAt(value) {
   return parsed;
 }
 
+function normalizeBoard(value) {
+  const board = String(value || "")
+    .trim()
+    .toLowerCase();
+  return BOARD_PATTERN.test(board) ? board : "classic";
+}
+
 let schemaCapabilities = null;
 let schemaUpgradeAttempted = false;
 
@@ -126,7 +134,8 @@ async function getSchemaCapabilities(env) {
   const names = new Set((results || []).map((row) => String(row?.name || "").toLowerCase()));
   schemaCapabilities = {
     hasSpecies: names.has("species"),
-    hasPlayedAt: names.has("played_at")
+    hasPlayedAt: names.has("played_at"),
+    hasBoard: names.has("board")
   };
   return schemaCapabilities;
 }
@@ -153,6 +162,14 @@ async function ensureSchemaUpgraded(env) {
     }
   }
 
+  if (!caps.hasBoard) {
+    try {
+      await env.DB.prepare(`ALTER TABLE leaderboard_scores ADD COLUMN board TEXT NOT NULL DEFAULT 'classic'`).run();
+    } catch {
+      /* no-op */
+    }
+  }
+
   schemaCapabilities = null;
   const finalCaps = await getSchemaCapabilities(env);
 
@@ -171,20 +188,41 @@ async function ensureSchemaUpgraded(env) {
       /* no-op */
     }
   }
+
+  if (finalCaps.hasBoard) {
+    try {
+      await env.DB.prepare(`UPDATE leaderboard_scores SET board = 'classic' WHERE board IS NULL OR TRIM(board) = ''`).run();
+    } catch {
+      /* no-op */
+    }
+  }
 }
 
-async function readTopScores(env) {
+async function readTopScores(env, board) {
   const caps = await getSchemaCapabilities(env);
-  const sql = caps.hasSpecies && caps.hasPlayedAt
-    ? `SELECT name, score, created_at AS createdAt, species, played_at AS playedAt
+  const normalizedBoard = normalizeBoard(board);
+
+  if (!caps.hasBoard && normalizedBoard !== "classic") {
+    return [];
+  }
+
+  const sql = caps.hasSpecies && caps.hasPlayedAt && caps.hasBoard
+    ? `SELECT name, score, created_at AS createdAt, species, played_at AS playedAt, board
        FROM leaderboard_scores
+       WHERE board = ?1
        ORDER BY score DESC, played_at ASC, id ASC
        LIMIT 25`
-    : `SELECT name, score, created_at AS createdAt
-       FROM leaderboard_scores
-       ORDER BY score DESC, created_at ASC, id ASC
-       LIMIT 25`;
-  const { results } = await env.DB.prepare(sql).all();
+    : caps.hasSpecies && caps.hasPlayedAt
+      ? `SELECT name, score, created_at AS createdAt, species, played_at AS playedAt
+         FROM leaderboard_scores
+         ORDER BY score DESC, played_at ASC, id ASC
+         LIMIT 25`
+      : `SELECT name, score, created_at AS createdAt
+         FROM leaderboard_scores
+         ORDER BY score DESC, created_at ASC, id ASC
+         LIMIT 25`;
+  const query = caps.hasBoard ? env.DB.prepare(sql).bind(normalizedBoard) : env.DB.prepare(sql);
+  const { results } = await query.all();
 
   return (results || []).map((row) => ({
     name: (() => {
@@ -194,44 +232,79 @@ async function readTopScores(env) {
     score: normalizeScore(row.score),
     species: normalizeSpecies(row.species),
     playedAt: normalizePlayedAt(row.playedAt || row.createdAt),
-    createdAt: normalizePlayedAt(row.playedAt || row.createdAt)
+    createdAt: normalizePlayedAt(row.playedAt || row.createdAt),
+    board: normalizeBoard(row.board || normalizedBoard)
   }));
 }
 
-async function countScores(env) {
-  const { results } = await env.DB.prepare(`SELECT COUNT(*) AS totalEntries FROM leaderboard_scores`).all();
+async function countScores(env, board) {
+  const caps = await getSchemaCapabilities(env);
+  const normalizedBoard = normalizeBoard(board);
+
+  if (!caps.hasBoard && normalizedBoard !== "classic") {
+    return 0;
+  }
+
+  const query = caps.hasBoard
+    ? env.DB.prepare(`SELECT COUNT(*) AS totalEntries FROM leaderboard_scores WHERE board = ?1`).bind(normalizedBoard)
+    : env.DB.prepare(`SELECT COUNT(*) AS totalEntries FROM leaderboard_scores`);
+  const { results } = await query.all();
   return Math.max(0, Math.floor(Number(results?.[0]?.totalEntries) || 0));
 }
 
-async function computeRank(env, score, playedAt, rowId) {
+async function computeRank(env, board, score, playedAt, rowId) {
   const caps = await getSchemaCapabilities(env);
+  const normalizedBoard = normalizeBoard(board);
   const normalizedScore = normalizeScore(score);
   const normalizedPlayedAt = normalizePlayedAt(playedAt);
   const normalizedRowId = Math.max(0, Math.floor(Number(rowId) || 0));
 
-  const sql = caps.hasPlayedAt
+  if (!caps.hasBoard && normalizedBoard !== "classic") {
+    return 1;
+  }
+
+  const sql = caps.hasPlayedAt && caps.hasBoard
     ? `SELECT COUNT(*) AS placement
        FROM leaderboard_scores
-       WHERE score > ?1
-          OR (score = ?1 AND (played_at < ?2 OR (played_at = ?2 AND id <= ?3)))`
-    : `SELECT COUNT(*) AS placement
-       FROM leaderboard_scores
-       WHERE score > ?1 OR (score = ?1 AND id <= ?2)`;
+       WHERE board = ?1
+         AND (
+           score > ?2
+           OR (score = ?2 AND (played_at < ?3 OR (played_at = ?3 AND id <= ?4)))
+         )`
+    : caps.hasPlayedAt
+      ? `SELECT COUNT(*) AS placement
+         FROM leaderboard_scores
+         WHERE score > ?1
+           OR (score = ?1 AND (played_at < ?2 OR (played_at = ?2 AND id <= ?3)))`
+      : `SELECT COUNT(*) AS placement
+         FROM leaderboard_scores
+         WHERE score > ?1 OR (score = ?1 AND id <= ?2)`;
 
-  const bound = caps.hasPlayedAt
-    ? env.DB.prepare(sql).bind(normalizedScore, normalizedPlayedAt, normalizedRowId)
-    : env.DB.prepare(sql).bind(normalizedScore, normalizedRowId);
-  const { results } = await bound.all();
+  const query = caps.hasPlayedAt && caps.hasBoard
+    ? env.DB.prepare(sql).bind(normalizedBoard, normalizedScore, normalizedPlayedAt, normalizedRowId)
+    : caps.hasPlayedAt
+      ? env.DB.prepare(sql).bind(normalizedScore, normalizedPlayedAt, normalizedRowId)
+      : env.DB.prepare(sql).bind(normalizedScore, normalizedRowId);
+  const { results } = await query.all();
   return Math.max(1, Math.floor(Number(results?.[0]?.placement) || 1));
 }
 
-async function insertScore(env, name, score, species, playedAt) {
+async function insertScore(env, board, name, score, species, playedAt) {
   const now = Date.now();
   const caps = await getSchemaCapabilities(env);
+  const normalizedBoard = normalizeBoard(board);
   const normalizedPlayedAt = normalizePlayedAt(playedAt);
   let insertedRowId = 0;
 
-  if (caps.hasSpecies && caps.hasPlayedAt) {
+  if (caps.hasSpecies && caps.hasPlayedAt && caps.hasBoard) {
+    const result = await env.DB.prepare(
+      `INSERT INTO leaderboard_scores (name, score, created_at, species, played_at, board)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
+    )
+      .bind(name, score, now, normalizeSpecies(species), normalizedPlayedAt, normalizedBoard)
+      .run();
+    insertedRowId = Math.max(0, Math.floor(Number(result?.meta?.last_row_id) || 0));
+  } else if (caps.hasSpecies && caps.hasPlayedAt) {
     const result = await env.DB.prepare(
       `INSERT INTO leaderboard_scores (name, score, created_at, species, played_at)
        VALUES (?1, ?2, ?3, ?4, ?5)`
@@ -250,27 +323,34 @@ async function insertScore(env, name, score, species, playedAt) {
   }
 
   if (Math.random() < 0.1) {
-    const cleanupSql = caps.hasPlayedAt
-      ? `DELETE FROM leaderboard_scores
-         WHERE id NOT IN (
-           SELECT id
-           FROM leaderboard_scores
-           ORDER BY score DESC, played_at ASC, id ASC
-           LIMIT 500
-         )`
-      : `DELETE FROM leaderboard_scores
-         WHERE id NOT IN (
-           SELECT id
-           FROM leaderboard_scores
-           ORDER BY score DESC, created_at ASC, id ASC
-           LIMIT 500
-         )`;
-    await env.DB.prepare(cleanupSql).run();
+    const cleanupQuery = caps.hasBoard
+      ? env.DB.prepare(
+          `DELETE FROM leaderboard_scores
+           WHERE board = ?1
+             AND id NOT IN (
+               SELECT id
+               FROM leaderboard_scores
+               WHERE board = ?1
+               ORDER BY score DESC, played_at ASC, id ASC
+               LIMIT 500
+             )`
+        ).bind(normalizedBoard)
+      : env.DB.prepare(
+          `DELETE FROM leaderboard_scores
+           WHERE id NOT IN (
+             SELECT id
+             FROM leaderboard_scores
+             ORDER BY score DESC, created_at ASC, id ASC
+             LIMIT 500
+           )`
+        );
+    await cleanupQuery.run();
   }
 
   return {
     rowId: insertedRowId,
-    playedAt: normalizedPlayedAt
+    playedAt: normalizedPlayedAt,
+    board: normalizedBoard
   };
 }
 
@@ -294,9 +374,10 @@ export default {
     await ensureSchemaUpgraded(env);
 
     if (request.method === "GET") {
-      const entries = await readTopScores(env);
-      const totalEntries = await countScores(env);
-      return jsonResponse({ entries, totalEntries, updatedAt: Date.now() }, request, env, 200);
+      const board = normalizeBoard(url.searchParams.get("board"));
+      const entries = await readTopScores(env, board);
+      const totalEntries = await countScores(env, board);
+      return jsonResponse({ entries, totalEntries, updatedAt: Date.now(), board }, request, env, 200);
     }
 
     if (request.method === "POST") {
@@ -311,6 +392,7 @@ export default {
       const score = normalizeScore(payload.score);
       const species = normalizeSpecies(payload.species);
       const playedAt = normalizePlayedAt(payload.playedAt);
+      const board = normalizeBoard(payload.board);
 
       if (score < MIN_SCORE) {
         return jsonResponse({ error: "Score must be a positive integer" }, request, env, 400);
@@ -319,11 +401,11 @@ export default {
         return jsonResponse({ error: "Name unavailable", errorCode: "invalid_name" }, request, env, 422);
       }
 
-      const inserted = await insertScore(env, name, score, species, playedAt);
-      const entries = await readTopScores(env);
-      const totalEntries = await countScores(env);
-      const rank = await computeRank(env, score, inserted.playedAt, inserted.rowId);
-      return jsonResponse({ ok: true, entries, rank, totalEntries, updatedAt: Date.now() }, request, env, 201);
+      const inserted = await insertScore(env, board, name, score, species, playedAt);
+      const entries = await readTopScores(env, board);
+      const totalEntries = await countScores(env, board);
+      const rank = await computeRank(env, board, score, inserted.playedAt, inserted.rowId);
+      return jsonResponse({ ok: true, entries, rank, totalEntries, updatedAt: Date.now(), board }, request, env, 201);
     }
 
     return jsonResponse({ error: "Method not allowed" }, request, env, 405);

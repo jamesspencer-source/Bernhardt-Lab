@@ -3,886 +3,503 @@
   const modal = document.getElementById("envelope-modal");
   const closeButton = document.getElementById("envelope-close");
   const startButton = document.getElementById("envelope-start");
-  const tutorialStartButton = document.getElementById("envelope-tutorial-start");
+  const dailyStartButton = document.getElementById("envelope-daily-start");
   const pauseButton = document.getElementById("envelope-pause");
   const restartButton = document.getElementById("envelope-restart");
+  const responseButton = document.getElementById("envelope-response");
   const canvas = document.getElementById("envelope-canvas");
   const overlay = document.getElementById("envelope-overlay");
   const overlayTitle = document.getElementById("envelope-overlay-title");
   const overlayCopy = document.getElementById("envelope-overlay-copy");
-  const modelPickerWrapEl = overlay ? overlay.querySelector(".envelope-model-picker") : null;
-  const overlayBriefingEl = overlay ? overlay.querySelector(".envelope-overlay-briefing") : null;
-  const playerNameWrapEl = overlay ? overlay.querySelector(".envelope-player-name") : null;
-  const startActionsWrapEl = overlay ? overlay.querySelector(".envelope-start-actions") : null;
-  const draftEl = document.getElementById("envelope-draft");
-  const draftOptionsEl = document.getElementById("envelope-draft-options");
+  const overlayStatus = document.getElementById("envelope-overlay-status");
+  const overlayPoints = document.getElementById("envelope-overlay-points");
+  const modelSelect = document.getElementById("envelope-model-select");
+  const modelNote = document.getElementById("envelope-model-note");
+  const playerNameInput = document.getElementById("envelope-player-name");
+  const playerNameFeedback = document.getElementById("envelope-player-name-feedback");
+  const dailyNote = document.getElementById("envelope-daily-note");
+  const scoreEl = document.getElementById("envelope-score");
+  const timeEl = document.getElementById("envelope-time");
+  const integrityEl = document.getElementById("envelope-integrity");
+  const integrityBarEl = document.getElementById("envelope-integrity-bar");
+  const repairEl = document.getElementById("envelope-repair");
+  const repairBarEl = document.getElementById("envelope-repair-bar");
+  const responseChargeEl = document.getElementById("envelope-response-charge");
+  const responseBarEl = document.getElementById("envelope-response-bar");
+  const phaseEl = document.getElementById("envelope-phase");
+  const phaseNoteEl = document.getElementById("envelope-phase-note");
+  const traitTitleEl = document.getElementById("envelope-trait-title");
+  const traitCopyEl = document.getElementById("envelope-trait-copy");
+  const networkPillEl = document.getElementById("envelope-network-pill");
+  const leaderboardMetaEl = document.getElementById("envelope-leaderboard-meta");
+  const leaderboardListEl = document.getElementById("envelope-leaderboard-list");
+  const rankSummaryEl = document.getElementById("envelope-rank-summary");
 
-  if (!trigger || !modal || !closeButton || !startButton || !pauseButton || !restartButton || !canvas || !overlay) {
+  if (
+    !trigger ||
+    !modal ||
+    !closeButton ||
+    !startButton ||
+    !dailyStartButton ||
+    !pauseButton ||
+    !restartButton ||
+    !responseButton ||
+    !canvas ||
+    !overlay
+  ) {
     return;
   }
 
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const scoreEl = document.getElementById("envelope-score");
-  const bestEl = document.getElementById("envelope-best");
-  const timeEl = document.getElementById("envelope-time");
-  const pressureEl = document.getElementById("envelope-pressure");
-  const integrityEl = document.getElementById("envelope-integrity");
-  const integrityBarEl = document.getElementById("envelope-integrity-bar");
-  const shieldEl = document.getElementById("envelope-shield");
-  const shieldBarEl = document.getElementById("envelope-shield-bar");
-  const boostEl = document.getElementById("envelope-boost");
-  const boostBarEl = document.getElementById("envelope-boost-bar");
-  const leaderboardListEl = document.getElementById("envelope-leaderboard-list");
-  const leaderboardMetaEl = document.getElementById("envelope-leaderboard-meta");
-  const nameFormEl = document.getElementById("envelope-name-form");
-  const nameInputEl = document.getElementById("envelope-name-input");
-  const nameLabelEl = document.getElementById("envelope-name-label");
-  const nameSkipEl = document.getElementById("envelope-name-skip");
-  const nameFeedbackEl = document.getElementById("envelope-name-feedback");
-  const playerNameInputEl = document.getElementById("envelope-player-name");
-  const playerNameFeedbackEl = document.getElementById("envelope-player-name-feedback");
-  const tutorialNoteEl = document.getElementById("envelope-tutorial-note");
-  const modelSelectEl = document.getElementById("envelope-model-select");
-  const modelNoteEl = document.getElementById("envelope-model-note");
-  const precursorKeyListEl = document.getElementById("envelope-precursor-key-list");
-  const overlayStatusEl = document.getElementById("envelope-overlay-status");
-  const pressureNoteEl = document.getElementById("envelope-pressure-note");
-  const comboEl = document.getElementById("envelope-combo");
-  const comboNoteEl = document.getElementById("envelope-combo-note");
-  const sectorEl = document.getElementById("envelope-sector");
-  const sectorNoteEl = document.getElementById("envelope-sector-note");
-  const networkPillEl = document.getElementById("envelope-network-pill");
-  const traitTitleEl = document.getElementById("envelope-trait-title");
-  const traitCopyEl = document.getElementById("envelope-trait-copy");
-  const directiveTitleEl = document.getElementById("envelope-directive-title");
-  const directiveCopyEl = document.getElementById("envelope-directive-copy");
-  const assemblyTitleEl = document.getElementById("envelope-assembly-title");
-  const assemblyCopyEl = document.getElementById("envelope-assembly-copy");
-  const assemblyStatusEl = document.getElementById("envelope-assembly-status");
-  const assemblySlotsEl = document.getElementById("envelope-assembly-slots");
-  const forecastTitleEl = document.getElementById("envelope-forecast-title");
-  const forecastCopyEl = document.getElementById("envelope-forecast-copy");
-  const upgradeTitleEl = document.getElementById("envelope-upgrade-title");
-  const upgradeCopyEl = document.getElementById("envelope-upgrade-copy");
-  const rankTitleEl = document.getElementById("envelope-rank-title");
-  const rankCopyEl = document.getElementById("envelope-rank-copy");
-  const rankSummaryEl = document.getElementById("envelope-rank-summary");
-
+  const STORAGE_VERSION = "v2";
+  const BEST_KEY = `bernhardt-envelope-escape-best-${STORAGE_VERSION}`;
+  const BOARD_PREFIX = `bernhardt-envelope-escape-board-${STORAGE_VERSION}-`;
+  const MODEL_KEY = `bernhardt-envelope-escape-model-${STORAGE_VERSION}`;
+  const NAME_KEY = `bernhardt-envelope-escape-name-${STORAGE_VERSION}`;
+  const LEADERBOARD_SIZE = 25;
+  const GLOBAL_LEADERBOARD_URL = String(window.ENVELOPE_LEADERBOARD_URL || "").trim();
+  const REQUEST_TIMEOUT_MS = 9000;
+  const LAB_TIMEZONE = "America/New_York";
+  const TAU = Math.PI * 2;
+  const BOARD_PATTERN = /^(classic|daily-\d{4}-\d{2}-\d{2})$/;
   const prefersReducedMotion =
     typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  const STORAGE_KEY = "bernhardt-envelope-escape-best";
-  const LEADERBOARD_KEY = "bernhardt-envelope-escape-leaderboard-v1";
-  const PENDING_LEADERBOARD_KEY = "bernhardt-envelope-escape-pending-v1";
-  const MODEL_KEY = "bernhardt-envelope-escape-model";
-  const PLAYER_NAME_KEY = "bernhardt-envelope-escape-player-name";
-  const TUTORIAL_SEEN_KEY = "bernhardt-envelope-escape-tutorial-seen";
-  const LEADERBOARD_SIZE = 25;
-  const PENDING_LEADERBOARD_LIMIT = 120;
-  const LEADERBOARD_REQUEST_TIMEOUT_MS = 9000;
-  const GLOBAL_LEADERBOARD_URL = String(window.ENVELOPE_LEADERBOARD_URL || "").trim();
-
-  const BACTERIA_MODELS = {
+  const SPECIES = {
     ecoli: {
       label: "Escherichia coli",
-      morphology: "Straight rod",
+      passiveTitle: "Balanced repair",
+      passiveCopy: "Repair fragments build the stress response a little faster.",
+      speedMul: 1,
+      responseGainMul: 1.12,
+      damageMul: 1,
+      ruptureDamageMul: 1,
+      burstRadius: 188,
+      healBonus: 2,
+      fragmentMagnet: 0,
       shape: "rod",
-      radiusScale: 1,
-      lengthScale: 2.72,
       palette: {
-        membraneA: "#6ae7ee",
-        membraneB: "#9af9ff",
-        membraneC: "#4ec8d8",
-        core: "rgba(9, 41, 69, 0.9)",
-        accent: "rgba(161, 245, 255, 0.8)",
-        shield: "rgba(125, 243, 255, 0.7)"
-      }
-    },
-    kpneumoniae: {
-      label: "Klebsiella pneumoniae",
-      morphology: "Encapsulated rod",
-      shape: "encapsulated-rod",
-      radiusScale: 1.08,
-      lengthScale: 2.5,
-      palette: {
-        membraneA: "#7fe6d3",
-        membraneB: "#a6ffe5",
-        membraneC: "#59c8bb",
-        core: "rgba(17, 52, 74, 0.88)",
-        accent: "rgba(190, 255, 236, 0.78)",
-        shield: "rgba(171, 255, 224, 0.68)"
-      }
-    },
-    abaumannii: {
-      label: "Acinetobacter baumannii",
-      morphology: "Coccobacillus",
-      shape: "coccobacillus",
-      radiusScale: 0.98,
-      lengthScale: 2.1,
-      palette: {
-        membraneA: "#86d8ff",
-        membraneB: "#b8e9ff",
-        membraneC: "#63b7ef",
-        core: "rgba(12, 40, 70, 0.88)",
-        accent: "rgba(175, 227, 255, 0.8)",
-        shield: "rgba(139, 226, 255, 0.68)"
-      }
-    },
-    saureus: {
-      label: "Staphylococcus aureus",
-      morphology: "Coccus",
-      shape: "coccus",
-      radiusScale: 1.05,
-      lengthScale: 2,
-      palette: {
-        membraneA: "#ffd88f",
-        membraneB: "#ffe8b8",
-        membraneC: "#f5b15a",
-        core: "rgba(88, 48, 20, 0.76)",
-        accent: "rgba(255, 226, 170, 0.76)",
-        shield: "rgba(255, 228, 173, 0.66)"
+        bodyA: "#77ecf0",
+        bodyB: "#99fbff",
+        outline: "#d4fbff",
+        core: "#15395d",
+        pulse: "rgba(128, 244, 255, 0.9)"
       }
     },
     paeruginosa: {
       label: "Pseudomonas aeruginosa",
-      morphology: "Slightly curved rod",
+      passiveTitle: "Fast swimmer",
+      passiveCopy: "Higher movement speed makes lane changes and recoveries easier.",
+      speedMul: 1.1,
+      responseGainMul: 1,
+      damageMul: 1,
+      ruptureDamageMul: 1,
+      burstRadius: 182,
+      healBonus: 0,
+      fragmentMagnet: 0,
       shape: "curved-rod",
-      radiusScale: 0.94,
-      lengthScale: 2.85,
       palette: {
-        membraneA: "#8deed7",
-        membraneB: "#b5ffe8",
-        membraneC: "#60cdb7",
-        core: "rgba(12, 52, 59, 0.88)",
-        accent: "rgba(191, 255, 239, 0.8)",
-        shield: "rgba(169, 254, 228, 0.7)"
+        bodyA: "#88f1da",
+        bodyB: "#b8ffe8",
+        outline: "#dffff4",
+        core: "#163c4a",
+        pulse: "rgba(147, 255, 221, 0.88)"
+      }
+    },
+    saureus: {
+      label: "Staphylococcus aureus",
+      passiveTitle: "Thick wall",
+      passiveCopy: "Incoming damage is slightly reduced across the whole run.",
+      speedMul: 0.96,
+      responseGainMul: 1,
+      damageMul: 0.88,
+      ruptureDamageMul: 0.88,
+      burstRadius: 186,
+      healBonus: 1,
+      fragmentMagnet: 0,
+      shape: "coccus",
+      palette: {
+        bodyA: "#ffd789",
+        bodyB: "#ffe6b3",
+        outline: "#fff1d1",
+        core: "#6c421b",
+        pulse: "rgba(255, 227, 160, 0.9)"
       }
     },
     spneumoniae: {
       label: "Streptococcus pneumoniae",
-      morphology: "Lancet diplococcus",
+      passiveTitle: "Capsule rebound",
+      passiveCopy: "Completed repairs grant a longer, stronger stabilization burst.",
+      speedMul: 0.98,
+      responseGainMul: 1,
+      damageMul: 1,
+      ruptureDamageMul: 1,
+      burstRadius: 218,
+      healBonus: 5,
+      fragmentMagnet: 0,
       shape: "diplococcus",
-      radiusScale: 0.96,
-      lengthScale: 2.05,
       palette: {
-        membraneA: "#ffb3c8",
-        membraneB: "#ffd1df",
-        membraneC: "#f08fae",
-        core: "rgba(92, 33, 58, 0.82)",
-        accent: "rgba(255, 214, 229, 0.84)",
-        shield: "rgba(255, 197, 222, 0.68)"
+        bodyA: "#ffb8cd",
+        bodyB: "#ffd6e3",
+        outline: "#ffe8ef",
+        core: "#7c3454",
+        pulse: "rgba(255, 200, 224, 0.9)"
       }
     },
     cglutamicum: {
       label: "Corynebacterium glutamicum",
-      morphology: "Coryneform rod",
+      passiveTitle: "Layered envelope",
+      passiveCopy: "Rupture fronts are less punishing than they are for other strains.",
+      speedMul: 0.99,
+      responseGainMul: 1,
+      damageMul: 1,
+      ruptureDamageMul: 0.76,
+      burstRadius: 190,
+      healBonus: 1,
+      fragmentMagnet: 0,
       shape: "coryneform",
-      radiusScale: 0.95,
-      lengthScale: 2.38,
       palette: {
-        membraneA: "#c6d4ff",
-        membraneB: "#e2e8ff",
-        membraneC: "#9db2ff",
-        core: "rgba(25, 33, 79, 0.84)",
-        accent: "rgba(218, 228, 255, 0.8)",
-        shield: "rgba(191, 208, 255, 0.72)"
-      }
-    }
-  };
-
-  // Species-aware precursor set for game pickups (PG/Lipid II, Gram-negative OM glycoconjugates,
-  // Gram-positive teichoic acids, and Corynebacteriales arabinogalactan-mycolate layers).
-  const ENVELOPE_PRECURSORS = {
-    lipidII: {
-      label: "Lipid II",
-      shortLabel: "Lipid II",
-      points: 120,
-      icon: "lipid-ii",
-      coreShape: "hex",
-      glowColor: "rgba(181, 255, 218, 0.9)",
-      fillColor: "rgba(162, 255, 205, 0.95)",
-      strokeColor: "rgba(31, 98, 78, 0.58)",
-      detailColor: "rgba(230, 255, 243, 0.78)",
-      burstColor: "#89ffca",
-      floaterColor: "#b4ffd7"
-    },
-    phospholipid: {
-      label: "Phospholipids",
-      shortLabel: "Phospholipids",
-      points: 90,
-      icon: "phospholipid",
-      coreShape: "disc",
-      glowColor: "rgba(181, 218, 255, 0.9)",
-      fillColor: "rgba(165, 208, 255, 0.95)",
-      strokeColor: "rgba(42, 78, 118, 0.62)",
-      detailColor: "rgba(226, 240, 255, 0.82)",
-      burstColor: "#9bc2ff",
-      floaterColor: "#c4dcff"
-    },
-    lps: {
-      label: "LPS",
-      shortLabel: "LPS",
-      points: 130,
-      icon: "lps",
-      coreShape: "hex",
-      glowColor: "rgba(255, 216, 174, 0.88)",
-      fillColor: "rgba(255, 200, 140, 0.95)",
-      strokeColor: "rgba(112, 71, 33, 0.56)",
-      detailColor: "rgba(255, 235, 210, 0.82)",
-      burstColor: "#ffc288",
-      floaterColor: "#ffd7af"
-    },
-    los: {
-      label: "LOS",
-      shortLabel: "LOS",
-      points: 125,
-      icon: "los",
-      coreShape: "hex",
-      glowColor: "rgba(255, 197, 195, 0.88)",
-      fillColor: "rgba(255, 172, 172, 0.95)",
-      strokeColor: "rgba(123, 52, 52, 0.56)",
-      detailColor: "rgba(255, 228, 228, 0.82)",
-      burstColor: "#ff9fa4",
-      floaterColor: "#ffc7cb"
-    },
-    capsule: {
-      label: "Capsule polysaccharide",
-      shortLabel: "Capsule",
-      points: 115,
-      icon: "capsule",
-      coreShape: "capsule",
-      glowColor: "rgba(191, 255, 230, 0.9)",
-      fillColor: "rgba(182, 255, 222, 0.95)",
-      strokeColor: "rgba(38, 103, 87, 0.56)",
-      detailColor: "rgba(236, 255, 247, 0.82)",
-      burstColor: "#93ffd9",
-      floaterColor: "#bbffe6"
-    },
-    wta: {
-      label: "Wall teichoic acids",
-      shortLabel: "WTA",
-      points: 120,
-      icon: "teichoic",
-      coreShape: "rounded-rect",
-      glowColor: "rgba(255, 218, 149, 0.9)",
-      fillColor: "rgba(255, 194, 122, 0.95)",
-      strokeColor: "rgba(117, 73, 27, 0.56)",
-      detailColor: "rgba(255, 237, 201, 0.82)",
-      burstColor: "#ffbf7f",
-      floaterColor: "#ffd5a9"
-    },
-    lta: {
-      label: "Lipoteichoic acids",
-      shortLabel: "LTA",
-      points: 110,
-      icon: "teichoic-anchor",
-      coreShape: "rounded-rect",
-      glowColor: "rgba(255, 199, 150, 0.9)",
-      fillColor: "rgba(255, 177, 124, 0.95)",
-      strokeColor: "rgba(123, 65, 33, 0.56)",
-      detailColor: "rgba(255, 229, 200, 0.82)",
-      burstColor: "#ffb685",
-      floaterColor: "#ffd2b5"
-    },
-    cholineTa: {
-      label: "Choline-rich teichoic acids",
-      shortLabel: "Teichoic acids",
-      points: 120,
-      icon: "teichoic",
-      coreShape: "rounded-rect",
-      glowColor: "rgba(255, 184, 218, 0.9)",
-      fillColor: "rgba(255, 156, 202, 0.95)",
-      strokeColor: "rgba(116, 43, 86, 0.56)",
-      detailColor: "rgba(255, 221, 238, 0.82)",
-      burstColor: "#ff9ad1",
-      floaterColor: "#ffc3e3"
-    },
-    arabinogalactan: {
-      label: "Arabinogalactan",
-      shortLabel: "Arabinogalactan",
-      points: 130,
-      icon: "mesh",
-      coreShape: "hex",
-      glowColor: "rgba(218, 203, 255, 0.9)",
-      fillColor: "rgba(198, 179, 255, 0.95)",
-      strokeColor: "rgba(72, 51, 123, 0.56)",
-      detailColor: "rgba(234, 224, 255, 0.82)",
-      burstColor: "#c8b0ff",
-      floaterColor: "#ddcdff"
-    },
-    mycolic: {
-      label: "Mycolic acids",
-      shortLabel: "Mycolic acids",
-      points: 140,
-      icon: "mycolic",
-      coreShape: "capsule",
-      glowColor: "rgba(183, 219, 255, 0.9)",
-      fillColor: "rgba(164, 204, 255, 0.95)",
-      strokeColor: "rgba(46, 71, 122, 0.56)",
-      detailColor: "rgba(220, 236, 255, 0.82)",
-      burstColor: "#9ebfff",
-      floaterColor: "#c5dcff"
-    }
-  };
-
-  const MODEL_PRECURSOR_POOLS = {
-    ecoli: [
-      { id: "lipidII", weight: 0.46 },
-      { id: "lps", weight: 0.34 },
-      { id: "phospholipid", weight: 0.2 }
-    ],
-    paeruginosa: [
-      { id: "lipidII", weight: 0.44 },
-      { id: "lps", weight: 0.34 },
-      { id: "phospholipid", weight: 0.22 }
-    ],
-    kpneumoniae: [
-      { id: "lipidII", weight: 0.35 },
-      { id: "lps", weight: 0.26 },
-      { id: "capsule", weight: 0.28 },
-      { id: "phospholipid", weight: 0.11 }
-    ],
-    abaumannii: [
-      { id: "lipidII", weight: 0.35 },
-      { id: "los", weight: 0.31 },
-      { id: "capsule", weight: 0.23 },
-      { id: "phospholipid", weight: 0.11 }
-    ],
-    saureus: [
-      { id: "lipidII", weight: 0.38 },
-      { id: "wta", weight: 0.3 },
-      { id: "lta", weight: 0.22 },
-      { id: "phospholipid", weight: 0.1 }
-    ],
-    spneumoniae: [
-      { id: "lipidII", weight: 0.38 },
-      { id: "cholineTa", weight: 0.34 },
-      { id: "capsule", weight: 0.28 }
-    ],
-    cglutamicum: [
-      { id: "lipidII", weight: 0.34 },
-      { id: "arabinogalactan", weight: 0.3 },
-      { id: "mycolic", weight: 0.28 },
-      { id: "phospholipid", weight: 0.08 }
-    ]
-  };
-
-  const MODEL_TRAITS = {
-    ecoli: {
-      title: "Fast rebuild",
-      copy: "Precursor pickups repair a little more envelope integrity.",
-      modifiers: {
-        precursorRepairBonus: 2,
-        precursorScoreMul: 1.04
-      }
-    },
-    paeruginosa: {
-      title: "Surge surfer",
-      copy: "Score gain spikes a bit higher during phage surges.",
-      modifiers: {
-        surgeScoreMul: 1.18
-      }
-    },
-    saureus: {
-      title: "Wall fortifier",
-      copy: "Shield pickups are stronger and precursors patch a little more damage.",
-      modifiers: {
-        precursorRepairBonus: 1,
-        shieldGainBonus: 10
-      }
-    },
-    spneumoniae: {
-      title: "Capsule slip",
-      copy: "Near misses are a touch easier to trigger and score slightly better.",
-      modifiers: {
-        nearMissWindowMul: 1.18,
-        nearMissScoreMul: 1.12
-      }
-    },
-    cglutamicum: {
-      title: "Mycomembrane barrier",
-      copy: "Antibiotic pulses hit a little softer.",
-      modifiers: {
-        pulseDamageMul: 0.84
+        bodyA: "#c5d4ff",
+        bodyB: "#e4ebff",
+        outline: "#f3f6ff",
+        core: "#29336d",
+        pulse: "rgba(198, 214, 255, 0.9)"
       }
     },
     kpneumoniae: {
-      title: "Capsule reserve",
-      copy: "Each run begins with a small protective shield buffer.",
-      modifiers: {
-        startingShield: 18
+      label: "Klebsiella pneumoniae",
+      passiveTitle: "Capsule dragnet",
+      passiveCopy: "Repair fragments begin drifting toward the cell a little earlier.",
+      speedMul: 0.97,
+      responseGainMul: 1,
+      damageMul: 1,
+      ruptureDamageMul: 1,
+      burstRadius: 184,
+      healBonus: 2,
+      fragmentMagnet: 68,
+      shape: "encapsulated-rod",
+      palette: {
+        bodyA: "#8de4d4",
+        bodyB: "#b5ffeb",
+        outline: "#e0fff5",
+        core: "#164853",
+        pulse: "rgba(167, 255, 227, 0.9)"
       }
     },
     abaumannii: {
-      title: "Scavenger metabolism",
-      copy: "Catalytic boosts last longer once you find them.",
-      modifiers: {
-        boostDurationMul: 1.24
+      label: "Acinetobacter baumannii",
+      passiveTitle: "Stress tolerant",
+      passiveCopy: "The stress response meter charges faster from survival and pickups.",
+      speedMul: 1.02,
+      responseGainMul: 1.18,
+      damageMul: 1,
+      ruptureDamageMul: 1,
+      burstRadius: 186,
+      healBonus: 1,
+      fragmentMagnet: 0,
+      shape: "coccobacillus",
+      palette: {
+        bodyA: "#89d8ff",
+        bodyB: "#bcecff",
+        outline: "#e1f7ff",
+        core: "#163d6d",
+        pulse: "rgba(158, 224, 255, 0.9)"
       }
     }
   };
 
-  const MODEL_ASSEMBLY_PLANS = {
-    ecoli: {
-      title: "Gram-negative envelope build",
-      copy: "Balance peptidoglycan, outer membrane glycoconjugates, and phospholipids to keep the barrier intact.",
-      priority: ["lipidII", "lps", "phospholipid"]
-    },
-    paeruginosa: {
-      title: "Outer-membrane resilience build",
-      copy: "Refresh peptidoglycan and LPS while feeding the membrane through phospholipid supply.",
-      priority: ["lipidII", "lps", "phospholipid"]
-    },
-    kpneumoniae: {
-      title: "Capsule-armored build",
-      copy: "Rebuild wall, capsule, and outer-membrane layers before the next stress pulse arrives.",
-      priority: ["lipidII", "capsule", "lps", "phospholipid"]
-    },
-    abaumannii: {
-      title: "Barrier scavenger build",
-      copy: "Patch the sacculus and outer barrier while harvesting LOS and capsule material under pressure.",
-      priority: ["lipidII", "los", "capsule", "phospholipid"]
-    },
-    saureus: {
-      title: "Gram-positive wall build",
-      copy: "Reinforce peptidoglycan with wall and lipoteichoic acid inputs to thicken the protective shell.",
-      priority: ["lipidII", "wta", "lta", "phospholipid"]
-    },
-    spneumoniae: {
-      title: "Diplococcal surface build",
-      copy: "Coordinate peptidoglycan, choline-rich teichoic acid, and capsule assembly to hold shape.",
-      priority: ["lipidII", "cholineTa", "capsule"]
-    },
-    cglutamicum: {
-      title: "Mycomembrane coat build",
-      copy: "Layer peptidoglycan, arabinogalactan, and mycolic acids into a robust Corynebacterial envelope.",
-      priority: ["lipidII", "arabinogalactan", "mycolic", "phospholipid"]
-    }
-  };
-
-  const ADAPTATION_MODULES = [
+  const PHASES = [
     {
-      id: "mreb-lanes",
-      title: "MreB lane sensing",
-      copy: "Sharper lateral steering helps you line up cleanly through inhibitor fronts.",
-      modifiers: {
-        moveSpeedMul: 1.08,
-        frontGapMul: 1.08
-      }
+      id: "settling",
+      start: 0,
+      title: "Onset stress",
+      note: "Sparse hazards. Build rhythm and collect repair fragments.",
+      rates: { fragment: 1.12, phage: 0.68, wave: 0.52, rupture: 0.45 },
+      tintA: "rgba(21, 93, 112, 0.22)",
+      tintB: "rgba(28, 128, 149, 0.1)"
     },
     {
-      id: "sigmae-buffer",
-      title: "SigmaE buffering",
-      copy: "Shields arrive fuller and each run starts with a little more reserve protection.",
-      modifiers: {
-        shieldGainBonus: 12,
-        startingShield: 10
-      }
+      id: "antibiotic",
+      start: 60,
+      title: "Antibiotic sweep",
+      note: "Broad drug fronts arrive more often and cut off easy routes.",
+      rates: { fragment: 1.02, phage: 0.9, wave: 0.92, rupture: 0.62 },
+      tintA: "rgba(24, 116, 129, 0.28)",
+      tintB: "rgba(52, 156, 176, 0.13)"
     },
     {
-      id: "lipid-routing",
-      title: "Lipid II routing",
-      copy: "Precursor pickups score higher and complete envelope builds pay out harder.",
-      modifiers: {
-        precursorScoreMul: 1.12,
-        assemblyRewardMul: 1.12
-      }
+      id: "mixed",
+      start: 150,
+      title: "Mixed assault",
+      note: "Phages, waves, and rupture fronts begin to overlap more aggressively.",
+      rates: { fragment: 0.97, phage: 1.16, wave: 1.08, rupture: 0.92 },
+      tintA: "rgba(53, 132, 160, 0.28)",
+      tintB: "rgba(120, 183, 211, 0.14)"
     },
     {
-      id: "capsule-slipstream",
-      title: "Capsule slipstream",
-      copy: "Near-miss windows widen slightly, making tight dodges easier to convert into chain value.",
-      modifiers: {
-        nearMissWindowMul: 1.1,
-        nearMissScoreMul: 1.08
-      }
-    },
-    {
-      id: "divisome-tuning",
-      title: "Divisome tuning",
-      copy: "Inhibitor fronts move more slowly and give you a slightly wider safe lane.",
-      modifiers: {
-        frontSpeedMul: 0.88,
-        frontGapMul: 1.12
-      }
-    },
-    {
-      id: "efflux-breathing-room",
-      title: "Efflux breathing room",
-      copy: "Antibiotic pulses hit softer and overall hazard tempo eases slightly.",
-      modifiers: {
-        pulseDamageMul: 0.82,
-        hazardSpeedMul: 0.94
-      }
-    },
-    {
-      id: "phage-decoy-net",
-      title: "Phage decoy net",
-      copy: "Phages track a little less aggressively and surges take longer to return.",
-      modifiers: {
-        phageSpeedMul: 0.9,
-        surgeCooldownMul: 1.12
-      }
-    },
-    {
-      id: "scavenger-metabolism",
-      title: "Scavenger metabolism",
-      copy: "Pickups remain on screen longer so you can convert more of the arena into value.",
-      modifiers: {
-        resourceLifeMul: 1.28,
-        boostDurationMul: 1.08
-      }
-    },
-    {
-      id: "stress-memory",
-      title: "Stress memory",
-      copy: "Repairs patch more integrity and post-hit invulnerability lasts a little longer.",
-      modifiers: {
-        precursorRepairBonus: 2,
-        invulnerabilityBonus: 0.12
-      }
-    },
-    {
-      id: "surge-harvest",
-      title: "Surge harvest",
-      copy: "Phage blooms become more profitable, rewarding players who survive the hardest windows.",
-      modifiers: {
-        surgeScoreMul: 1.18,
-        assemblyRewardMul: 1.08
-      }
-    },
-    {
-      id: "sensor-array",
-      title: "Envelope sensor array",
-      copy: "Assembly queues complete into bigger payouts and the best queues are easier to read under pressure.",
-      modifiers: {
-        assemblyRewardMul: 1.16,
-        frontGapMul: 1.06
-      }
-    },
-    {
-      id: "burst-catalysis",
-      title: "Burst catalysis",
-      copy: "Catalytic boosts last longer and movement under boost feels more explosive.",
-      modifiers: {
-        boostDurationMul: 1.18,
-        moveSpeedMul: 1.05
-      }
+      id: "critical",
+      start: 240,
+      title: "Critical rupture",
+      note: "The envelope is failing fast. Repair cycles buy only brief breathing room.",
+      rates: { fragment: 0.93, phage: 1.36, wave: 1.22, rupture: 1.18 },
+      tintA: "rgba(91, 142, 172, 0.3)",
+      tintB: "rgba(177, 214, 235, 0.18)"
     }
   ];
 
-  const BREAKTHROUGH_PROTOCOLS = [
-    {
-      id: "sigmae-triage",
-      title: "SigmaE triage",
-      copy: "Rapid envelope repair restores integrity and shield in a single burst.",
-      floater: "SigmaE triage",
-      apply() {
-        state.integrity = clamp(state.integrity + 28, 0, 100);
-        state.shield = clamp(state.shield + 34, 0, 100);
-        addBurst(state.player.x, state.player.y, "#87f5ff", 22);
-      }
-    },
-    {
-      id: "crispr-sweep",
-      title: "CRISPR sweep",
-      copy: "A defensive sweep strips phages from the field and buys you a short invulnerability window.",
-      floater: "CRISPR sweep",
-      apply() {
-        const cleared = state.phages.length;
-        state.phages = [];
-        state.score += cleared * 28;
-        state.invulnerable = Math.max(state.invulnerable, 2.1);
-        addBurst(state.player.x, state.player.y, "#cfe9ff", 24);
-      }
-    },
-    {
-      id: "tol-pal-reroute",
-      title: "Tol-Pal reroute",
-      copy: "Clears active fronts and pulses so you can reposition before the next wave arrives.",
-      floater: "Tol-Pal reroute",
-      apply() {
-        const cleared = state.fronts.length + state.pulses.length;
-        state.fronts = [];
-        state.pulses = [];
-        state.score += cleared * 34;
-        addBurst(state.player.x, state.player.y, "#b0ecff", 24);
-      }
-    },
-    {
-      id: "fast-track-assembly",
-      title: "Fast-track assembly",
-      copy: "Instantly installs pending queue pieces and kicks catalytic tempo higher.",
-      floater: "Fast-track assembly",
-      apply() {
-        if (state.assemblyQueue?.steps?.length) {
-          const pending = state.assemblyQueue.steps.filter((step) => !step.completed).slice(0, 2);
-          pending.forEach((step) => {
-            step.completed = true;
-            addFloater(state.player.x, state.player.y - 10, `${step.label} installed`, "#defbff");
-          });
-          renderAssemblyQueue();
-          if (state.assemblyQueue.steps.every((step) => step.completed)) {
-            completeAssemblyQueue();
-          } else {
-            updateRunIntel();
-          }
-        }
-        state.boostTimer = clamp(state.boostTimer + 4.2, 0, 12);
-      }
-    },
-    {
-      id: "sos-slowfield",
-      title: "SOS slowdown",
-      copy: "Temporarily slows hazard tempo, creating a precious breather in the middle of heavy pressure.",
-      floater: "SOS slowdown",
-      apply() {
-        state.slowFieldTimer = Math.max(state.slowFieldTimer, 8.5);
-        addBurst(state.player.x, state.player.y, "#ffd8a6", 22);
-      }
-    }
-  ];
-
-  const RUN_SECTORS = [
-    {
-      id: "envelope-initiation",
-      title: "Envelope Initiation",
-      startsAt: 0,
-      endsAt: 55,
-      bonus: 380,
-      directivePool: ["collect_precursor", "collect_shield", "collect_boost", "survive_window"],
-      targets: { precursor: 4, shield: 1, boost: 1, nearMiss: 2, survive: 20 },
-      assemblySize: 2,
-      threatLevel: 0.88,
-      phagePressure: 0.84,
-      pulsePressure: 0.78,
-      frontPressure: 0,
-      resourcePressure: 1.12,
-      forecastTitle: "Baseline biosynthesis",
-      forecastCopy: "Traffic is still light. Lock in your first envelope build before the regimen tightens."
-    },
-    {
-      id: "septal-stress-test",
-      title: "Septal Stress Test",
-      startsAt: 55,
-      endsAt: 125,
-      bonus: 620,
-      directivePool: ["collect_precursor", "near_miss", "survive_window", "collect_boost"],
-      targets: { precursor: 5, shield: 1, boost: 1, nearMiss: 4, survive: 24 },
-      assemblySize: 3,
-      threatLevel: 1.02,
-      phagePressure: 0.96,
-      pulsePressure: 0.94,
-      frontPressure: 0.58,
-      resourcePressure: 1.02,
-      forecastTitle: "Division inhibitors incoming",
-      forecastCopy: "Telegraphed inhibitor fronts start appearing. Move early into the safe lane and keep rebuilding."
-    },
-    {
-      id: "antibiotic-gauntlet",
-      title: "Antibiotic Gauntlet",
-      startsAt: 125,
-      endsAt: 210,
-      bonus: 860,
-      directivePool: ["near_miss", "survive_window", "collect_boost", "collect_precursor"],
-      targets: { precursor: 6, shield: 2, boost: 1, nearMiss: 5, survive: 28 },
-      assemblySize: 3,
-      threatLevel: 1.18,
-      phagePressure: 1.06,
-      pulsePressure: 1.2,
-      frontPressure: 0.94,
-      resourcePressure: 0.96,
-      forecastTitle: "Cell-wall drugs intensify",
-      forecastCopy: "Antibiotic rings and inhibitor fronts start to overlap. Assembly bursts become your recovery window."
-    },
+  const DAILY_PROFILES = [
     {
       id: "phage-bloom",
-      title: "Phage Bloom",
-      startsAt: 210,
-      endsAt: 300,
-      bonus: 1100,
-      directivePool: ["near_miss", "survive_window", "surge_end", "collect_precursor"],
-      targets: { precursor: 7, shield: 2, boost: 1, nearMiss: 6, survive: 32 },
-      assemblySize: 3,
-      threatLevel: 1.34,
-      phagePressure: 1.26,
-      pulsePressure: 1.08,
-      frontPressure: 1.06,
-      resourcePressure: 0.9,
-      forecastTitle: "Bloom conditions",
-      forecastCopy: "Phage swarms thicken and safe windows shrink. Clean dodges matter as much as raw collection."
+      name: "Phage Bloom",
+      subtitle: "More phages, faster stress-response gain.",
+      modifiers: { phage: 1.35, wave: 0.92, rupture: 0.95, fragment: 1.08, response: 1.2, score: 1.08, repairNeeded: 4 }
     },
     {
-      id: "collapse-cascade",
-      title: "Collapse Cascade",
-      startsAt: 300,
-      endsAt: Number.POSITIVE_INFINITY,
-      bonus: 1420,
-      directivePool: ["surge_end", "near_miss", "survive_window", "collect_precursor"],
-      targets: { precursor: 8, shield: 2, boost: 1, nearMiss: 7, survive: 36 },
-      assemblySize: 4,
-      threatLevel: 1.52,
-      phagePressure: 1.36,
-      pulsePressure: 1.22,
-      frontPressure: 1.22,
-      resourcePressure: 0.86,
-      forecastTitle: "Failure cascade",
-      forecastCopy: "Everything stacks here. Only crisp lane changes and efficient envelope rebuilding keep you alive."
+      id: "beta-lactam-surge",
+      name: "Beta-Lactam Surge",
+      subtitle: "Denser antibiotic waves with slightly richer fragment spawns.",
+      modifiers: { phage: 0.98, wave: 1.34, rupture: 0.94, fragment: 1.14, response: 1, score: 1.1, repairNeeded: 4 }
+    },
+    {
+      id: "Rupture Field",
+      name: "Rupture Field",
+      subtitle: "More shear fronts. Positioning matters more than raw speed.",
+      modifiers: { phage: 0.95, wave: 1.02, rupture: 1.42, fragment: 1.06, response: 1, score: 1.12, repairNeeded: 4 }
+    },
+    {
+      id: "repair-rationing",
+      name: "Repair Rationing",
+      subtitle: "Repair fragments are rarer, but each completed cycle pays out more.",
+      modifiers: { phage: 1.08, wave: 1.06, rupture: 1.08, fragment: 0.84, response: 1.08, score: 1.18, repairNeeded: 5 }
     }
   ];
 
-  const TUTORIAL_SECTOR = {
-    id: "tutorial",
-    title: "Tutorial Route",
-    startsAt: 0,
-    endsAt: Number.POSITIVE_INFINITY,
-    bonus: 0,
-    directivePool: [],
-    targets: { precursor: 3, shield: 1, boost: 1, nearMiss: 1, survive: 12 },
-    assemblySize: 2,
-    threatLevel: 0.5,
-    phagePressure: 0.44,
-    pulsePressure: 0.4,
-    frontPressure: 0,
-    resourcePressure: 1.28,
-    forecastTitle: "Practice conditions",
-    forecastCopy: "Use the route to learn assembly, pickups, and dodges without ranking pressure."
-  };
+  const FRAGMENT_TYPES = [
+    { id: "mesh", label: "PG mesh", color: "#a8ffd2", halo: "rgba(168, 255, 210, 0.34)" },
+    { id: "sealant", label: "Membrane sealant", color: "#9fe7ff", halo: "rgba(159, 231, 255, 0.34)" },
+    { id: "chaperone", label: "Stress chaperone", color: "#ffdca0", halo: "rgba(255, 220, 160, 0.34)" }
+  ];
 
-  const state = {
-    width: 960,
-    height: 540,
-    dpr: 1,
-    running: false,
-    paused: false,
-    elapsed: 0,
-    score: 0,
-    best: readBestScore(),
-    integrity: 100,
-    shield: 0,
-    boostTimer: 0,
-    combo: 0,
-    invulnerable: 0,
-    shake: 0,
-    flowAngle: random(0, Math.PI * 2),
-    flowTargetAngle: random(0, Math.PI * 2),
-    flowStrength: 0,
-    flowTargetStrength: 0,
-    flowShiftIn: random(7, 12),
-    phageSpawnIn: 1.45,
-    pulseSpawnIn: 5.4,
-    frontSpawnIn: 11.5,
-    breakthroughSpawnIn: 28,
-    resourceSpawnIn: 1.2,
-    surgeIn: 64,
-    surgeTimer: 0,
-    surgePulseIn: 0.44,
-    slowFieldTimer: 0,
-    nearMissCooldown: 0,
-    collapseActive: false,
-    collapseTimer: 0,
-    collapseDuration: 2.7,
-    collapseRuptureAt: 0.38,
-    collapseReleased: false,
-    lysisPhages: [],
-    lysisRuptures: [],
-    lysisFragments: [],
-    lysisShockwaves: [],
-    particles: [],
-    phages: [],
-    pulses: [],
-    fronts: [],
-    resources: [],
-    bursts: [],
-    floaters: [],
-    trails: [],
-    leaderboard: readLeaderboard(),
-    pendingLeaderboard: readPendingLeaderboard(),
-    leaderboardMode: GLOBAL_LEADERBOARD_URL ? "global" : "local",
-    leaderboardStats: {
-      totalEntries: 0,
-      updatedAt: 0
-    },
-    lastSubmission: null,
-    pendingScore: null,
-    runMode: "ranked",
-    tutorialTipStep: 0,
-    tutorialSeen: readTutorialSeen(),
-    playerName: readPlayerName(),
-    modelId: readModelChoice(),
-    sectorId: RUN_SECTORS[0].id,
-    directive: null,
-    assemblyQueue: null,
-    assembliesCompleted: 0,
-    directivesCompleted: 0,
-    bestCombo: 0,
-    upgrades: [],
-    draftChoices: [],
-    pendingDraftSectorId: "",
-    surgesCleared: 0,
-    player: {
-      x: 0,
-      y: 0,
+  const state = createState();
+  let rafId = 0;
+
+  function createState() {
+    const selectedSpeciesId = normalizeSpeciesId(readStorageText(MODEL_KEY)) || "ecoli";
+    return {
+      open: false,
+      running: false,
+      paused: false,
+      overlayMode: "start",
+      lastFrame: 0,
+      selectedSpeciesId,
+      speciesId: selectedSpeciesId,
+      dailyChallenge: buildDailyChallenge(),
+      currentMode: "classic",
+      currentBoard: "classic",
+      currentBoardLabel: "Classic board",
+      playerName: readStorageText(NAME_KEY),
+      bestByBoard: readStorageJson(BEST_KEY, {}),
+      leaderboard: [],
+      leaderboardMode: GLOBAL_LEADERBOARD_URL ? "fallback" : "local",
+      leaderboardStats: { totalEntries: 0, updatedAt: 0, board: "classic" },
+      leaderboardMessage: "",
+      dailyBoardReady: false,
+      lastPlacement: null,
+      elapsed: 0,
+      score: 0,
+      integrity: 100,
+      repairProgress: 0,
+      repairNeeded: 4,
+      responseCharge: 0,
+      responseReadyFlash: 0,
+      safeWindow: 0,
+      phaseIndex: 0,
+      hitFlash: 0,
+      banner: null,
+      input: { up: false, down: false, left: false, right: false },
+      pointer: { active: false, x: canvas.width * 0.5, y: canvas.height * 0.5 },
+      fragments: [],
+      phages: [],
+      waves: [],
+      ruptures: [],
+      pulses: [],
+      floaters: [],
+      backgroundMotes: seedBackgroundMotes(),
+      spawnTimers: { fragment: 0.3, phage: 1.4, wave: 4.4, rupture: 5.2 },
+      player: createPlayer(selectedSpeciesId)
+    };
+  }
+
+  function seedBackgroundMotes() {
+    return Array.from({ length: 34 }, () => ({
+      x: randomRange(0, canvas.width),
+      y: randomRange(0, canvas.height),
+      radius: randomRange(1, 4),
+      drift: randomRange(10, 28),
+      alpha: randomRange(0.06, 0.18)
+    }));
+  }
+
+  function createPlayer(speciesId) {
+    return {
+      x: canvas.width * 0.5,
+      y: canvas.height * 0.55,
       vx: 0,
       vy: 0,
-      angle: 0,
-      radius: 18,
-      length: 50
-    }
-  };
-
-  const keys = {
-    up: false,
-    down: false,
-    left: false,
-    right: false
-  };
-
-  const pointer = {
-    active: false,
-    x: 0,
-    y: 0
-  };
-
-  function resetInputState() {
-    keys.up = false;
-    keys.down = false;
-    keys.left = false;
-    keys.right = false;
-    pointer.active = false;
+      angle: -Math.PI / 2,
+      speciesId
+    };
   }
 
-  const seededBest = Math.max(state.best, getLeaderboardBest(state.leaderboard));
-  state.best = seededBest;
-  state.leaderboardStats.totalEntries = state.leaderboard.length;
-  state.leaderboardStats.updatedAt = Date.now();
-  writeBestScore(seededBest);
+  function normalizeSpeciesId(value) {
+    return Object.prototype.hasOwnProperty.call(SPECIES, value) ? value : "ecoli";
+  }
 
-  let rafId = null;
-  let lastFrame = 0;
-  let overlayMode = "start";
-  let triggerTimer = null;
+  function normalizeBoard(value) {
+    const raw = String(value || "").trim().toLowerCase();
+    return BOARD_PATTERN.test(raw) ? raw : "classic";
+  }
 
-  function readBestScore() {
+  function readStorageText(key) {
     try {
-      const value = Number(window.localStorage.getItem(STORAGE_KEY) || "0");
-      return Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+      return window.localStorage.getItem(key) || "";
     } catch {
-      return 0;
+      return "";
     }
   }
 
-  function writeBestScore(value) {
+  function writeStorageText(key, value) {
     try {
-      window.localStorage.setItem(STORAGE_KEY, String(Math.max(0, Math.floor(value))));
+      window.localStorage.setItem(key, String(value || ""));
     } catch {
       /* no-op */
     }
   }
 
-  function sanitizeName(value) {
+  function readStorageJson(key, fallback) {
+    try {
+      const raw = window.localStorage.getItem(key);
+      return raw ? JSON.parse(raw) : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+
+  function writeStorageJson(key, value) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      /* no-op */
+    }
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  function randomRange(min, max) {
+    return min + Math.random() * (max - min);
+  }
+
+  function pick(list) {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function hashString(value) {
+    let hash = 2166136261;
+    for (let index = 0; index < value.length; index += 1) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  function createSeededRandom(seed) {
+    let value = seed >>> 0;
+    return () => {
+      value = (value + 0x6d2b79f5) >>> 0;
+      let next = Math.imul(value ^ (value >>> 15), 1 | value);
+      next ^= next + Math.imul(next ^ (next >>> 7), 61 | next);
+      return ((next ^ (next >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function getLabDateKey(date = Date.now()) {
+    const parts = new Intl.DateTimeFormat("en-CA", {
+      timeZone: LAB_TIMEZONE,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit"
+    })
+      .formatToParts(new Date(date))
+      .reduce((accumulator, part) => {
+        if (part.type !== "literal") accumulator[part.type] = part.value;
+        return accumulator;
+      }, {});
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }
+
+  function formatLabDate(dateKey) {
+    const [year, month, day] = String(dateKey).split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day, 12, 0, 0));
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: LAB_TIMEZONE,
+      month: "short",
+      day: "numeric"
+    }).format(date);
+  }
+
+  function buildDailyChallenge() {
+    const dateKey = getLabDateKey();
+    const rng = createSeededRandom(hashString(`envelope-daily-${dateKey}`));
+    const speciesIds = Object.keys(SPECIES);
+    const profile = DAILY_PROFILES[Math.floor(rng() * DAILY_PROFILES.length)];
+    const speciesId = speciesIds[Math.floor(rng() * speciesIds.length)];
+    return {
+      dateKey,
+      dateLabel: formatLabDate(dateKey),
+      board: `daily-${dateKey}`,
+      speciesId,
+      profile
+    };
+  }
+
+  function refreshDailyChallenge() {
+    const nextChallenge = buildDailyChallenge();
+    if (nextChallenge.board !== state.dailyChallenge.board) {
+      state.dailyChallenge = nextChallenge;
+      if (state.currentMode === "daily" && !state.running) {
+        state.currentBoard = nextChallenge.board;
+      }
+    }
+  }
+
+  function getSpecies(id = state.speciesId) {
+    return SPECIES[normalizeSpeciesId(id)];
+  }
+
+  function getCurrentBest(board = state.currentBoard) {
+    const key = normalizeBoard(board);
+    return Math.max(0, Math.floor(Number(state.bestByBoard[key]) || 0));
+  }
+
+  function setCurrentBest(board, score) {
+    const key = normalizeBoard(board);
+    state.bestByBoard[key] = Math.max(getCurrentBest(key), Math.floor(Number(score) || 0));
+    writeStorageJson(BEST_KEY, state.bestByBoard);
+  }
+
+  function getLocalBoardKey(board) {
+    return `${BOARD_PREFIX}${normalizeBoard(board)}`;
+  }
+
+  function normalizeName(value) {
     return String(value || "")
       .replace(/[^A-Za-z0-9 ._'-]/g, "")
       .replace(/\s+/g, " ")
@@ -928,3840 +545,1460 @@
     return !blockedTokens.some((token) => normalized.includes(token));
   }
 
-  function setNameFeedback(message = "") {
-    if (!nameFeedbackEl) return;
-    nameFeedbackEl.textContent = message;
-    nameFeedbackEl.hidden = !message;
+  function getPlayerName() {
+    const sanitized = normalizeName(playerNameInput ? playerNameInput.value : "");
+    if (!sanitized) return "Anonymous";
+    return isNameAllowed(sanitized) ? sanitized : "Anonymous";
   }
 
-  function normalizeSpeciesId(value) {
-    const key = String(value || "").trim().toLowerCase();
-    if (key && BACTERIA_MODELS[key]) return key;
-    return "unknown";
+  function updatePlayerNameFeedback() {
+    if (!playerNameFeedback || !playerNameInput) return;
+    const sanitized = normalizeName(playerNameInput.value);
+    const allowed = isNameAllowed(sanitized);
+    if (!allowed) {
+      playerNameFeedback.hidden = false;
+      playerNameFeedback.textContent = "That name is unavailable. Scores will save as Anonymous.";
+    } else if (playerNameInput.value && sanitized !== playerNameInput.value) {
+      playerNameFeedback.hidden = false;
+      playerNameFeedback.textContent = "Unsupported characters will be removed when the score is saved.";
+    } else {
+      playerNameFeedback.hidden = true;
+      playerNameFeedback.textContent = "";
+    }
   }
 
-  function getSpeciesLabel(speciesId) {
-    const key = normalizeSpeciesId(speciesId);
-    if (key === "unknown") return "Model not recorded";
-    return getModel(key).label;
+  function readLocalLeaderboard(board) {
+    const raw = readStorageJson(getLocalBoardKey(board), []);
+    return normalizeLeaderboardEntries(raw, board);
   }
 
-  const SPECIES_INLINE_PATTERNS = [
-    /\bEscherichia\s+coli\b/gi,
-    /\bPseudomonas\s+aeruginosa\b/gi,
-    /\bStaphylococcus\s+aureus\b/gi,
-    /\bStreptococcus\s+pneumoniae\b/gi,
-    /\bCorynebacterium\s+glutamicum\b/gi,
-    /\bKlebsiella\s+pneumoniae\b/gi,
-    /\bAcinetobacter\s+baumannii\b/gi,
-    /\bE\.\s*coli\b/gi,
-    /\bP\.\s*aeruginosa\b/gi,
-    /\bS\.\s*aureus\b/gi,
-    /\bS\.\s*pneumoniae\b/gi,
-    /\bC\.\s*glutamicum\b/gi,
-    /\bK\.\s*pneumoniae\b/gi,
-    /\bA\.\s*baumannii\b/gi
-  ];
-
-  function escapeHtml(value = "") {
-    return String(value)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/\"/g, "&quot;")
-      .replace(/'/g, "&#39;");
+  function writeLocalLeaderboard(board, entries) {
+    writeStorageJson(getLocalBoardKey(board), normalizeLeaderboardEntries(entries, board));
   }
 
-  function formatSpeciesAwareHtml(value = "") {
-    const escaped = escapeHtml(value);
-    return SPECIES_INLINE_PATTERNS.reduce(
-      (result, pattern) => result.replace(pattern, (match) => `<em class="species-name">${match}</em>`),
-      escaped
-    );
-  }
-
-  function formatLeaderboardTimestamp(ms) {
-    const time = Number(ms) || Date.now();
-    const stamp = new Date(time);
-    if (!Number.isFinite(stamp.getTime())) return "Unknown time";
-    const pad = (value) => String(value).padStart(2, "0");
-    return `${stamp.getFullYear()}-${pad(stamp.getMonth() + 1)}-${pad(stamp.getDate())} ${pad(stamp.getHours())}:${pad(stamp.getMinutes())}`;
-  }
-
-  function normalizeLeaderboardEntry(entry) {
-    const cleanedName = sanitizeName(entry?.name) || "Anonymous";
-    const playedAt = Math.max(0, Number(entry?.playedAt ?? entry?.createdAt) || Date.now());
-    const score = Math.max(0, Math.floor(Number(entry?.score) || 0));
-    return {
-      name: isNameAllowed(cleanedName) ? cleanedName : "Anonymous",
-      score,
-      species: normalizeSpeciesId(entry?.species ?? entry?.speciesId ?? entry?.modelId),
-      playedAt,
-      createdAt: playedAt
-    };
-  }
-
-  function normalizeLeaderboardEntries(entries) {
-    if (!Array.isArray(entries)) return [];
-    return entries
-      .map((entry) => normalizeLeaderboardEntry(entry))
-      .filter((entry) => entry.score > 0)
-      .sort((a, b) => (b.score - a.score !== 0 ? b.score - a.score : a.createdAt - b.createdAt))
+  function normalizeLeaderboardEntries(entries, board) {
+    const normalizedBoard = normalizeBoard(board);
+    return (Array.isArray(entries) ? entries : [])
+      .map((entry) => ({
+        name: (() => {
+          const cleaned = normalizeName(entry?.name) || "Anonymous";
+          return isNameAllowed(cleaned) ? cleaned : "Anonymous";
+        })(),
+        score: clamp(Math.floor(Number(entry?.score) || 0), 0, 2000000000),
+        species: normalizeSpeciesId(entry?.species),
+        playedAt: Math.floor(Number(entry?.playedAt || entry?.createdAt) || Date.now()),
+        board: normalizeBoard(entry?.board || normalizedBoard)
+      }))
+      .filter((entry) => entry.score > 0 && entry.board === normalizedBoard)
+      .sort((left, right) => {
+        if (right.score !== left.score) return right.score - left.score;
+        return left.playedAt - right.playedAt;
+      })
       .slice(0, LEADERBOARD_SIZE);
   }
 
-  function readLeaderboard() {
-    try {
-      const parsed = JSON.parse(window.localStorage.getItem(LEADERBOARD_KEY) || "[]");
-      return normalizeLeaderboardEntries(parsed);
-    } catch {
-      return [];
-    }
-  }
-
-  function writeLeaderboard(entries) {
-    try {
-      window.localStorage.setItem(LEADERBOARD_KEY, JSON.stringify(entries));
-    } catch {
-      /* no-op */
-    }
-  }
-
-  function readPendingLeaderboard() {
-    try {
-      const parsed = JSON.parse(window.localStorage.getItem(PENDING_LEADERBOARD_KEY) || "[]");
-      if (!Array.isArray(parsed)) return [];
-      return parsed
-        .map((entry) => normalizeLeaderboardEntry(entry))
-        .filter((entry) => entry.score > 0)
-        .slice(-PENDING_LEADERBOARD_LIMIT);
-    } catch {
-      return [];
-    }
-  }
-
-  function writePendingLeaderboard(entries) {
-    try {
-      window.localStorage.setItem(PENDING_LEADERBOARD_KEY, JSON.stringify(entries.slice(-PENDING_LEADERBOARD_LIMIT)));
-    } catch {
-      /* no-op */
-    }
-  }
-
-  function readPlayerName() {
-    try {
-      return sanitizeName(window.localStorage.getItem(PLAYER_NAME_KEY) || "") || "Anonymous";
-    } catch {
-      return "Anonymous";
-    }
-  }
-
-  function writePlayerName(name) {
-    try {
-      window.localStorage.setItem(PLAYER_NAME_KEY, sanitizeName(name) || "Anonymous");
-    } catch {
-      /* no-op */
-    }
-  }
-
-  function setPlayerNameFeedback(message = "") {
-    if (!playerNameFeedbackEl) return;
-    playerNameFeedbackEl.textContent = message;
-    playerNameFeedbackEl.hidden = !message;
-  }
-
-  function readTutorialSeen() {
-    try {
-      return window.localStorage.getItem(TUTORIAL_SEEN_KEY) === "1";
-    } catch {
-      return false;
-    }
-  }
-
-  function writeTutorialSeen(seen = true) {
-    try {
-      window.localStorage.setItem(TUTORIAL_SEEN_KEY, seen ? "1" : "0");
-    } catch {
-      /* no-op */
-    }
-  }
-
-  function syncPlayerNameInput() {
-    if (!playerNameInputEl) return;
-    playerNameInputEl.value = state.playerName || "Anonymous";
-  }
-
-  function updateTutorialNote() {
-    if (!tutorialNoteEl) return;
-    tutorialNoteEl.textContent = state.tutorialSeen
-      ? "Need a refresher? Practice Route is easier and does not affect the leaderboard."
-      : "First time? Try Practice Route (easier, not ranked).";
-  }
-
-  function setLeaderboardMeta(mode) {
-    if (!leaderboardMetaEl) return;
-    const status = getLeaderboardStatusDescriptor(mode);
-    leaderboardMetaEl.classList.remove("is-global", "is-fallback");
-    leaderboardMetaEl.textContent = status.label;
-    if (status.className) leaderboardMetaEl.classList.add(status.className);
-    updateRunIntel();
-  }
-
-  async function fetchJsonWithTimeout(url, options = {}, timeoutMs = LEADERBOARD_REQUEST_TIMEOUT_MS) {
-    const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-    const timeoutId = controller
-      ? window.setTimeout(() => {
-          controller.abort();
-        }, timeoutMs)
-      : null;
-
-    try {
-      const response = await fetch(url, {
-        ...options,
-        signal: controller ? controller.signal : undefined
-      });
-      return response;
-    } finally {
-      if (timeoutId !== null) window.clearTimeout(timeoutId);
-    }
-  }
-
-
-  async function fetchGlobalLeaderboard() {
-    if (!GLOBAL_LEADERBOARD_URL) return null;
-    const response = await fetchJsonWithTimeout(GLOBAL_LEADERBOARD_URL, {
-      method: "GET",
-      headers: { Accept: "application/json" }
-    });
-    if (!response.ok) {
-      throw new Error(`Leaderboard fetch failed (${response.status})`);
-    }
-    const payload = await response.json();
-    const entries = Array.isArray(payload) ? payload : payload?.entries;
-    return {
-      entries: normalizeLeaderboardEntries(entries),
-      totalEntries: Math.max(0, Math.floor(Number(payload?.totalEntries) || 0)),
-      updatedAt: Math.max(0, Math.floor(Number(payload?.updatedAt) || Date.now()))
-    };
-  }
-
-  async function submitGlobalScore(name, score, species, playedAt) {
-    if (!GLOBAL_LEADERBOARD_URL) return;
-    const response = await fetchJsonWithTimeout(GLOBAL_LEADERBOARD_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json"
-      },
-      body: JSON.stringify({
-        name: sanitizeName(name) || "Anonymous",
-        score: Math.max(0, Math.floor(score)),
-        species: normalizeSpeciesId(species),
-        playedAt: Math.max(0, Math.floor(Number(playedAt) || Date.now()))
-      })
-    });
-    if (!response.ok) {
-      let errorCode = `http_${response.status}`;
-      try {
-        const payload = await response.json();
-        if (payload?.errorCode) errorCode = String(payload.errorCode);
-      } catch {
-        /* no-op */
-      }
-      const error = new Error(`Leaderboard submit failed (${response.status})`);
-      error.code = errorCode;
-      throw error;
-    }
-    return response.json();
-  }
-
-  function enqueuePendingLeaderboardEntry(entry) {
-    const normalized = normalizeLeaderboardEntry(entry);
-    if (normalized.score <= 0) return;
-    state.pendingLeaderboard.push(normalized);
-    state.pendingLeaderboard = state.pendingLeaderboard.slice(-PENDING_LEADERBOARD_LIMIT);
-    writePendingLeaderboard(state.pendingLeaderboard);
-  }
-
-  async function flushPendingLeaderboard(maxAttempts = 25) {
-    if (!GLOBAL_LEADERBOARD_URL || !state.pendingLeaderboard.length) return 0;
-
-    const queue = [...state.pendingLeaderboard].sort((a, b) => a.playedAt - b.playedAt);
-    const remaining = [];
-    let sent = 0;
-    let attempts = 0;
-
-    for (let i = 0; i < queue.length; i += 1) {
-      const entry = queue[i];
-
-      if (attempts >= maxAttempts) {
-        remaining.push(...queue.slice(i));
-        break;
-      }
-
-      attempts += 1;
-
-      try {
-        await submitGlobalScore(entry.name, entry.score, entry.species, entry.playedAt);
-        sent += 1;
-      } catch (error) {
-        if (error && error.code === "invalid_name") {
-          continue;
-        }
-        remaining.push(entry, ...queue.slice(i + 1));
-        break;
-      }
-    }
-
-    state.pendingLeaderboard = remaining.slice(-PENDING_LEADERBOARD_LIMIT);
-    writePendingLeaderboard(state.pendingLeaderboard);
-    return sent;
-  }
-
-  async function refreshLeaderboardFromSource() {
-    if (!GLOBAL_LEADERBOARD_URL) {
-      state.leaderboardMode = "local";
-      state.leaderboardStats.totalEntries = state.leaderboard.length;
-      state.leaderboardStats.updatedAt = Date.now();
-      setLeaderboardMeta("local");
-      renderLeaderboard();
-      return;
-    }
-
-    try {
-      await flushPendingLeaderboard(50);
-      const remote = await fetchGlobalLeaderboard();
-      state.leaderboard = remote?.entries || [];
-      state.leaderboardStats.totalEntries = Math.max(state.leaderboard.length, remote?.totalEntries || 0);
-      state.leaderboardStats.updatedAt = remote?.updatedAt || Date.now();
-      writeLeaderboard(state.leaderboard);
-      state.leaderboardMode = "global";
-      setLeaderboardMeta("global");
-      state.best = Math.max(state.best, getLeaderboardBest(state.leaderboard));
-      writeBestScore(state.best);
-      updateHud();
-      renderLeaderboard();
-    } catch {
-      state.leaderboard = readLeaderboard();
-      state.leaderboardMode = "fallback";
-      state.leaderboardStats.totalEntries = Math.max(state.leaderboardStats.totalEntries, state.leaderboard.length);
-      state.leaderboardStats.updatedAt = Date.now();
-      setLeaderboardMeta("fallback");
-      renderLeaderboard();
-    }
-  }
-
-  function getLeaderboardBest(entries) {
-    if (!entries.length) return 0;
-    return Math.max(0, Math.floor(entries[0].score));
-  }
-
-  function renderLeaderboard() {
-    if (!leaderboardListEl) return;
-
-    leaderboardListEl.innerHTML = "";
-    let highlightedLatest = false;
-    for (let i = 0; i < LEADERBOARD_SIZE; i += 1) {
-      const li = document.createElement("li");
-      const entry = state.leaderboard[i];
-
-      if (entry) {
-        const score = document.createElement("strong");
-        score.textContent = String(entry.score);
-
-        const mainLine = document.createElement("div");
-        mainLine.className = "envelope-leaderboard-main";
-        mainLine.append(score, document.createTextNode(` — ${entry.name}`));
-
-        const metaLine = document.createElement("span");
-        metaLine.className = "envelope-leaderboard-meta-line";
-        metaLine.innerHTML = `${formatSpeciesAwareHtml(getSpeciesLabel(entry.species))} · ${escapeHtml(formatLeaderboardTimestamp(entry.playedAt || entry.createdAt))}`;
-
-        const isLatestSaved =
-          !highlightedLatest &&
-          state.lastSubmission &&
-          entry.name === state.lastSubmission.name &&
-          entry.score === state.lastSubmission.score &&
-          entry.species === state.lastSubmission.species &&
-          Math.abs((entry.playedAt || 0) - (state.lastSubmission.playedAt || 0)) < 300000;
-
-        if (isLatestSaved) {
-          highlightedLatest = true;
-          li.classList.add("is-player-entry");
-        }
-
-        li.append(mainLine, metaLine);
-      } else {
-        li.classList.add("is-empty");
-        li.textContent = "—";
-      }
-
-      leaderboardListEl.append(li);
-    }
-  }
-
-  function hideNameForm() {
-    state.pendingScore = null;
-    if (nameFormEl) nameFormEl.hidden = true;
-    if (nameInputEl) nameInputEl.value = "";
-    setNameFeedback("");
-  }
-
-  function openNameForm(score) {
-    const cleanedScore = Math.max(0, Math.floor(score));
-    if (cleanedScore <= 0) return;
-
-    state.pendingScore = cleanedScore;
-
-    if (!nameFormEl) {
-      const rawName = window.prompt(`Top 25 score (${cleanedScore}). Enter your name:`);
-      if (rawName === null) {
-        state.pendingScore = null;
-        return;
-      }
-      const fallbackName = sanitizeName(rawName);
-      const savedName = fallbackName || "Anonymous";
-      if (!isNameAllowed(savedName)) {
-        state.pendingScore = null;
-        showOverlay("Score not saved", "Name unavailable. Try another name.", "Play Again", "restart");
-        return;
-      }
-      addLeaderboardEntry(savedName, cleanedScore).then(() => {
-        const placement = formatPlacement();
-        showOverlay(
-          "Score saved",
-          `${savedName} saved with ${cleanedScore} points. Best score: ${Math.floor(state.best)}.${placement ? ` Placement: ${placement}.` : ""}`,
-          "Play Again",
-          "restart"
-        );
-      });
-      return;
-    }
-
-    if (nameLabelEl) nameLabelEl.textContent = `Top 25 score (${cleanedScore}): enter your name`;
-    nameFormEl.hidden = false;
-    setNameFeedback("");
-    if (nameInputEl) {
-      nameInputEl.value = "";
-      nameInputEl.focus({ preventScroll: true });
-    }
-  }
-
-  async function addLeaderboardEntry(name, score) {
-    const previousBest = Math.floor(state.best);
-    const playedAt = Date.now();
-    const entry = {
-      name: sanitizeName(name) || "Anonymous",
-      score: Math.max(0, Math.floor(score)),
-      species: normalizeSpeciesId(state.modelId),
-      playedAt,
-      createdAt: playedAt
-    };
-    if (entry.score <= 0) return false;
-    if (!isNameAllowed(entry.name)) return false;
-
-    if (GLOBAL_LEADERBOARD_URL) {
-      try {
-        const payload = await submitGlobalScore(entry.name, entry.score, entry.species, entry.playedAt);
-        await flushPendingLeaderboard(50);
-        state.leaderboard = normalizeLeaderboardEntries(payload?.entries);
-        state.leaderboardStats.totalEntries = Math.max(state.leaderboard.length, Math.floor(Number(payload?.totalEntries) || 0));
-        state.leaderboardStats.updatedAt = Date.now();
-        writeLeaderboard(state.leaderboard);
-        state.leaderboardMode = "global";
-        setLeaderboardMeta("global");
-        state.lastSubmission = {
-          name: entry.name,
-          score: entry.score,
-          species: entry.species,
-          playedAt: entry.playedAt,
-          scope: "global",
-          rank: Math.max(0, Math.floor(Number(payload?.rank) || 0)) || null,
-          totalEntries: Math.max(state.leaderboard.length, Math.floor(Number(payload?.totalEntries) || 0)),
-          isBest: entry.score > previousBest
-        };
-      } catch (error) {
-        if (error && error.code === "invalid_name") {
-          state.leaderboardMode = "global";
-          setLeaderboardMeta("global");
-          return false;
-        }
-        enqueuePendingLeaderboardEntry(entry);
-        state.leaderboard.push(entry);
-        state.leaderboard = normalizeLeaderboardEntries(state.leaderboard);
-        writeLeaderboard(state.leaderboard);
-        state.leaderboardMode = "fallback";
-        state.leaderboardStats.totalEntries = Math.max(state.leaderboardStats.totalEntries, state.leaderboard.length);
-        state.leaderboardStats.updatedAt = Date.now();
-        setLeaderboardMeta("fallback");
-        state.lastSubmission = {
-          name: entry.name,
-          score: entry.score,
-          species: entry.species,
-          playedAt: entry.playedAt,
-          scope: "fallback",
-          rank: computeLocalRank(state.leaderboard, entry),
-          totalEntries: state.leaderboard.length,
-          isBest: entry.score > previousBest
-        };
-      }
-    } else {
-      state.leaderboard.push(entry);
-      state.leaderboard = normalizeLeaderboardEntries(state.leaderboard);
-      writeLeaderboard(state.leaderboard);
-      state.leaderboardMode = "local";
-      state.leaderboardStats.totalEntries = state.leaderboard.length;
-      state.leaderboardStats.updatedAt = Date.now();
-      setLeaderboardMeta("local");
-      state.lastSubmission = {
-        name: entry.name,
-        score: entry.score,
-        species: entry.species,
-        playedAt: entry.playedAt,
-        scope: "local",
-        rank: computeLocalRank(state.leaderboard, entry),
-        totalEntries: state.leaderboard.length,
-        isBest: entry.score > previousBest
-      };
-    }
-
-    state.best = Math.max(state.best, getLeaderboardBest(state.leaderboard));
-    writeBestScore(state.best);
-    renderLeaderboard();
-    updateHud();
-    return true;
-  }
-
-  function readModelChoice() {
-    try {
-      const stored = String(window.localStorage.getItem(MODEL_KEY) || "").toLowerCase();
-      if (stored && BACTERIA_MODELS[stored]) return stored;
-    } catch {
-      /* no-op */
-    }
-    return "ecoli";
-  }
-
-  function writeModelChoice(modelId) {
-    try {
-      window.localStorage.setItem(MODEL_KEY, modelId);
-    } catch {
-      /* no-op */
-    }
-  }
-
-  function getModel(modelId) {
-    return BACTERIA_MODELS[modelId] || BACTERIA_MODELS.ecoli;
-  }
-
-  function getPrecursorPool(modelId = state.modelId) {
-    return MODEL_PRECURSOR_POOLS[modelId] || MODEL_PRECURSOR_POOLS.ecoli;
-  }
-
-  function getPrecursorDefinition(precursorId) {
-    return ENVELOPE_PRECURSORS[precursorId] || ENVELOPE_PRECURSORS.lipidII;
-  }
-
-  function pickModelPrecursor(modelId = state.modelId) {
-    const pool = getPrecursorPool(modelId);
-    const totalWeight = pool.reduce((sum, entry) => sum + Math.max(0, Number(entry.weight) || 0), 0);
-    if (totalWeight <= 0) return ENVELOPE_PRECURSORS.lipidII;
-
-    let roll = Math.random() * totalWeight;
-    for (let i = 0; i < pool.length; i += 1) {
-      const entry = pool[i];
-      roll -= Math.max(0, Number(entry.weight) || 0);
-      if (roll <= 0) {
-        return getPrecursorDefinition(entry.id);
-      }
-    }
-
-    return getPrecursorDefinition(pool[pool.length - 1].id);
-  }
-
-  function getPrecursorLabels(modelId = state.modelId) {
-    const seen = new Set();
-    const labels = [];
-    const pool = getPrecursorPool(modelId);
-
-    pool.forEach((entry) => {
-      const def = getPrecursorDefinition(entry.id);
-      const key = def.shortLabel || def.label;
-      if (seen.has(key)) return;
-      seen.add(key);
-      labels.push(key);
-    });
-
-    return labels;
-  }
-
-  function getPrecursorKeyEntries(modelId = state.modelId) {
-    const seen = new Set();
-    const entries = [];
-    const pool = getPrecursorPool(modelId);
-    const modifiers = getActiveRunModifiers(modelId);
-
-    pool.forEach((entry) => {
-      const def = getPrecursorDefinition(entry.id);
-      const key = def.shortLabel || def.label;
-      if (seen.has(key)) return;
-      seen.add(key);
-      entries.push({
-        label: key,
-        points: Math.max(
-          1,
-          Math.floor((Number(def.points) || 100) * modifiers.precursorScoreMul)
-        )
-      });
-    });
-
-    return entries;
-  }
-
-  function renderPrecursorKey() {
-    if (!precursorKeyListEl) return;
-    const entries = getPrecursorKeyEntries(state.modelId);
-    precursorKeyListEl.innerHTML = "";
-    entries.forEach((entry) => {
-      const li = document.createElement("li");
-      const label = document.createElement("span");
-      label.textContent = entry.label;
-      const points = document.createElement("strong");
-      points.textContent = `+${entry.points}`;
-      li.append(label, points);
-      precursorKeyListEl.append(li);
-    });
-  }
-
-  function applyModelGeometry() {
-    const model = getModel(state.modelId);
-    const baseRadius = clamp(Math.round(state.height * 0.035), 15, 24);
-    state.player.radius = clamp(baseRadius * model.radiusScale, 13, 27);
-    state.player.length = Math.round(state.player.radius * model.lengthScale);
-  }
-
-  function updateModelUi() {
-    const model = getModel(state.modelId);
-    const trait = getModelTraitData(state.modelId);
-    if (modelSelectEl && modelSelectEl.value !== state.modelId) {
-      modelSelectEl.value = state.modelId;
-    }
-    if (modelNoteEl) {
-      modelNoteEl.innerHTML = `${formatSpeciesAwareHtml(model.label)} · ${escapeHtml(model.morphology)} · Envelope inputs: ${escapeHtml(getPrecursorLabels(state.modelId).join(", "))} · Trait: ${escapeHtml(trait.title)}`;
-    }
-    renderPrecursorKey();
-    renderAssemblyQueue();
-    updateRunIntel();
-  }
-
-  function setModel(modelId, persist = true) {
-    const next = BACTERIA_MODELS[modelId] ? modelId : "ecoli";
-    state.modelId = next;
-    if (persist) writeModelChoice(next);
-    applyModelGeometry();
-    state.assemblyQueue = buildAssemblyQueue(next, getCurrentSector());
-    updateModelUi();
-  }
-
-  function capturePlayerNameForRun() {
-    const proposed = sanitizeName(playerNameInputEl ? playerNameInputEl.value : state.playerName) || "Anonymous";
-    if (!isNameAllowed(proposed)) {
-      setPlayerNameFeedback("Name unavailable. Please choose a different name.");
-      if (playerNameInputEl) {
-        playerNameInputEl.focus({ preventScroll: true });
-        playerNameInputEl.select();
-      }
-      return false;
-    }
-
-    state.playerName = proposed;
-    writePlayerName(proposed);
-    syncPlayerNameInput();
-    setPlayerNameFeedback("");
-    return true;
-  }
-
-  function getModelTraitData(modelId = state.modelId) {
-    return MODEL_TRAITS[modelId] || MODEL_TRAITS.ecoli;
-  }
-
-  function getAdaptationModule(moduleId) {
-    return ADAPTATION_MODULES.find((module) => module.id === moduleId) || null;
-  }
-
-  function getBreakthroughProtocol(protocolId) {
-    return BREAKTHROUGH_PROTOCOLS.find((protocol) => protocol.id === protocolId) || BREAKTHROUGH_PROTOCOLS[0];
-  }
-
-  function getActiveRunModifiers(modelId = state.modelId) {
-    const trait = getModelTraitData(modelId);
-    const modifiers = {
-      precursorRepairBonus: 0,
-      shieldGainBonus: 0,
-      startingShield: 0,
-      precursorScoreMul: 1,
-      surgeScoreMul: 1,
-      nearMissWindowMul: 1,
-      nearMissScoreMul: 1,
-      pulseDamageMul: 1,
-      boostDurationMul: 1,
-      moveSpeedMul: 1,
-      frontGapMul: 1,
-      frontSpeedMul: 1,
-      hazardSpeedMul: 1,
-      assemblyRewardMul: 1,
-      surgeCooldownMul: 1,
-      phageSpeedMul: 1,
-      resourceLifeMul: 1,
-      invulnerabilityBonus: 0
-    };
-
-    const applyModifierSet = (set) => {
-      if (!set) return;
-      if (set.precursorRepairBonus) modifiers.precursorRepairBonus += set.precursorRepairBonus;
-      if (set.shieldGainBonus) modifiers.shieldGainBonus += set.shieldGainBonus;
-      if (set.startingShield) modifiers.startingShield += set.startingShield;
-      if (set.invulnerabilityBonus) modifiers.invulnerabilityBonus += set.invulnerabilityBonus;
-      if (set.precursorScoreMul) modifiers.precursorScoreMul *= set.precursorScoreMul;
-      if (set.surgeScoreMul) modifiers.surgeScoreMul *= set.surgeScoreMul;
-      if (set.nearMissWindowMul) modifiers.nearMissWindowMul *= set.nearMissWindowMul;
-      if (set.nearMissScoreMul) modifiers.nearMissScoreMul *= set.nearMissScoreMul;
-      if (set.pulseDamageMul) modifiers.pulseDamageMul *= set.pulseDamageMul;
-      if (set.boostDurationMul) modifiers.boostDurationMul *= set.boostDurationMul;
-      if (set.moveSpeedMul) modifiers.moveSpeedMul *= set.moveSpeedMul;
-      if (set.frontGapMul) modifiers.frontGapMul *= set.frontGapMul;
-      if (set.frontSpeedMul) modifiers.frontSpeedMul *= set.frontSpeedMul;
-      if (set.hazardSpeedMul) modifiers.hazardSpeedMul *= set.hazardSpeedMul;
-      if (set.assemblyRewardMul) modifiers.assemblyRewardMul *= set.assemblyRewardMul;
-      if (set.surgeCooldownMul) modifiers.surgeCooldownMul *= set.surgeCooldownMul;
-      if (set.phageSpeedMul) modifiers.phageSpeedMul *= set.phageSpeedMul;
-      if (set.resourceLifeMul) modifiers.resourceLifeMul *= set.resourceLifeMul;
-    };
-
-    applyModifierSet(trait.modifiers);
-    state.upgrades.forEach((moduleId) => {
-      applyModifierSet(getAdaptationModule(moduleId)?.modifiers);
-    });
-
-    if (state.slowFieldTimer > 0) {
-      modifiers.hazardSpeedMul *= 0.8;
-      modifiers.frontSpeedMul *= 0.84;
-      modifiers.phageSpeedMul *= 0.88;
-    }
-
-    return modifiers;
-  }
-
-  function buildDraftChoices(count = 3) {
-    const owned = new Set(state.upgrades);
-    const pool = ADAPTATION_MODULES.filter((module) => !owned.has(module.id));
-    const source = pool.length >= count ? [...pool] : [...ADAPTATION_MODULES];
-    const choices = [];
-
-    while (source.length && choices.length < count) {
-      const index = Math.floor(Math.random() * source.length);
-      choices.push(source.splice(index, 1)[0]);
-    }
-
-    return choices;
-  }
-
-  function getAssemblyPlan(modelId = state.modelId) {
-    return MODEL_ASSEMBLY_PLANS[modelId] || MODEL_ASSEMBLY_PLANS.ecoli;
-  }
-
-  function buildAssemblyQueue(modelId = state.modelId, sector = getCurrentSector()) {
-    const plan = getAssemblyPlan(modelId);
-    const modifiers = getActiveRunModifiers(modelId);
-    const desiredSize = clamp(Number(sector?.assemblySize) || 2, 2, Math.max(2, plan.priority.length));
-    const steps = [];
-    const seen = new Set();
-    const offset = state.assembliesCompleted % plan.priority.length;
-
-    for (let i = 0; i < plan.priority.length * 2 && steps.length < desiredSize; i += 1) {
-      const precursorId = plan.priority[(offset + i) % plan.priority.length];
-      if (seen.has(precursorId)) continue;
-      seen.add(precursorId);
-      steps.push({
-        id: precursorId,
-        label: getPrecursorDefinition(precursorId).shortLabel || getPrecursorDefinition(precursorId).label,
-        completed: false
-      });
-    }
-
-    return {
-      modelId,
-      sectorId: sector?.id || "tutorial",
-      title: plan.title,
-      description: plan.copy,
-      rewardScore:
-        Math.round(((Number(sector?.bonus) || 300) * (steps.length >= 4 ? 0.34 : 0.28) + steps.length * 60) * modifiers.assemblyRewardMul),
-      rewardShield: steps.length >= 4 ? 16 : 12,
-      rewardIntegrity: steps.length >= 4 ? 14 : 10,
-      rewardBoost: steps.length >= 4 ? 3.1 : 2.4,
-      steps
-    };
-  }
-
-  function setAssemblyQueue(queue = state.assemblyQueue) {
-    state.assemblyQueue = queue;
-    renderAssemblyQueue();
-    updateRunIntel();
-  }
-
-  function renderAssemblyQueue() {
-    if (!assemblySlotsEl) return;
-    const queue = state.assemblyQueue;
-    assemblySlotsEl.innerHTML = "";
-
-    if (!queue || !Array.isArray(queue.steps) || !queue.steps.length) {
-      const empty = document.createElement("p");
-      empty.className = "envelope-assembly-empty";
-      empty.textContent = "Assembly queue will appear when the run begins.";
-      assemblySlotsEl.append(empty);
-      return;
-    }
-
-    queue.steps.forEach((step) => {
-      const chip = document.createElement("div");
-      chip.className = "envelope-assembly-chip";
-      if (step.completed) chip.classList.add("is-complete");
-
-      const label = document.createElement("strong");
-      label.textContent = step.label;
-      const status = document.createElement("span");
-      status.textContent = step.completed ? "Installed" : "Needed";
-
-      chip.append(label, status);
-      assemblySlotsEl.append(chip);
-    });
-  }
-
-  function updateOverlayLayout(mode = overlayMode) {
-    const startMode = mode === "start";
-    const draftMode = mode === "draft";
-    const showStartActions = mode === "start" || mode === "resume" || mode === "restart";
-
-    if (modelPickerWrapEl) modelPickerWrapEl.hidden = !startMode;
-    if (playerNameWrapEl) playerNameWrapEl.hidden = !startMode;
-    if (tutorialNoteEl) tutorialNoteEl.hidden = !startMode;
-    if (startActionsWrapEl) startActionsWrapEl.hidden = !showStartActions;
-    if (tutorialStartButton) tutorialStartButton.hidden = mode !== "start";
-    if (draftEl) draftEl.hidden = !draftMode;
-    if (overlayBriefingEl) overlayBriefingEl.hidden = false;
-  }
-
-  function renderDraftOptions() {
-    if (!draftOptionsEl) return;
-    draftOptionsEl.innerHTML = "";
-
-    state.draftChoices.forEach((choice) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "envelope-draft-option";
-      button.dataset.moduleId = choice.id;
-
-      const title = document.createElement("strong");
-      title.textContent = choice.title;
-      const copy = document.createElement("span");
-      copy.textContent = choice.copy;
-
-      button.append(title, copy);
-      draftOptionsEl.append(button);
-    });
-  }
-
-  function applyAdaptationChoice(moduleId) {
-    const module = getAdaptationModule(moduleId);
-    if (!module) return;
-    if (!state.upgrades.includes(module.id)) {
-      state.upgrades.push(module.id);
-    }
-    state.draftChoices = [];
-    state.pendingDraftSectorId = "";
-    addFloater(state.width * 0.5, 60, module.title, "#d9f7ff");
-    addBurst(state.width * 0.5, 72, "#c7f0ff", 20);
-    state.paused = false;
-    pauseButton.textContent = "Pause";
-    hideOverlay();
-    updateModelUi();
-    updateRunIntel();
-    lastFrame = performance.now();
-    ensureLoop();
-  }
-
-  function openAdaptationDraft(sector) {
-    state.draftChoices = buildDraftChoices(3);
-    if (!state.draftChoices.length) return;
-    state.pendingDraftSectorId = sector.id;
-    state.paused = true;
-    pauseButton.textContent = "Continue";
-    renderDraftOptions();
-    showOverlay(
-      `${sector.title} adaptation`,
-      "Choose one lab adaptation before the next pressure regime locks in.",
-      "",
-      "draft"
-    );
-  }
-
-  function completeAssemblyQueue() {
-    const queue = state.assemblyQueue;
-    if (!queue) return;
-
-    state.assembliesCompleted += 1;
-    state.score += queue.rewardScore;
-    state.integrity = clamp(state.integrity + queue.rewardIntegrity, 0, 100);
-    state.shield = clamp(state.shield + queue.rewardShield, 0, 100);
-    state.boostTimer = clamp(state.boostTimer + queue.rewardBoost, 0, 12);
-    state.combo = clamp(state.combo + 1, 0, 14);
-    state.bestCombo = Math.max(state.bestCombo, state.combo);
-    addFloater(state.width * 0.5, 72, `${queue.title} fortified +${queue.rewardScore}`, "#c7f6ff");
-    addBurst(state.width * 0.5, 82, "#a3efff", 20);
-
-    const nextQueue = buildAssemblyQueue(state.modelId, getCurrentSector());
-    setAssemblyQueue(nextQueue);
-  }
-
-  function advanceAssemblyProgress(precursorId) {
-    const queue = state.assemblyQueue;
-    if (!queue || !Array.isArray(queue.steps)) return;
-
-    const step = queue.steps.find((candidate) => candidate.id === precursorId && !candidate.completed);
-    if (!step) return;
-
-    step.completed = true;
-    addFloater(state.player.x, state.player.y - 18, `${step.label} installed`, "#d8fbff");
-    renderAssemblyQueue();
-    updateRunIntel();
-
-    if (queue.steps.every((candidate) => candidate.completed)) {
-      completeAssemblyQueue();
-    }
-  }
-
-  function getSectorForElapsed(elapsed, mode = state.runMode) {
-    if (mode === "tutorial") return TUTORIAL_SECTOR;
-    return RUN_SECTORS.find((sector) => elapsed < sector.endsAt) || RUN_SECTORS[RUN_SECTORS.length - 1];
-  }
-
-  function getCurrentSector() {
-    return getSectorForElapsed(state.elapsed, state.runMode);
-  }
-
-  function buildDirective(type, sector) {
-    const rewardBase = Math.max(220, Math.round(sector.bonus * 0.58) || 260);
-
-    switch (type) {
-      case "collect_shield":
-        return {
-          type,
-          sectorId: sector.id,
-          title: "Buffer the envelope",
-          description: `Collect ${sector.targets.shield} SigmaE shield pickup${sector.targets.shield > 1 ? "s" : ""}.`,
-          target: sector.targets.shield,
-          progress: 0,
-          rewardScore: rewardBase - 20,
-          rewardShield: 10,
-          rewardIntegrity: 4,
-          completed: false
-        };
-      case "collect_boost":
-        return {
-          type,
-          sectorId: sector.id,
-          title: "Prime the catalysts",
-          description: `Collect ${sector.targets.boost} catalytic boost${sector.targets.boost > 1 ? "s" : ""}.`,
-          target: sector.targets.boost,
-          progress: 0,
-          rewardScore: rewardBase,
-          rewardShield: 0,
-          rewardIntegrity: 6,
-          completed: false
-        };
-      case "near_miss":
-        return {
-          type,
-          sectorId: sector.id,
-          title: "Thread the phages",
-          description: `Trigger ${sector.targets.nearMiss} tight dodge${sector.targets.nearMiss > 1 ? "s" : ""} without lysing.`,
-          target: sector.targets.nearMiss,
-          progress: 0,
-          rewardScore: rewardBase + 40,
-          rewardShield: 6,
-          rewardIntegrity: 0,
-          completed: false
-        };
-      case "surge_end":
-        return {
-          type,
-          sectorId: sector.id,
-          title: "Weather the bloom",
-          description: "Live through the next phage surge.",
-          target: 1,
-          progress: 0,
-          rewardScore: rewardBase + 80,
-          rewardShield: 10,
-          rewardIntegrity: 0,
-          completed: false
-        };
-      case "survive_window":
-        return {
-          type,
-          sectorId: sector.id,
-          title: "Hold formation",
-          description: `Stay intact for ${sector.targets.survive} seconds in this sector.`,
-          target: sector.targets.survive,
-          progress: 0,
-          rewardScore: rewardBase,
-          rewardShield: 0,
-          rewardIntegrity: 8,
-          completed: false
-        };
-      case "collect_precursor":
-      default:
-        return {
-          type: "collect_precursor",
-          sectorId: sector.id,
-          title: "Rebuild reserve",
-          description: `Collect ${sector.targets.precursor} species-specific precursor pickup${sector.targets.precursor > 1 ? "s" : ""}.`,
-          target: sector.targets.precursor,
-          progress: 0,
-          rewardScore: rewardBase + 20,
-          rewardShield: 0,
-          rewardIntegrity: 10,
-          completed: false
-        };
-    }
-  }
-
-  function assignDirectiveForSector(sector, force = false) {
-    if (state.runMode === "tutorial") {
-      state.directive = {
-        type: "tutorial",
-        sectorId: TUTORIAL_SECTOR.id,
-        title: "Tutorial route",
-        description: "Practice movement, pickups, and dodges. Tutorial runs are never ranked.",
-        target: 1,
-        progress: 0,
-        rewardScore: 0,
-        rewardShield: 0,
-        rewardIntegrity: 0,
-        completed: false
-      };
-      return;
-    }
-
-    if (!force && state.directive && !state.directive.completed && state.directive.sectorId === sector.id) {
-      return;
-    }
-
-    const previousType = state.directive?.type || "";
-    const pool = sector.directivePool.filter((type) => type !== previousType);
-    const choicePool = pool.length ? pool : sector.directivePool;
-    const choice = choicePool[Math.floor(Math.random() * choicePool.length)] || "collect_precursor";
-    state.directive = buildDirective(choice, sector);
-  }
-
-  function getDirectiveProgressText(directive = state.directive) {
-    if (!directive) return "No objective assigned.";
-    if (directive.type === "tutorial") return "Practice only";
-    if (directive.completed) return `Completed · +${directive.rewardScore}`;
-    if (directive.type === "survive_window") {
-      return `${Math.min(directive.target, Math.floor(directive.progress))}/${directive.target}s`;
-    }
-    return `${Math.min(directive.target, Math.floor(directive.progress))}/${directive.target}`;
-  }
-
-  function completeDirective(directive = state.directive) {
-    if (!directive || directive.completed) return;
-
-    directive.completed = true;
-    directive.progress = directive.target;
-    state.directivesCompleted += 1;
-    state.score += directive.rewardScore;
-    state.integrity = clamp(state.integrity + directive.rewardIntegrity, 0, 100);
-    state.shield = clamp(state.shield + directive.rewardShield, 0, 100);
-    state.combo = clamp(state.combo + 1, 0, 14);
-    state.bestCombo = Math.max(state.bestCombo, state.combo);
-    addFloater(state.width * 0.5, 78, `${directive.title} +${directive.rewardScore}`, "#d0f6ff");
-    addBurst(state.width * 0.5, 90, "#a9efff", 18);
-    updateRunIntel();
-  }
-
-  function advanceDirectiveProgress(type, amount = 1) {
-    if (!state.directive || state.directive.completed) return;
-    if (state.directive.type !== type) return;
-    state.directive.progress = clamp(state.directive.progress + amount, 0, state.directive.target);
-    updateRunIntel();
-    if (state.directive.progress >= state.directive.target) {
-      completeDirective(state.directive);
-    }
-  }
-
-  function initializeRunProgress() {
-    const sector = getSectorForElapsed(0, state.runMode);
-    state.sectorId = sector.id;
-    state.surgesCleared = 0;
-    assignDirectiveForSector(sector, true);
-    setAssemblyQueue(buildAssemblyQueue(state.modelId, sector));
-  }
-
-  function updateDirectiveTimer(dt) {
-    if (!state.directive || state.directive.completed) return;
-    if (state.directive.type !== "survive_window") return;
-    const previousWhole = Math.floor(state.directive.progress);
-    state.directive.progress = clamp(state.directive.progress + dt, 0, state.directive.target);
-    if (Math.floor(state.directive.progress) !== previousWhole) {
-      updateRunIntel();
-    }
-    if (state.directive.progress >= state.directive.target) {
-      completeDirective(state.directive);
-    }
-  }
-
-  function handleSectorTransition(force = false) {
-    const nextSector = getSectorForElapsed(state.elapsed, state.runMode);
-    if (!force && nextSector.id === state.sectorId) return;
-
-    const isTransition = !force && state.runMode === "ranked" && nextSector.id !== state.sectorId;
-    state.sectorId = nextSector.id;
-    assignDirectiveForSector(nextSector, true);
-    setAssemblyQueue(buildAssemblyQueue(state.modelId, nextSector));
-
-    if (isTransition) {
-      state.score += nextSector.bonus;
-      addFloater(state.width * 0.5, 52, `${nextSector.title} +${nextSector.bonus}`, "#9feeff");
-      addBurst(state.width * 0.5, 62, "#9befff", 20);
-      openAdaptationDraft(nextSector);
-    }
-    updateRunIntel();
-  }
-
-  function handleSurgeCleared() {
-    state.surgesCleared += 1;
-    advanceDirectiveProgress("surge_end", 1);
-    addFloater(state.width * 0.5, 44, "Surge cleared", "#d4f7ff");
-    updateRunIntel();
-  }
-
-  function getLeaderboardStatusDescriptor(mode = state.leaderboardMode) {
-    if (mode === "global") {
-      const totalEntries = Number(state.leaderboardStats.totalEntries) || 0;
-      return {
-        label: "Shared leaderboard",
-        overlay: totalEntries > 0 ? `Shared leaderboard live · ${totalEntries} recorded runs` : "Shared leaderboard live",
-        pill: totalEntries > 0 ? `Shared · ${totalEntries} runs` : "Shared leaderboard",
-        rankSummary: totalEntries > 0 ? `Competing across ${totalEntries} recorded runs.` : "Competing across all visitors.",
-        className: "is-global"
-      };
-    }
-    if (mode === "fallback") {
-      return {
-        label: "Global offline · using local copy",
-        overlay: "Leaderboard connection lost · using your cached board until sync returns.",
-        pill: "Offline cache",
-        rankSummary: "Saved scores will sync when the shared leaderboard comes back.",
-        className: "is-fallback"
-      };
-    }
-    return {
-      label: "Local leaderboard",
-      overlay: "This copy of the game is only saving scores on this device.",
-      pill: "Local only",
-      rankSummary: "Scores are only visible in this browser until the shared leaderboard connection is available.",
-      className: ""
-    };
-  }
-
-  function formatPlacement(result = state.lastSubmission) {
-    if (!result) return null;
-    if (result.scope === "global" && result.rank) {
-      return `#${result.rank}${result.totalEntries ? ` of ${result.totalEntries}` : ""} overall`;
-    }
-    if (result.rank) {
-      return `#${result.rank} on this device`;
-    }
-    return null;
-  }
-
-  function computeLocalRank(entries, candidate) {
-    const normalizedCandidate = normalizeLeaderboardEntry(candidate);
-    const ranked = normalizeLeaderboardEntries(Array.isArray(entries) ? entries : []);
-    const index = ranked.findIndex(
+  function computeLocalRank(entries, newEntry) {
+    const merged = normalizeLeaderboardEntries([...(entries || []), newEntry], newEntry.board);
+    const index = merged.findIndex(
       (entry) =>
-        entry.name === normalizedCandidate.name &&
-        entry.score === normalizedCandidate.score &&
-        entry.species === normalizedCandidate.species &&
-        Math.abs((entry.playedAt || 0) - (normalizedCandidate.playedAt || 0)) < 300000
+        entry.name === newEntry.name &&
+        entry.score === newEntry.score &&
+        entry.playedAt === newEntry.playedAt &&
+        entry.board === newEntry.board
     );
-    return index >= 0 ? index + 1 : null;
+    return index >= 0 ? index + 1 : merged.length;
   }
 
-  function updateRunIntel() {
-    const trait = getModelTraitData(state.modelId);
-    const sector = getCurrentSector();
-    const directive = state.directive;
-    const assemblyQueue = state.assemblyQueue;
-    const status = getLeaderboardStatusDescriptor(state.leaderboardMode);
-    const placement = formatPlacement();
-    const assemblyCompleted = assemblyQueue?.steps?.filter((step) => step.completed).length || 0;
-    const assemblyTotal = assemblyQueue?.steps?.length || 0;
-
-    if (traitTitleEl) traitTitleEl.textContent = trait.title;
-    if (traitCopyEl) traitCopyEl.textContent = trait.copy;
-
-    if (directiveTitleEl) {
-      directiveTitleEl.textContent = directive ? directive.title : "Awaiting launch";
-    }
-    if (directiveCopyEl) {
-      directiveCopyEl.textContent = directive
-        ? `${directive.description} ${directive.type === "tutorial" ? "" : `(${getDirectiveProgressText(directive)})`}`.trim()
-        : "Start a ranked run to receive your first objective.";
-    }
-
-    if (assemblyTitleEl) {
-      assemblyTitleEl.textContent = assemblyQueue ? assemblyQueue.title : "Queue calibrating";
-    }
-    if (assemblyCopyEl) {
-      assemblyCopyEl.textContent = assemblyQueue
-        ? `${assemblyQueue.description} (${assemblyCompleted}/${assemblyTotal} installed · next burst grants shield, integrity, and catalytic tempo.)`
-        : "Collect the required envelope modules to trigger a fortification burst.";
-    }
-    if (assemblyStatusEl) {
-      assemblyStatusEl.textContent = assemblyQueue
-        ? `${assemblyCompleted}/${assemblyTotal} installed · ${state.assembliesCompleted} fortified`
-        : "Queue calibrating";
-    }
-
-    if (forecastTitleEl) {
-      forecastTitleEl.textContent = sector.forecastTitle || sector.title;
-    }
-    if (forecastCopyEl) {
-      const surgePrefix = state.surgeTimer > 0 ? "Surge active now. " : state.slowFieldTimer > 0 ? "SOS slowdown active. " : "";
-      forecastCopyEl.textContent = `${surgePrefix}${sector.forecastCopy || "Pressure profile updating."}`.trim();
-    }
-
-    if (upgradeTitleEl) {
-      upgradeTitleEl.textContent = state.upgrades.length
-        ? `${state.upgrades.length} active · ${getAdaptationModule(state.upgrades[state.upgrades.length - 1])?.title || "Adapted"}`
-        : "No adaptations yet";
-    }
-    if (upgradeCopyEl) {
-      const latestUpgrade = getAdaptationModule(state.upgrades[state.upgrades.length - 1]);
-      const stack = state.upgrades
-        .slice(-3)
-        .map((moduleId) => getAdaptationModule(moduleId)?.title || "Adaptation")
-        .join(" · ");
-      upgradeCopyEl.textContent = state.upgrades.length
-        ? `${latestUpgrade?.copy || "Adaptation active."} Active stack: ${stack}.`
-        : "Sector rewards will offer one adaptation choice each transition.";
-    }
-
-    if (rankTitleEl) {
-      rankTitleEl.textContent = placement ? `Latest placement: ${placement}` : "No score saved yet";
-    }
-    if (rankCopyEl) {
-      rankCopyEl.textContent = state.lastSubmission
-        ? `${state.lastSubmission.name} scored ${state.lastSubmission.score} as ${formatSpeciesAwareHtml(getSpeciesLabel(state.lastSubmission.species))}`.replace(/<[^>]+>/g, "")
-        : status.rankSummary;
-    }
-
-    if (networkPillEl) {
-      networkPillEl.textContent = status.pill;
-      networkPillEl.classList.remove("is-global", "is-fallback");
-      if (status.className) networkPillEl.classList.add(status.className);
-    }
-
-    if (overlayStatusEl) {
-      overlayStatusEl.textContent = status.overlay;
-      overlayStatusEl.classList.remove("is-global", "is-fallback");
-      if (status.className) overlayStatusEl.classList.add(status.className);
-    }
-
-    if (rankSummaryEl) {
-      rankSummaryEl.textContent = placement
-        ? `Latest saved run: ${placement}${state.lastSubmission?.isBest ? " · new best" : ""}.`
-        : status.rankSummary;
-    }
-
-    if (sectorEl) {
-      sectorEl.textContent = sector.title;
-    }
-    if (sectorNoteEl) {
-      if (state.runMode === "tutorial") {
-        sectorNoteEl.textContent = "Practice route only";
-      } else if (Number.isFinite(sector.endsAt)) {
-        sectorNoteEl.textContent = `Milestone bonus at ${formatDuration(sector.endsAt)}`;
-      } else {
-        sectorNoteEl.textContent = "Final sector active";
-      }
-    }
+  function formatDuration(totalSeconds) {
+    const rounded = Math.max(0, Math.floor(totalSeconds));
+    const minutes = Math.floor(rounded / 60);
+    const seconds = rounded % 60;
+    return `${minutes}:${String(seconds).padStart(2, "0")}`;
   }
 
-  function clamp(value, min, max) {
-    return Math.min(max, Math.max(min, value));
+  function formatRank(rank) {
+    const remainder10 = rank % 10;
+    const remainder100 = rank % 100;
+    if (remainder10 === 1 && remainder100 !== 11) return `${rank}st`;
+    if (remainder10 === 2 && remainder100 !== 12) return `${rank}nd`;
+    if (remainder10 === 3 && remainder100 !== 13) return `${rank}rd`;
+    return `${rank}th`;
   }
 
-  function random(min, max) {
-    return min + Math.random() * (max - min);
-  }
-
-  function smoothstep(value) {
-    const t = clamp(value, 0, 1);
-    return t * t * (3 - 2 * t);
-  }
-
-  function getDifficultyProfile() {
-    const sector = getCurrentSector();
-    if (state.runMode === "tutorial") {
-      const ramp = smoothstep(state.elapsed / 180);
-      return {
-        intensity: (0.34 + ramp * 0.42) * (sector.threatLevel || 1),
-        phageSpeedMul: 0.5 + ramp * 0.26,
-        pulseSpeedMul: 0.42 + ramp * 0.24,
-        frontSpeedMul: 0.54 + ramp * 0.2,
-        phageSpawnMul: (0.34 + ramp * 0.5) * (sector.phagePressure || 1),
-        pulseSpawnMul: (0.32 + ramp * 0.42) * (sector.pulsePressure || 1),
-        frontSpawnMul: (0.3 + ramp * 0.28) * (sector.frontPressure || 1),
-        resourceSpawnMul: (2.08 - ramp * 0.22) * (sector.resourcePressure || 1),
-        frontGapScale: 0.84,
-        darterChance: 0.02 + ramp * 0.08,
-        damageMul: 0.46 + ramp * 0.22,
-        surgeCooldownMul: 2.5,
-        surgeDurationMul: 0.6,
-        surgeCadenceMul: 0.58
-      };
-    }
-
-    const ramp = smoothstep(state.elapsed / 310);
+  function pointToCanvas(event) {
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return { x: canvas.width * 0.5, y: canvas.height * 0.5 };
     return {
-      intensity: (0.56 + ramp * 1.38) * (sector.threatLevel || 1),
-      phageSpeedMul: 0.8 + ramp * 0.72,
-      pulseSpeedMul: 0.74 + ramp * 0.82,
-      frontSpeedMul: 0.82 + ramp * 0.58,
-      phageSpawnMul: (0.64 + ramp * 1.08) * (sector.phagePressure || 1),
-      pulseSpawnMul: (0.58 + ramp * 0.98) * (sector.pulsePressure || 1),
-      frontSpawnMul: (0.42 + ramp * 0.86) * (sector.frontPressure || 1),
-      resourceSpawnMul: (1.24 - ramp * 0.32) * (sector.resourcePressure || 1),
-      frontGapScale: 1 + ramp * 0.26,
-      darterChance: 0.08 + ramp * 0.28,
-      damageMul: 0.84 + ramp * 0.4,
-      surgeCooldownMul: 1.4 - ramp * 0.42,
-      surgeDurationMul: 0.88 + ramp * 0.36,
-      surgeCadenceMul: 0.9 + ramp * 0.44
+      x: ((event.clientX - rect.left) / rect.width) * canvas.width,
+      y: ((event.clientY - rect.top) / rect.height) * canvas.height
     };
   }
 
-  function formatDuration(seconds) {
-    const total = Math.max(0, Math.floor(seconds));
-    const minutes = Math.floor(total / 60);
-    const remainder = total % 60;
-    return `${minutes}:${String(remainder).padStart(2, "0")}`;
-  }
-
-  function getPressureState(profile) {
-    if (state.runMode === "tutorial") {
-      return { label: "Tutorial", className: "envelope-pressure-calm" };
-    }
-    if (state.surgeTimer > 0) {
-      return { label: "Surge", className: "envelope-pressure-surge" };
-    }
-    if (profile.intensity < 1.02) {
-      return { label: "Calm", className: "envelope-pressure-calm" };
-    }
-    if (profile.intensity < 1.45) {
-      return { label: "Ramping", className: "envelope-pressure-ramping" };
-    }
-    if (profile.intensity < 1.95) {
-      return { label: "Strained", className: "envelope-pressure-strained" };
-    }
-    return { label: "Critical", className: "envelope-pressure-critical" };
-  }
-
-  function normalizeAngle(angle) {
-    let next = angle;
-    while (next <= -Math.PI) next += Math.PI * 2;
-    while (next > Math.PI) next -= Math.PI * 2;
-    return next;
-  }
-
-  function updateFlowField(dt, profile) {
-    state.flowShiftIn -= dt;
-    if (state.flowShiftIn <= 0) {
-      const intensity = profile.intensity;
-      state.flowTargetAngle = random(0, Math.PI * 2);
-      state.flowTargetStrength = random(4, 22 + intensity * 10);
-      state.flowShiftIn = random(6.4, 10.8) / (0.88 + intensity * 0.13);
-    }
-
-    const angleDelta = normalizeAngle(state.flowTargetAngle - state.flowAngle);
-    state.flowAngle += angleDelta * dt * 1.05;
-    state.flowStrength += (state.flowTargetStrength - state.flowStrength) * dt * 0.9;
-    state.flowStrength = clamp(state.flowStrength, 0, 36);
-  }
-
-  function isModalOpen() {
-    return modal.hasAttribute("open");
-  }
-
-  function resizeCanvas() {
-    const rect = canvas.getBoundingClientRect();
-    const width = Math.max(320, Math.round(rect.width || 960));
-    const height = Math.max(180, Math.round(rect.height || 540));
-    const prevWidth = state.width || width;
-    const prevHeight = state.height || height;
-
-    state.width = width;
-    state.height = height;
-    state.dpr = Math.min(window.devicePixelRatio || 1, 2);
-
-    canvas.width = Math.floor(state.width * state.dpr);
-    canvas.height = Math.floor(state.height * state.dpr);
-
-    ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
-
-    if (state.player.x === 0 && state.player.y === 0) {
-      placePlayerCenter();
-    } else {
-      applyModelGeometry();
-      const xRatio = prevWidth > 0 ? state.player.x / prevWidth : 0.5;
-      const yRatio = prevHeight > 0 ? state.player.y / prevHeight : 0.5;
-      state.player.x = xRatio * state.width;
-      state.player.y = yRatio * state.height;
-      state.player.x = clamp(state.player.x, state.player.radius, state.width - state.player.radius);
-      state.player.y = clamp(state.player.y, state.player.radius, state.height - state.player.radius);
-    }
-  }
-
-  function placePlayerCenter() {
-    applyModelGeometry();
-    state.player.x = Math.round(state.width * 0.33);
-    state.player.y = Math.round(state.height * 0.5);
-    state.player.vx = 0;
-    state.player.vy = 0;
-    state.player.angle = 0;
-  }
-
-  function resetSimulation() {
-    const modifiers = getActiveRunModifiers(state.modelId);
-    state.elapsed = 0;
-    state.score = 0;
-    state.integrity = 100;
-    state.shield = clamp(modifiers.startingShield || 0, 0, 100);
-    state.boostTimer = 0;
-    state.combo = 0;
-    state.invulnerable = 0;
-    state.shake = 0;
-    state.flowAngle = random(0, Math.PI * 2);
-    state.flowTargetAngle = state.flowAngle;
-    state.flowStrength = random(0, 6);
-    state.flowTargetStrength = state.flowStrength;
-    state.flowShiftIn = random(6.8, 10.6);
-    state.phageSpawnIn = 1.45;
-    state.pulseSpawnIn = 5.4;
-    state.frontSpawnIn = 11.5;
-    state.resourceSpawnIn = 1.2;
-    state.surgeIn = state.runMode === "tutorial" ? 9999 : random(58, 86);
-    state.surgeTimer = 0;
-    state.surgePulseIn = 0.44;
-    state.tutorialTipStep = 0;
-    state.nearMissCooldown = 0;
-    state.collapseActive = false;
-    state.collapseTimer = 0;
-    state.collapseRuptureAt = 0.38;
-    state.collapseReleased = false;
-    state.lysisPhages = [];
-    state.lysisRuptures = [];
-    state.lysisFragments = [];
-    state.lysisShockwaves = [];
-    state.phages = [];
-    state.pulses = [];
-    state.fronts = [];
-    state.resources = [];
-    state.bursts = [];
-    state.floaters = [];
-    state.trails = [];
-    state.assembliesCompleted = 0;
-    state.directivesCompleted = 0;
-    state.bestCombo = 0;
-    state.upgrades = [];
-    state.draftChoices = [];
-    state.pendingDraftSectorId = "";
-    state.slowFieldTimer = 0;
-    state.breakthroughSpawnIn = random(24, 34);
-    buildAmbientParticles();
-    placePlayerCenter();
-    initializeRunProgress();
-    updateHud();
-    updateRunIntel();
-  }
-
-  function buildAmbientParticles() {
-    const count = clamp(Math.round((state.width * state.height) / 15000), 36, 96);
-    state.particles = Array.from({ length: count }, () => ({
-      x: random(0, state.width),
-      y: random(0, state.height),
-      r: random(1, 3.2),
-      vx: random(8, 26),
-      vy: random(-6, 6),
-      twinkle: random(0, Math.PI * 2)
-    }));
-  }
-
-  function showOverlay(title, copy, actionText, mode) {
-    overlayMode = mode;
-    overlayTitle.textContent = title;
-    overlayCopy.textContent = copy;
-    startButton.textContent = actionText;
-    updateOverlayLayout(mode);
-    overlay.classList.remove("is-hidden");
+  function setOverlayPoints(items) {
+    if (!overlayPoints) return;
+    overlayPoints.innerHTML = "";
+    items.forEach((item) => {
+      const li = document.createElement("li");
+      li.textContent = item;
+      overlayPoints.append(li);
+    });
   }
 
   function hideOverlay() {
     overlay.classList.add("is-hidden");
   }
 
-  function updateHud() {
-    const profile = getDifficultyProfile();
-    const pressure = getPressureState(profile);
-    const sector = getCurrentSector();
-    const integrityPct = clamp(state.integrity, 0, 100);
-    const shieldPct = clamp(state.shield, 0, 100);
-    const boostPct = clamp((state.boostTimer / 7.2) * 100, 0, 100);
-    const nextSurgeCountdown = state.runMode === "tutorial" ? null : state.surgeTimer > 0 ? 0 : Math.ceil(state.surgeIn);
-    const telegraphedFront = state.fronts.some((front) => front.telegraph > 0);
+  function showOverlay(mode) {
+    state.overlayMode = mode;
+    overlay.classList.remove("is-hidden");
 
-    if (scoreEl) scoreEl.textContent = String(Math.floor(state.score));
-    if (bestEl) bestEl.textContent = String(Math.floor(state.best));
-    if (timeEl) timeEl.textContent = formatDuration(state.elapsed);
-    if (pressureEl) {
-      pressureEl.textContent = pressure.label;
-      pressureEl.classList.remove(
-        "envelope-pressure-calm",
-        "envelope-pressure-ramping",
-        "envelope-pressure-strained",
-        "envelope-pressure-critical",
-        "envelope-pressure-surge"
-      );
-      pressureEl.classList.add(pressure.className);
-    }
-    if (pressureNoteEl) {
-      pressureNoteEl.textContent =
-        state.runMode === "tutorial"
-          ? "Practice pacing"
-          : state.slowFieldTimer > 0
-            ? `SOS slowdown · ${Math.ceil(state.slowFieldTimer)}s left`
-          : state.surgeTimer > 0
-            ? `Surge active · ${Math.ceil(state.surgeTimer)}s left`
-            : telegraphedFront
-              ? "Inhibitor front incoming"
-            : `Next surge in ${formatDuration(nextSurgeCountdown || 0)}`;
-    }
-    if (comboEl) comboEl.textContent = `x${state.combo + 1}`;
-    if (comboNoteEl) {
-      comboNoteEl.textContent =
-        state.combo > 0 ? `Bonus scoring live · ${state.combo} clean chain${state.combo > 1 ? "s" : ""}` : "Build with pickups and clean dodges";
-    }
-    if (sectorEl) sectorEl.textContent = sector.title;
-    if (sectorNoteEl) {
-      sectorNoteEl.textContent =
-        state.runMode === "tutorial"
-          ? "Practice route only"
-          : Number.isFinite(sector.endsAt)
-            ? `Milestone bonus at ${formatDuration(sector.endsAt)}`
-            : "Final sector active";
-    }
-    if (integrityEl) integrityEl.textContent = `${Math.floor(integrityPct)}%`;
-    if (shieldEl) shieldEl.textContent = `${Math.floor(shieldPct)}%`;
-    if (boostEl) boostEl.textContent = `${Math.floor(boostPct)}%`;
-    if (integrityBarEl) integrityBarEl.style.width = `${integrityPct.toFixed(1)}%`;
-    if (shieldBarEl) shieldBarEl.style.width = `${shieldPct.toFixed(1)}%`;
-    if (boostBarEl) boostBarEl.style.width = `${boostPct.toFixed(1)}%`;
-  }
-
-  function pointerToWorld(event) {
-    const rect = canvas.getBoundingClientRect();
-    const px = (event.clientX - rect.left) / rect.width;
-    const py = (event.clientY - rect.top) / rect.height;
-    pointer.x = clamp(px * state.width, 0, state.width);
-    pointer.y = clamp(py * state.height, 0, state.height);
-  }
-
-  function openModal() {
-    if (isModalOpen()) return;
-
-    if (typeof modal.showModal === "function") {
-      modal.showModal();
+    if (mode === "start") {
+      overlayTitle.textContent = "Keep the envelope intact.";
+      overlayCopy.textContent =
+        "Collect repair fragments, trigger stabilization bursts, and survive phages, antibiotic waves, and rupture fronts long enough to climb the board.";
+      overlayStatus.textContent = "Repair the cell envelope before stress overwhelms the bacterium.";
+      setOverlayPoints([
+        "Collect 4 repair fragments to trigger a stabilization burst.",
+        "Use your stress response when the meter is full for a short safe window.",
+        "Difficulty rises slowly, so smart movement matters more than memorizing patterns."
+      ]);
+      startButton.textContent = "Start Classic Run";
+      dailyStartButton.textContent = "Play Daily Challenge";
+    } else if (mode === "paused") {
+      overlayTitle.textContent = "Run paused";
+      overlayCopy.textContent = `${state.currentBoardLabel}. Resume when you are ready to keep the bacterium intact.`;
+      overlayStatus.textContent = `Current score ${Math.round(state.score)} after ${formatDuration(state.elapsed)}.`;
+      setOverlayPoints([
+        `${Math.round(state.integrity)}% integrity remaining.`,
+        `${state.repairProgress} of ${state.repairNeeded} repair fragments collected.`,
+        "Use the stress response proactively when lanes start collapsing."
+      ]);
+      startButton.textContent = "Resume Run";
+      dailyStartButton.textContent = "Restart Run";
     } else {
-      modal.setAttribute("open", "");
+      const best = Math.max(getCurrentBest(state.currentBoard), Math.round(state.score));
+      overlayTitle.textContent = "Envelope compromised";
+      overlayCopy.textContent = `${state.currentBoardLabel}. Survived ${formatDuration(state.elapsed)} with ${Math.round(
+        state.score
+      )} points.`;
+      overlayStatus.textContent = state.lastPlacement
+        ? state.lastPlacement.summary
+        : "Score saved. Use a different strain or jump into the daily challenge for a new rhythm.";
+      setOverlayPoints([
+        `${Math.round(state.integrity)}% integrity at collapse.`,
+        `Personal best on this board: ${best}.`,
+        `Species used: ${getSpecies().label}.`
+      ]);
+      startButton.textContent = state.currentMode === "daily" ? "Replay Daily Challenge" : "Run Classic Again";
+      dailyStartButton.textContent = state.currentMode === "daily" ? "Play Classic" : "Try Daily Challenge";
     }
 
-    resizeCanvas();
-    state.runMode = "ranked";
-    resetSimulation();
-    hideNameForm();
-    state.running = false;
-    state.paused = false;
-    pauseButton.textContent = "Pause";
-    setLeaderboardMeta(state.leaderboardMode === "global" ? "global" : state.leaderboardMode === "fallback" ? "fallback" : "local");
-    renderLeaderboard();
-    refreshLeaderboardFromSource();
-    updateModelUi();
-    syncPlayerNameInput();
-    setPlayerNameFeedback("");
-    updateTutorialNote();
-
-    showOverlay(
-      "Envelope Escape",
-      "Assemble the right envelope modules, choose sector adaptations, grab rare response protocols, and survive long enough to climb the leaderboard.",
-      "Start Ranked Trial",
-      "start"
-    );
-
-    ensureLoop();
+    updateControlState();
   }
 
-  function closeModal() {
-    if (typeof modal.close === "function") {
-      modal.close();
-    } else {
-      modal.removeAttribute("open");
+  function updateControlState() {
+    const activeRun = state.running && !state.paused;
+    pauseButton.disabled = !state.running;
+    restartButton.disabled = !state.running && state.overlayMode === "start";
+    responseButton.disabled = !activeRun || state.responseCharge < 100;
+    responseButton.classList.toggle("is-ready", activeRun && state.responseCharge >= 100);
+    pauseButton.textContent = state.paused ? "Resume" : "Pause";
+  }
+
+  function updateSpeciesInfo() {
+    const overlaySpecies = getSpecies(state.selectedSpeciesId);
+    const activeSpecies = getSpecies(state.running ? state.speciesId : state.selectedSpeciesId);
+    if (modelSelect) modelSelect.value = state.selectedSpeciesId;
+    if (modelNote) modelNote.textContent = overlaySpecies.passiveCopy;
+    if (traitTitleEl) traitTitleEl.textContent = activeSpecies.passiveTitle;
+    if (traitCopyEl) traitCopyEl.textContent = activeSpecies.passiveCopy;
+  }
+
+  function updateDailyNote() {
+    if (!dailyNote) return;
+    const challenge = state.dailyChallenge;
+    const species = getSpecies(challenge.speciesId);
+    dailyNote.textContent = `${challenge.dateLabel} daily challenge: ${challenge.profile.name}. Locked to ${species.label}. ${challenge.profile.subtitle}`;
+  }
+
+  function getPhaseForElapsed(elapsedSeconds) {
+    let phase = PHASES[0];
+    for (let index = 0; index < PHASES.length; index += 1) {
+      if (elapsedSeconds >= PHASES[index].start) {
+        phase = PHASES[index];
+      } else {
+        break;
+      }
     }
+    return phase;
+  }
 
-    state.running = false;
-    state.paused = false;
-    resetInputState();
-    hideNameForm();
-    updateRunIntel();
+  function getModeModifiers() {
+    if (state.currentMode !== "daily") {
+      return { phage: 1, wave: 1, rupture: 1, fragment: 1, response: 1, score: 1, repairNeeded: 4 };
+    }
+    return state.dailyChallenge.profile.modifiers;
+  }
 
-    if (rafId !== null) {
-      window.cancelAnimationFrame(rafId);
-      rafId = null;
+  function setBanner(title, copy, timer = 2.2) {
+    state.banner = { title, copy, timer };
+  }
+
+  function addFloater(x, y, text, color = "#d8fbff") {
+    state.floaters.push({ x, y, text, color, life: 1.15, vy: -24 });
+  }
+
+  function spawnInitialFragments() {
+    while (state.fragments.length < 2) {
+      spawnFragment();
     }
   }
 
-  function startSimulation(mode = state.runMode || "ranked") {
-    state.runMode = mode === "tutorial" ? "tutorial" : "ranked";
-    if (state.runMode === "tutorial") {
-      state.tutorialSeen = true;
-      writeTutorialSeen(true);
-      updateTutorialNote();
-    }
-
-    resetSimulation();
-    hideNameForm();
+  function resetRun(mode) {
+    refreshDailyChallenge();
+    state.currentMode = mode;
+    state.dailyBoardReady = false;
+    state.currentBoard = mode === "daily" ? state.dailyChallenge.board : "classic";
+    state.currentBoardLabel = mode === "daily" ? "Daily challenge" : "Classic board";
+    state.speciesId = mode === "daily" ? state.dailyChallenge.speciesId : state.selectedSpeciesId;
+    state.elapsed = 0;
+    state.score = 0;
+    state.integrity = 100;
+    state.responseCharge = 0;
+    state.responseReadyFlash = 0;
+    state.safeWindow = 0;
+    state.hitFlash = 0;
+    state.phaseIndex = 0;
+    state.repairNeeded = Math.max(4, Math.floor(getModeModifiers().repairNeeded || 4));
+    state.repairProgress = 0;
+    state.lastPlacement = null;
+    state.banner = null;
+    state.fragments = [];
+    state.phages = [];
+    state.waves = [];
+    state.ruptures = [];
+    state.pulses = [];
+    state.floaters = [];
+    state.player = createPlayer(state.speciesId);
+    state.spawnTimers = { fragment: 0.2, phage: 1.3, wave: 4.8, rupture: 5.6 };
+    spawnInitialFragments();
     state.running = true;
     state.paused = false;
-    pauseButton.textContent = "Pause";
+    state.lastFrame = 0;
     hideOverlay();
-    lastFrame = performance.now();
-    if (state.runMode === "tutorial") {
-      addFloater(state.width * 0.5, 54, "Tutorial mode: scores are not ranked.", "#c9f5ff");
-    } else {
-      const sector = getCurrentSector();
-      addFloater(state.width * 0.5, 54, sector.title, "#c9f5ff");
-    }
-    updateRunIntel();
-    ensureLoop();
+    setBanner("Envelope initiated", "Collect repair fragments to trigger your first stabilization burst.");
+    refreshLeaderboard(state.currentBoard);
+    updateHud(true);
+    updateControlState();
   }
 
-  function resumeSimulation() {
-    state.paused = false;
-    pauseButton.textContent = "Pause";
-    hideOverlay();
-    lastFrame = performance.now();
-    ensureLoop();
-  }
-
-  function pauseSimulation() {
+  function pauseRun() {
     if (!state.running) return;
     state.paused = true;
-    pauseButton.textContent = "Resume";
-    showOverlay(
-      "Paused",
-      "Dodge phages, antibiotic fronts, and expanding drug waves while you finish directives and envelope builds.",
-      "Resume",
-      "resume"
-    );
+    showOverlay("paused");
   }
 
-  function buildRunSummaryText(finalScore) {
-    const reachedSector = getCurrentSector();
-    const comboValue = Math.max(1, state.bestCombo + 1);
-    const parts = [
-      `Final score: ${finalScore}.`,
-      `Best score: ${Math.floor(state.best)}.`,
-      `Reached ${reachedSector.title}.`,
-      `${state.assembliesCompleted} envelope build${state.assembliesCompleted === 1 ? "" : "s"} completed.`,
-      `${state.directivesCompleted} directive${state.directivesCompleted === 1 ? "" : "s"} cleared.`,
-      `${state.upgrades.length} adaptation${state.upgrades.length === 1 ? "" : "s"} installed.`,
-      `Best clean chain: x${comboValue}.`
-    ];
-    return parts.join(" ");
-  }
-
-  function endSimulation() {
-    state.running = false;
+  function resumeRun() {
+    if (!state.running) return;
     state.paused = false;
-    pauseButton.textContent = "Pause";
-    const finalScore = Math.floor(state.score);
-    const savedName = state.playerName || "Anonymous";
+    state.lastFrame = 0;
+    hideOverlay();
+    updateControlState();
+  }
 
-    if (state.runMode === "tutorial") {
-      const tutorialSummary = buildRunSummaryText(finalScore);
-      hideNameForm();
-      showOverlay(
-        "Tutorial complete",
-        `${tutorialSummary} Tutorial runs are practice only and are not submitted to the leaderboard.`,
-        "Start Ranked Trial",
-        "start"
-      );
-      state.runMode = "ranked";
-      updateHud();
-      renderLeaderboard();
-      return;
+  function applyDamage(amount, kind, hitX, hitY) {
+    if (state.safeWindow > 0) return false;
+    const species = getSpecies();
+    let adjusted = amount * species.damageMul;
+    if (kind === "rupture") {
+      adjusted *= species.ruptureDamageMul;
     }
-
-    if (finalScore > state.best) {
-      state.best = finalScore;
-      writeBestScore(state.best);
+    state.integrity = clamp(state.integrity - adjusted, 0, 100);
+    state.safeWindow = 0.65;
+    state.hitFlash = 0.32;
+    addFloater(hitX, hitY, `-${Math.round(adjusted)}`, "#ffb6c4");
+    if (state.integrity <= 0) {
+      endRun();
     }
+    return true;
+  }
 
-    const baseSummary = buildRunSummaryText(finalScore);
+  function completeRepairCycle() {
+    const species = getSpecies();
+    const scoreBonus = Math.round(320 * getModeModifiers().score + state.elapsed * 0.3);
+    state.repairProgress = 0;
+    state.score += scoreBonus;
+    state.integrity = clamp(state.integrity + 12 + species.healBonus, 0, 100);
+    state.responseCharge = clamp(state.responseCharge + 18, 0, 100);
+    state.safeWindow = Math.max(state.safeWindow, 0.85);
+    const radius = species.burstRadius;
+    clearHazardsAroundPlayer(radius);
+    state.pulses.push({
+      x: state.player.x,
+      y: state.player.y,
+      radius: 10,
+      maxRadius: radius + 24,
+      lineWidth: 10,
+      color: species.palette.pulse,
+      life: 0.62
+    });
+    setBanner("Envelope stabilized", "Nearby stressors were cleared by a successful repair cycle.");
+    addFloater(state.player.x, state.player.y - 36, `+${scoreBonus}`, "#b9ffd4");
+  }
 
-    updateHud();
-    renderLeaderboard();
+  function triggerStressResponse() {
+    if (!state.running || state.paused || state.responseCharge < 100) return;
+    const species = getSpecies();
+    state.responseCharge = 0;
+    state.responseReadyFlash = 0;
+    state.safeWindow = Math.max(state.safeWindow, 1.15);
+    state.integrity = clamp(state.integrity + 14 + species.healBonus, 0, 100);
+    clearHazardsAroundPlayer(species.burstRadius + 28);
+    state.pulses.push({
+      x: state.player.x,
+      y: state.player.y,
+      radius: 16,
+      maxRadius: species.burstRadius + 64,
+      lineWidth: 14,
+      color: species.palette.pulse,
+      life: 0.74
+    });
+    state.score += 120;
+    setBanner("Stress response", "A short safe window is active. Reposition before pressure closes again.");
+    addFloater(state.player.x, state.player.y - 40, "Stress response", "#d7fbff");
+    updateControlState();
+  }
 
-    hideNameForm();
+  function getDifficultyScalar() {
+    return clamp(state.elapsed / 300, 0, 1);
+  }
 
-    showOverlay(
-      "Envelope collapsed",
-      `${baseSummary} Saving to leaderboard...`,
-      "Play Again",
-      "restart"
-    );
-
-    if (finalScore <= 0) {
-      showOverlay(
-        "Envelope collapsed",
-        baseSummary,
-        "Play Again",
-        "restart"
-      );
-      return;
+  function spawnFragment() {
+    const kind = pick(FRAGMENT_TYPES);
+    const margin = 72;
+    let attempts = 0;
+    let x = canvas.width * 0.5;
+    let y = canvas.height * 0.5;
+    while (attempts < 18) {
+      x = randomRange(margin, canvas.width - margin);
+      y = randomRange(margin, canvas.height - margin);
+      const distanceToPlayer = Math.hypot(x - state.player.x, y - state.player.y);
+      if (distanceToPlayer > 120) break;
+      attempts += 1;
     }
-
-    addLeaderboardEntry(savedName, finalScore).then(async (accepted) => {
-      if (state.running || state.collapseActive) return;
-      if (accepted) {
-        const placement = formatPlacement();
-        showOverlay(
-          "Envelope collapsed",
-          `${baseSummary} Saved as ${savedName}.${placement ? ` Placement: ${placement}.` : ""}`,
-          "Play Again",
-          "restart"
-        );
-        return;
-      }
-
-      if (savedName !== "Anonymous") {
-        await addLeaderboardEntry("Anonymous", finalScore);
-        if (state.running || state.collapseActive) return;
-        const placement = formatPlacement();
-        showOverlay(
-          "Envelope collapsed",
-          `${baseSummary} Saved as Anonymous.${placement ? ` Placement: ${placement}.` : ""}`,
-          "Play Again",
-          "restart"
-        );
-        return;
-      }
-
-      showOverlay(
-        "Envelope collapsed",
-        baseSummary,
-        "Play Again",
-        "restart"
-      );
+    state.fragments.push({
+      kind,
+      x,
+      y,
+      radius: 14,
+      pulse: randomRange(0, TAU),
+      drift: randomRange(8, 20)
     });
   }
 
-  function spawnPhage(kind = "hunter") {
-    const margin = 48;
+  function spawnPhage() {
+    const difficulty = getDifficultyScalar();
     const edge = Math.floor(Math.random() * 4);
     let x = 0;
     let y = 0;
-
     if (edge === 0) {
-      x = -margin;
-      y = random(0, state.height);
+      x = -28;
+      y = randomRange(40, canvas.height - 40);
     } else if (edge === 1) {
-      x = state.width + margin;
-      y = random(0, state.height);
+      x = canvas.width + 28;
+      y = randomRange(40, canvas.height - 40);
     } else if (edge === 2) {
-      x = random(0, state.width);
-      y = -margin;
+      x = randomRange(40, canvas.width - 40);
+      y = -28;
     } else {
-      x = random(0, state.width);
-      y = state.height + margin;
+      x = randomRange(40, canvas.width - 40);
+      y = canvas.height + 28;
     }
-
-    const profile = getDifficultyProfile();
-    const modifiers = getActiveRunModifiers(state.modelId);
-    const baseSpeed = random(70, 96) * profile.phageSpeedMul + profile.intensity * 7;
-    const isDarter = kind === "darter";
-    const speed = (isDarter ? baseSpeed * random(1.12, 1.27) : baseSpeed) * modifiers.phageSpeedMul * modifiers.hazardSpeedMul;
-    const angle = Math.atan2(state.player.y - y, state.player.x - x) + random(-0.35, 0.35);
-
+    const speed = lerp(96, 182, difficulty);
     state.phages.push({
       x,
       y,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      r: isDarter ? random(9, 12.5) : random(11, 16),
-      spin: random(-2.4, 2.4),
-      rot: random(0, Math.PI * 2),
-      wobble: random(0, Math.PI * 2),
-      wobbleAmp: isDarter ? random(2, 8) : random(4, 12),
-      kind,
-      nearScored: false
+      vx: 0,
+      vy: 0,
+      radius: randomRange(12, 15),
+      speed,
+      turnRate: lerp(1.4, 2.5, difficulty),
+      nearActive: false,
+      nearAwarded: false,
+      spin: randomRange(0, TAU)
     });
   }
 
-  function spawnPulse() {
-    const profile = getDifficultyProfile();
-    const margin = 64;
-    const modifiers = getActiveRunModifiers(state.modelId);
-    state.pulses.push({
-      x: random(margin, state.width - margin),
-      y: random(margin, state.height - margin),
-      r: random(10, 26),
-      thickness: random(11, 16),
-      speed:
-        (random(68, 98) * profile.pulseSpeedMul + profile.intensity * 9) *
-        (state.surgeTimer > 0 ? 1.08 : 1) *
-        modifiers.hazardSpeedMul,
-      maxR: Math.max(state.width, state.height) * random(0.52, 0.82),
-      hitLock: 0,
-      nearScored: false
-    });
-  }
-
-  function spawnFront() {
-    const sector = getCurrentSector();
-    const profile = getDifficultyProfile();
-    const modifiers = getActiveRunModifiers(state.modelId);
-    if ((sector.frontPressure || 0) <= 0.05) return;
-
-    const orientation = Math.random() < 0.5 ? "vertical" : "horizontal";
-    const axisSpan = orientation === "vertical" ? state.width : state.height;
-    const crossSpan = orientation === "vertical" ? state.height : state.width;
-    const thickness = clamp(random(34, 48) * (0.94 + profile.intensity * 0.08), 30, 62);
-    const gapSize = clamp(crossSpan * random(0.22, 0.29) * modifiers.frontGapMul / (profile.frontGapScale || 1), 96, 230);
-    const direction = Math.random() < 0.5 ? 1 : -1;
-    const position = direction > 0 ? -thickness : axisSpan + thickness;
-
-    state.fronts.push({
-      orientation,
-      position,
-      direction,
+  function spawnWave() {
+    const difficulty = getDifficultyScalar();
+    const axis = Math.random() > 0.5 ? "x" : "y";
+    const thickness = randomRange(84, 112);
+    const fromNegative = Math.random() > 0.5;
+    const velocity = (fromNegative ? 1 : -1) * lerp(148, 236, difficulty);
+    state.waves.push({
+      axis,
+      position: fromNegative ? -thickness : axis === "x" ? canvas.width + thickness : canvas.height + thickness,
+      velocity,
       thickness,
-      gapCenter: random(gapSize * 0.6, crossSpan - gapSize * 0.6),
-      gapSize,
-      speed: random(112, 156) * profile.frontSpeedMul * modifiers.frontSpeedMul * modifiers.hazardSpeedMul,
-      telegraph: 0.9,
-      hitLock: 0,
-      grazed: false
+      hue: Math.random() > 0.5 ? "#77dfff" : "#91f3ff"
     });
   }
 
-  function spawnBreakthrough() {
-    const protocol = BREAKTHROUGH_PROTOCOLS[Math.floor(Math.random() * BREAKTHROUGH_PROTOCOLS.length)] || BREAKTHROUGH_PROTOCOLS[0];
-    state.resources.push({
-      x: random(34, state.width - 34),
-      y: random(34, state.height - 34),
-      r: 13,
-      kind: "breakthrough",
-      protocol,
-      phase: random(0, Math.PI * 2),
-      life: 0
-    });
-  }
-
-  function spawnResource() {
-    const kindRoll = Math.random();
-    let kind = "precursor";
-    if (kindRoll < 0.14) kind = "shield";
-    else if (kindRoll > 0.86) kind = "boost";
-    const precursor = kind === "precursor" ? pickModelPrecursor(state.modelId) : null;
-
-    state.resources.push({
-      x: random(30, state.width - 30),
-      y: random(30, state.height - 30),
-      r: kind === "shield" ? 12 : kind === "boost" ? 11 : precursor?.coreShape === "capsule" ? 11 : 10,
-      kind,
-      precursor,
-      phase: random(0, Math.PI * 2),
-      life: 0
-    });
-  }
-
-  function addBurst(x, y, color, amount = 14) {
-    for (let i = 0; i < amount; i += 1) {
-      const angle = random(0, Math.PI * 2);
-      const speed = random(28, 180);
-      state.bursts.push({
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        life: random(0.24, 0.62),
-        maxLife: random(0.24, 0.62),
-        color,
-        size: random(1.6, 4.8)
-      });
-    }
-  }
-
-  function addFloater(x, y, text, color) {
-    state.floaters.push({
-      x,
-      y,
-      text,
-      color,
-      life: 1.2,
-      maxLife: 1.2
-    });
-  }
-
-  function spawnPhageSwarm(count) {
-    for (let i = 0; i < count; i += 1) {
-      const kind = Math.random() < 0.45 ? "darter" : "hunter";
-      spawnPhage(kind);
-    }
-  }
-
-  function triggerPressureSurge() {
-    if (state.runMode === "tutorial") {
-      state.surgeIn = 9999;
-      return;
-    }
-    const profile = getDifficultyProfile();
-    const modifiers = getActiveRunModifiers(state.modelId);
-    state.surgeTimer = random(4.8, 7.1) * profile.surgeDurationMul;
-    state.surgePulseIn = random(0.28, 0.44) / profile.surgeCadenceMul;
-    state.surgeIn = random(16, 24) * profile.surgeCooldownMul * modifiers.surgeCooldownMul;
-    state.shake = Math.max(state.shake, 6.5);
-    addFloater(state.width * 0.5, 48, "Phage surge", "#98f0ff");
-    addBurst(state.width * 0.5, 62, "#8eefff", 20);
-    const swarmSize = 2 + Math.floor(state.elapsed / 85) + Math.round(profile.intensity * 0.65);
-    spawnPhageSwarm(clamp(swarmSize, 2, 9));
-  }
-
-  function maybeShowTutorialHints() {
-    if (state.runMode !== "tutorial") return;
-
-    const hints = [
-      { at: 1.2, text: "Collect the highlighted precursors to build your envelope queue." },
-      { at: 6.2, text: "Avoid phages and pink antibiotic waves." },
-      { at: 12.2, text: "Blue shields absorb damage while assembly bursts refill them." },
-      { at: 18.2, text: "Catalytic boosts raise speed and score gain." }
-    ];
-
-    while (state.tutorialTipStep < hints.length && state.elapsed >= hints[state.tutorialTipStep].at) {
-      const hint = hints[state.tutorialTipStep];
-      addFloater(state.width * 0.5, 62 + state.tutorialTipStep * 8, hint.text, "#bdefff");
-      state.tutorialTipStep += 1;
-    }
-  }
-
-  function localToWorldPoint(originX, originY, angle, localX, localY) {
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    return {
-      x: originX + localX * cos - localY * sin,
-      y: originY + localX * sin + localY * cos
-    };
-  }
-
-  function buildLysisRuptures(model) {
-    const isRound = model.shape === "coccus" || model.shape === "diplococcus";
-    const count = prefersReducedMotion ? (isRound ? 2 : 3) : isRound ? 4 : 5;
-    const ruptures = [];
-
-    for (let i = 0; i < count; i += 1) {
-      if (isRound) {
-        const theta = (Math.PI * 2 * i) / count + random(-0.26, 0.26);
-        const radius = random(0.38, 0.62);
-        ruptures.push({
-          xRatio: Math.cos(theta) * radius,
-          yRatio: Math.sin(theta) * radius,
-          size: random(2.2, 4.2),
-          crackAngle: theta + random(-0.3, 0.3)
-        });
-      } else {
-        const t = count === 1 ? 0 : i / (count - 1);
-        const xRatio = -0.56 + t * 1.12 + random(-0.08, 0.08);
-        const yBase = i % 2 === 0 ? -0.38 : 0.38;
-        ruptures.push({
-          xRatio,
-          yRatio: yBase + random(-0.12, 0.12),
-          size: random(2.2, 4.6),
-          crackAngle: random(-1.15, 1.15)
-        });
-      }
-    }
-
-    return ruptures;
-  }
-
-  function ruptureWorldPoint(site) {
-    return localToWorldPoint(
-      state.player.x,
-      state.player.y,
-      state.player.angle,
-      site.xRatio * state.player.length * 0.44,
-      site.yRatio * state.player.radius * 0.95
-    );
-  }
-
-  function triggerRuptureBurstEffect(model) {
-    if (state.collapseReleased) return;
-    state.collapseReleased = true;
-    state.shake = Math.max(state.shake, 22);
-
-    const fragmentPool = prefersReducedMotion ? 18 : 34;
-    const colorA = model?.palette?.membraneB || "#9af9ff";
-    const colorB = model?.palette?.membraneC || "#6ae7ee";
-
-    state.lysisRuptures.forEach((site) => {
-      const point = ruptureWorldPoint(site);
-
-      state.lysisShockwaves.push({
-        x: point.x,
-        y: point.y,
-        r: state.player.radius * 0.2,
-        maxR: state.player.radius * random(2.8, 4.2),
-        thickness: random(2.8, 4.2),
-        life: random(0.34, 0.56),
-        maxLife: random(0.34, 0.56)
-      });
-
-      addBurst(point.x, point.y, "#ff9fc9", 10);
-      addBurst(point.x, point.y, "#9af2ff", 8);
-
-      const fragCount = Math.max(3, Math.floor(fragmentPool / Math.max(1, state.lysisRuptures.length)));
-      for (let i = 0; i < fragCount; i += 1) {
-        const theta = Math.atan2(site.yRatio, site.xRatio) + state.player.angle + random(-0.75, 0.75);
-        const speed = random(70, 250);
-        state.lysisFragments.push({
-          x: point.x + random(-2.4, 2.4),
-          y: point.y + random(-2.4, 2.4),
-          vx: Math.cos(theta) * speed,
-          vy: Math.sin(theta) * speed,
-          angle: random(0, Math.PI * 2),
-          spin: random(-9.5, 9.5),
-          length: random(4.6, 10.2),
-          width: random(1.8, 3.6),
-          life: random(0.52, 1.2),
-          maxLife: random(0.52, 1.2),
-          color: Math.random() < 0.5 ? colorA : colorB
-        });
-      }
-    });
-  }
-
-  function triggerLysisSequence() {
-    if (state.collapseActive) return;
-
-    const model = getModel(state.modelId);
-    state.collapseActive = true;
-    state.collapseTimer = 0;
-    state.collapseRuptureAt = prefersReducedMotion ? 0.28 : 0.38;
-    state.collapseReleased = false;
-    state.running = false;
-    state.paused = false;
-    pauseButton.textContent = "Pause";
-    state.invulnerable = 0;
-    state.shield = 0;
-    state.shake = 14;
-    state.phages = [];
-    state.pulses = [];
-    state.fronts = [];
-    state.resources = [];
-    state.trails = [];
-    state.lysisFragments = [];
-    state.lysisShockwaves = [];
-    state.lysisRuptures = buildLysisRuptures(model);
-
-    const sourceX = state.player.x;
-    const sourceY = state.player.y;
-    const releaseCount = prefersReducedMotion ? 28 : 68;
-    state.lysisPhages = Array.from({ length: releaseCount }, () => {
-      const site = state.lysisRuptures[Math.floor(random(0, state.lysisRuptures.length))];
-      const localX = site.xRatio * state.player.length * 0.44 + random(-2.4, 2.4);
-      const localY = site.yRatio * state.player.radius * 0.95 + random(-2.4, 2.4);
-      const spawn = localToWorldPoint(sourceX, sourceY, state.player.angle, localX, localY);
-      const theta = Math.atan2(localY, localX) + state.player.angle + random(-0.6, 0.6);
-      const speed = random(52, 240);
-      return {
-        x: spawn.x,
-        y: spawn.y,
-        vx: Math.cos(theta) * speed,
-        vy: Math.sin(theta) * speed,
-        r: random(2.6, 5.4),
-        spin: random(-4, 4),
-        rot: random(0, Math.PI * 2),
-        wobble: random(0, Math.PI * 2),
-        wobbleAmp: random(0.6, 2.2),
-        launch: random(0.1, 0.28),
-        delay: state.collapseRuptureAt + random(0.02, prefersReducedMotion ? 0.42 : 0.94),
-        released: false,
-        kind: Math.random() < 0.34 ? "darter" : "hunter",
-        life: random(1.8, 3.2),
-        maxLife: random(1.8, 3.2)
-      };
-    });
-
-    addFloater(sourceX, sourceY - 34, "Cell lysis", "#ffafcb");
-    addBurst(sourceX, sourceY, "#ff8cb2", 26);
-    addBurst(sourceX, sourceY, "#9ef7ff", 22);
-    updateHud();
-  }
-
-  function updateLysisSequence(dt) {
-    state.collapseTimer += dt;
-    const model = getModel(state.modelId);
-
-    if (!state.collapseReleased && state.collapseTimer >= state.collapseRuptureAt) {
-      triggerRuptureBurstEffect(model);
-    }
-
-    for (let i = state.lysisPhages.length - 1; i >= 0; i -= 1) {
-      const phage = state.lysisPhages[i];
-      phage.delay -= dt;
-      phage.rot += phage.spin * dt;
-      phage.wobble += dt * 9;
-
-      if (phage.delay > 0) {
-        phage.x += Math.cos(phage.wobble) * phage.wobbleAmp * 0.08;
-        phage.y += Math.sin(phage.wobble) * phage.wobbleAmp * 0.08;
-        continue;
-      }
-
-      if (!phage.released) {
-        phage.released = true;
-        if (Math.random() < 0.44) addBurst(phage.x, phage.y, "#ffd2e5", 4);
-      }
-
-      phage.life -= dt;
-      if (phage.launch > 0) {
-        phage.vx *= 1.028;
-        phage.vy *= 1.028;
-        phage.launch -= dt;
-      }
-      phage.x += phage.vx * dt + Math.cos(phage.wobble) * phage.wobbleAmp;
-      phage.y += phage.vy * dt + Math.sin(phage.wobble) * phage.wobbleAmp;
-      phage.vx *= 0.986;
-      phage.vy *= 0.986;
-      if (phage.life <= 0) state.lysisPhages.splice(i, 1);
-    }
-
-    for (let i = state.lysisShockwaves.length - 1; i >= 0; i -= 1) {
-      const wave = state.lysisShockwaves[i];
-      wave.life -= dt;
-      wave.r += (wave.maxR / wave.maxLife) * dt;
-      if (wave.life <= 0 || wave.r >= wave.maxR) state.lysisShockwaves.splice(i, 1);
-    }
-
-    for (let i = state.lysisFragments.length - 1; i >= 0; i -= 1) {
-      const fragment = state.lysisFragments[i];
-      fragment.life -= dt;
-      fragment.x += fragment.vx * dt;
-      fragment.y += fragment.vy * dt;
-      fragment.vx *= 0.973;
-      fragment.vy *= 0.973;
-      fragment.angle += fragment.spin * dt;
-      if (fragment.life <= 0) state.lysisFragments.splice(i, 1);
-    }
-
-    for (let i = state.bursts.length - 1; i >= 0; i -= 1) {
-      const burst = state.bursts[i];
-      burst.life -= dt;
-      burst.x += burst.vx * dt;
-      burst.y += burst.vy * dt;
-      burst.vx *= 0.97;
-      burst.vy *= 0.97;
-      if (burst.life <= 0) state.bursts.splice(i, 1);
-    }
-
-    for (let i = state.floaters.length - 1; i >= 0; i -= 1) {
-      const floater = state.floaters[i];
-      floater.life -= dt;
-      floater.y -= 24 * dt;
-      if (floater.life <= 0) state.floaters.splice(i, 1);
-    }
-
-    if (state.collapseReleased && state.collapseTimer > state.collapseRuptureAt && state.collapseTimer < 1.5) {
-      if (Math.random() < dt * 11) {
-        addBurst(
-          state.player.x + random(-18, 18),
-          state.player.y + random(-18, 18),
-          Math.random() < 0.5 ? "#ff8cb2" : "#95f3ff",
-          8
-        );
-      }
-    }
-
-    if (state.collapseTimer >= state.collapseDuration) {
-      state.collapseActive = false;
-      endSimulation();
-    }
-  }
-
-  function applyDamage(amount, label, source = "generic") {
-    if (state.collapseActive || state.invulnerable > 0) return;
-    const profile = getDifficultyProfile();
-    const modifiers = getActiveRunModifiers(state.modelId);
-    let scaledAmount = amount * profile.damageMul;
-    if (source === "pulse") {
-      scaledAmount *= modifiers.pulseDamageMul;
-    }
-
-    if (state.shield > 0) {
-      const absorbed = Math.min(state.shield, scaledAmount * 1.2);
-      state.shield = Math.max(0, state.shield - absorbed);
-      addFloater(state.player.x, state.player.y - 26, "Shield absorbed", "#7deaf2");
-      addBurst(state.player.x, state.player.y, "#7deaf2", 10);
+  function spawnRupture() {
+    const difficulty = getDifficultyScalar();
+    const angle = pick([Math.PI / 4, -Math.PI / 4, (3 * Math.PI) / 4, (-3 * Math.PI) / 4]) + randomRange(-0.2, 0.2);
+    const length = randomRange(260, 360);
+    const directionX = Math.cos(angle);
+    const directionY = Math.sin(angle);
+    const normalX = -directionY;
+    const normalY = directionX;
+    const edge = Math.floor(Math.random() * 4);
+    let centerX = 0;
+    let centerY = 0;
+    if (edge === 0) {
+      centerX = -80;
+      centerY = randomRange(60, canvas.height - 60);
+    } else if (edge === 1) {
+      centerX = canvas.width + 80;
+      centerY = randomRange(60, canvas.height - 60);
+    } else if (edge === 2) {
+      centerX = randomRange(60, canvas.width - 60);
+      centerY = -80;
     } else {
-      state.integrity -= scaledAmount;
-      addFloater(state.player.x, state.player.y - 26, label, "#ff9db5");
-      addBurst(state.player.x, state.player.y, "#ff7b9b", 12);
+      centerX = randomRange(60, canvas.width - 60);
+      centerY = canvas.height + 80;
     }
-
-    state.invulnerable = 0.42 + modifiers.invulnerabilityBonus;
-    state.shake = 9;
-    state.combo = 0;
+    const half = length * 0.5;
+    state.ruptures.push({
+      x1: centerX - directionX * half,
+      y1: centerY - directionY * half,
+      x2: centerX + directionX * half,
+      y2: centerY + directionY * half,
+      vx: normalX * lerp(134, 220, difficulty),
+      vy: normalY * lerp(134, 220, difficulty),
+      width: randomRange(12, 18),
+      life: 6.6
+    });
   }
 
-  function collectResource(resource, index) {
-    const modifiers = getActiveRunModifiers(state.modelId);
-    if (resource.kind === "shield") {
-      state.shield = clamp(state.shield + 42 + modifiers.shieldGainBonus, 0, 100);
-      state.integrity = clamp(state.integrity + 5, 0, 100);
-      state.score += 190 + state.combo * 12;
-      addFloater(resource.x, resource.y, "SigmaE shield", "#86f5ff");
-      addBurst(resource.x, resource.y, "#86f5ff", 16);
-      advanceDirectiveProgress("collect_shield", 1);
-    } else if (resource.kind === "boost") {
-      state.boostTimer = clamp(state.boostTimer + 7.2 * modifiers.boostDurationMul, 0, 12);
-      state.score += 140 + state.combo * 14;
-      addFloater(resource.x, resource.y, "Catalytic boost", "#c3dcff");
-      addBurst(resource.x, resource.y, "#b9d5ff", 16);
-      advanceDirectiveProgress("collect_boost", 1);
-    } else if (resource.kind === "breakthrough") {
-      const protocol = resource.protocol || BREAKTHROUGH_PROTOCOLS[0];
-      protocol.apply();
-      state.score += 220 + state.combo * 18;
-      state.combo = clamp(state.combo + 1, 0, 14);
-      state.bestCombo = Math.max(state.bestCombo, state.combo);
-      addFloater(resource.x, resource.y, protocol.floater, "#fff1c7");
-      addBurst(resource.x, resource.y, "#ffe4b0", 18);
-    } else {
-      const precursor = resource.precursor || ENVELOPE_PRECURSORS.lipidII;
-      const precursorPoints = Math.max(
-        1,
-        Math.floor((Number(precursor.points) || 100) * modifiers.precursorScoreMul)
-      );
-      state.integrity = clamp(state.integrity + 8 + modifiers.precursorRepairBonus, 0, 100);
-      state.score += precursorPoints + state.combo * 16;
-      addFloater(
-        resource.x,
-        resource.y,
-        `+${precursor.shortLabel} +${precursorPoints}${state.combo > 0 ? ` x${state.combo + 1}` : ""}`,
-        precursor.floaterColor || "#b2ffd6"
-      );
-      addBurst(resource.x, resource.y, precursor.burstColor || "#89ffca", 12);
-      advanceDirectiveProgress("collect_precursor", 1);
-      advanceAssemblyProgress(precursor.id);
+  function updateSpawnTimers(dt) {
+    const phase = getPhaseForElapsed(state.elapsed);
+    const modifiers = getModeModifiers();
+    const difficulty = getDifficultyScalar();
+    const phageMul = phase.rates.phage * modifiers.phage * (0.74 + difficulty * 0.9);
+    const waveMul = phase.rates.wave * modifiers.wave * (0.62 + difficulty * 0.72);
+    const ruptureMul = phase.rates.rupture * modifiers.rupture * (0.58 + difficulty * 0.74);
+    const fragmentMul = phase.rates.fragment * modifiers.fragment;
+
+    state.spawnTimers.fragment -= dt * fragmentMul;
+    if (state.fragments.length < 2 && state.spawnTimers.fragment <= 0) {
+      spawnFragment();
+      state.spawnTimers.fragment = randomRange(1.05, 1.75);
     }
 
-    state.combo = clamp(state.combo + 1, 0, 14);
-    state.bestCombo = Math.max(state.bestCombo, state.combo);
-    state.resources.splice(index, 1);
+    state.spawnTimers.phage -= dt * phageMul;
+    if (state.spawnTimers.phage <= 0) {
+      spawnPhage();
+      state.spawnTimers.phage = randomRange(1.2, 1.95);
+    }
+
+    if (state.elapsed > 22) {
+      state.spawnTimers.wave -= dt * waveMul;
+      if (state.spawnTimers.wave <= 0) {
+        spawnWave();
+        state.spawnTimers.wave = randomRange(4.5, 7.1);
+      }
+    }
+
+    if (state.elapsed > 38) {
+      state.spawnTimers.rupture -= dt * ruptureMul;
+      if (state.spawnTimers.rupture <= 0) {
+        spawnRupture();
+        state.spawnTimers.rupture = randomRange(5.2, 7.8);
+      }
+    }
+  }
+
+  function clearHazardsAroundPlayer(radius) {
+    const px = state.player.x;
+    const py = state.player.y;
+    state.phages = state.phages.filter((phage) => {
+      const distance = Math.hypot(phage.x - px, phage.y - py);
+      if (distance <= radius + phage.radius) {
+        addFloater(phage.x, phage.y, "+", "#c8fff1");
+        return false;
+      }
+      return true;
+    });
+    state.waves = state.waves.filter((wave) => {
+      const distance = wave.axis === "x" ? Math.abs(wave.position - px) : Math.abs(wave.position - py);
+      return distance > radius + wave.thickness * 0.5;
+    });
+    state.ruptures = state.ruptures.filter((rupture) => {
+      const distance = pointSegmentDistance(px, py, rupture.x1, rupture.y1, rupture.x2, rupture.y2);
+      return distance > radius + rupture.width;
+    });
+  }
+
+  function pointSegmentDistance(px, py, ax, ay, bx, by) {
+    const abx = bx - ax;
+    const aby = by - ay;
+    const lengthSquared = abx * abx + aby * aby || 1;
+    const t = clamp(((px - ax) * abx + (py - ay) * aby) / lengthSquared, 0, 1);
+    const closestX = ax + abx * t;
+    const closestY = ay + aby * t;
+    return Math.hypot(px - closestX, py - closestY);
+  }
+
+  function isTypingTarget(target) {
+    if (!(target instanceof Element)) return false;
+    return target.matches("input, textarea, select");
   }
 
   function updatePlayer(dt) {
-    const moveSpeedBase = clamp(state.height * 0.68, 210, 360);
-    const modifiers = getActiveRunModifiers(state.modelId);
-    const boostFactor = state.boostTimer > 0 ? 1.32 : 1;
-    const moveSpeed = moveSpeedBase * boostFactor * modifiers.moveSpeedMul;
-    const flowX = Math.cos(state.flowAngle) * state.flowStrength;
-    const flowY = Math.sin(state.flowAngle) * state.flowStrength;
-    let inputX = 0;
-    let inputY = 0;
+    const species = getSpecies();
+    let moveX = 0;
+    let moveY = 0;
 
-    if (keys.left) inputX -= 1;
-    if (keys.right) inputX += 1;
-    if (keys.up) inputY -= 1;
-    if (keys.down) inputY += 1;
-
-    if (pointer.active) {
-      const dx = pointer.x - state.player.x;
-      const dy = pointer.y - state.player.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist > 6) {
-        inputX += dx / dist;
-        inputY += dy / dist;
+    if (state.pointer.active) {
+      moveX = state.pointer.x - state.player.x;
+      moveY = state.pointer.y - state.player.y;
+      const distance = Math.hypot(moveX, moveY);
+      if (distance > 2) {
+        moveX /= distance;
+        moveY /= distance;
+      } else {
+        moveX = 0;
+        moveY = 0;
+      }
+    } else {
+      if (state.input.left) moveX -= 1;
+      if (state.input.right) moveX += 1;
+      if (state.input.up) moveY -= 1;
+      if (state.input.down) moveY += 1;
+      const length = Math.hypot(moveX, moveY);
+      if (length > 0) {
+        moveX /= length;
+        moveY /= length;
       }
     }
 
-    const mag = Math.hypot(inputX, inputY) || 1;
-    const desiredVx = (inputX / mag) * moveSpeed;
-    const desiredVy = (inputY / mag) * moveSpeed;
-
-    state.player.vx += (desiredVx - state.player.vx) * 8.4 * dt;
-    state.player.vy += (desiredVy - state.player.vy) * 8.4 * dt;
-
-    state.player.x += (state.player.vx + flowX * 0.72) * dt;
-    state.player.y += (state.player.vy + flowY * 0.72) * dt;
-
-    state.player.x = clamp(state.player.x, state.player.radius, state.width - state.player.radius);
-    state.player.y = clamp(state.player.y, state.player.radius, state.height - state.player.radius);
-
-    if (Math.hypot(state.player.vx, state.player.vy) > 1) {
+    const baseSpeed = 294 * species.speedMul;
+    state.player.vx = moveX * baseSpeed;
+    state.player.vy = moveY * baseSpeed;
+    state.player.x = clamp(state.player.x + state.player.vx * dt, 36, canvas.width - 36);
+    state.player.y = clamp(state.player.y + state.player.vy * dt, 36, canvas.height - 36);
+    if (Math.abs(state.player.vx) + Math.abs(state.player.vy) > 12) {
       state.player.angle = Math.atan2(state.player.vy, state.player.vx);
     }
   }
 
-  function getFrontPlayerSnapshot(front) {
-    const axisCoord = front.orientation === "vertical" ? state.player.x : state.player.y;
-    const crossCoord = front.orientation === "vertical" ? state.player.y : state.player.x;
-    const axisDistance = Math.abs(axisCoord - front.position);
-    const gapHalf = front.gapSize * 0.5;
-    const crossDistance = Math.abs(crossCoord - front.gapCenter);
-    return {
-      axisDistance,
-      crossDistance,
-      inGap: crossDistance <= gapHalf + state.player.radius * 0.35,
-      nearGapEdge: crossDistance >= gapHalf - state.player.radius * 0.92
-    };
+  function updateFragments(dt) {
+    const species = getSpecies();
+    const magnetRadius = 96 + species.fragmentMagnet;
+    for (let index = state.fragments.length - 1; index >= 0; index -= 1) {
+      const fragment = state.fragments[index];
+      fragment.pulse += dt * 2.1;
+      const distance = Math.hypot(fragment.x - state.player.x, fragment.y - state.player.y);
+      if (distance < magnetRadius && distance > 0.001) {
+        const pull = clamp((magnetRadius - distance) / magnetRadius, 0, 1) * (84 + species.fragmentMagnet * 0.7);
+        fragment.x -= ((fragment.x - state.player.x) / distance) * pull * dt;
+        fragment.y -= ((fragment.y - state.player.y) / distance) * pull * dt;
+      }
+
+      if (distance < 26) {
+        state.fragments.splice(index, 1);
+        state.score += 60;
+        state.repairProgress += 1;
+        state.responseCharge = clamp(state.responseCharge + 19 * species.responseGainMul * getModeModifiers().response, 0, 100);
+        addFloater(fragment.x, fragment.y, fragment.kind.label, fragment.kind.color);
+        if (state.responseCharge >= 100) {
+          state.responseReadyFlash = 0.48;
+        }
+        if (state.repairProgress >= state.repairNeeded) {
+          completeRepairCycle();
+        }
+      }
+    }
   }
 
-  function updateSimulation(dt) {
-    state.elapsed += dt;
-    const profile = getDifficultyProfile();
-    const modifiers = getActiveRunModifiers(state.modelId);
-    maybeShowTutorialHints();
-    handleSectorTransition();
-    updateDirectiveTimer(dt);
-    updateFlowField(dt, profile);
-    const surgeStrength = state.surgeTimer > 0 ? 1.35 : 1;
-    const boostScoreMul = state.boostTimer > 0 ? 1.22 : 1;
-    const traitSurgeScoreMul = state.surgeTimer > 0 ? modifiers.surgeScoreMul : 1;
-    state.score += dt * (16 + state.elapsed * 0.22 + state.combo * 0.8) * surgeStrength * boostScoreMul * traitSurgeScoreMul;
+  function updatePhages(dt) {
+    const difficulty = getDifficultyScalar();
+    for (let index = state.phages.length - 1; index >= 0; index -= 1) {
+      const phage = state.phages[index];
+      const toPlayerX = state.player.x - phage.x;
+      const toPlayerY = state.player.y - phage.y;
+      const distance = Math.hypot(toPlayerX, toPlayerY) || 1;
+      const desiredX = (toPlayerX / distance) * phage.speed;
+      const desiredY = (toPlayerY / distance) * phage.speed;
+      phage.vx = lerp(phage.vx, desiredX, clamp(dt * phage.turnRate, 0, 1));
+      phage.vy = lerp(phage.vy, desiredY, clamp(dt * phage.turnRate, 0, 1));
+      phage.x += phage.vx * dt;
+      phage.y += phage.vy * dt;
+      phage.spin += dt * (1.3 + difficulty);
 
-    state.invulnerable = Math.max(0, state.invulnerable - dt);
-    state.shake = Math.max(0, state.shake - dt * 22);
-    state.shield = Math.max(0, state.shield - dt * 1.8);
-    state.boostTimer = Math.max(0, state.boostTimer - dt);
-    state.nearMissCooldown = Math.max(0, state.nearMissCooldown - dt);
-    state.slowFieldTimer = Math.max(0, state.slowFieldTimer - dt);
-
-    state.surgeIn -= dt;
-    if (state.surgeIn <= 0 && !state.collapseActive) {
-      triggerPressureSurge();
-    }
-    if (state.surgeTimer > 0) {
-      const surgeWasActive = state.surgeTimer > 0;
-      state.surgeTimer = Math.max(0, state.surgeTimer - dt);
-      state.surgePulseIn -= dt;
-      if (state.surgePulseIn <= 0) {
-        const surgeDarterChance = clamp(profile.darterChance + 0.16, 0.2, 0.72);
-        spawnPhage(Math.random() < surgeDarterChance ? "darter" : "hunter");
-        state.surgePulseIn = random(0.24, 0.42) / profile.surgeCadenceMul;
-      }
-      if (surgeWasActive && state.surgeTimer <= 0) {
-        handleSurgeCleared();
-      }
-    }
-
-    updatePlayer(dt);
-    state.trails.push({
-      x: state.player.x,
-      y: state.player.y,
-      angle: state.player.angle,
-      life: 0.5,
-      maxLife: 0.5
-    });
-    if (state.trails.length > 28) state.trails.shift();
-
-    for (let i = state.trails.length - 1; i >= 0; i -= 1) {
-      const trail = state.trails[i];
-      trail.life -= dt;
-      if (trail.life <= 0) state.trails.splice(i, 1);
-    }
-
-    const pulsePressure = state.surgeTimer > 0 ? 0.78 : 1;
-    const phagePressure = state.surgeTimer > 0 ? 0.66 : 1;
-    const flowX = Math.cos(state.flowAngle) * state.flowStrength;
-    const flowY = Math.sin(state.flowAngle) * state.flowStrength;
-
-    state.phageSpawnIn -= dt;
-    state.pulseSpawnIn -= dt;
-    state.frontSpawnIn -= dt;
-    state.breakthroughSpawnIn -= dt;
-    state.resourceSpawnIn -= dt;
-
-    if (state.phageSpawnIn <= 0) {
-      const kind = Math.random() < profile.darterChance ? "darter" : "hunter";
-      spawnPhage(kind);
-      state.phageSpawnIn = clamp((random(1.18, 2.15) / profile.phageSpawnMul) * phagePressure, 0.26, 2.4);
-    }
-
-    if (state.pulseSpawnIn <= 0) {
-      spawnPulse();
-      state.pulseSpawnIn = clamp((random(3.6, 6.2) / profile.pulseSpawnMul) * pulsePressure, 1.05, 6.6);
-    }
-
-    if (state.frontSpawnIn <= 0) {
-      spawnFront();
-      state.frontSpawnIn = clamp(random(11.8, 18.2) / Math.max(0.2, profile.frontSpawnMul || 0.2), 5.8, 18.5);
-    }
-
-    if (state.breakthroughSpawnIn <= 0) {
-      spawnBreakthrough();
-      state.breakthroughSpawnIn = random(28, 42);
-    }
-
-    if (state.resourceSpawnIn <= 0) {
-      spawnResource();
-      state.resourceSpawnIn = clamp(random(0.95, 1.65) / profile.resourceSpawnMul, 0.72, 1.95);
-    }
-
-    state.particles.forEach((particle) => {
-      particle.x += particle.vx * dt;
-      particle.y += particle.vy * dt;
-      particle.twinkle += dt * random(0.2, 0.55);
-
-      if (particle.x > state.width + 10) particle.x = -8;
-      if (particle.y > state.height + 10) particle.y = -8;
-      if (particle.y < -10) particle.y = state.height + 8;
-    });
-
-    for (let i = state.phages.length - 1; i >= 0; i -= 1) {
-      const phage = state.phages[i];
-      const targetAngle = Math.atan2(state.player.y - phage.y, state.player.x - phage.x);
-      const phageSteer = phage.kind === "darter" ? 0.56 : 0.4;
-      const steer = phageSteer * dt;
-      const currentAngle = Math.atan2(phage.vy, phage.vx);
-      const newAngle = currentAngle + clamp(targetAngle - currentAngle, -steer, steer);
-      const speed = Math.hypot(phage.vx, phage.vy);
-      const accel = phage.kind === "darter" ? 1.015 : 1.004;
-
-      phage.vx = Math.cos(newAngle) * speed * accel;
-      phage.vy = Math.sin(newAngle) * speed * accel;
-      phage.wobble += dt * 6;
-      phage.rot += phage.spin * dt;
-      const flowDrift = phage.kind === "darter" ? 0.2 : 0.28;
-      phage.x += phage.vx * dt + Math.cos(phage.wobble) * phage.wobbleAmp * dt + flowX * dt * flowDrift;
-      phage.y += phage.vy * dt + Math.sin(phage.wobble) * phage.wobbleAmp * dt + flowY * dt * flowDrift;
-
-      if (phage.x < -90 || phage.x > state.width + 90 || phage.y < -90 || phage.y > state.height + 90) {
-        state.phages.splice(i, 1);
+      const collisionRadius = 22 + phage.radius;
+      if (distance <= collisionRadius) {
+        state.phages.splice(index, 1);
+        applyDamage(13, "phage", phage.x, phage.y);
         continue;
       }
 
-      const dist = Math.hypot(phage.x - state.player.x, phage.y - state.player.y);
-      if (dist < phage.r + state.player.radius * 0.8) {
-        applyDamage(17, "Phage impact", "phage");
-        state.phages.splice(i, 1);
-        continue;
+      if (!phage.nearAwarded && distance < collisionRadius + 38) {
+        phage.nearActive = true;
+      } else if (phage.nearActive && distance > collisionRadius + 68) {
+        phage.nearActive = false;
+        phage.nearAwarded = true;
+        state.score += 36;
+        state.responseCharge = clamp(state.responseCharge + 4 * getSpecies().responseGainMul, 0, 100);
+        addFloater(phage.x, phage.y, "Close call", "#d2faff");
       }
 
-      const nearBand = phage.r + state.player.radius * 1.15 * modifiers.nearMissWindowMul;
-      if (!phage.nearScored && dist < nearBand && state.nearMissCooldown <= 0) {
-        phage.nearScored = true;
-        state.nearMissCooldown = 0.18;
-        const nearBonus = Math.floor((24 + state.combo * 4) * modifiers.nearMissScoreMul);
-        state.score += nearBonus;
-        state.combo = clamp(state.combo + 1, 0, 14);
-        state.bestCombo = Math.max(state.bestCombo, state.combo);
-        addFloater(phage.x, phage.y - 12, `Near miss +${nearBonus}`, "#9eeeff");
-        addBurst(phage.x, phage.y, "#8cefff", 8);
-        advanceDirectiveProgress("near_miss", 1);
+      if (phage.x < -60 || phage.x > canvas.width + 60 || phage.y < -60 || phage.y > canvas.height + 60) {
+        state.phages.splice(index, 1);
       }
     }
+  }
 
-    for (let i = state.pulses.length - 1; i >= 0; i -= 1) {
-      const pulse = state.pulses[i];
-      pulse.r += pulse.speed * dt;
-      pulse.hitLock = Math.max(0, pulse.hitLock - dt);
-      pulse.x = clamp(pulse.x + flowX * dt * 0.05, 24, state.width - 24);
-      pulse.y = clamp(pulse.y + flowY * dt * 0.05, 24, state.height - 24);
-
-      const dist = Math.hypot(pulse.x - state.player.x, pulse.y - state.player.y);
-      const ringGap = Math.abs(dist - pulse.r);
-      if (ringGap < pulse.thickness + state.player.radius * 0.15 && pulse.hitLock <= 0) {
-        applyDamage(12, "Antibiotic pulse", "pulse");
-        pulse.hitLock = 0.46;
+  function updateWaves(dt) {
+    for (let index = state.waves.length - 1; index >= 0; index -= 1) {
+      const wave = state.waves[index];
+      wave.position += wave.velocity * dt;
+      const collisionDistance = wave.axis === "x" ? Math.abs(state.player.x - wave.position) : Math.abs(state.player.y - wave.position);
+      if (collisionDistance < wave.thickness * 0.5 + 18) {
+        state.waves.splice(index, 1);
+        applyDamage(17, "wave", state.player.x, state.player.y);
+        continue;
       }
+      const limit = wave.axis === "x" ? canvas.width : canvas.height;
+      if (wave.position < -wave.thickness * 1.5 || wave.position > limit + wave.thickness * 1.5) {
+        state.waves.splice(index, 1);
+      }
+    }
+  }
 
+  function updateRuptures(dt) {
+    for (let index = state.ruptures.length - 1; index >= 0; index -= 1) {
+      const rupture = state.ruptures[index];
+      rupture.x1 += rupture.vx * dt;
+      rupture.y1 += rupture.vy * dt;
+      rupture.x2 += rupture.vx * dt;
+      rupture.y2 += rupture.vy * dt;
+      rupture.life -= dt;
+      const distance = pointSegmentDistance(state.player.x, state.player.y, rupture.x1, rupture.y1, rupture.x2, rupture.y2);
+      if (distance <= rupture.width + 14) {
+        state.ruptures.splice(index, 1);
+        applyDamage(16, "rupture", state.player.x, state.player.y);
+        continue;
+      }
       if (
-        !pulse.nearScored &&
-        ringGap < pulse.thickness + state.player.radius * 1.25 * modifiers.nearMissWindowMul &&
-        ringGap > pulse.thickness + state.player.radius * 0.28
+        rupture.life <= 0 ||
+        (rupture.x1 < -220 && rupture.x2 < -220) ||
+        (rupture.x1 > canvas.width + 220 && rupture.x2 > canvas.width + 220) ||
+        (rupture.y1 < -220 && rupture.y2 < -220) ||
+        (rupture.y1 > canvas.height + 220 && rupture.y2 > canvas.height + 220)
       ) {
-        pulse.nearScored = true;
-        const pulseBonus = Math.floor((18 + state.combo * 3) * modifiers.nearMissScoreMul);
-        state.score += pulseBonus;
-        state.combo = clamp(state.combo + 1, 0, 14);
-        state.bestCombo = Math.max(state.bestCombo, state.combo);
-        addFloater(state.player.x, state.player.y - 28, `Tight dodge +${pulseBonus}`, "#b0d8ff");
-        advanceDirectiveProgress("near_miss", 1);
+        state.ruptures.splice(index, 1);
       }
+    }
+  }
 
-      if (pulse.r > pulse.maxR) {
-        state.pulses.splice(i, 1);
+  function updateEffects(dt) {
+    state.safeWindow = Math.max(0, state.safeWindow - dt);
+    state.hitFlash = Math.max(0, state.hitFlash - dt);
+    state.responseReadyFlash = Math.max(0, state.responseReadyFlash - dt);
+
+    if (state.banner) {
+      state.banner.timer -= dt;
+      if (state.banner.timer <= 0) {
+        state.banner = null;
       }
     }
 
-    for (let i = state.fronts.length - 1; i >= 0; i -= 1) {
-      const front = state.fronts[i];
-      front.hitLock = Math.max(0, front.hitLock - dt);
-
-      if (front.telegraph > 0) {
-        front.telegraph = Math.max(0, front.telegraph - dt);
-      } else {
-        front.position += front.speed * dt * front.direction;
-      }
-
-      const snapshot = getFrontPlayerSnapshot(front);
-      const activeBand = snapshot.axisDistance < front.thickness * 0.5 + state.player.radius * 0.6;
-
-      if (front.telegraph <= 0 && activeBand && !snapshot.inGap && front.hitLock <= 0) {
-        applyDamage(13.5, "Inhibitor front", "pulse");
-        front.hitLock = 0.5;
-      }
-
-      if (
-        front.telegraph <= 0 &&
-        activeBand &&
-        snapshot.inGap &&
-        snapshot.nearGapEdge &&
-        !front.grazed
-      ) {
-        front.grazed = true;
-        const frontBonus = Math.floor((26 + state.combo * 3) * modifiers.nearMissScoreMul);
-        state.score += frontBonus;
-        state.combo = clamp(state.combo + 1, 0, 14);
-        state.bestCombo = Math.max(state.bestCombo, state.combo);
-        addFloater(state.player.x, state.player.y - 24, `Lane thread +${frontBonus}`, "#d0e4ff");
-        advanceDirectiveProgress("near_miss", 1);
-      }
-
-      const axisSpan = front.orientation === "vertical" ? state.width : state.height;
-      if (front.position < -front.thickness * 1.8 || front.position > axisSpan + front.thickness * 1.8) {
-        state.fronts.splice(i, 1);
-      }
-    }
-
-    for (let i = state.resources.length - 1; i >= 0; i -= 1) {
-      const resource = state.resources[i];
-      resource.life += dt;
-      resource.phase += dt * 2.8;
-      resource.y += Math.sin(resource.phase) * 7 * dt;
-      resource.x = clamp(resource.x + flowX * dt * 0.08, 22, state.width - 22);
-
-      if (resource.life > 15 * modifiers.resourceLifeMul) {
-        state.resources.splice(i, 1);
-        continue;
-      }
-
-      const dist = Math.hypot(resource.x - state.player.x, resource.y - state.player.y);
-      if (dist < resource.r + state.player.radius * 0.72) {
-        collectResource(resource, i);
-      }
-    }
-
-    for (let i = state.bursts.length - 1; i >= 0; i -= 1) {
-      const burst = state.bursts[i];
-      burst.life -= dt;
-      burst.x += burst.vx * dt;
-      burst.y += burst.vy * dt;
-      burst.vx *= 0.97;
-      burst.vy *= 0.97;
-      if (burst.life <= 0) state.bursts.splice(i, 1);
-    }
-
-    for (let i = state.floaters.length - 1; i >= 0; i -= 1) {
-      const floater = state.floaters[i];
+    for (let index = state.floaters.length - 1; index >= 0; index -= 1) {
+      const floater = state.floaters[index];
       floater.life -= dt;
-      floater.y -= 24 * dt;
-      if (floater.life <= 0) state.floaters.splice(i, 1);
-    }
-
-    if (state.integrity <= 0) {
-      state.integrity = 0;
-      triggerLysisSequence();
-    }
-
-    updateHud();
-  }
-
-  function drawBackground(time) {
-    const t = time * 0.001;
-    const gradient = ctx.createLinearGradient(0, 0, state.width, state.height);
-    gradient.addColorStop(0, "#040c18");
-    gradient.addColorStop(0.42, "#08243d");
-    gradient.addColorStop(1, "#0e3958");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, state.width, state.height);
-
-    const bloomFields = [
-      { x: 0.18, y: 0.2, r: 0.46, c0: "rgba(94, 199, 215, 0.21)", c1: "rgba(94, 199, 215, 0)" },
-      { x: 0.78, y: 0.28, r: 0.38, c0: "rgba(90, 130, 255, 0.17)", c1: "rgba(90, 130, 255, 0)" },
-      { x: 0.66, y: 0.78, r: 0.44, c0: "rgba(113, 246, 196, 0.13)", c1: "rgba(113, 246, 196, 0)" }
-    ];
-
-    bloomFields.forEach((field, index) => {
-      const px = state.width * field.x + Math.cos(t * (0.12 + index * 0.05)) * 26;
-      const py = state.height * field.y + Math.sin(t * (0.16 + index * 0.03)) * 22;
-      const radius = Math.max(state.width, state.height) * field.r;
-      const bloom = ctx.createRadialGradient(px, py, radius * 0.06, px, py, radius);
-      bloom.addColorStop(0, field.c0);
-      bloom.addColorStop(1, field.c1);
-      ctx.fillStyle = bloom;
-      ctx.fillRect(0, 0, state.width, state.height);
-    });
-
-    if (state.surgeTimer > 0) {
-      const pulse = 0.48 + 0.52 * Math.sin(time * 0.02);
-      const surgeAlpha = clamp(state.surgeTimer / 8, 0, 1) * 0.24 * pulse;
-      const surgeGlow = ctx.createRadialGradient(
-        state.width * 0.5,
-        state.height * 0.5,
-        state.height * 0.12,
-        state.width * 0.5,
-        state.height * 0.5,
-        state.width * 0.74
-      );
-      surgeGlow.addColorStop(0, `rgba(255, 148, 195, ${(surgeAlpha * 0.7).toFixed(3)})`);
-      surgeGlow.addColorStop(1, "rgba(255, 148, 195, 0)");
-      ctx.fillStyle = surgeGlow;
-      ctx.fillRect(0, 0, state.width, state.height);
-    }
-
-    ctx.save();
-    ctx.globalAlpha = 0.21;
-    ctx.strokeStyle = "rgba(132, 204, 213, 0.2)";
-    ctx.lineWidth = 1;
-
-    const spacing = 32;
-    const offset = (time * 0.015) % spacing;
-    for (let x = -spacing; x < state.width + spacing; x += spacing) {
-      ctx.beginPath();
-      ctx.moveTo(x + offset, 0);
-      ctx.lineTo(x + offset + state.height * 0.08, state.height);
-      ctx.stroke();
-    }
-
-    ctx.globalAlpha = 0.16;
-    const yOffset = (time * 0.008) % spacing;
-    for (let y = -spacing; y < state.height + spacing; y += spacing) {
-      ctx.beginPath();
-      ctx.moveTo(0, y + yOffset);
-      ctx.lineTo(state.width, y + yOffset);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    if (state.flowStrength > 1.5) {
-      const flowAlpha = clamp(state.flowStrength / 36, 0, 1) * 0.26;
-      const dx = Math.cos(state.flowAngle);
-      const dy = Math.sin(state.flowAngle);
-      ctx.save();
-      ctx.strokeStyle = `rgba(178, 240, 252, ${flowAlpha.toFixed(3)})`;
-      ctx.lineWidth = 1.2;
-      ctx.lineCap = "round";
-      for (let i = 0; i < 14; i += 1) {
-        const px = ((i * 97 + time * (0.015 + i * 0.00025) * state.flowStrength) % (state.width + 140)) - 70;
-        const py = ((i * 61 + time * (0.011 + i * 0.0002) * state.flowStrength) % (state.height + 140)) - 70;
-        const len = 16 + flowAlpha * 26 + (i % 4) * 3;
-        ctx.beginPath();
-        ctx.moveTo(px, py);
-        ctx.lineTo(px + dx * len, py + dy * len);
-        ctx.stroke();
+      floater.y += floater.vy * dt;
+      if (floater.life <= 0) {
+        state.floaters.splice(index, 1);
       }
-      ctx.restore();
     }
 
-    if (state.boostTimer > 0) {
-      const boostAlpha = clamp(state.boostTimer / 8, 0, 1) * (0.17 + Math.sin(time * 0.014) * 0.04);
-      const boostGlow = ctx.createRadialGradient(
-        state.player.x,
-        state.player.y,
-        state.player.radius * 0.4,
-        state.player.x,
-        state.player.y,
-        state.player.radius * 7.4
-      );
-      boostGlow.addColorStop(0, `rgba(185, 218, 255, ${(boostAlpha * 0.88).toFixed(3)})`);
-      boostGlow.addColorStop(1, "rgba(185, 218, 255, 0)");
-      ctx.fillStyle = boostGlow;
-      ctx.beginPath();
-      ctx.arc(state.player.x, state.player.y, state.player.radius * 7.4, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    state.particles.forEach((particle) => {
-      const alpha = 0.12 + 0.16 * (0.5 + 0.5 * Math.sin(particle.twinkle));
-      const glow = ctx.createRadialGradient(particle.x, particle.y, 0, particle.x, particle.y, particle.r * 3.4);
-      glow.addColorStop(0, `rgba(188, 244, 248, ${(alpha * 0.9).toFixed(3)})`);
-      glow.addColorStop(1, "rgba(188, 244, 248, 0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(particle.x, particle.y, particle.r * 3.4, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = `rgba(150, 227, 233, ${(alpha + 0.08).toFixed(3)})`;
-      ctx.beginPath();
-      ctx.arc(particle.x, particle.y, Math.max(0.8, particle.r * 0.62), 0, Math.PI * 2);
-      ctx.fill();
-    });
-  }
-
-  function drawPulse(pulse) {
-    const ringAlpha = clamp(0.5 - pulse.r / (pulse.maxR * 1.2), 0.08, 0.44);
-    const bloom = ctx.createRadialGradient(pulse.x, pulse.y, pulse.r * 0.75, pulse.x, pulse.y, pulse.r + pulse.thickness * 3);
-    bloom.addColorStop(0, "rgba(255, 135, 175, 0)");
-    bloom.addColorStop(1, `rgba(255, 144, 184, ${(ringAlpha * 0.34).toFixed(3)})`);
-    ctx.fillStyle = bloom;
-    ctx.beginPath();
-    ctx.arc(pulse.x, pulse.y, pulse.r + pulse.thickness * 3, 0, Math.PI * 2);
-    ctx.fill();
-
-    ctx.strokeStyle = `rgba(255, 133, 167, ${(ringAlpha * 1.05).toFixed(3)})`;
-    ctx.lineWidth = pulse.thickness * 1.05;
-    ctx.beginPath();
-    ctx.arc(pulse.x, pulse.y, pulse.r, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.strokeStyle = `rgba(168, 228, 255, ${(ringAlpha * 0.9).toFixed(3)})`;
-    ctx.lineWidth = Math.max(2, pulse.thickness * 0.34);
-    ctx.beginPath();
-    ctx.arc(pulse.x, pulse.y, pulse.r, 0, Math.PI * 2);
-    ctx.stroke();
-  }
-
-  function drawFront(front, time) {
-    const pulse = 0.55 + 0.45 * Math.sin(time * 0.012);
-    const telegraphAlpha = front.telegraph > 0 ? 0.18 + pulse * 0.16 : 0.28 + pulse * 0.08;
-    const activeAlpha = front.telegraph > 0 ? telegraphAlpha : telegraphAlpha + 0.12;
-    const gapHalf = front.gapSize * 0.5;
-    const gapStart = front.gapCenter - gapHalf;
-    const gapEnd = front.gapCenter + gapHalf;
-
-    ctx.save();
-
-    if (front.orientation === "vertical") {
-      const x = front.position - front.thickness * 0.5;
-      ctx.fillStyle = `rgba(255, 139, 183, ${activeAlpha.toFixed(3)})`;
-      ctx.fillRect(x, 0, front.thickness, Math.max(0, gapStart));
-      ctx.fillRect(x, Math.min(state.height, gapEnd), front.thickness, Math.max(0, state.height - gapEnd));
-
-      ctx.fillStyle = `rgba(162, 241, 255, ${(activeAlpha * 0.34).toFixed(3)})`;
-      ctx.fillRect(x, Math.max(0, gapStart), front.thickness, Math.max(0, gapEnd - gapStart));
-
-      ctx.strokeStyle = `rgba(221, 246, 255, ${(activeAlpha * 0.86).toFixed(3)})`;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(x + 1, Math.max(0, gapStart), Math.max(0, front.thickness - 2), Math.max(0, gapEnd - gapStart));
-    } else {
-      const y = front.position - front.thickness * 0.5;
-      ctx.fillStyle = `rgba(255, 139, 183, ${activeAlpha.toFixed(3)})`;
-      ctx.fillRect(0, y, Math.max(0, gapStart), front.thickness);
-      ctx.fillRect(Math.min(state.width, gapEnd), y, Math.max(0, state.width - gapEnd), front.thickness);
-
-      ctx.fillStyle = `rgba(162, 241, 255, ${(activeAlpha * 0.34).toFixed(3)})`;
-      ctx.fillRect(Math.max(0, gapStart), y, Math.max(0, gapEnd - gapStart), front.thickness);
-
-      ctx.strokeStyle = `rgba(221, 246, 255, ${(activeAlpha * 0.86).toFixed(3)})`;
-      ctx.lineWidth = 2;
-      ctx.strokeRect(Math.max(0, gapStart), y + 1, Math.max(0, gapEnd - gapStart), Math.max(0, front.thickness - 2));
-    }
-
-    ctx.restore();
-  }
-
-  function drawPhage(phage) {
-    ctx.save();
-    ctx.translate(phage.x, phage.y);
-    ctx.rotate(phage.rot);
-    const isDarter = phage.kind === "darter";
-
-    const glow = ctx.createRadialGradient(0, 0, phage.r * 0.2, 0, 0, phage.r * 2.6);
-    glow.addColorStop(0, isDarter ? "rgba(255, 178, 213, 0.44)" : "rgba(162, 247, 255, 0.42)");
-    glow.addColorStop(1, isDarter ? "rgba(255, 178, 213, 0)" : "rgba(162, 247, 255, 0)");
-    ctx.fillStyle = glow;
-    ctx.beginPath();
-    ctx.arc(0, 0, phage.r * 2.6, 0, Math.PI * 2);
-    ctx.fill();
-
-    const headGradient = ctx.createRadialGradient(-2, -2, 2, 0, 0, phage.r);
-    if (isDarter) {
-      headGradient.addColorStop(0, "rgba(255, 220, 237, 0.97)");
-      headGradient.addColorStop(1, "rgba(206, 102, 144, 0.94)");
-    } else {
-      headGradient.addColorStop(0, "rgba(193, 248, 255, 0.96)");
-      headGradient.addColorStop(1, "rgba(72, 165, 194, 0.94)");
-    }
-    ctx.fillStyle = headGradient;
-    ctx.beginPath();
-    for (let i = 0; i < 6; i += 1) {
-      const a = (Math.PI / 3) * i;
-      const px = Math.cos(a) * phage.r;
-      const py = Math.sin(a) * phage.r;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.strokeStyle = isDarter ? "rgba(255, 225, 238, 0.9)" : "rgba(198, 251, 255, 0.92)";
-    ctx.lineWidth = 1.8;
-    ctx.stroke();
-
-    ctx.strokeStyle = isDarter ? "rgba(252, 174, 214, 0.62)" : "rgba(143, 230, 241, 0.58)";
-    ctx.lineWidth = 1.05;
-    for (let i = 0; i < 3; i += 1) {
-      const angle = (Math.PI / 3) * i;
-      ctx.beginPath();
-      ctx.moveTo(Math.cos(angle) * phage.r * 0.2, Math.sin(angle) * phage.r * 0.2);
-      ctx.lineTo(Math.cos(angle) * phage.r * 0.78, Math.sin(angle) * phage.r * 0.78);
-      ctx.stroke();
-    }
-
-    const tailBase = phage.r + phage.r * 0.18;
-    const tailY = phage.r + phage.r * (isDarter ? 1.54 : 1.72);
-    ctx.strokeStyle = isDarter ? "rgba(255, 212, 233, 0.86)" : "rgba(188, 248, 255, 0.86)";
-    ctx.lineWidth = isDarter ? 1.65 : 2;
-    ctx.beginPath();
-    ctx.moveTo(0, tailBase);
-    ctx.lineTo(0, tailY);
-    ctx.stroke();
-
-    ctx.strokeStyle = isDarter ? "rgba(255, 170, 213, 0.74)" : "rgba(144, 233, 246, 0.8)";
-    ctx.lineWidth = isDarter ? 1.2 : 1.6;
-    ctx.beginPath();
-    ctx.moveTo(-phage.r * 0.42, tailBase + phage.r * 0.22);
-    ctx.lineTo(phage.r * 0.42, tailBase + phage.r * 0.22);
-    ctx.moveTo(-phage.r * 0.3, tailBase + phage.r * 0.55);
-    ctx.lineTo(phage.r * 0.3, tailBase + phage.r * 0.55);
-    ctx.stroke();
-
-    ctx.strokeStyle = isDarter ? "rgba(255, 204, 228, 0.86)" : "rgba(162, 244, 255, 0.82)";
-    ctx.lineWidth = isDarter ? 1.1 : 1.4;
-    ctx.beginPath();
-    ctx.moveTo(0, tailY);
-    ctx.lineTo(-phage.r * 1.02, tailY + phage.r * 0.92);
-    ctx.moveTo(0, tailY);
-    ctx.lineTo(phage.r * 1.02, tailY + phage.r * 0.92);
-    ctx.moveTo(-phage.r * 0.18, tailY + phage.r * 0.2);
-    ctx.lineTo(-phage.r * 1.06, tailY + phage.r * 0.78);
-    ctx.moveTo(phage.r * 0.18, tailY + phage.r * 0.2);
-    ctx.lineTo(phage.r * 1.06, tailY + phage.r * 0.78);
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  function drawPrecursorCore(precursor, radius) {
-    if (precursor.coreShape === "disc") {
-      ctx.beginPath();
-      ctx.arc(0, 0, radius * 0.92, 0, Math.PI * 2);
-      return;
-    }
-
-    if (precursor.coreShape === "rounded-rect") {
-      drawCapsule(0, 0, radius * 1.56, radius * 0.72);
-      return;
-    }
-
-    if (precursor.coreShape === "capsule") {
-      drawCapsule(0, 0, radius * 1.88, radius * 0.82);
-      return;
-    }
-
-    ctx.beginPath();
-    for (let i = 0; i < 6; i += 1) {
-      const a = (Math.PI / 3) * i;
-      const px = Math.cos(a) * radius;
-      const py = Math.sin(a) * radius;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
-    }
-    ctx.closePath();
-  }
-
-  function drawPrecursorGlyph(precursor, radius) {
-    ctx.strokeStyle = precursor.detailColor || "rgba(220, 255, 236, 0.62)";
-    ctx.fillStyle = precursor.detailColor || "rgba(220, 255, 236, 0.62)";
-    ctx.lineWidth = 1.2;
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-
-    switch (precursor.icon) {
-      case "lipid-ii": {
-        ctx.beginPath();
-        ctx.moveTo(-radius * 0.4, 0);
-        ctx.lineTo(radius * 0.4, 0);
-        ctx.moveTo(0, -radius * 0.36);
-        ctx.lineTo(0, radius * 0.22);
-        ctx.moveTo(-radius * 0.16, radius * 0.46);
-        ctx.lineTo(-radius * 0.16, radius * 0.78);
-        ctx.moveTo(radius * 0.16, radius * 0.42);
-        ctx.lineTo(radius * 0.16, radius * 0.74);
-        ctx.stroke();
-        break;
-      }
-      case "phospholipid": {
-        ctx.beginPath();
-        ctx.arc(0, -radius * 0.1, radius * 0.26, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.moveTo(-radius * 0.18, radius * 0.05);
-        ctx.lineTo(-radius * 0.26, radius * 0.68);
-        ctx.moveTo(radius * 0.12, radius * 0.06);
-        ctx.lineTo(radius * 0.28, radius * 0.7);
-        ctx.stroke();
-        break;
-      }
-      case "lps": {
-        ctx.beginPath();
-        ctx.moveTo(0, -radius * 0.5);
-        ctx.lineTo(0, radius * 0.5);
-        ctx.moveTo(0, -radius * 0.2);
-        ctx.lineTo(-radius * 0.3, -radius * 0.42);
-        ctx.moveTo(0, -radius * 0.2);
-        ctx.lineTo(radius * 0.3, -radius * 0.42);
-        ctx.moveTo(0, 0.02 * radius);
-        ctx.lineTo(-radius * 0.34, -radius * 0.08);
-        ctx.moveTo(0, 0.02 * radius);
-        ctx.lineTo(radius * 0.34, -radius * 0.08);
-        ctx.stroke();
-        break;
-      }
-      case "los": {
-        ctx.beginPath();
-        ctx.moveTo(0, -radius * 0.42);
-        ctx.lineTo(0, radius * 0.42);
-        ctx.moveTo(0, -radius * 0.08);
-        ctx.lineTo(-radius * 0.24, -radius * 0.3);
-        ctx.moveTo(0, -radius * 0.08);
-        ctx.lineTo(radius * 0.24, -radius * 0.3);
-        ctx.stroke();
-        break;
-      }
-      case "capsule": {
-        ctx.beginPath();
-        drawCapsule(0, 0, radius * 1.18, radius * 0.48);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(-radius * 0.22, 0, radius * 0.08, 0, Math.PI * 2);
-        ctx.arc(radius * 0.22, 0, radius * 0.08, 0, Math.PI * 2);
-        ctx.fill();
-        break;
-      }
-      case "teichoic": {
-        ctx.beginPath();
-        ctx.moveTo(-radius * 0.26, -radius * 0.5);
-        ctx.lineTo(-radius * 0.26, radius * 0.5);
-        ctx.moveTo(radius * 0.24, -radius * 0.5);
-        ctx.lineTo(radius * 0.24, radius * 0.5);
-        for (let y = -0.35; y <= 0.35; y += 0.22) {
-          ctx.moveTo(-radius * 0.26, radius * y);
-          ctx.lineTo(radius * 0.24, radius * y);
-        }
-        ctx.stroke();
-        break;
-      }
-      case "teichoic-anchor": {
-        ctx.beginPath();
-        ctx.moveTo(-radius * 0.2, -radius * 0.48);
-        ctx.lineTo(-radius * 0.2, radius * 0.28);
-        ctx.moveTo(radius * 0.2, -radius * 0.48);
-        ctx.lineTo(radius * 0.2, radius * 0.28);
-        ctx.moveTo(-radius * 0.2, -radius * 0.18);
-        ctx.lineTo(radius * 0.2, -radius * 0.18);
-        ctx.moveTo(-radius * 0.2, 0.1 * radius);
-        ctx.lineTo(radius * 0.2, 0.1 * radius);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(-radius * 0.32, radius * 0.36);
-        ctx.lineTo(radius * 0.32, radius * 0.36);
-        ctx.moveTo(-radius * 0.2, radius * 0.36);
-        ctx.lineTo(-radius * 0.1, radius * 0.56);
-        ctx.moveTo(radius * 0.2, radius * 0.36);
-        ctx.lineTo(radius * 0.1, radius * 0.56);
-        ctx.stroke();
-        break;
-      }
-      case "mesh": {
-        ctx.beginPath();
-        for (let x = -0.28; x <= 0.28; x += 0.28) {
-          ctx.moveTo(radius * x, -radius * 0.42);
-          ctx.lineTo(radius * x, radius * 0.42);
-        }
-        for (let y = -0.3; y <= 0.3; y += 0.3) {
-          ctx.moveTo(-radius * 0.42, radius * y);
-          ctx.lineTo(radius * 0.42, radius * y);
-        }
-        ctx.stroke();
-        break;
-      }
-      case "mycolic": {
-        ctx.beginPath();
-        ctx.moveTo(-radius * 0.32, -radius * 0.4);
-        ctx.lineTo(-radius * 0.14, -radius * 0.1);
-        ctx.lineTo(-radius * 0.32, radius * 0.22);
-        ctx.lineTo(-radius * 0.12, radius * 0.5);
-        ctx.moveTo(radius * 0.12, -radius * 0.46);
-        ctx.lineTo(radius * 0.3, -radius * 0.18);
-        ctx.lineTo(radius * 0.12, radius * 0.16);
-        ctx.lineTo(radius * 0.32, radius * 0.46);
-        ctx.stroke();
-        break;
-      }
-      default: {
-        ctx.beginPath();
-        ctx.moveTo(-radius * 0.4, 0);
-        ctx.lineTo(radius * 0.4, 0);
-        ctx.moveTo(0, -radius * 0.4);
-        ctx.lineTo(0, radius * 0.4);
-        ctx.stroke();
-        break;
+    for (let index = state.pulses.length - 1; index >= 0; index -= 1) {
+      const pulse = state.pulses[index];
+      pulse.life -= dt;
+      const progress = 1 - pulse.life / 0.74;
+      pulse.radius = lerp(pulse.radius, pulse.maxRadius, clamp(progress, 0, 1));
+      if (pulse.life <= 0) {
+        state.pulses.splice(index, 1);
       }
     }
   }
 
-  function drawResource(resource, time) {
-    ctx.save();
-    ctx.translate(resource.x, resource.y);
-    ctx.rotate(time * 0.0007 + resource.phase * 0.5);
-
-    if (resource.kind === "shield") {
-      const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, resource.r * 2.1);
-      glow.addColorStop(0, "rgba(139, 246, 255, 0.9)");
-      glow.addColorStop(1, "rgba(62, 168, 201, 0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(0, 0, resource.r * 2.1, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(150, 243, 255, 0.9)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(0, 0, resource.r, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(-resource.r * 0.55, 0);
-      ctx.lineTo(resource.r * 0.55, 0);
-      ctx.moveTo(0, -resource.r * 0.55);
-      ctx.lineTo(0, resource.r * 0.55);
-      ctx.stroke();
-      ctx.strokeStyle = "rgba(182, 252, 255, 0.72)";
-      ctx.lineWidth = 1.2;
-      ctx.beginPath();
-      ctx.arc(0, 0, resource.r * 0.58, 0, Math.PI * 2);
-      ctx.stroke();
-    } else if (resource.kind === "boost") {
-      const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, resource.r * 2.2);
-      glow.addColorStop(0, "rgba(188, 214, 255, 0.9)");
-      glow.addColorStop(1, "rgba(93, 110, 226, 0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(0, 0, resource.r * 2.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = "rgba(201, 221, 255, 0.92)";
-      ctx.beginPath();
-      ctx.moveTo(-resource.r * 0.55, resource.r * 0.14);
-      ctx.lineTo(-resource.r * 0.08, resource.r * 0.14);
-      ctx.lineTo(-resource.r * 0.22, resource.r * 0.7);
-      ctx.lineTo(resource.r * 0.56, -resource.r * 0.2);
-      ctx.lineTo(resource.r * 0.12, -resource.r * 0.2);
-      ctx.lineTo(resource.r * 0.26, -resource.r * 0.74);
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(234, 242, 255, 0.84)";
-      ctx.lineWidth = 1.15;
-      ctx.stroke();
-    } else if (resource.kind === "breakthrough") {
-      const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, resource.r * 2.4);
-      glow.addColorStop(0, "rgba(255, 235, 176, 0.94)");
-      glow.addColorStop(1, "rgba(255, 186, 124, 0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(0, 0, resource.r * 2.4, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(255, 238, 204, 0.95)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(0, 0, resource.r * 0.96, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.fillStyle = "rgba(255, 222, 148, 0.96)";
-      ctx.beginPath();
-      for (let i = 0; i < 6; i += 1) {
-        const angle = (Math.PI / 3) * i - Math.PI / 2;
-        const outer = resource.r * 0.78;
-        const inner = resource.r * 0.34;
-        const outerX = Math.cos(angle) * outer;
-        const outerY = Math.sin(angle) * outer;
-        const innerX = Math.cos(angle + Math.PI / 6) * inner;
-        const innerY = Math.sin(angle + Math.PI / 6) * inner;
-        if (i === 0) ctx.moveTo(outerX, outerY);
-        else ctx.lineTo(outerX, outerY);
-        ctx.lineTo(innerX, innerY);
-      }
-      ctx.closePath();
-      ctx.fill();
-
-      ctx.strokeStyle = "rgba(255, 248, 232, 0.92)";
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
-    } else {
-      const precursor = resource.precursor || ENVELOPE_PRECURSORS.lipidII;
-      const glow = ctx.createRadialGradient(0, 0, 1, 0, 0, resource.r * 2.2);
-      glow.addColorStop(0, precursor.glowColor || "rgba(175, 255, 214, 0.86)");
-      glow.addColorStop(1, "rgba(83, 199, 154, 0)");
-      ctx.fillStyle = glow;
-      ctx.beginPath();
-      ctx.arc(0, 0, resource.r * 2.2, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = precursor.fillColor || "rgba(167, 255, 213, 0.95)";
-      drawPrecursorCore(precursor, resource.r);
-      ctx.fill();
-
-      ctx.strokeStyle = precursor.strokeColor || "rgba(34, 94, 81, 0.45)";
-      ctx.lineWidth = 1;
-      drawPrecursorCore(precursor, resource.r);
-      ctx.stroke();
-
-      drawPrecursorGlyph(precursor, resource.r);
-    }
-
-    ctx.restore();
-  }
-
-  function drawMorphologyPath(model, length, radius) {
-    if (model.shape === "coccus") {
-      ctx.beginPath();
-      ctx.arc(0, 0, radius, 0, Math.PI * 2);
-      ctx.closePath();
-      return;
-    }
-    if (model.shape === "diplococcus") {
-      drawDiplococcus(0, 0, length, radius);
-      return;
-    }
-    if (model.shape === "coccobacillus") {
-      drawCapsule(0, 0, length * 0.84, radius * 0.92);
-      return;
-    }
-    if (model.shape === "curved-rod") {
-      drawCurvedCapsule(0, 0, length * 0.94, radius * 0.94);
-      return;
-    }
-    if (model.shape === "coryneform") {
-      drawCoryneform(0, 0, length * 0.92, radius);
-      return;
-    }
-    drawCapsule(0, 0, length, radius);
-  }
-
-  function drawMorphologyAccents(model, length, radius, alpha) {
-    if (model.shape === "coccus") {
-      ctx.strokeStyle = `rgba(255, 238, 203, ${clamp(alpha * 0.7, 0, 1).toFixed(3)})`;
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.arc(0, 0, radius * 0.55, 0, Math.PI * 2);
-      ctx.stroke();
-
-      for (let i = 0; i < 3; i += 1) {
-        const theta = -0.8 + i * 0.8;
-        const x = Math.cos(theta) * radius * 0.56;
-        const y = Math.sin(theta) * radius * 0.48;
-        ctx.beginPath();
-        ctx.arc(x, y, radius * 0.2, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      return;
-    }
-
-    if (model.shape === "diplococcus") {
-      ctx.globalAlpha = clamp(alpha * 0.9, 0, 1);
-      ctx.strokeStyle = "rgba(255, 226, 236, 0.86)";
-      ctx.lineWidth = 1.4;
-      ctx.beginPath();
-      ctx.moveTo(0, -radius * 0.72);
-      ctx.lineTo(0, radius * 0.72);
-      ctx.stroke();
-
-      const lobeRadius = radius * 0.86;
-      const centerOffset = clamp(length * 0.2, radius * 0.3, radius * 0.55);
-      for (let i = -1; i <= 1; i += 2) {
-        ctx.beginPath();
-        ctx.arc(i * centerOffset, 0, lobeRadius * 0.45, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-      return;
-    }
-
-    ctx.globalAlpha = clamp(alpha * 0.82, 0, 1);
-    if (model.shape === "curved-rod") {
-      ctx.strokeStyle = "rgba(190, 255, 239, 0.8)";
-      ctx.lineWidth = 1.2;
-      for (let i = -2; i <= 2; i += 1) {
-        const offset = i * 5.4;
-        ctx.beginPath();
-        ctx.moveTo(-length * 0.26, offset - radius * 0.08);
-        ctx.quadraticCurveTo(0, offset - radius * 0.22, length * 0.26, offset + radius * 0.08);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-      return;
-    }
-
-    if (model.shape === "coryneform") {
-      ctx.strokeStyle = "rgba(219, 229, 255, 0.82)";
-      ctx.lineWidth = 1.2;
-      for (let i = -1; i <= 2; i += 1) {
-        const x = -length * 0.23 + i * length * 0.16;
-        ctx.beginPath();
-        ctx.moveTo(x, -radius * 0.45 + i * radius * 0.03);
-        ctx.lineTo(x + length * 0.16, radius * 0.48 + i * radius * 0.03);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-      return;
-    }
-
-    ctx.strokeStyle = model.shape === "encapsulated-rod" ? "rgba(203, 255, 231, 0.76)" : "rgba(161, 245, 255, 0.8)";
-    ctx.lineWidth = 1.2;
-    for (let i = -2; i <= 2; i += 1) {
-      const offset = i * 6;
-      ctx.beginPath();
-      ctx.moveTo(-length * 0.26, offset);
-      ctx.lineTo(length * 0.26, offset);
-      ctx.stroke();
-    }
-    ctx.globalAlpha = 1;
-
-    if (model.shape === "encapsulated-rod") {
-      ctx.strokeStyle = "rgba(195, 255, 228, 0.44)";
-      ctx.lineWidth = 1.8;
-      drawCapsule(0, 0, length * 1.08, radius * 1.13);
-      ctx.stroke();
-    }
-  }
-
-  function drawTrails() {
-    if (!state.trails.length) return;
-    const model = getModel(state.modelId);
-
-    state.trails.forEach((trail, index) => {
-      const alpha = clamp((trail.life / trail.maxLife) * 0.44, 0, 0.44);
-      const widthScale = clamp(index / state.trails.length, 0.3, 1);
-      ctx.save();
-      ctx.translate(trail.x, trail.y);
-      ctx.rotate(trail.angle);
-      const trailColor =
-        state.boostTimer > 0
-          ? "190, 217, 255"
-          : model.shape === "coccus"
-            ? "255, 224, 159"
-            : "130, 228, 238";
-      ctx.fillStyle = `rgba(${trailColor}, ${alpha.toFixed(3)})`;
-      drawMorphologyPath(model, state.player.length * 0.72 * widthScale, state.player.radius * 0.58 * widthScale);
-      ctx.fill();
-      ctx.restore();
-    });
-  }
-
-  function drawPlayer(time) {
-    const model = getModel(state.modelId);
-    const palette = model.palette;
-    ctx.save();
-    ctx.translate(state.player.x, state.player.y);
-    ctx.rotate(state.player.angle);
-
-    const outerLength = state.player.length;
-    const outerRadius = state.player.radius;
-
-    const membrane = ctx.createLinearGradient(-outerLength / 2, 0, outerLength / 2, 0);
-    membrane.addColorStop(0, palette.membraneA);
-    membrane.addColorStop(0.5, palette.membraneB);
-    membrane.addColorStop(1, palette.membraneC);
-
-    ctx.fillStyle = membrane;
-    drawMorphologyPath(model, outerLength, outerRadius);
-    ctx.fill();
-
-    ctx.globalAlpha = 0.62;
-    ctx.fillStyle = palette.core;
-    drawMorphologyPath(model, outerLength * 0.78, outerRadius * 0.65);
-    ctx.fill();
-
-    ctx.globalAlpha = 0.88;
-    ctx.strokeStyle = "rgba(185, 252, 255, 0.94)";
-    ctx.lineWidth = 2;
-    drawMorphologyPath(model, outerLength, outerRadius);
-    ctx.stroke();
-
-    drawMorphologyAccents(model, outerLength, outerRadius, 0.42);
-
-    ctx.restore();
-
-    if (state.shield > 0) {
-      const r = state.player.radius + 8 + Math.sin(time * 0.01) * 1.8;
-      const baseAlpha = clamp(0.25 + state.shield / 220, 0.25, 0.7);
-      const shieldColor = palette.shield || "rgba(125, 243, 255, 0.7)";
-      ctx.strokeStyle = toRgba(shieldColor, baseAlpha);
-      ctx.lineWidth = 3;
-      ctx.beginPath();
-      ctx.arc(state.player.x, state.player.y, r, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    if (state.boostTimer > 0) {
-      const burstAlpha = clamp(state.boostTimer / 10, 0, 1) * (0.42 + Math.sin(time * 0.03) * 0.15);
-      ctx.strokeStyle = `rgba(194, 220, 255, ${clamp(burstAlpha, 0.12, 0.56).toFixed(3)})`;
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(state.player.x, state.player.y, state.player.radius + 12 + Math.sin(time * 0.012) * 2.2, 0, Math.PI * 2);
-      ctx.stroke();
-    }
-
-    if (state.invulnerable > 0) {
-      const blink = Math.sin(time * 0.04) > 0;
-      if (blink) {
-        ctx.strokeStyle = "rgba(255, 140, 172, 0.74)";
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.arc(state.player.x, state.player.y, state.player.radius + 3, 0, Math.PI * 2);
-        ctx.stroke();
-      }
-    }
-  }
-
-  function drawLysisShockwaves() {
-    state.lysisShockwaves.forEach((wave) => {
-      const alpha = clamp(wave.life / wave.maxLife, 0, 1);
-      ctx.strokeStyle = `rgba(255, 186, 221, ${(alpha * 0.44).toFixed(3)})`;
-      ctx.lineWidth = wave.thickness;
-      ctx.beginPath();
-      ctx.arc(wave.x, wave.y, wave.r, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.strokeStyle = `rgba(161, 240, 255, ${(alpha * 0.34).toFixed(3)})`;
-      ctx.lineWidth = Math.max(1.2, wave.thickness * 0.44);
-      ctx.beginPath();
-      ctx.arc(wave.x, wave.y, wave.r * 0.84, 0, Math.PI * 2);
-      ctx.stroke();
-    });
-  }
-
-  function drawLysisFragments() {
-    state.lysisFragments.forEach((fragment) => {
-      const alpha = clamp(fragment.life / fragment.maxLife, 0, 1);
-      ctx.save();
-      ctx.translate(fragment.x, fragment.y);
-      ctx.rotate(fragment.angle);
-      ctx.globalAlpha = alpha;
-      ctx.fillStyle = toRgba(fragment.color, alpha * 0.9);
-      ctx.beginPath();
-      ctx.moveTo(-fragment.length * 0.5, -fragment.width * 0.5);
-      ctx.lineTo(fragment.length * 0.44, -fragment.width * 0.72);
-      ctx.lineTo(fragment.length * 0.56, fragment.width * 0.42);
-      ctx.lineTo(-fragment.length * 0.42, fragment.width * 0.72);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    });
-  }
-
-  function drawLysisPhages() {
-    drawLysisShockwaves();
-    drawLysisFragments();
-    state.lysisPhages.forEach((phage) => {
-      if (phage.delay > 0 || !phage.released) return;
-      const fade = clamp(phage.life / phage.maxLife, 0, 1);
-      ctx.save();
-      ctx.globalAlpha = fade;
-      drawPhage(phage);
-      ctx.restore();
-    });
-  }
-
-  function drawCollapsingRuptures(outerLength, outerRadius, progress, membraneAlpha) {
-    if (!state.lysisRuptures.length) return;
-    const crackProgress = clamp((progress - 0.08) / 0.28, 0, 1);
-    const ruptureProgress = clamp((state.collapseTimer - state.collapseRuptureAt) / 0.26, 0, 1);
-    if (crackProgress <= 0 && ruptureProgress <= 0) return;
-
-    state.lysisRuptures.forEach((site) => {
-      const x = site.xRatio * outerLength * 0.44;
-      const y = site.yRatio * outerRadius * 0.95;
-      const holeRadius = site.size * (0.35 + ruptureProgress * 1.55);
-
-      if (crackProgress > 0) {
-        ctx.strokeStyle = `rgba(255, 216, 231, ${(membraneAlpha * 0.56 * crackProgress).toFixed(3)})`;
-        ctx.lineWidth = 1.25;
-        for (let i = 0; i < 3; i += 1) {
-          const branchAngle = site.crackAngle + (i - 1) * 0.8 + Math.sin(progress * 8 + i) * 0.1;
-          const len = site.size * (2.2 + crackProgress * 2.7) * (i === 1 ? 1.1 : 0.78);
-          ctx.beginPath();
-          ctx.moveTo(x, y);
-          ctx.lineTo(x + Math.cos(branchAngle) * len, y + Math.sin(branchAngle) * len);
-          ctx.stroke();
-        }
-      }
-
-      if (ruptureProgress > 0) {
-        ctx.fillStyle = `rgba(10, 18, 35, ${(0.32 + ruptureProgress * 0.58).toFixed(3)})`;
-        ctx.beginPath();
-        ctx.arc(x, y, holeRadius, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.strokeStyle = `rgba(255, 194, 220, ${(membraneAlpha * 0.52 * ruptureProgress).toFixed(3)})`;
-        ctx.lineWidth = 1.1;
-        ctx.beginPath();
-        ctx.arc(x, y, holeRadius * 1.08, 0, Math.PI * 2);
-        ctx.stroke();
+  function updateBackground(dt) {
+    state.backgroundMotes.forEach((mote) => {
+      mote.y += mote.drift * dt;
+      if (mote.y > canvas.height + 8) {
+        mote.y = -8;
+        mote.x = randomRange(0, canvas.width);
       }
     });
   }
 
-  function drawCollapsingCell(time) {
-    const model = getModel(state.modelId);
-    const palette = model.palette;
-    const progress = clamp(state.collapseTimer / state.collapseDuration, 0, 1);
-    const swell = progress < 0.24 ? 1 + progress * 0.5 : 1.12 - (progress - 0.24) * 0.82;
-    const membraneAlpha = clamp(0.95 - progress * 1.35, 0, 1);
-    const coreAlpha = clamp(0.78 - progress * 1.25, 0, 0.78);
-    const stretch = 1 + Math.sin(time * 0.02) * 0.05 * (1 - progress);
-
-    ctx.save();
-    ctx.translate(state.player.x, state.player.y);
-    ctx.rotate(state.player.angle);
-    ctx.scale(swell * stretch, swell);
-
-    const outerLength = state.player.length;
-    const outerRadius = state.player.radius;
-    const membrane = ctx.createLinearGradient(-outerLength / 2, 0, outerLength / 2, 0);
-    membrane.addColorStop(0, toRgba(palette.membraneA, membraneAlpha));
-    membrane.addColorStop(0.55, `rgba(255, 170, 203, ${(membraneAlpha * 0.86).toFixed(3)})`);
-    membrane.addColorStop(1, toRgba(palette.membraneC, membraneAlpha));
-    ctx.fillStyle = membrane;
-    drawMorphologyPath(model, outerLength, outerRadius);
-    ctx.fill();
-
-    ctx.fillStyle = toRgba(palette.core, coreAlpha);
-    drawMorphologyPath(model, outerLength * 0.78, outerRadius * 0.64);
-    ctx.fill();
-
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = `rgba(241, 194, 220, ${(membraneAlpha * 0.9).toFixed(3)})`;
-    drawMorphologyPath(model, outerLength, outerRadius);
-    ctx.stroke();
-    drawMorphologyAccents(model, outerLength, outerRadius, membraneAlpha * 0.42);
-    drawCollapsingRuptures(outerLength, outerRadius, progress, membraneAlpha);
-    ctx.restore();
-
-    const flash = clamp(1 - Math.abs(progress - 0.22) / 0.22, 0, 1);
-    if (flash > 0) {
-      const burst = ctx.createRadialGradient(
-        state.player.x,
-        state.player.y,
-        state.player.radius * 0.8,
-        state.player.x,
-        state.player.y,
-        state.player.radius * (7 + flash * 10)
-      );
-      burst.addColorStop(0, `rgba(255, 208, 224, ${(flash * 0.32).toFixed(3)})`);
-      burst.addColorStop(1, "rgba(255, 208, 224, 0)");
-      ctx.fillStyle = burst;
-      ctx.beginPath();
-      ctx.arc(state.player.x, state.player.y, state.player.radius * (7 + flash * 10), 0, Math.PI * 2);
-      ctx.fill();
+  function update(dt) {
+    state.elapsed += dt;
+    const previousPhase = PHASES[state.phaseIndex];
+    const nextPhase = getPhaseForElapsed(state.elapsed);
+    const nextPhaseIndex = PHASES.findIndex((phase) => phase.id === nextPhase.id);
+    if (nextPhaseIndex !== state.phaseIndex) {
+      state.phaseIndex = nextPhaseIndex;
+      setBanner(nextPhase.title, nextPhase.note);
     }
-  }
 
-  function drawVignette() {
-    const vignette = ctx.createRadialGradient(
-      state.width * 0.5,
-      state.height * 0.5,
-      Math.min(state.width, state.height) * 0.22,
-      state.width * 0.5,
-      state.height * 0.5,
-      Math.max(state.width, state.height) * 0.76
+    state.score += dt * 28 * getModeModifiers().score;
+    state.responseCharge = clamp(
+      state.responseCharge + dt * 3.9 * getSpecies().responseGainMul * getModeModifiers().response,
+      0,
+      100
     );
-    vignette.addColorStop(0, "rgba(0, 0, 0, 0)");
-    vignette.addColorStop(1, "rgba(0, 0, 0, 0.34)");
-    ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, state.width, state.height);
+    if (state.responseCharge >= 100 && state.responseReadyFlash <= 0.001) {
+      state.responseReadyFlash = 0.48;
+    }
+
+    updateSpawnTimers(dt);
+    updatePlayer(dt);
+    updateFragments(dt);
+    updatePhages(dt);
+    updateWaves(dt);
+    updateRuptures(dt);
+    updateEffects(dt);
+    updateBackground(dt);
+
+    if (Math.floor(state.elapsed * 10) % 5 === 0 && previousPhase.id !== nextPhase.id) {
+      updateHud();
+    }
   }
 
-  function drawCapsule(x, y, length, radius) {
-    const half = length / 2;
-    ctx.beginPath();
-    ctx.moveTo(x - half + radius, y - radius);
-    ctx.lineTo(x + half - radius, y - radius);
-    ctx.arc(x + half - radius, y, radius, -Math.PI / 2, Math.PI / 2, false);
-    ctx.lineTo(x - half + radius, y + radius);
-    ctx.arc(x - half + radius, y, radius, Math.PI / 2, -Math.PI / 2, false);
-    ctx.closePath();
+  function updateHud(force = false) {
+    const phase = getPhaseForElapsed(state.elapsed);
+    const best = getCurrentBest(state.currentBoard);
+    if (scoreEl) scoreEl.textContent = String(Math.round(state.score));
+    if (timeEl) timeEl.textContent = formatDuration(state.elapsed);
+    if (integrityEl) integrityEl.textContent = `${Math.round(state.integrity)}%`;
+    if (integrityBarEl) integrityBarEl.style.width = `${clamp(state.integrity, 0, 100)}%`;
+    if (repairEl) repairEl.textContent = `${state.repairProgress} / ${state.repairNeeded}`;
+    if (repairBarEl) repairBarEl.style.width = `${(clamp(state.repairProgress, 0, state.repairNeeded) / state.repairNeeded) * 100}%`;
+    if (responseChargeEl) responseChargeEl.textContent = `${Math.round(state.responseCharge)}%`;
+    if (responseBarEl) responseBarEl.style.width = `${clamp(state.responseCharge, 0, 100)}%`;
+    if (phaseEl) phaseEl.textContent = phase.title;
+    if (phaseNoteEl) phaseNoteEl.textContent = phase.note;
+    if (traitTitleEl) traitTitleEl.textContent = getSpecies().passiveTitle;
+    if (traitCopyEl) traitCopyEl.textContent = getSpecies().passiveCopy;
+    if (!state.lastPlacement && rankSummaryEl && force) {
+      rankSummaryEl.textContent =
+        best > 0
+          ? `Best on this board: ${best}. Finish another run to improve your placement.`
+          : "Finish a run to see your placement and best score summary.";
+    }
+    updateControlState();
   }
 
-  function drawDiplococcus(x, y, length, radius) {
-    const lobeRadius = radius * 0.86;
-    const centerOffset = clamp(length * 0.2, radius * 0.3, radius * 0.55);
-    ctx.beginPath();
-    ctx.arc(x - centerOffset, y, lobeRadius, 0, Math.PI * 2);
-    ctx.arc(x + centerOffset, y, lobeRadius, 0, Math.PI * 2);
-    ctx.closePath();
-  }
+  function drawBackground() {
+    const phase = getPhaseForElapsed(state.elapsed);
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, "#071522");
+    gradient.addColorStop(0.5, "#0c2237");
+    gradient.addColorStop(1, "#08131f");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  function drawCurvedCapsule(x, y, length, radius) {
-    const half = length / 2;
-    const curve = radius * 0.55;
-    const leftY = y - curve * 0.32;
-    const rightY = y + curve * 0.32;
-    ctx.beginPath();
-    ctx.moveTo(x - half + radius, leftY - radius);
-    ctx.quadraticCurveTo(x, y - radius - curve, x + half - radius, rightY - radius);
-    ctx.arc(x + half - radius, rightY, radius, -Math.PI / 2, Math.PI / 2, false);
-    ctx.quadraticCurveTo(x, y + radius + curve, x - half + radius, leftY + radius);
-    ctx.arc(x - half + radius, leftY, radius, Math.PI / 2, -Math.PI / 2, false);
-    ctx.closePath();
-  }
+    const accent = ctx.createRadialGradient(canvas.width * 0.2, canvas.height * 0.18, 10, canvas.width * 0.2, canvas.height * 0.18, canvas.width * 0.72);
+    accent.addColorStop(0, phase.tintA);
+    accent.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = accent;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  function drawCoryneform(x, y, length, radius) {
-    const half = length / 2;
-    const narrowRadius = radius * 0.72;
-    const wideRadius = radius * 1.12;
-    ctx.beginPath();
-    ctx.moveTo(x - half + narrowRadius, y - narrowRadius);
-    ctx.quadraticCurveTo(x - length * 0.1, y - radius * 1.1, x + half - wideRadius, y - wideRadius);
-    ctx.arc(x + half - wideRadius, y, wideRadius, -Math.PI / 2, Math.PI / 2, false);
-    ctx.quadraticCurveTo(x - length * 0.14, y + radius * 1.08, x - half + narrowRadius, y + narrowRadius);
-    ctx.arc(x - half + narrowRadius, y, narrowRadius, Math.PI / 2, -Math.PI / 2, false);
-    ctx.closePath();
-  }
+    const accentB = ctx.createRadialGradient(canvas.width * 0.82, canvas.height * 0.8, 10, canvas.width * 0.82, canvas.height * 0.8, canvas.width * 0.62);
+    accentB.addColorStop(0, phase.tintB);
+    accentB.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.fillStyle = accentB;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  function drawBursts() {
-    state.bursts.forEach((burst) => {
-      const alpha = clamp(burst.life / burst.maxLife, 0, 1);
-      ctx.fillStyle = toRgba(burst.color, alpha);
+    ctx.save();
+    ctx.strokeStyle = "rgba(165, 227, 241, 0.08)";
+    ctx.lineWidth = 1;
+    for (let x = 40; x < canvas.width; x += 80) {
       ctx.beginPath();
-      ctx.arc(burst.x, burst.y, burst.size * alpha, 0, Math.PI * 2);
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, canvas.height);
+      ctx.stroke();
+    }
+    for (let y = 40; y < canvas.height; y += 80) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    state.backgroundMotes.forEach((mote) => {
+      ctx.fillStyle = `rgba(178, 235, 245, ${mote.alpha})`;
+      ctx.beginPath();
+      ctx.arc(mote.x, mote.y, mote.radius, 0, TAU);
       ctx.fill();
     });
+
+    if (state.hitFlash > 0) {
+      ctx.fillStyle = `rgba(255, 120, 147, ${state.hitFlash * 0.22})`;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+  }
+
+  function drawFragments() {
+    state.fragments.forEach((fragment) => {
+      const bob = Math.sin(fragment.pulse) * 4;
+      ctx.save();
+      ctx.translate(fragment.x, fragment.y + bob);
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, TAU);
+      ctx.fillStyle = fragment.kind.halo;
+      ctx.fill();
+      ctx.fillStyle = fragment.kind.color;
+      ctx.beginPath();
+      for (let index = 0; index < 6; index += 1) {
+        const angle = -Math.PI / 2 + (index / 6) * TAU;
+        const radius = index % 2 === 0 ? 10 : 6;
+        const x = Math.cos(angle) * radius;
+        const y = Math.sin(angle) * radius;
+        if (index === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    });
+  }
+
+  function drawPhages() {
+    state.phages.forEach((phage) => {
+      ctx.save();
+      ctx.translate(phage.x, phage.y);
+      ctx.rotate(phage.spin);
+      ctx.strokeStyle = "rgba(209, 244, 255, 0.92)";
+      ctx.fillStyle = "rgba(106, 208, 236, 0.92)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(0, 0, phage.radius, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+      for (let index = 0; index < 6; index += 1) {
+        const angle = (index / 6) * TAU;
+        const inner = phage.radius + 1;
+        const outer = phage.radius + 7;
+        ctx.beginPath();
+        ctx.moveTo(Math.cos(angle) * inner, Math.sin(angle) * inner);
+        ctx.lineTo(Math.cos(angle) * outer, Math.sin(angle) * outer);
+        ctx.stroke();
+      }
+      ctx.beginPath();
+      ctx.moveTo(0, phage.radius + 2);
+      ctx.lineTo(0, phage.radius + 16);
+      ctx.moveTo(-7, phage.radius + 11);
+      ctx.lineTo(7, phage.radius + 11);
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawWaves() {
+    state.waves.forEach((wave) => {
+      ctx.save();
+      ctx.fillStyle = wave.hue === "#77dfff" ? "rgba(119, 223, 255, 0.22)" : "rgba(145, 243, 255, 0.18)";
+      ctx.strokeStyle = wave.hue;
+      ctx.lineWidth = 2.5;
+      if (wave.axis === "x") {
+        ctx.fillRect(wave.position - wave.thickness * 0.5, 0, wave.thickness, canvas.height);
+        ctx.beginPath();
+        ctx.moveTo(wave.position, 0);
+        ctx.lineTo(wave.position, canvas.height);
+        ctx.stroke();
+      } else {
+        ctx.fillRect(0, wave.position - wave.thickness * 0.5, canvas.width, wave.thickness);
+        ctx.beginPath();
+        ctx.moveTo(0, wave.position);
+        ctx.lineTo(canvas.width, wave.position);
+        ctx.stroke();
+      }
+      ctx.restore();
+    });
+  }
+
+  function drawRuptures() {
+    state.ruptures.forEach((rupture) => {
+      ctx.save();
+      ctx.strokeStyle = "rgba(255, 196, 145, 0.95)";
+      ctx.lineWidth = rupture.width;
+      ctx.lineCap = "round";
+      ctx.setLineDash([12, 10]);
+      ctx.beginPath();
+      ctx.moveTo(rupture.x1, rupture.y1);
+      ctx.lineTo(rupture.x2, rupture.y2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.strokeStyle = "rgba(255, 239, 214, 0.9)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(rupture.x1, rupture.y1);
+      ctx.lineTo(rupture.x2, rupture.y2);
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawPulses() {
+    state.pulses.forEach((pulse) => {
+      ctx.save();
+      ctx.strokeStyle = pulse.color;
+      ctx.lineWidth = pulse.lineWidth;
+      ctx.globalAlpha = clamp(pulse.life / 0.74, 0, 1);
+      ctx.beginPath();
+      ctx.arc(pulse.x, pulse.y, pulse.radius, 0, TAU);
+      ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawPlayer() {
+    const species = getSpecies();
+    const { x, y, angle } = state.player;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    if (state.safeWindow > 0) {
+      ctx.fillStyle = `rgba(179, 245, 255, ${0.12 + state.safeWindow * 0.16})`;
+      ctx.beginPath();
+      ctx.arc(0, 0, 34, 0, TAU);
+      ctx.fill();
+    }
+
+    const gradient = ctx.createLinearGradient(-24, -8, 24, 8);
+    gradient.addColorStop(0, species.palette.bodyA);
+    gradient.addColorStop(1, species.palette.bodyB);
+    ctx.fillStyle = gradient;
+    ctx.strokeStyle = species.palette.outline;
+    ctx.lineWidth = 2.5;
+
+    if (species.shape === "coccus") {
+      ctx.beginPath();
+      ctx.arc(0, 0, 18, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+    } else if (species.shape === "diplococcus") {
+      ctx.beginPath();
+      ctx.arc(-10, 0, 14, 0, TAU);
+      ctx.arc(10, 0, 14, 0, TAU);
+      ctx.fill();
+      ctx.stroke();
+    } else {
+      const radius = species.shape === "coccobacillus" ? 12 : 14;
+      const halfLength =
+        species.shape === "encapsulated-rod" ? 26 : species.shape === "curved-rod" ? 25 : species.shape === "coryneform" ? 24 : 23;
+      ctx.beginPath();
+      ctx.moveTo(-halfLength + radius, -radius);
+      ctx.lineTo(halfLength - radius, -radius);
+      ctx.quadraticCurveTo(halfLength, -radius, halfLength, 0);
+      ctx.quadraticCurveTo(halfLength, radius, halfLength - radius, radius);
+      ctx.lineTo(-halfLength + radius, radius);
+      ctx.quadraticCurveTo(-halfLength, radius, -halfLength, 0);
+      ctx.quadraticCurveTo(-halfLength, -radius, -halfLength + radius, -radius);
+      if (species.shape === "curved-rod") {
+        ctx.transform(1, -0.08, 0.08, 1, 0, 0);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      if (species.shape === "coryneform") {
+        ctx.beginPath();
+        ctx.moveTo(-6, -12);
+        ctx.lineTo(6, 12);
+        ctx.stroke();
+      }
+    }
+
+    ctx.fillStyle = species.palette.core;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 10, 7, 0, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBanner() {
+    if (!state.banner) return;
+    const width = 360;
+    const height = 74;
+    const x = (canvas.width - width) * 0.5;
+    const y = 28;
+    ctx.save();
+    ctx.fillStyle = "rgba(7, 19, 31, 0.78)";
+    ctx.strokeStyle = "rgba(170, 235, 243, 0.3)";
+    ctx.lineWidth = 1.5;
+    roundRect(ctx, x, y, width, height, 18);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = "#f2fbff";
+    ctx.font = "700 24px Manrope";
+    ctx.fillText(state.banner.title, x + 20, y + 30);
+    ctx.fillStyle = "rgba(219, 240, 248, 0.92)";
+    ctx.font = "500 15px Manrope";
+    ctx.fillText(state.banner.copy, x + 20, y + 54);
+    ctx.restore();
   }
 
   function drawFloaters() {
-    if (!state.floaters.length) return;
-    ctx.font = "700 13px Manrope, sans-serif";
-    ctx.textAlign = "center";
     state.floaters.forEach((floater) => {
-      const alpha = clamp(floater.life / floater.maxLife, 0, 1);
-      ctx.fillStyle = toRgba(floater.color, alpha);
+      ctx.save();
+      ctx.globalAlpha = clamp(floater.life, 0, 1);
+      ctx.fillStyle = floater.color;
+      ctx.font = "700 15px Manrope";
+      ctx.textAlign = "center";
       ctx.fillText(floater.text, floater.x, floater.y);
+      ctx.restore();
     });
   }
 
-  function toRgba(hexOrRgb, alpha) {
-    if (hexOrRgb.startsWith("rgba")) {
-      const values = hexOrRgb
-        .replace("rgba(", "")
-        .replace(")", "")
-        .split(",")
-        .map((part) => part.trim());
-      return `rgba(${values[0]}, ${values[1]}, ${values[2]}, ${alpha.toFixed(3)})`;
-    }
-    if (hexOrRgb.startsWith("rgb")) {
-      const values = hexOrRgb
-        .replace("rgb(", "")
-        .replace(")", "")
-        .split(",")
-        .map((part) => part.trim());
-      return `rgba(${values[0]}, ${values[1]}, ${values[2]}, ${alpha.toFixed(3)})`;
-    }
-    const hex = hexOrRgb.replace("#", "");
-    const value = hex.length === 3 ? hex.split("").map((c) => c + c).join("") : hex;
-    const r = Number.parseInt(value.slice(0, 2), 16);
-    const g = Number.parseInt(value.slice(2, 4), 16);
-    const b = Number.parseInt(value.slice(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(3)})`;
+  function roundRect(context, x, y, width, height, radius) {
+    context.beginPath();
+    context.moveTo(x + radius, y);
+    context.lineTo(x + width - radius, y);
+    context.quadraticCurveTo(x + width, y, x + width, y + radius);
+    context.lineTo(x + width, y + height - radius);
+    context.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    context.lineTo(x + radius, y + height);
+    context.quadraticCurveTo(x, y + height, x, y + height - radius);
+    context.lineTo(x, y + radius);
+    context.quadraticCurveTo(x, y, x + radius, y);
+    context.closePath();
   }
 
-  function drawFrame(timestamp) {
-    if (!isModalOpen()) return;
-
-    let dt = 0.016;
-    if (lastFrame) {
-      dt = clamp((timestamp - lastFrame) / 1000, 0.001, 0.033);
-    }
-    lastFrame = timestamp;
-
-    if (state.running && !state.paused) {
-      updateSimulation(dt);
-    }
-    if (state.collapseActive) {
-      updateLysisSequence(dt);
-    }
-
-    ctx.save();
-    if (state.shake > 0 && !prefersReducedMotion) {
-      const shakeX = random(-state.shake, state.shake) * 0.28;
-      const shakeY = random(-state.shake, state.shake) * 0.28;
-      ctx.translate(shakeX, shakeY);
-    }
-
-    drawBackground(timestamp);
-    state.pulses.forEach(drawPulse);
-    state.fronts.forEach((front) => drawFront(front, timestamp));
-    state.resources.forEach((resource) => drawResource(resource, timestamp));
-    state.phages.forEach(drawPhage);
-    drawTrails();
-    if (state.collapseActive) {
-      drawCollapsingCell(timestamp);
-      drawLysisPhages();
-    } else {
-      drawPlayer(timestamp);
-    }
-    drawBursts();
+  function render() {
+    drawBackground();
+    drawFragments();
+    drawWaves();
+    drawRuptures();
+    drawPhages();
+    drawPulses();
+    drawPlayer();
+    drawBanner();
     drawFloaters();
-    drawVignette();
-    ctx.restore();
+  }
 
-    if (isModalOpen()) {
-      rafId = window.requestAnimationFrame(drawFrame);
+  function getLeaderboardDescriptor() {
+    const totalEntries = Math.max(state.leaderboard.length, Number(state.leaderboardStats.totalEntries) || 0);
+    if (state.leaderboardMode === "global") {
+      return {
+        className: "is-global",
+        pill: state.currentMode === "daily" ? "Shared daily board" : "Shared classic board",
+        meta: `${totalEntries} recorded ${totalEntries === 1 ? "run" : "runs"}`,
+        summaryPrefix: "Shared board"
+      };
+    }
+    if (state.leaderboardMode === "fallback") {
+      const isDailyFallback = state.currentMode === "daily" && !state.dailyBoardReady;
+      return {
+        className: "is-fallback",
+        pill: isDailyFallback ? "Daily board local" : "Local fallback",
+        meta: isDailyFallback
+          ? "Daily challenge is saving on this device until the worker is updated."
+          : `${totalEntries} local ${totalEntries === 1 ? "run" : "runs"} on this device`,
+        summaryPrefix: isDailyFallback ? "Local daily board" : "Local fallback"
+      };
+    }
+    return {
+      className: "",
+      pill: "Local board",
+      meta: `${totalEntries} local ${totalEntries === 1 ? "run" : "runs"} on this device`,
+      summaryPrefix: "Local board"
+    };
+  }
+
+  function renderLeaderboard() {
+    if (!leaderboardListEl || !leaderboardMetaEl || !networkPillEl) return;
+    leaderboardListEl.innerHTML = "";
+    const descriptor = getLeaderboardDescriptor();
+    networkPillEl.textContent = descriptor.pill;
+    networkPillEl.classList.remove("is-global", "is-fallback");
+    leaderboardMetaEl.classList.remove("is-global", "is-fallback");
+    if (descriptor.className) {
+      networkPillEl.classList.add(descriptor.className);
+      leaderboardMetaEl.classList.add(descriptor.className);
+    }
+    leaderboardMetaEl.textContent = descriptor.meta;
+    if (state.leaderboard.length === 0) {
+      const empty = document.createElement("li");
+      empty.className = "is-empty";
+      empty.textContent = "No scores recorded yet on this board.";
+      leaderboardListEl.append(empty);
     } else {
-      rafId = null;
+      state.leaderboard.forEach((entry, index) => {
+        const li = document.createElement("li");
+        if (state.lastPlacement && entry.playedAt === state.lastPlacement.playedAt && entry.score === state.lastPlacement.score) {
+          li.classList.add("is-player-entry");
+        }
+        const rank = document.createElement("span");
+        rank.textContent = `#${index + 1}`;
+        const main = document.createElement("div");
+        main.className = "envelope-leaderboard-main";
+        const label = document.createElement("strong");
+        label.textContent = entry.name;
+        const meta = document.createElement("span");
+        meta.className = "envelope-leaderboard-meta-line";
+        meta.textContent = `${entry.score.toLocaleString()} pts · ${getSpecies(entry.species).label}`;
+        main.append(label, meta);
+        li.append(rank, main);
+        leaderboardListEl.append(li);
+      });
     }
   }
 
-  function ensureLoop() {
-    if (rafId !== null) return;
-    lastFrame = 0;
-    rafId = window.requestAnimationFrame(drawFrame);
+  function findPlacement(entries, entry) {
+    const index = (entries || []).findIndex(
+      (candidate) =>
+        candidate.name === entry.name &&
+        candidate.score === entry.score &&
+        candidate.playedAt === entry.playedAt &&
+        candidate.board === entry.board
+    );
+    return index >= 0 ? index + 1 : computeLocalRank(entries, entry);
   }
 
-  function onKeyChange(event, value) {
+  async function fetchLeaderboardPayload(board) {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const response = await window.fetch(`${GLOBAL_LEADERBOARD_URL}?board=${encodeURIComponent(board)}`, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        signal: controller.signal
+      });
+      if (!response.ok) throw new Error(`Leaderboard request failed with ${response.status}`);
+      return await response.json();
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  async function postLeaderboardPayload(entry) {
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+    try {
+      const response = await window.fetch(GLOBAL_LEADERBOARD_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify(entry),
+        signal: controller.signal
+      });
+      if (!response.ok) throw new Error(`Leaderboard submit failed with ${response.status}`);
+      return await response.json();
+    } finally {
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  function acceptRemoteBoard(board, payloadBoard) {
+    const normalizedPayloadBoard = payloadBoard ? normalizeBoard(payloadBoard) : "";
+    if (normalizedPayloadBoard === board) return true;
+    return board === "classic" && !normalizedPayloadBoard;
+  }
+
+  async function refreshLeaderboard(board) {
+    const normalizedBoard = normalizeBoard(board);
+    state.leaderboard = readLocalLeaderboard(normalizedBoard);
+    state.leaderboardStats = { totalEntries: state.leaderboard.length, updatedAt: Date.now(), board: normalizedBoard };
+    state.leaderboardMode = GLOBAL_LEADERBOARD_URL ? "fallback" : "local";
+    renderLeaderboard();
+
+    if (!GLOBAL_LEADERBOARD_URL) {
+      return;
+    }
+
+    try {
+      const payload = await fetchLeaderboardPayload(normalizedBoard);
+      if (!acceptRemoteBoard(normalizedBoard, payload?.board)) {
+        if (normalizedBoard !== "classic") state.dailyBoardReady = false;
+        state.leaderboardMode = "fallback";
+        renderLeaderboard();
+        return;
+      }
+
+      if (normalizedBoard !== "classic") {
+        state.dailyBoardReady = true;
+      }
+
+      state.leaderboard = normalizeLeaderboardEntries(payload?.entries, normalizedBoard);
+      state.leaderboardStats = {
+        totalEntries: Math.max(state.leaderboard.length, Math.floor(Number(payload?.totalEntries) || 0)),
+        updatedAt: Math.floor(Number(payload?.updatedAt) || Date.now()),
+        board: normalizedBoard
+      };
+      state.leaderboardMode = "global";
+      writeLocalLeaderboard(normalizedBoard, state.leaderboard);
+      renderLeaderboard();
+    } catch {
+      state.leaderboardMode = "fallback";
+      renderLeaderboard();
+    }
+  }
+
+  async function submitScore() {
+    const entry = {
+      name: getPlayerName(),
+      score: Math.round(state.score),
+      species: state.speciesId,
+      playedAt: Date.now(),
+      board: state.currentBoard
+    };
+
+    const best = Math.max(getCurrentBest(state.currentBoard), entry.score);
+    setCurrentBest(state.currentBoard, entry.score);
+
+    if (!GLOBAL_LEADERBOARD_URL) {
+      state.leaderboard = normalizeLeaderboardEntries([entry, ...readLocalLeaderboard(state.currentBoard)], state.currentBoard);
+      state.leaderboardMode = "local";
+      writeLocalLeaderboard(state.currentBoard, state.leaderboard);
+      const rank = findPlacement(state.leaderboard, entry);
+      state.lastPlacement = {
+        score: entry.score,
+        playedAt: entry.playedAt,
+        summary: `Saved on the local board at ${formatRank(rank)} place. Best on this board: ${best}.`
+      };
+      rankSummaryEl.textContent = state.lastPlacement.summary;
+      renderLeaderboard();
+      return;
+    }
+
+    try {
+      const payload = await postLeaderboardPayload(entry);
+      if (!acceptRemoteBoard(state.currentBoard, payload?.board)) {
+        throw new Error("Remote board mismatch");
+      }
+      if (state.currentMode === "daily") state.dailyBoardReady = true;
+      state.leaderboard = normalizeLeaderboardEntries(payload?.entries, state.currentBoard);
+      state.leaderboardStats = {
+        totalEntries: Math.max(state.leaderboard.length, Math.floor(Number(payload?.totalEntries) || 0)),
+        updatedAt: Math.floor(Number(payload?.updatedAt) || Date.now()),
+        board: state.currentBoard
+      };
+      state.leaderboardMode = "global";
+      writeLocalLeaderboard(state.currentBoard, state.leaderboard);
+      const rank = Math.max(1, Math.floor(Number(payload?.rank) || computeLocalRank(state.leaderboard, entry)));
+      state.lastPlacement = {
+        score: entry.score,
+        playedAt: entry.playedAt,
+        summary: `${state.currentBoardLabel} saved at ${formatRank(rank)} place on the shared board. Best on this board: ${best}.`
+      };
+      rankSummaryEl.textContent = state.lastPlacement.summary;
+      renderLeaderboard();
+    } catch {
+      state.leaderboard = normalizeLeaderboardEntries([entry, ...readLocalLeaderboard(state.currentBoard)], state.currentBoard);
+      state.leaderboardMode = "fallback";
+      writeLocalLeaderboard(state.currentBoard, state.leaderboard);
+      const rank = findPlacement(state.leaderboard, entry);
+      state.lastPlacement = {
+        score: entry.score,
+        playedAt: entry.playedAt,
+        summary:
+          state.currentMode === "daily" && !state.dailyBoardReady
+            ? `Saved on this device at ${formatRank(rank)} place. Redeploy the worker to share daily scores globally.`
+            : `Saved on the local fallback board at ${formatRank(rank)} place. Best on this board: ${best}.`
+      };
+      rankSummaryEl.textContent = state.lastPlacement.summary;
+      renderLeaderboard();
+    }
+  }
+
+  function endRun() {
+    if (!state.running) return;
+    state.running = false;
+    state.paused = false;
+    updateControlState();
+    showOverlay("ended");
+    submitScore();
+  }
+
+  function handlePrimaryAction() {
+    if (state.overlayMode === "paused") {
+      resumeRun();
+      return;
+    }
+    if (state.overlayMode === "ended") {
+      resetRun(state.currentMode);
+      return;
+    }
+    resetRun("classic");
+  }
+
+  function handleSecondaryAction() {
+    if (state.overlayMode === "paused") {
+      resetRun(state.currentMode);
+      return;
+    }
+    if (state.overlayMode === "ended") {
+      resetRun(state.currentMode === "daily" ? "classic" : "daily");
+      return;
+    }
+    resetRun("daily");
+  }
+
+  function openModal() {
+    if (modal.open) return;
+    refreshDailyChallenge();
+    if (!state.running) {
+      state.currentMode = "classic";
+      state.currentBoard = "classic";
+      state.currentBoardLabel = "Classic board";
+      state.speciesId = state.selectedSpeciesId;
+    }
+    updateDailyNote();
+    updateSpeciesInfo();
+    if (playerNameInput) {
+      playerNameInput.value = state.playerName;
+      updatePlayerNameFeedback();
+    }
+    if (state.running || state.paused) {
+      showOverlay("paused");
+    } else {
+      showOverlay("start");
+    }
+    state.open = true;
+    modal.showModal();
+    refreshLeaderboard(state.currentBoard);
+    render();
+    if (!rafId) {
+      rafId = window.requestAnimationFrame(loop);
+    }
+  }
+
+  function closeModal() {
+    if (state.running) {
+      pauseRun();
+    }
+    state.open = false;
+    modal.close();
+    if (rafId) {
+      window.cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+  }
+
+  function loop(now) {
+    if (!state.open) {
+      rafId = 0;
+      return;
+    }
+    const dt = state.lastFrame ? Math.min(0.033, (now - state.lastFrame) / 1000) : 0.016;
+    state.lastFrame = now;
+    if (state.running && !state.paused) {
+      update(dt);
+      updateHud();
+    }
+    render();
+    rafId = window.requestAnimationFrame(loop);
+  }
+
+  function onKeyChange(event, isPressed) {
+    if (isTypingTarget(event.target)) return;
     const key = event.key.toLowerCase();
+    if (key === "arrowup" || key === "w") state.input.up = isPressed;
+    if (key === "arrowdown" || key === "s") state.input.down = isPressed;
+    if (key === "arrowleft" || key === "a") state.input.left = isPressed;
+    if (key === "arrowright" || key === "d") state.input.right = isPressed;
+    if (!isPressed && key !== " " && key !== "p" && key !== "escape") return;
 
-    if (key === "arrowup" || key === "w") keys.up = value;
-    if (key === "arrowdown" || key === "s") keys.down = value;
-    if (key === "arrowleft" || key === "a") keys.left = value;
-    if (key === "arrowright" || key === "d") keys.right = value;
-
-    if (value && key === " " && state.running) {
+    if (isPressed && key === " ") {
       event.preventDefault();
-      if (overlayMode === "draft") return;
-      if (state.paused) resumeSimulation();
-      else pauseSimulation();
+      triggerStressResponse();
+    }
+
+    if (isPressed && (key === "p" || key === "escape")) {
+      event.preventDefault();
+      if (state.running && !state.paused) pauseRun();
+      else if (state.running && state.paused) resumeRun();
     }
   }
 
-  trigger.addEventListener("click", () => {
-    trigger.classList.add("is-arming");
-    if (triggerTimer) window.clearTimeout(triggerTimer);
-    triggerTimer = window.setTimeout(() => {
-      trigger.classList.remove("is-arming");
-      triggerTimer = null;
-    }, 420);
-    openModal();
-  });
+  trigger.addEventListener("click", openModal);
   closeButton.addEventListener("click", closeModal);
-
-  startButton.addEventListener("click", () => {
-    if (overlayMode === "resume") {
-      resumeSimulation();
-      return;
-    }
-    if (!capturePlayerNameForRun()) return;
-    if (overlayMode === "start") {
-      startSimulation("ranked");
-      return;
-    }
-    startSimulation(state.runMode);
-  });
-
-  if (tutorialStartButton) {
-    tutorialStartButton.addEventListener("click", () => {
-      if (!capturePlayerNameForRun()) return;
-      startSimulation("tutorial");
-    });
-  }
-
+  startButton.addEventListener("click", handlePrimaryAction);
+  dailyStartButton.addEventListener("click", handleSecondaryAction);
   pauseButton.addEventListener("click", () => {
     if (!state.running) return;
-    if (overlayMode === "draft") return;
-    if (state.paused) resumeSimulation();
-    else pauseSimulation();
+    if (state.paused) resumeRun();
+    else pauseRun();
   });
-
-  restartButton.addEventListener("click", () => startSimulation(state.runMode));
-
-  if (nameFormEl) {
-    nameFormEl.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      if (state.pendingScore === null) return;
-
-      const savedName = sanitizeName(nameInputEl ? nameInputEl.value : "") || "Anonymous";
-      const savedScore = state.pendingScore;
-      const accepted = await addLeaderboardEntry(savedName, savedScore);
-      if (!accepted) {
-        setNameFeedback("Name unavailable. Try a different one.");
-        if (nameInputEl) {
-          nameInputEl.focus({ preventScroll: true });
-          nameInputEl.select();
-        }
-        return;
-      }
-      hideNameForm();
-      const placement = formatPlacement();
-      showOverlay(
-        "Score saved",
-        `${savedName} saved with ${savedScore} points. Best score: ${Math.floor(state.best)}.${placement ? ` Placement: ${placement}.` : ""}`,
-        "Play Again",
-        "restart"
-      );
+  restartButton.addEventListener("click", () => {
+    const mode = state.running || state.overlayMode === "ended" ? state.currentMode : "classic";
+    resetRun(mode);
+  });
+  responseButton.addEventListener("click", triggerStressResponse);
+  modal.addEventListener("close", () => {
+    if (rafId) {
+      window.cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+    state.open = false;
+  });
+  modelSelect.addEventListener("change", () => {
+    state.selectedSpeciesId = normalizeSpeciesId(modelSelect.value);
+    writeStorageText(MODEL_KEY, state.selectedSpeciesId);
+    if (!state.running || state.paused) {
+      state.speciesId = state.selectedSpeciesId;
+    }
+    updateSpeciesInfo();
+  });
+  if (playerNameInput) {
+    playerNameInput.addEventListener("input", () => {
+      state.playerName = normalizeName(playerNameInput.value);
+      writeStorageText(NAME_KEY, playerNameInput.value);
+      updatePlayerNameFeedback();
     });
   }
-
-  if (nameSkipEl) {
-    nameSkipEl.addEventListener("click", () => {
-      hideNameForm();
-      if (!state.running && !state.collapseActive) {
-        showOverlay(
-          "Envelope collapsed",
-          `Final score: ${Math.floor(state.score)}. Best score: ${Math.floor(state.best)}.`,
-          "Play Again",
-          "restart"
-        );
-      }
-    });
-  }
-
-  if (draftOptionsEl) {
-    draftOptionsEl.addEventListener("click", (event) => {
-      const button = event.target.closest(".envelope-draft-option");
-      if (!button) return;
-      const moduleId = button.getAttribute("data-module-id") || "";
-      if (!moduleId) return;
-      applyAdaptationChoice(moduleId);
-    });
-  }
-
-  if (modelSelectEl) {
-    modelSelectEl.addEventListener("change", () => {
-      setModel(modelSelectEl.value, true);
-      if (!state.running && isModalOpen()) ensureLoop();
-    });
-  }
-
-  if (playerNameInputEl) {
-    playerNameInputEl.addEventListener("input", () => {
-      setPlayerNameFeedback("");
-    });
-    playerNameInputEl.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter") return;
-      if (overlayMode === "resume") return;
-      event.preventDefault();
-      if (!capturePlayerNameForRun()) return;
-      if (overlayMode === "start") {
-        startSimulation("ranked");
-        return;
-      }
-      startSimulation(state.runMode);
-    });
-  }
-
-  modal.addEventListener("cancel", (event) => {
-    event.preventDefault();
-    closeModal();
-  });
-
-  modal.addEventListener("click", (event) => {
-    if (event.target === modal) closeModal();
-  });
-
-  window.addEventListener("keydown", (event) => {
-    if (!isModalOpen()) return;
-    onKeyChange(event, true);
-  });
-
-  window.addEventListener("keyup", (event) => {
-    if (!isModalOpen()) return;
-    onKeyChange(event, false);
-  });
-
-  window.addEventListener("blur", () => {
-    resetInputState();
-  });
-
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) return;
-    resetInputState();
-  });
 
   canvas.addEventListener("pointerdown", (event) => {
-    pointer.active = true;
-    pointerToWorld(event);
-    if (typeof canvas.setPointerCapture === "function") {
-      try {
-        canvas.setPointerCapture(event.pointerId);
-      } catch {
-        /* no-op */
-      }
+    const point = pointToCanvas(event);
+    state.pointer.active = true;
+    state.pointer.x = point.x;
+    state.pointer.y = point.y;
+    canvas.setPointerCapture(event.pointerId);
+  });
+  canvas.addEventListener("pointermove", (event) => {
+    if (!state.pointer.active && event.pointerType !== "touch" && event.buttons === 0) return;
+    const point = pointToCanvas(event);
+    state.pointer.active = true;
+    state.pointer.x = point.x;
+    state.pointer.y = point.y;
+  });
+  canvas.addEventListener("pointerup", () => {
+    state.pointer.active = false;
+  });
+  canvas.addEventListener("pointercancel", () => {
+    state.pointer.active = false;
+  });
+  canvas.addEventListener("pointerleave", (event) => {
+    if (event.pointerType !== "mouse") {
+      state.pointer.active = false;
     }
   });
 
-  canvas.addEventListener("pointermove", (event) => {
-    if (!pointer.active) return;
-    pointerToWorld(event);
-  });
+  window.addEventListener("keydown", (event) => onKeyChange(event, true));
+  window.addEventListener("keyup", (event) => onKeyChange(event, false));
 
-  canvas.addEventListener("pointerup", () => {
-    pointer.active = false;
-  });
-
-  canvas.addEventListener("pointercancel", () => {
-    pointer.active = false;
-  });
-
-  canvas.addEventListener("pointerleave", () => {
-    pointer.active = false;
-  });
-
-  window.addEventListener("resize", () => {
-    if (!isModalOpen()) return;
-    resizeCanvas();
-    ensureLoop();
-  });
-
-  setModel(state.modelId, false);
-  hideNameForm();
-  setLeaderboardMeta(state.leaderboardMode === "global" ? "global" : state.leaderboardMode === "fallback" ? "fallback" : "local");
+  updateDailyNote();
+  updateSpeciesInfo();
+  if (playerNameInput) {
+    playerNameInput.value = state.playerName;
+    updatePlayerNameFeedback();
+  }
+  updateHud(true);
   renderLeaderboard();
-  refreshLeaderboardFromSource();
-  updateHud();
+  render();
 })();

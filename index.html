@@ -23,7 +23,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brands/favicon-32.png?v=20260307a" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/brands/apple-touch-icon.png?v=20260307a" />
     <link rel="stylesheet" href="assets/styles.css?v=20260317d" />
-    <link rel="stylesheet" href="assets/envelope-escape.css?v=20260317f" />
+    <link rel="stylesheet" href="assets/envelope-escape.css?v=20260319a" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -549,7 +549,10 @@
           <span class="envelope-stage-margin-text">to move</span>
           <span class="envelope-stage-margin-sep" aria-hidden="true">•</span>
           <span class="envelope-keyset" aria-hidden="true"><kbd>Space</kbd></span>
-          <span class="envelope-stage-margin-text">pause / resume</span>
+          <span class="envelope-stage-margin-text">stress response</span>
+          <span class="envelope-stage-margin-sep" aria-hidden="true">•</span>
+          <span class="envelope-keyset" aria-hidden="true"><kbd>P</kbd></span>
+          <span class="envelope-stage-margin-text">pause</span>
         </div>
 
         <div class="envelope-stage-wrap">
@@ -561,54 +564,53 @@
             aria-label="Envelope Escape game canvas"
           ></canvas>
           <div id="envelope-overlay" class="envelope-overlay">
-            <h3 id="envelope-overlay-title">Envelope Escape</h3>
-            <p id="envelope-overlay-copy">
-              Steer a model bacterium through phage blooms, antibiotic fronts, and cell-wall stress. Assemble the
-              right envelope modules, choose sector adaptations, and stay intact long enough to climb the global board.
-            </p>
-            <div class="envelope-model-picker">
-              <label for="envelope-model-select">Choose a model bacterium</label>
-              <select id="envelope-model-select" name="envelope-model">
-                <option value="ecoli">Escherichia coli</option>
-                <option value="paeruginosa">Pseudomonas aeruginosa</option>
-                <option value="saureus">Staphylococcus aureus</option>
-                <option value="spneumoniae">Streptococcus pneumoniae</option>
-                <option value="cglutamicum">Corynebacterium glutamicum</option>
-                <option value="kpneumoniae">Klebsiella pneumoniae</option>
-                <option value="abaumannii">Acinetobacter baumannii</option>
-              </select>
-              <p id="envelope-model-note"></p>
-            </div>
-            <div class="envelope-overlay-briefing" aria-label="Run overview">
-              <p id="envelope-overlay-status" class="envelope-overlay-status">Preparing ranked run intel…</p>
-              <ul class="envelope-overlay-points">
-                <li>Complete assembly queues to trigger envelope fortification bursts.</li>
-                <li>Each sector changes the stress regimen and offers one adaptation choice.</li>
-                <li>Species traits subtly change how each bacterium handles pressure and recovery.</li>
-              </ul>
-            </div>
-            <div id="envelope-draft" class="envelope-draft" hidden>
-              <p class="envelope-draft-label">Choose one adaptation</p>
-              <div id="envelope-draft-options" class="envelope-draft-options"></div>
-            </div>
-            <div class="envelope-player-name">
-              <label for="envelope-player-name">Leaderboard name</label>
-              <input
-                id="envelope-player-name"
-                name="envelope-player-name"
-                type="text"
-                maxlength="24"
-                autocomplete="nickname"
-                placeholder="Enter your name"
-              />
-              <p id="envelope-player-name-feedback" hidden></p>
-            </div>
-            <p id="envelope-tutorial-note" class="envelope-tutorial-note">
-              First time? Try Practice Route (easier, not ranked).
-            </p>
-            <div class="envelope-start-actions">
-              <button id="envelope-start" class="envelope-action" type="button">Start Ranked Trial</button>
-              <button id="envelope-tutorial-start" class="envelope-secondary" type="button">Practice Route</button>
+            <div class="envelope-overlay-inner">
+              <p class="envelope-overlay-kicker">Arcade survival</p>
+              <h3 id="envelope-overlay-title">Keep the envelope intact.</h3>
+              <p id="envelope-overlay-copy">
+                Collect repair fragments, trigger stabilization bursts, and survive phages, antibiotic waves, and
+                rupture fronts long enough to climb the board.
+              </p>
+              <div class="envelope-model-picker">
+                <label for="envelope-model-select">Model bacterium</label>
+                <select id="envelope-model-select" name="envelope-model">
+                  <option value="ecoli">Escherichia coli</option>
+                  <option value="paeruginosa">Pseudomonas aeruginosa</option>
+                  <option value="saureus">Staphylococcus aureus</option>
+                  <option value="spneumoniae">Streptococcus pneumoniae</option>
+                  <option value="cglutamicum">Corynebacterium glutamicum</option>
+                  <option value="kpneumoniae">Klebsiella pneumoniae</option>
+                  <option value="abaumannii">Acinetobacter baumannii</option>
+                </select>
+                <p id="envelope-model-note">Balanced repair chassis for learning the flow of the run.</p>
+              </div>
+              <div class="envelope-player-name">
+                <label for="envelope-player-name">Leaderboard name (optional)</label>
+                <input
+                  id="envelope-player-name"
+                  name="envelope-player-name"
+                  type="text"
+                  maxlength="24"
+                  autocomplete="nickname"
+                  placeholder="Anonymous"
+                />
+                <p id="envelope-player-name-feedback" hidden></p>
+              </div>
+              <div class="envelope-overlay-briefing" aria-label="Run overview">
+                <p id="envelope-overlay-status" class="envelope-overlay-status">
+                  Repair the cell envelope before stress overwhelms the bacterium.
+                </p>
+                <ul id="envelope-overlay-points" class="envelope-overlay-points">
+                  <li>Collect 4 repair fragments to trigger a stabilization burst.</li>
+                  <li>Use your stress response when the meter is full for a short safe window.</li>
+                  <li>Difficulty rises slowly, so smart movement matters more than memorizing patterns.</li>
+                </ul>
+              </div>
+              <p id="envelope-daily-note" class="envelope-daily-note">Today’s challenge is loading…</p>
+              <div class="envelope-start-actions">
+                <button id="envelope-start" class="envelope-action" type="button">Start Classic Run</button>
+                <button id="envelope-daily-start" class="envelope-secondary" type="button">Play Daily Challenge</button>
+              </div>
             </div>
           </div>
         </div>
@@ -619,100 +621,56 @@
             <strong id="envelope-score">0</strong>
           </article>
           <article class="envelope-card">
-            <span>Best</span>
-            <strong id="envelope-best">0</strong>
-          </article>
-          <article class="envelope-card">
-            <span>Survival Time</span>
+            <span>Time</span>
             <strong id="envelope-time">0:00</strong>
           </article>
-          <article class="envelope-card">
-            <span>Pressure State</span>
-            <strong id="envelope-pressure">Calm</strong>
-            <small id="envelope-pressure-note">Next surge in --</small>
-          </article>
-          <article class="envelope-card">
-            <span>Stability Chain</span>
-            <strong id="envelope-combo">x1</strong>
-            <small id="envelope-combo-note">Build with pickups and clean dodges</small>
-          </article>
-          <article class="envelope-card">
-            <span>Sector</span>
-            <strong id="envelope-sector">Envelope Initiation</strong>
-            <small id="envelope-sector-note">Milestone bonus at 0:55</small>
-          </article>
           <article class="envelope-card envelope-card--meter">
-            <span>Envelope Integrity</span>
+            <span>Integrity</span>
             <strong id="envelope-integrity">100%</strong>
             <div class="envelope-meter" aria-hidden="true"><span id="envelope-integrity-bar"></span></div>
           </article>
           <article class="envelope-card envelope-card--meter">
-            <span>Shield</span>
-            <strong id="envelope-shield">0%</strong>
-            <div class="envelope-meter" aria-hidden="true"><span id="envelope-shield-bar"></span></div>
+            <span>Repair progress</span>
+            <strong id="envelope-repair">0 / 4</strong>
+            <div class="envelope-meter" aria-hidden="true"><span id="envelope-repair-bar"></span></div>
           </article>
           <article class="envelope-card envelope-card--meter">
-            <span>Catalytic Boost</span>
-            <strong id="envelope-boost">0%</strong>
-            <div class="envelope-meter" aria-hidden="true"><span id="envelope-boost-bar"></span></div>
+            <span>Stress response</span>
+            <strong id="envelope-response-charge">0%</strong>
+            <div class="envelope-meter" aria-hidden="true"><span id="envelope-response-bar"></span></div>
           </article>
         </div>
 
         <div class="envelope-controls">
-          <div class="envelope-buttons">
-            <button id="envelope-pause" class="envelope-secondary" type="button">Pause</button>
-            <button id="envelope-restart" class="envelope-secondary" type="button">New Run</button>
+          <div class="envelope-control-row">
+            <div class="envelope-buttons">
+              <button id="envelope-pause" class="envelope-secondary" type="button">Pause</button>
+              <button id="envelope-restart" class="envelope-secondary" type="button">New Run</button>
+              <button id="envelope-response" class="envelope-action" type="button">Trigger Stress Response</button>
+            </div>
+            <p class="envelope-hint">Drag or touch to steer on mobile. Space also triggers the stress response.</p>
           </div>
-          <p class="envelope-hint">Tip: drag/touch also works for movement.</p>
-          <section class="envelope-run-intel" aria-labelledby="envelope-run-intel-title">
-            <div class="envelope-run-intel-head">
-              <h3 id="envelope-run-intel-title">Run intel</h3>
-              <p id="envelope-network-pill" class="envelope-network-pill">Loading leaderboard…</p>
-            </div>
-            <div class="envelope-run-intel-grid">
-              <article class="envelope-intel-card">
-                <span>Species trait</span>
-                <strong id="envelope-trait-title">Balanced chassis</strong>
-                <p id="envelope-trait-copy">A reliable all-rounder for learning the flow of the run.</p>
-              </article>
-              <article class="envelope-intel-card">
-                <span>Current directive</span>
-                <strong id="envelope-directive-title">Awaiting launch</strong>
-                <p id="envelope-directive-copy">Start a ranked run to receive your first objective.</p>
-              </article>
-              <article class="envelope-intel-card">
-                <span>Assembly queue</span>
-                <strong id="envelope-assembly-title">Queue calibrating</strong>
-                <p id="envelope-assembly-copy">Collect the required envelope modules to trigger a fortification burst.</p>
-              </article>
-              <article class="envelope-intel-card">
-                <span>Hazard forecast</span>
-                <strong id="envelope-forecast-title">Stress map pending</strong>
-                <p id="envelope-forecast-copy">The next sector forecast appears here when the run spins up.</p>
-              </article>
-              <article class="envelope-intel-card">
-                <span>Active adaptations</span>
-                <strong id="envelope-upgrade-title">No adaptations yet</strong>
-                <p id="envelope-upgrade-copy">Sector rewards will offer one adaptation choice each transition.</p>
-              </article>
-              <article class="envelope-intel-card">
-                <span>Last ranked result</span>
-                <strong id="envelope-rank-title">No score saved yet</strong>
-                <p id="envelope-rank-copy">Shared placement appears here after a ranked run.</p>
-              </article>
-            </div>
-          </section>
-          <section class="envelope-assembly-board" aria-labelledby="envelope-assembly-board-title">
-            <div class="envelope-assembly-board-head">
-              <h3 id="envelope-assembly-board-title">Envelope assembly</h3>
-              <p id="envelope-assembly-status" class="envelope-assembly-status">Queue calibrating</p>
-            </div>
-            <div id="envelope-assembly-slots" class="envelope-assembly-slots" aria-live="polite"></div>
-          </section>
-          <section class="envelope-precursor-key" aria-labelledby="envelope-precursor-key-title">
-            <h3 id="envelope-precursor-key-title">Precursor key</h3>
-            <ul id="envelope-precursor-key-list" class="envelope-precursor-key-list"></ul>
-          </section>
+
+          <div class="envelope-status-strip">
+            <article class="envelope-status-card">
+              <span>Stress phase</span>
+              <strong id="envelope-phase">Onset stress</strong>
+              <p id="envelope-phase-note">Sparse hazards. Build rhythm and collect repair fragments.</p>
+            </article>
+            <article class="envelope-status-card">
+              <span>Species trait</span>
+              <strong id="envelope-trait-title">Balanced repair</strong>
+              <p id="envelope-trait-copy">Repair fragments build your stress response a little faster.</p>
+            </article>
+            <article class="envelope-status-card">
+              <span>Board status</span>
+              <strong id="envelope-network-pill" class="envelope-network-pill">Loading leaderboard…</strong>
+              <p id="envelope-rank-summary" class="envelope-rank-summary">
+                Finish a run to see your placement and best score summary.
+              </p>
+            </article>
+          </div>
+
           <section class="envelope-leaderboard" aria-labelledby="envelope-leaderboard-title">
             <div class="envelope-leaderboard-head">
               <h3 id="envelope-leaderboard-title">Top 25 Scores</h3>
@@ -720,24 +678,7 @@
                 <p id="envelope-leaderboard-meta">Loading leaderboard…</p>
               </div>
             </div>
-            <p id="envelope-rank-summary" class="envelope-rank-summary">Saved runs and placements will appear here.</p>
             <ol id="envelope-leaderboard-list" class="envelope-leaderboard-list"></ol>
-            <form id="envelope-name-form" class="envelope-name-form" hidden>
-              <label for="envelope-name-input" id="envelope-name-label">New high score: enter your name</label>
-              <p id="envelope-name-feedback" class="envelope-name-feedback" hidden></p>
-              <div class="envelope-name-row">
-                <input
-                  id="envelope-name-input"
-                  name="envelope-name"
-                  type="text"
-                  maxlength="24"
-                  autocomplete="nickname"
-                  placeholder="Name"
-                />
-                <button type="submit" class="envelope-action">Save</button>
-                <button id="envelope-name-skip" type="button" class="envelope-secondary">Skip</button>
-              </div>
-            </form>
           </section>
         </div>
       </div>
@@ -755,6 +696,6 @@
     <script src="assets/site-freshness.js" data-freshness-path="assets/data/site-freshness.json"></script>
     <script src="assets/main.js?v=20260317d"></script>
     <script src="assets/envelope-escape-config.js?v=20260318a"></script>
-    <script src="assets/envelope-escape.js?v=20260317f"></script>
+    <script src="assets/envelope-escape.js?v=20260319a"></script>
   </body>
 </html>
