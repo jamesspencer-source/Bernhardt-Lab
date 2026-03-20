@@ -600,50 +600,51 @@
               <p class="envelope-overlay-kicker">Arcade survival</p>
               <h3 id="envelope-overlay-title">Keep the envelope intact.</h3>
               <p id="envelope-overlay-copy">
-                Collect repair fragments, trigger stabilization bursts, and survive phages, antibiotic waves, and
-                rupture fronts long enough to climb the board.
+                Collect repair fragments, stabilize the cell, and outlast escalating envelope stress.
               </p>
-              <div class="envelope-model-picker">
-                <label for="envelope-model-select">Model bacterium</label>
-                <select id="envelope-model-select" name="envelope-model">
-                  <option value="ecoli">Escherichia coli</option>
-                  <option value="paeruginosa">Pseudomonas aeruginosa</option>
-                  <option value="saureus">Staphylococcus aureus</option>
-                  <option value="spneumoniae">Streptococcus pneumoniae</option>
-                  <option value="cglutamicum">Corynebacterium glutamicum</option>
-                  <option value="kpneumoniae">Klebsiella pneumoniae</option>
-                  <option value="abaumannii">Acinetobacter baumannii</option>
-                </select>
-                <p id="envelope-model-note">Balanced repair chassis for learning the flow of the run.</p>
-              </div>
-              <div class="envelope-player-name">
-                <label for="envelope-player-name">Leaderboard name (optional)</label>
-                <input
-                  id="envelope-player-name"
-                  name="envelope-player-name"
-                  type="text"
-                  maxlength="24"
-                  autocomplete="nickname"
-                  placeholder="Anonymous"
-                />
-                <p id="envelope-player-name-feedback" hidden></p>
+              <div class="envelope-overlay-fields">
+                <div class="envelope-model-picker">
+                  <label for="envelope-model-select">Model bacterium</label>
+                  <select id="envelope-model-select" name="envelope-model">
+                    <option value="ecoli">Escherichia coli</option>
+                    <option value="paeruginosa">Pseudomonas aeruginosa</option>
+                    <option value="saureus">Staphylococcus aureus</option>
+                    <option value="spneumoniae">Streptococcus pneumoniae</option>
+                    <option value="cglutamicum">Corynebacterium glutamicum</option>
+                    <option value="kpneumoniae">Klebsiella pneumoniae</option>
+                    <option value="abaumannii">Acinetobacter baumannii</option>
+                  </select>
+                  <p id="envelope-model-note">Balanced repair strain for learning the flow.</p>
+                </div>
+                <div class="envelope-player-name">
+                  <label for="envelope-player-name">Leaderboard name</label>
+                  <input
+                    id="envelope-player-name"
+                    name="envelope-player-name"
+                    type="text"
+                    maxlength="24"
+                    autocomplete="nickname"
+                    placeholder="Anonymous"
+                  />
+                  <p id="envelope-player-name-feedback" hidden></p>
+                </div>
               </div>
               <div class="envelope-overlay-briefing" aria-label="Run overview">
                 <p id="envelope-overlay-status" class="envelope-overlay-status">
-                  Repair the cell envelope before stress overwhelms the bacterium.
+                  Collect 4 fragments, then trigger the stress response when the meter is full.
                 </p>
                 <ul id="envelope-overlay-points" class="envelope-overlay-points">
-                  <li>Collect 4 repair fragments to trigger a stabilization burst.</li>
-                  <li>Use your stress response when the meter is full for a short safe window.</li>
-                  <li>Difficulty rises slowly, so smart movement matters more than memorizing patterns.</li>
+                  <li>Difficulty rises slowly, so clean movement matters more than memorizing patterns.</li>
                 </ul>
               </div>
-              <div class="envelope-trait-brief">
-                <span>Species trait</span>
-                <strong id="envelope-trait-title">Balanced repair</strong>
-                <p id="envelope-trait-copy">Repair fragments build your stress response a little faster.</p>
+              <div class="envelope-overlay-meta">
+                <div class="envelope-trait-brief">
+                  <span>Species trait</span>
+                  <strong id="envelope-trait-title">Balanced repair</strong>
+                  <p id="envelope-trait-copy">Repair fragments build your stress response a little faster.</p>
+                </div>
+                <p id="envelope-daily-note" class="envelope-daily-note">Daily challenge is loading…</p>
               </div>
-              <p id="envelope-daily-note" class="envelope-daily-note">Today’s challenge is loading…</p>
               <div class="envelope-start-actions">
                 <button id="envelope-start" class="envelope-action" type="button">Start Classic Run</button>
                 <button id="envelope-daily-start" class="envelope-secondary" type="button">Play Daily Challenge</button>
