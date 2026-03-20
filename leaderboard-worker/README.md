@@ -9,9 +9,10 @@ This adds a shared Top 25 leaderboard for `Envelope Escape` across all visitors.
 - Redeploying the Worker also keeps data as long as it stays bound to the same D1 database.
 
 ## What this API provides
-- `GET /leaderboard` returns the global top 25.
-- `POST /leaderboard` submits `{ "name": "...", "score": 123, "species": "ecoli", "playedAt": 1739999999999 }`.
-- `GET` and `POST` responses now also include `totalEntries`, and `POST` returns the submitted run's `rank`.
+- `GET /leaderboard?board=classic` returns the shared classic top 25.
+- `GET /leaderboard?board=daily-YYYY-MM-DD` returns the seeded daily board top 25.
+- `POST /leaderboard` submits `{ "name": "...", "score": 123, "species": "ecoli", "playedAt": 1739999999999, "board": "classic" }`.
+- `GET` and `POST` responses include `totalEntries` and `board`, and `POST` also returns the submitted run's `rank`.
 - Name submissions are moderated (disallowed names are rejected).
 
 ## Deploy steps
@@ -31,7 +32,7 @@ wrangler d1 create bernhardt_lab_leaderboard
 6. (Optional) Set allowed origins in `wrangler.toml` using `ALLOWED_ORIGINS`.
 7. Apply schema:
 ```bash
-wrangler d1 execute bernhardt_lab_leaderboard --file=schema.sql
+wrangler d1 execute bernhardt_lab_leaderboard --remote --file=schema.sql
 ```
 8. Deploy:
 ```bash
@@ -48,13 +49,18 @@ wrangler d1 export bernhardt_lab_leaderboard --output ./leaderboard-backup.sql
 
 ## Wire frontend to the API
 1. Open:
-- `assets/envelope-escape-config.js`
-- `github-flat/envelope-escape-config.js`
+- `data/runtime-config.json`
 2. Set:
-```js
-window.ENVELOPE_LEADERBOARD_URL = "https://<your-worker-subdomain>/leaderboard";
+```json
+{
+  "leaderboardUrl": "https://<your-worker-subdomain>/leaderboard"
+}
 ```
-3. Deploy/publish your site.
+3. Run:
+```bash
+python3 scripts/build_site.py
+```
+4. Deploy/publish your site.
 
 When the URL is set, the game leaderboard becomes global.
 Players will also see their latest overall placement after each ranked run.

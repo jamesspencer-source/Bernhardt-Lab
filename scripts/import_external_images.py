@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import os
 import re
-import shutil
 import subprocess
 from pathlib import Path
 from urllib.parse import unquote, urlparse
@@ -13,9 +12,8 @@ from urllib.parse import unquote, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
 CANONICAL_IMAGE_DIR = ROOT / "assets" / "images" / "imported"
-FLAT_DIR = ROOT / "github-flat"
 FILE_SUFFIXES = {".html", ".js", ".css"}
-SKIP_DIRS = {".git", ".venv", "tmp"}
+SKIP_DIRS = {".git", ".venv", "tmp", "github-flat"}
 URL_PATTERN = re.compile(r"https://images\.squarespace-cdn\.com[^\"' )>]+")
 
 
@@ -50,10 +48,7 @@ def build_filename(url: str) -> str:
 
 
 def replacement_for(path: Path, filename: str) -> str:
-    rel = path.relative_to(ROOT)
-    if rel.parts[0] == "github-flat":
-        return filename
-    if rel.parts[0] == "assets":
+    if path.relative_to(ROOT).parts[0] == "assets":
         return f"assets/images/imported/{filename}"
     target = CANONICAL_IMAGE_DIR / filename
     return os.path.relpath(target, path.parent).replace(os.sep, "/")
@@ -85,9 +80,7 @@ def main() -> None:
 
     for url, filename in sorted(url_map.items()):
         canonical_path = CANONICAL_IMAGE_DIR / filename
-        flat_path = FLAT_DIR / filename
         download(url, canonical_path)
-        shutil.copy2(canonical_path, flat_path)
 
     updated_count = 0
     for path in files:

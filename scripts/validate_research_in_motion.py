@@ -13,7 +13,7 @@ from typing import Dict, List
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MANIFESTS = [
     ROOT / "assets" / "data" / "research-in-motion.json",
-    ROOT / "github-flat" / "research-in-motion.json",
+    ROOT / "github-flat" / "assets" / "data" / "research-in-motion.json",
 ]
 
 BLOCKED_ARTICLE_HOST_RE = re.compile(r"pubmed\.ncbi\.nlm\.nih\.gov|biorxiv\.org|medrxiv\.org", re.IGNORECASE)

@@ -1,0 +1,25 @@
+{
+  "heroSlides": [
+    {
+      "image": "assets/images/research/cglutamicum-wt-tem-9335.jpg",
+      "position": "center 42%"
+    },
+    {
+      "image": "assets/images/research/fluorescence-envelope.jpg",
+      "position": "center center"
+    },
+    {
+      "image": "assets/images/research/pseudomonas-tem.jpg",
+      "position": "center center"
+    },
+    {
+      "image": "assets/images/research/coryfdaa.png",
+      "position": "center center"
+    },
+    {
+      "image": "assets/images/research/corynebacterium-phage.jpg",
+      "position": "center center"
+    }
+  ],
+  "featuredVideoId": "RxHTaTmPlwQ"
+}

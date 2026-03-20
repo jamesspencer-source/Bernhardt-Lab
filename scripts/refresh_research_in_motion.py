@@ -28,6 +28,8 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 from urllib.parse import urlencode, urljoin
 
+from site_builder import build_site
+
 try:
     from PIL import Image, ImageOps, ImageStat  # type: ignore
 
@@ -40,8 +42,6 @@ except Exception:  # pragma: no cover
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS_IMAGE_DIR = ROOT / "assets" / "images" / "research-motion"
 ASSETS_MANIFEST = ROOT / "assets" / "data" / "research-in-motion.json"
-FLAT_DIR = ROOT / "github-flat"
-FLAT_MANIFEST = FLAT_DIR / "research-in-motion.json"
 OVERRIDES_PATH = ROOT / "scripts" / "research_motion_overrides.json"
 
 USER_AGENT = (
@@ -1029,20 +1029,16 @@ def build_items(
 
 def persist_outputs(selected: List[Dict], temp_dir: Path, underfilled_reason: str) -> None:
     ASSETS_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
-    FLAT_DIR.mkdir(parents=True, exist_ok=True)
     ASSETS_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
 
     keep_names = [item["imageName"] for item in selected]
     cleanup_old_images(ASSETS_IMAGE_DIR, keep_names)
-    cleanup_old_images(FLAT_DIR, keep_names)
 
     assets_items = []
-    flat_items = []
     for item in selected:
         image_name = item["imageName"]
         temp_file = temp_dir / image_name
         shutil.copy2(temp_file, ASSETS_IMAGE_DIR / image_name)
-        shutil.copy2(temp_file, FLAT_DIR / image_name)
 
         common = {
             "pmid": item["pmid"],
@@ -1058,7 +1054,6 @@ def persist_outputs(selected: List[Dict], temp_dir: Path, underfilled_reason: st
             "figureSource": item["figureSource"],
         }
         assets_items.append({**common, "image": f"assets/images/research-motion/{image_name}"})
-        flat_items.append({**common, "image": image_name})
 
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     base_manifest = {
@@ -1067,10 +1062,8 @@ def persist_outputs(selected: List[Dict], temp_dir: Path, underfilled_reason: st
         "underfilledReason": underfilled_reason,
     }
     assets_manifest = {**base_manifest, "items": assets_items}
-    flat_manifest = {**base_manifest, "items": flat_items}
 
     write_manifest(ASSETS_MANIFEST, assets_manifest)
-    write_manifest(FLAT_MANIFEST, flat_manifest)
 
 
 def main() -> int:
@@ -1111,6 +1104,7 @@ def main() -> int:
 
     persist_outputs(selected, temp_dir, underfilled_reason=underfilled_reason)
     shutil.rmtree(temp_dir, ignore_errors=True)
+    build_site()
 
     log(f"Done. Wrote {len(selected)} strictly verified Research in Motion entries.", verbose)
     return 0

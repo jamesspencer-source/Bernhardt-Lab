@@ -14,6 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
+from site_builder import build_site
+
 
 YOUTUBE_API_ENDPOINT = "https://www.googleapis.com/youtube/v3/videos"
 YOUTUBE_FALLBACK_ENDPOINT = "https://returnyoutubedislikeapi.com/votes"
@@ -108,12 +110,10 @@ def main() -> int:
 
     root = Path(__file__).resolve().parents[1]
     structured_path = root / "assets" / "data" / "youtube-video-stats.json"
-    flat_path = root / "github-flat" / "youtube-video-stats.json"
-
     try:
         view_count, source = resolve_view_count(args.video_id, str(args.api_key or "").strip())
     except Exception as exc:
-        if structured_path.exists() and flat_path.exists():
+        if structured_path.exists():
             print(f"WARNING: {exc}")
             print("Keeping existing video stats files unchanged.")
             return 0
@@ -129,11 +129,10 @@ def main() -> int:
 
     structured_path.parent.mkdir(parents=True, exist_ok=True)
     structured_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    flat_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-
+    build_site()
     print(f"Updated YouTube views: {view_count:,} ({source})")
     print(f"  - {structured_path}")
-    print(f"  - {flat_path}")
+    print("Regenerated canonical and github-flat outputs.")
     return 0
 
 
