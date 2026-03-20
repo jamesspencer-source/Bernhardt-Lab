@@ -325,6 +325,7 @@
       hitFlash: 0,
       banner: null,
       deathAnimation: null,
+      camera: { x: 0, y: 0, zoom: 1, shake: 0, idle: randomRange(0, TAU) },
       input: { up: false, down: false, left: false, right: false },
       pointer: { active: false, x: canvas.width * 0.5, y: canvas.height * 0.5 },
       fragments: [],
@@ -345,7 +346,11 @@
       y: randomRange(0, canvas.height),
       radius: randomRange(1, 4),
       drift: randomRange(10, 28),
-      alpha: randomRange(0.06, 0.18)
+      driftX: randomRange(-6, 6),
+      alpha: randomRange(0.06, 0.18),
+      depth: randomRange(0.38, 1),
+      twinkle: randomRange(0, TAU),
+      twinkleSpeed: randomRange(0.5, 1.3)
     }));
   }
 
@@ -408,6 +413,32 @@
 
   function lerp(a, b, t) {
     return a + (b - a) * t;
+  }
+
+  function easeOutCubic(t) {
+    return 1 - (1 - t) ** 3;
+  }
+
+  function getDepthScale(y) {
+    return lerp(0.86, 1.15, clamp(y / canvas.height, 0, 1));
+  }
+
+  function drawGroundShadow(x, y, width, height, alpha) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(width, height);
+    ctx.fillStyle = `rgba(4, 8, 16, ${alpha})`;
+    ctx.beginPath();
+    ctx.arc(0, 0, 1, 0, TAU);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function applyWorldTransform() {
+    const { x, y, zoom } = state.camera;
+    ctx.translate(canvas.width * 0.5 + x, canvas.height * 0.5 + y);
+    ctx.scale(zoom, zoom);
+    ctx.translate(-canvas.width * 0.5, -canvas.height * 0.5);
   }
 
   function randomRange(min, max) {
@@ -878,6 +909,7 @@
     state.integrity = clamp(state.integrity - adjusted, 0, 100);
     state.safeWindow = 0.65;
     state.hitFlash = 0.32;
+    state.camera.shake = Math.max(state.camera.shake, 1);
     addFloater(hitX, hitY, `-${Math.round(adjusted)}`, "#ffb6c4");
     if (state.integrity <= 0) {
       endRun();
@@ -893,6 +925,7 @@
     state.integrity = clamp(state.integrity + 12 + species.healBonus, 0, 100);
     state.responseCharge = clamp(state.responseCharge + 18, 0, 100);
     state.safeWindow = Math.max(state.safeWindow, 0.85);
+    state.camera.shake = Math.max(state.camera.shake, 0.4);
     const radius = species.burstRadius;
     clearHazardsAroundPlayer(radius);
     state.pulses.push({
@@ -914,6 +947,7 @@
     state.responseCharge = 0;
     state.responseReadyFlash = 0;
     state.safeWindow = Math.max(state.safeWindow, 1.15);
+    state.camera.shake = Math.max(state.camera.shake, 0.72);
     state.integrity = clamp(state.integrity + 14 + species.healBonus, 0, 100);
     clearHazardsAroundPlayer(species.burstRadius + 28);
     state.pulses.push({
@@ -1298,12 +1332,30 @@
   }
 
   function updateBackground(dt) {
+    const focusX = ((state.player?.x || canvas.width * 0.5) - canvas.width * 0.5) / (canvas.width * 0.5);
+    const focusY = ((state.player?.y || canvas.height * 0.55) - canvas.height * 0.56) / canvas.height;
+    state.camera.idle += dt;
+    state.camera.shake = Math.max(0, state.camera.shake - dt * 3.6);
+    const shakeMagnitude = state.camera.shake * state.camera.shake * 10;
+    const shockX = Math.sin(state.camera.idle * 52) * shakeMagnitude;
+    const shockY = Math.cos(state.camera.idle * 47) * shakeMagnitude * 0.7;
+    const targetX = -focusX * 34 + Math.sin(state.camera.idle * 0.43) * 4 + shockX;
+    const targetY = -focusY * 30 + Math.cos(state.camera.idle * 0.37) * 3 + shockY;
+    const targetZoom = 1 + state.responseReadyFlash * 0.008 + (state.safeWindow > 0 ? 0.012 : 0) + (state.dying ? 0.03 : 0);
+    state.camera.x = lerp(state.camera.x, targetX, clamp(dt * 3.2, 0, 1));
+    state.camera.y = lerp(state.camera.y, targetY, clamp(dt * 3, 0, 1));
+    state.camera.zoom = lerp(state.camera.zoom, targetZoom, clamp(dt * 2.3, 0, 1));
+
     state.backgroundMotes.forEach((mote) => {
-      mote.y += mote.drift * dt;
+      mote.twinkle += dt * mote.twinkleSpeed;
+      mote.y += mote.drift * mote.depth * dt;
+      mote.x += mote.driftX * mote.depth * dt;
       if (mote.y > canvas.height + 8) {
         mote.y = -8;
         mote.x = randomRange(0, canvas.width);
       }
+      if (mote.x < -12) mote.x = canvas.width + 12;
+      if (mote.x > canvas.width + 12) mote.x = -12;
     });
   }
 
@@ -1367,6 +1419,8 @@
 
   function drawBackground() {
     const phase = getPhaseForElapsed(state.elapsed);
+    const vanishX = canvas.width * 0.5 + state.camera.x * 4.5;
+    const horizonY = canvas.height * 0.18 + state.camera.y * 0.35;
     const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
     gradient.addColorStop(0, "#071522");
     gradient.addColorStop(0.5, "#0c2237");
@@ -1387,26 +1441,51 @@
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
-    ctx.strokeStyle = "rgba(165, 227, 241, 0.08)";
-    ctx.lineWidth = 1;
-    for (let x = 40; x < canvas.width; x += 80) {
+    ctx.fillStyle = "rgba(180, 236, 242, 0.05)";
+    ctx.fillRect(0, horizonY - 1, canvas.width, 2);
+    const floorGradient = ctx.createLinearGradient(0, horizonY, 0, canvas.height);
+    floorGradient.addColorStop(0, "rgba(127, 197, 214, 0.03)");
+    floorGradient.addColorStop(1, "rgba(127, 197, 214, 0.12)");
+    ctx.fillStyle = floorGradient;
+    ctx.beginPath();
+    ctx.moveTo(0, horizonY);
+    ctx.lineTo(canvas.width, horizonY);
+    ctx.lineTo(canvas.width, canvas.height);
+    ctx.lineTo(0, canvas.height);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = "rgba(165, 227, 241, 0.1)";
+    for (let index = -8; index <= 8; index += 1) {
+      const baseX = canvas.width * 0.5 + index * 118 + state.camera.x * 1.4;
       ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, canvas.height);
+      ctx.moveTo(baseX, canvas.height + 30);
+      ctx.lineTo(vanishX + index * 18, horizonY);
       ctx.stroke();
     }
-    for (let y = 40; y < canvas.height; y += 80) {
+
+    for (let row = 0; row < 10; row += 1) {
+      const depth = row / 9;
+      const eased = depth * depth;
+      const y = lerp(horizonY + 12, canvas.height + 40, eased);
+      const width = lerp(44, canvas.width * 1.18, eased);
+      const alpha = lerp(0.04, 0.14, eased);
       ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(canvas.width, y);
+      ctx.strokeStyle = `rgba(165, 227, 241, ${alpha})`;
+      ctx.moveTo(vanishX - width * 0.5, y);
+      ctx.lineTo(vanishX + width * 0.5, y);
       ctx.stroke();
     }
     ctx.restore();
 
     state.backgroundMotes.forEach((mote) => {
-      ctx.fillStyle = `rgba(178, 235, 245, ${mote.alpha})`;
+      const twinkle = 0.72 + Math.sin(mote.twinkle) * 0.28;
+      const x = mote.x + state.camera.x * mote.depth * 0.6;
+      const y = mote.y + state.camera.y * mote.depth * 0.9;
+      const radius = mote.radius * (0.7 + mote.depth * 0.7);
+      ctx.fillStyle = `rgba(178, 235, 245, ${mote.alpha * twinkle})`;
       ctx.beginPath();
-      ctx.arc(mote.x, mote.y, mote.radius, 0, TAU);
+      ctx.arc(x, y, radius, 0, TAU);
       ctx.fill();
     });
 
@@ -1419,11 +1498,22 @@
   function drawFragments() {
     state.fragments.forEach((fragment) => {
       const bob = Math.sin(fragment.pulse) * 4;
+      const depth = getDepthScale(fragment.y);
+      drawGroundShadow(fragment.x, fragment.y + 16, 18 * depth, 7 * depth, 0.18);
       ctx.save();
       ctx.translate(fragment.x, fragment.y + bob);
+      ctx.scale(depth, depth);
       ctx.beginPath();
-      ctx.arc(0, 0, 18, 0, TAU);
+      ctx.ellipse(0, 8, 12, 5, 0, 0, TAU);
       ctx.fillStyle = fragment.kind.halo;
+      ctx.fill();
+      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
+      ctx.beginPath();
+      ctx.moveTo(-8, -2);
+      ctx.lineTo(0, -12);
+      ctx.lineTo(8, -2);
+      ctx.lineTo(0, 3);
+      ctx.closePath();
       ctx.fill();
       ctx.fillStyle = fragment.kind.color;
       ctx.beginPath();
@@ -1443,11 +1533,18 @@
 
   function drawPhages() {
     state.phages.forEach((phage) => {
+      const depth = getDepthScale(phage.y);
+      drawGroundShadow(phage.x, phage.y + phage.radius + 12, 17 * depth, 7 * depth, 0.22);
       ctx.save();
       ctx.translate(phage.x, phage.y);
       ctx.rotate(phage.spin);
+      ctx.scale(depth, depth);
       ctx.strokeStyle = "rgba(209, 244, 255, 0.92)";
-      ctx.fillStyle = "rgba(106, 208, 236, 0.92)";
+      const bodyGradient = ctx.createRadialGradient(-4, -5, 2, 0, 0, phage.radius + 5);
+      bodyGradient.addColorStop(0, "rgba(200, 248, 255, 0.98)");
+      bodyGradient.addColorStop(0.45, "rgba(106, 208, 236, 0.96)");
+      bodyGradient.addColorStop(1, "rgba(53, 129, 166, 0.95)");
+      ctx.fillStyle = bodyGradient;
       ctx.lineWidth = 2;
       ctx.beginPath();
       ctx.arc(0, 0, phage.radius, 0, TAU);
@@ -1475,17 +1572,22 @@
   function drawWaves() {
     state.waves.forEach((wave) => {
       ctx.save();
-      ctx.fillStyle = wave.hue === "#77dfff" ? "rgba(119, 223, 255, 0.22)" : "rgba(145, 243, 255, 0.18)";
+      const coreAlpha = wave.hue === "#77dfff" ? 0.26 : 0.22;
+      ctx.fillStyle = wave.hue === "#77dfff" ? `rgba(119, 223, 255, ${coreAlpha})` : `rgba(145, 243, 255, ${coreAlpha})`;
       ctx.strokeStyle = wave.hue;
       ctx.lineWidth = 2.5;
       if (wave.axis === "x") {
         ctx.fillRect(wave.position - wave.thickness * 0.5, 0, wave.thickness, canvas.height);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+        ctx.fillRect(wave.position - wave.thickness * 0.18, 0, wave.thickness * 0.1, canvas.height);
         ctx.beginPath();
         ctx.moveTo(wave.position, 0);
         ctx.lineTo(wave.position, canvas.height);
         ctx.stroke();
       } else {
         ctx.fillRect(0, wave.position - wave.thickness * 0.5, canvas.width, wave.thickness);
+        ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
+        ctx.fillRect(0, wave.position - wave.thickness * 0.18, canvas.width, wave.thickness * 0.1);
         ctx.beginPath();
         ctx.moveTo(0, wave.position);
         ctx.lineTo(canvas.width, wave.position);
@@ -1497,9 +1599,12 @@
 
   function drawRuptures() {
     state.ruptures.forEach((rupture) => {
+      const depth = getDepthScale((rupture.y1 + rupture.y2) * 0.5);
       ctx.save();
       ctx.strokeStyle = "rgba(255, 196, 145, 0.95)";
-      ctx.lineWidth = rupture.width;
+      ctx.shadowColor = "rgba(255, 174, 109, 0.55)";
+      ctx.shadowBlur = 18 * depth;
+      ctx.lineWidth = rupture.width * depth;
       ctx.lineCap = "round";
       ctx.setLineDash([12, 10]);
       ctx.beginPath();
@@ -1523,8 +1628,15 @@
       ctx.strokeStyle = pulse.color;
       ctx.lineWidth = pulse.lineWidth;
       ctx.globalAlpha = clamp(pulse.life / 0.74, 0, 1);
+      ctx.shadowColor = pulse.color;
+      ctx.shadowBlur = 18;
       ctx.beginPath();
       ctx.arc(pulse.x, pulse.y, pulse.radius, 0, TAU);
+      ctx.stroke();
+      ctx.globalAlpha *= 0.45;
+      ctx.lineWidth *= 0.45;
+      ctx.beginPath();
+      ctx.arc(pulse.x, pulse.y, pulse.radius * 0.72, 0, TAU);
       ctx.stroke();
       ctx.restore();
     });
@@ -1578,6 +1690,11 @@
     ctx.fillStyle = species.palette.core;
     ctx.beginPath();
     ctx.ellipse(0, 0, 10, 7, 0, 0, TAU);
+    ctx.fill();
+
+    ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
+    ctx.beginPath();
+    ctx.ellipse(-6, -6, 6, 3, -0.4, 0, TAU);
     ctx.fill();
 
     if (crackPhase > 0.02) {
@@ -1672,13 +1789,16 @@
     }
     const species = getSpecies();
     const { x, y, angle } = state.player;
+    const depth = getDepthScale(y);
+    drawGroundShadow(x, y + 18, 26 * depth, 10 * depth, state.safeWindow > 0 ? 0.16 : 0.26);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle);
+    ctx.scale(depth, depth);
     if (state.safeWindow > 0) {
       ctx.fillStyle = `rgba(179, 245, 255, ${0.12 + state.safeWindow * 0.16})`;
       ctx.beginPath();
-      ctx.arc(0, 0, 34, 0, TAU);
+      ctx.ellipse(0, 4, 34, 24, 0, 0, TAU);
       ctx.fill();
     }
 
@@ -1736,14 +1856,17 @@
 
   function render() {
     drawBackground();
-    drawFragments();
+    ctx.save();
+    applyWorldTransform();
     drawWaves();
     drawRuptures();
+    drawFragments();
     drawPhages();
     drawPulses();
     drawPlayer();
-    drawBanner();
     drawFloaters();
+    ctx.restore();
+    drawBanner();
   }
 
   function getLeaderboardDescriptor() {
@@ -1977,6 +2100,7 @@
     state.paused = false;
     state.banner = null;
     state.pointer.active = false;
+    state.camera.shake = Math.max(state.camera.shake, 1.4);
     state.deathAnimation = createLysisAnimation();
     updateControlState();
   }
@@ -2066,6 +2190,7 @@
       update(dt);
       updateHud();
     } else if (state.dying) {
+      updateBackground(dt);
       updateLysisAnimation(dt);
     }
     render();
