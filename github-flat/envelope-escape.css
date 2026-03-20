@@ -356,7 +356,7 @@
 
 .envelope-overlay-inner {
   width: min(24rem, 100%);
-  padding: 1rem 1rem 1.05rem;
+  padding: 1.08rem 1rem 1.05rem;
   border-radius: 22px;
   border: 1px solid rgba(172, 236, 242, 0.18);
   background:
@@ -369,9 +369,17 @@
 }
 
 .envelope-overlay-kicker {
-  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.6rem;
+  margin: 0 0 0.1rem;
+  padding: 0.2rem 0.56rem 0.18rem;
+  border-radius: 999px;
+  border: 1px solid rgba(177, 234, 240, 0.18);
+  background: rgba(125, 196, 205, 0.1);
   font-size: 0.72rem;
   font-weight: 800;
+  line-height: 1.15;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: rgba(177, 234, 240, 0.78);
