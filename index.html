@@ -23,7 +23,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brands/favicon-32.png?v=20260307a" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/brands/apple-touch-icon.png?v=20260307a" />
     <link rel="stylesheet" href="assets/styles.css?v=20260317d" />
-    <link rel="stylesheet" href="assets/envelope-escape.css?v=20260319a" />
+    <link rel="stylesheet" href="assets/envelope-escape.css?v=20260320a" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -537,23 +537,7 @@
           <button id="envelope-close" class="envelope-close" type="button" aria-label="Close game">Close</button>
         </header>
 
-        <div class="envelope-stage-margin-note" role="note" aria-label="Game controls">
-          <span class="envelope-stage-margin-label">Controls</span>
-          <span class="envelope-keyset" aria-hidden="true">
-            <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd>
-          </span>
-          <span class="envelope-stage-margin-text">or</span>
-          <span class="envelope-keyset" aria-hidden="true">
-            <kbd>&uarr;</kbd><kbd>&larr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd>
-          </span>
-          <span class="envelope-stage-margin-text">to move</span>
-          <span class="envelope-stage-margin-sep" aria-hidden="true">•</span>
-          <span class="envelope-keyset" aria-hidden="true"><kbd>Space</kbd></span>
-          <span class="envelope-stage-margin-text">stress response</span>
-          <span class="envelope-stage-margin-sep" aria-hidden="true">•</span>
-          <span class="envelope-keyset" aria-hidden="true"><kbd>P</kbd></span>
-          <span class="envelope-stage-margin-text">pause</span>
-        </div>
+        <p class="envelope-stage-hint">Move with WASD or the arrow keys, drag on touch, and press Space to trigger the stress response.</p>
 
         <div class="envelope-stage-wrap">
           <canvas
@@ -563,6 +547,54 @@
             height="720"
             aria-label="Envelope Escape game canvas"
           ></canvas>
+
+          <div class="envelope-hud envelope-hud--primary">
+            <article class="envelope-chip">
+              <span>Score</span>
+              <strong id="envelope-score">0</strong>
+            </article>
+            <article class="envelope-chip">
+              <span>Time</span>
+              <strong id="envelope-time">0:00</strong>
+            </article>
+          </div>
+
+          <div class="envelope-stage-banner">
+            <span class="envelope-stage-banner-label">Stress</span>
+            <strong id="envelope-phase">Onset stress</strong>
+            <p id="envelope-phase-note">Sparse hazards. Build rhythm and collect repair fragments.</p>
+          </div>
+
+          <div class="envelope-hud envelope-hud--meters">
+            <article class="envelope-meter-chip">
+              <span>Integrity</span>
+              <strong id="envelope-integrity">100%</strong>
+              <div class="envelope-meter" aria-hidden="true"><span id="envelope-integrity-bar"></span></div>
+            </article>
+            <article class="envelope-meter-chip">
+              <span>Repair</span>
+              <strong id="envelope-repair">0 / 4</strong>
+              <div class="envelope-meter" aria-hidden="true"><span id="envelope-repair-bar"></span></div>
+            </article>
+            <article class="envelope-meter-chip">
+              <span>Response</span>
+              <strong id="envelope-response-charge">0%</strong>
+              <div class="envelope-meter" aria-hidden="true"><span id="envelope-response-bar"></span></div>
+            </article>
+          </div>
+
+          <div class="envelope-stage-controls">
+            <button id="envelope-pause" class="envelope-secondary" type="button">Pause</button>
+            <button id="envelope-restart" class="envelope-secondary" type="button">New Run</button>
+            <button id="envelope-scores-toggle" class="envelope-secondary" type="button" aria-expanded="false" aria-controls="envelope-scores-panel">
+              Scores
+            </button>
+          </div>
+
+          <button id="envelope-response" class="envelope-action envelope-response-button" type="button">
+            Trigger Stress Response
+          </button>
+
           <div id="envelope-overlay" class="envelope-overlay">
             <div class="envelope-overlay-inner">
               <p class="envelope-overlay-kicker">Arcade survival</p>
@@ -606,6 +638,11 @@
                   <li>Difficulty rises slowly, so smart movement matters more than memorizing patterns.</li>
                 </ul>
               </div>
+              <div class="envelope-trait-brief">
+                <span>Species trait</span>
+                <strong id="envelope-trait-title">Balanced repair</strong>
+                <p id="envelope-trait-copy">Repair fragments build your stress response a little faster.</p>
+              </div>
               <p id="envelope-daily-note" class="envelope-daily-note">Today’s challenge is loading…</p>
               <div class="envelope-start-actions">
                 <button id="envelope-start" class="envelope-action" type="button">Start Classic Run</button>
@@ -615,63 +652,17 @@
           </div>
         </div>
 
-        <div class="envelope-hud">
-          <article class="envelope-card">
-            <span>Score</span>
-            <strong id="envelope-score">0</strong>
-          </article>
-          <article class="envelope-card">
-            <span>Time</span>
-            <strong id="envelope-time">0:00</strong>
-          </article>
-          <article class="envelope-card envelope-card--meter">
-            <span>Integrity</span>
-            <strong id="envelope-integrity">100%</strong>
-            <div class="envelope-meter" aria-hidden="true"><span id="envelope-integrity-bar"></span></div>
-          </article>
-          <article class="envelope-card envelope-card--meter">
-            <span>Repair progress</span>
-            <strong id="envelope-repair">0 / 4</strong>
-            <div class="envelope-meter" aria-hidden="true"><span id="envelope-repair-bar"></span></div>
-          </article>
-          <article class="envelope-card envelope-card--meter">
-            <span>Stress response</span>
-            <strong id="envelope-response-charge">0%</strong>
-            <div class="envelope-meter" aria-hidden="true"><span id="envelope-response-bar"></span></div>
-          </article>
-        </div>
-
-        <div class="envelope-controls">
-          <div class="envelope-control-row">
-            <div class="envelope-buttons">
-              <button id="envelope-pause" class="envelope-secondary" type="button">Pause</button>
-              <button id="envelope-restart" class="envelope-secondary" type="button">New Run</button>
-              <button id="envelope-response" class="envelope-action" type="button">Trigger Stress Response</button>
-            </div>
-            <p class="envelope-hint">Drag or touch to steer on mobile. Space also triggers the stress response.</p>
-          </div>
-
-          <div class="envelope-status-strip">
-            <article class="envelope-status-card">
-              <span>Stress phase</span>
-              <strong id="envelope-phase">Onset stress</strong>
-              <p id="envelope-phase-note">Sparse hazards. Build rhythm and collect repair fragments.</p>
-            </article>
-            <article class="envelope-status-card">
-              <span>Species trait</span>
-              <strong id="envelope-trait-title">Balanced repair</strong>
-              <p id="envelope-trait-copy">Repair fragments build your stress response a little faster.</p>
-            </article>
-            <article class="envelope-status-card">
-              <span>Board status</span>
+        <div class="envelope-drawer">
+          <div class="envelope-drawer-head">
+            <div class="envelope-drawer-copy">
               <strong id="envelope-network-pill" class="envelope-network-pill">Loading leaderboard…</strong>
               <p id="envelope-rank-summary" class="envelope-rank-summary">
                 Finish a run to see your placement and best score summary.
               </p>
-            </article>
+            </div>
           </div>
 
-          <section class="envelope-leaderboard" aria-labelledby="envelope-leaderboard-title">
+          <section id="envelope-scores-panel" class="envelope-leaderboard" aria-labelledby="envelope-leaderboard-title" hidden>
             <div class="envelope-leaderboard-head">
               <h3 id="envelope-leaderboard-title">Top 25 Scores</h3>
               <div class="envelope-leaderboard-meta-wrap">
@@ -696,6 +687,6 @@
     <script src="assets/site-freshness.js" data-freshness-path="assets/data/site-freshness.json"></script>
     <script src="assets/main.js?v=20260317d"></script>
     <script src="assets/envelope-escape-config.js?v=20260318a"></script>
-    <script src="assets/envelope-escape.js?v=20260319a"></script>
+    <script src="assets/envelope-escape.js?v=20260320a"></script>
   </body>
 </html>

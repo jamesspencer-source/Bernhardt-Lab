@@ -7,6 +7,8 @@
   const pauseButton = document.getElementById("envelope-pause");
   const restartButton = document.getElementById("envelope-restart");
   const responseButton = document.getElementById("envelope-response");
+  const scoresToggleButton = document.getElementById("envelope-scores-toggle");
+  const scoresPanel = document.getElementById("envelope-scores-panel");
   const canvas = document.getElementById("envelope-canvas");
   const overlay = document.getElementById("envelope-overlay");
   const overlayTitle = document.getElementById("envelope-overlay-title");
@@ -44,6 +46,8 @@
     !pauseButton ||
     !restartButton ||
     !responseButton ||
+    !scoresToggleButton ||
+    !scoresPanel ||
     !canvas ||
     !overlay
   ) {
@@ -299,6 +303,7 @@
       currentMode: "classic",
       currentBoard: "classic",
       currentBoardLabel: "Classic board",
+      scoresOpen: false,
       playerName: readStorageText(NAME_KEY),
       bestByBoard: readStorageJson(BEST_KEY, {}),
       leaderboard: [],
@@ -648,9 +653,17 @@
     overlay.classList.add("is-hidden");
   }
 
+  function setScoresOpen(nextOpen) {
+    state.scoresOpen = Boolean(nextOpen);
+    scoresPanel.hidden = !state.scoresOpen;
+    scoresToggleButton.setAttribute("aria-expanded", String(state.scoresOpen));
+    scoresToggleButton.textContent = state.scoresOpen ? "Hide Scores" : "Scores";
+  }
+
   function showOverlay(mode) {
     state.overlayMode = mode;
     overlay.classList.remove("is-hidden");
+    setScoresOpen(mode === "ended");
 
     if (mode === "start") {
       overlayTitle.textContent = "Keep the envelope intact.";
@@ -773,6 +786,7 @@
     state.repairProgress = 0;
     state.lastPlacement = null;
     state.banner = null;
+    setScoresOpen(false);
     state.fragments = [];
     state.phages = [];
     state.waves = [];
@@ -1857,6 +1871,7 @@
       state.currentBoard = "classic";
       state.currentBoardLabel = "Classic board";
       state.speciesId = state.selectedSpeciesId;
+      setScoresOpen(false);
     }
     updateDailyNote();
     updateSpeciesInfo();
@@ -1940,6 +1955,9 @@
     resetRun(mode);
   });
   responseButton.addEventListener("click", triggerStressResponse);
+  scoresToggleButton.addEventListener("click", () => {
+    setScoresOpen(!state.scoresOpen);
+  });
   modal.addEventListener("close", () => {
     if (rafId) {
       window.cancelAnimationFrame(rafId);
@@ -1999,6 +2017,7 @@
     updatePlayerNameFeedback();
   }
   updateHud(true);
+  setScoresOpen(false);
   renderLeaderboard();
   render();
 })();
