@@ -281,9 +281,9 @@
   ];
 
   const FRAGMENT_TYPES = [
-    { id: "pg-precursor", label: "PG precursor", color: "#a8ffd2", halo: "rgba(168, 255, 210, 0.34)" },
+    { id: "pg-synthase", label: "PG synthase", color: "#a8ffd2", halo: "rgba(168, 255, 210, 0.34)" },
     { id: "lipid-ii", label: "Lipid II", color: "#9fe7ff", halo: "rgba(159, 231, 255, 0.34)" },
-    { id: "hydrolase-control", label: "Hydrolase control", color: "#ffdca0", halo: "rgba(255, 220, 160, 0.34)" }
+    { id: "hydrolase-restraint", label: "Hydrolase restraint", color: "#ffdca0", halo: "rgba(255, 220, 160, 0.34)" }
   ];
 
   const state = createState();
@@ -294,6 +294,7 @@
     return {
       open: false,
       running: false,
+      dying: false,
       paused: false,
       overlayMode: "start",
       lastFrame: 0,
@@ -323,6 +324,7 @@
       phaseIndex: 0,
       hitFlash: 0,
       banner: null,
+      deathAnimation: null,
       input: { up: false, down: false, left: false, right: false },
       pointer: { active: false, x: canvas.width * 0.5, y: canvas.height * 0.5 },
       fragments: [],
@@ -687,7 +689,7 @@
       dailyStartButton.textContent = "Restart Run";
     } else {
       const best = Math.max(getCurrentBest(state.currentBoard), Math.round(state.score));
-      overlayTitle.textContent = "Envelope compromised";
+      overlayTitle.textContent = "Cell lysis";
       overlayCopy.textContent = `${state.currentBoardLabel}. Survived ${formatDuration(state.elapsed)} with ${Math.round(
         state.score
       )} points.`;
@@ -706,6 +708,14 @@
   }
 
   function updateControlState() {
+    if (state.dying) {
+      pauseButton.disabled = true;
+      restartButton.disabled = true;
+      responseButton.disabled = true;
+      responseButton.classList.remove("is-ready");
+      pauseButton.textContent = "Pause";
+      return;
+    }
     const activeRun = state.running && !state.paused;
     pauseButton.disabled = !state.running;
     restartButton.disabled = !state.running && state.overlayMode === "start";
@@ -757,6 +767,46 @@
     state.floaters.push({ x, y, text, color, life: 1.15, vy: -24 });
   }
 
+  function createLysisAnimation() {
+    const species = getSpecies();
+    const shardCount = prefersReducedMotion ? 10 : 22;
+    const palette = [species.palette.bodyA, species.palette.bodyB, species.palette.outline, species.palette.pulse];
+    return {
+      x: state.player.x,
+      y: state.player.y,
+      angle: state.player.angle,
+      speciesId: state.speciesId,
+      elapsed: 0,
+      duration: prefersReducedMotion ? 0.82 : 1.26,
+      shards: Array.from({ length: shardCount }, (_, index) => {
+        const angle = (index / shardCount) * TAU + randomRange(-0.22, 0.22);
+        return {
+          angle,
+          speed: randomRange(88, 248),
+          lift: randomRange(-34, 34),
+          spin: randomRange(-8, 8),
+          sizeX: randomRange(8, 18),
+          sizeY: randomRange(4, 10),
+          delay: randomRange(0.04, 0.24),
+          color: palette[index % palette.length],
+          kind: index % 3 === 0 ? "droplet" : "sliver"
+        };
+      })
+    };
+  }
+
+  function updateLysisAnimation(dt) {
+    if (!state.dying || !state.deathAnimation) return;
+    state.deathAnimation.elapsed += dt;
+    if (state.deathAnimation.elapsed >= state.deathAnimation.duration) {
+      state.dying = false;
+      state.deathAnimation = null;
+      updateControlState();
+      showOverlay("ended");
+      submitScore();
+    }
+  }
+
   function spawnInitialFragments() {
     while (state.fragments.length < 2) {
       spawnFragment();
@@ -793,8 +843,10 @@
     state.spawnTimers = { fragment: 0.2, phage: 1.3, wave: 4.8, rupture: 5.6 };
     spawnInitialFragments();
     state.running = true;
+    state.dying = false;
     state.paused = false;
     state.lastFrame = 0;
+    state.deathAnimation = null;
     hideOverlay();
     setBanner("Surveillance engaged", "Collect envelope factors to complete your first cycle.");
     refreshLeaderboard(state.currentBoard);
@@ -803,13 +855,13 @@
   }
 
   function pauseRun() {
-    if (!state.running) return;
+    if (!state.running || state.dying) return;
     state.paused = true;
     showOverlay("paused");
   }
 
   function resumeRun() {
-    if (!state.running) return;
+    if (!state.running || state.dying) return;
     state.paused = false;
     state.lastFrame = 0;
     hideOverlay();
@@ -1478,19 +1530,7 @@
     });
   }
 
-  function drawPlayer() {
-    const species = getSpecies();
-    const { x, y, angle } = state.player;
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(angle);
-    if (state.safeWindow > 0) {
-      ctx.fillStyle = `rgba(179, 245, 255, ${0.12 + state.safeWindow * 0.16})`;
-      ctx.beginPath();
-      ctx.arc(0, 0, 34, 0, TAU);
-      ctx.fill();
-    }
-
+  function drawCellGlyph(species, crackPhase = 0) {
     const gradient = ctx.createLinearGradient(-24, -8, 24, 8);
     gradient.addColorStop(0, species.palette.bodyA);
     gradient.addColorStop(1, species.palette.bodyB);
@@ -1539,6 +1579,110 @@
     ctx.beginPath();
     ctx.ellipse(0, 0, 10, 7, 0, 0, TAU);
     ctx.fill();
+
+    if (crackPhase > 0.02) {
+      ctx.save();
+      ctx.globalAlpha = clamp(crackPhase * 0.92, 0, 0.92);
+      ctx.strokeStyle = "rgba(248, 252, 255, 0.96)";
+      ctx.lineWidth = 1.7;
+      ctx.beginPath();
+      ctx.moveTo(-12, -11);
+      ctx.lineTo(-3, -2);
+      ctx.lineTo(-7, 8);
+      ctx.moveTo(6, -9);
+      ctx.lineTo(0, 1);
+      ctx.lineTo(9, 11);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function drawLysisSequence() {
+    const animation = state.deathAnimation;
+    if (!animation) return;
+    const species = getSpecies(animation.speciesId);
+    const progress = clamp(animation.elapsed / animation.duration, 0, 1);
+    const swell = clamp(progress / 0.22, 0, 1);
+    const rupture = clamp((progress - 0.16) / 0.2, 0, 1);
+    const debris = clamp((progress - 0.22) / 0.78, 0, 1);
+
+    ctx.save();
+    ctx.translate(animation.x, animation.y);
+    ctx.rotate(animation.angle);
+
+    const haloRadius = 30 + swell * 18 + rupture * 20;
+    const halo = ctx.createRadialGradient(0, 0, 8, 0, 0, haloRadius);
+    halo.addColorStop(0, `rgba(255, 243, 212, ${0.22 + swell * 0.18})`);
+    halo.addColorStop(0.55, `rgba(255, 184, 130, ${0.14 + rupture * 0.18})`);
+    halo.addColorStop(1, "rgba(255, 184, 130, 0)");
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(0, 0, haloRadius, 0, TAU);
+    ctx.fill();
+
+    ctx.globalAlpha = clamp(1 - debris * 0.9, 0, 1);
+    const scale = 1 + swell * 0.16 - rupture * 0.04;
+    ctx.scale(scale, scale);
+    drawCellGlyph(species, rupture);
+    ctx.restore();
+
+    if (rupture > 0.04) {
+      ctx.save();
+      ctx.strokeStyle = `rgba(255, 214, 171, ${0.6 - progress * 0.25})`;
+      ctx.lineWidth = 7 - progress * 2.5;
+      ctx.globalAlpha = clamp(0.78 - progress * 0.5, 0, 1);
+      ctx.beginPath();
+      ctx.arc(animation.x, animation.y, 24 + rupture * 92, 0, TAU);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    animation.shards.forEach((shard) => {
+      const shardProgress = clamp((animation.elapsed - shard.delay) / (animation.duration - shard.delay), 0, 1);
+      if (shardProgress <= 0) return;
+      const distance = shard.speed * shardProgress * (0.68 + 0.32 * shardProgress);
+      const x = animation.x + Math.cos(shard.angle) * distance;
+      const y = animation.y + Math.sin(shard.angle) * distance + shard.lift * shardProgress * 0.18;
+      const alpha = clamp(1 - shardProgress * 1.08, 0, 1) * (prefersReducedMotion ? 0.72 : 1);
+      const scale = 1 - shardProgress * 0.5;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(shard.angle + shard.spin * shardProgress);
+      ctx.scale(scale, scale);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = shard.color;
+      ctx.shadowColor = shard.color;
+      ctx.shadowBlur = prefersReducedMotion ? 0 : 16;
+      if (shard.kind === "droplet") {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, shard.sizeX * 0.45, shard.sizeY * 0.7, 0, 0, TAU);
+        ctx.fill();
+      } else {
+        roundRect(ctx, -shard.sizeX * 0.5, -shard.sizeY * 0.5, shard.sizeX, shard.sizeY, shard.sizeY * 0.45);
+        ctx.fill();
+      }
+      ctx.restore();
+    });
+  }
+
+  function drawPlayer() {
+    if (state.dying && state.deathAnimation) {
+      drawLysisSequence();
+      return;
+    }
+    const species = getSpecies();
+    const { x, y, angle } = state.player;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    if (state.safeWindow > 0) {
+      ctx.fillStyle = `rgba(179, 245, 255, ${0.12 + state.safeWindow * 0.16})`;
+      ctx.beginPath();
+      ctx.arc(0, 0, 34, 0, TAU);
+      ctx.fill();
+    }
+
+    drawCellGlyph(species, 0);
     ctx.restore();
   }
 
@@ -1829,10 +1973,12 @@
   function endRun() {
     if (!state.running) return;
     state.running = false;
+    state.dying = true;
     state.paused = false;
+    state.banner = null;
+    state.pointer.active = false;
+    state.deathAnimation = createLysisAnimation();
     updateControlState();
-    showOverlay("ended");
-    submitScore();
   }
 
   function handlePrimaryAction() {
@@ -1862,6 +2008,10 @@
   function openModal() {
     if (modal.open) return;
     refreshDailyChallenge();
+    if (state.dying) {
+      state.dying = false;
+      state.deathAnimation = null;
+    }
     if (!state.running) {
       state.currentMode = "classic";
       state.currentBoard = "classic";
@@ -1893,6 +2043,10 @@
     if (state.running) {
       pauseRun();
     }
+    if (state.dying) {
+      state.dying = false;
+      state.deathAnimation = null;
+    }
     state.open = false;
     modal.close();
     if (rafId) {
@@ -1911,6 +2065,8 @@
     if (state.running && !state.paused) {
       update(dt);
       updateHud();
+    } else if (state.dying) {
+      updateLysisAnimation(dt);
     }
     render();
     rafId = window.requestAnimationFrame(loop);
