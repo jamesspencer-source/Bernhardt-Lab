@@ -218,8 +218,8 @@
     {
       id: "settling",
       start: 0,
-      title: "Onset stress",
-      note: "Sparse hazards. Build rhythm and collect envelope factors.",
+      title: "Homeostatic load",
+      note: "Sparse hazards. Gather envelope factors and stabilize PG assembly.",
       rates: { fragment: 1.12, phage: 0.68, wave: 0.52, rupture: 0.45 },
       tintA: "rgba(21, 93, 112, 0.22)",
       tintB: "rgba(28, 128, 149, 0.1)"
@@ -227,8 +227,8 @@
     {
       id: "antibiotic",
       start: 60,
-      title: "Antibiotic sweep",
-      note: "Cell-wall-active drug pulses arrive more often and cut off easy routes.",
+      title: "Beta-lactam pulses",
+      note: "Cell-wall-active beta-lactam pulses arrive more often and cut off easy routes.",
       rates: { fragment: 1.02, phage: 0.9, wave: 0.92, rupture: 0.62 },
       tintA: "rgba(24, 116, 129, 0.28)",
       tintB: "rgba(52, 156, 176, 0.13)"
@@ -236,8 +236,8 @@
     {
       id: "mixed",
       start: 150,
-      title: "Mixed assault",
-      note: "Phages, drug pulses, and autolysin breaches begin to overlap more aggressively.",
+      title: "Phage + breach stress",
+      note: "Phages, beta-lactam pulses, and autolysin breaches begin to overlap more aggressively.",
       rates: { fragment: 0.97, phage: 1.16, wave: 1.08, rupture: 0.92 },
       tintA: "rgba(53, 132, 160, 0.28)",
       tintB: "rgba(120, 183, 211, 0.14)"
@@ -245,8 +245,8 @@
     {
       id: "critical",
       start: 240,
-      title: "Lytic crisis",
-      note: "Envelope failure is accelerating. Completed assembly cycles buy only brief breathing room.",
+      title: "Lytic failure",
+      note: "Widespread lysis risk is building. Completed assembly cycles buy only brief breathing room.",
       rates: { fragment: 0.93, phage: 1.36, wave: 1.22, rupture: 1.18 },
       tintA: "rgba(91, 142, 172, 0.3)",
       tintB: "rgba(177, 214, 235, 0.18)"
@@ -668,7 +668,7 @@
     if (mode === "start") {
       overlayTitle.textContent = "Keep the envelope intact.";
       overlayCopy.textContent =
-        "Collect envelope biogenesis factors, restore PG assembly, and outlast escalating envelope stress.";
+        "Collect envelope biogenesis factors, restore PG assembly, and outlast phages, beta-lactam pulses, and autolysin breaches.";
       overlayStatus.textContent = "Collect 4 envelope factors, then induce the stress response when the meter is full.";
       setOverlayPoints(["Difficulty rises slowly, so clean movement matters more than memorizing patterns."]);
       startButton.textContent = "Start Classic Run";
@@ -681,7 +681,7 @@
       )}% integrity remaining.`;
       setOverlayPoints([
         `${state.repairProgress} of ${state.repairNeeded} envelope factors collected.`,
-        "Induce the stress response proactively when drug pulses and breaches start overlapping."
+        "Induce the stress response proactively when beta-lactam pulses and autolysin breaches start overlapping."
       ]);
       startButton.textContent = "Resume Run";
       dailyStartButton.textContent = "Restart Run";
