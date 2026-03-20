@@ -1,0 +1,138 @@
+{
+  "generatedAt": "2026-02-21T09:17:27+00:00",
+  "source": "packaged-fallback",
+  "items": [
+    {
+      "pmid": "36097171",
+      "doi": "10.1038/s41564-022-01210-z",
+      "title": "Division-site architecture during constriction",
+      "journal": "Nature Microbiology",
+      "year": "2022",
+      "articleUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9519445/",
+      "image": "assets/images/highlights/nmicro2022-divisome-fluorescence.jpg",
+      "sourceLabel": "Nature Microbiology · 2022",
+      "caption": "Fluorescence map of division geometry."
+    },
+    {
+      "pmid": "36097171",
+      "doi": "10.1038/s41564-022-01210-z",
+      "title": "Time-lapse envelope insertion series",
+      "journal": "Nature Microbiology",
+      "year": "2022",
+      "articleUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9519445/",
+      "image": "assets/images/highlights/nmicro2022-timelapse-rods.jpg",
+      "sourceLabel": "Nature Microbiology · 2022",
+      "caption": "Dynamic envelope insertion over time."
+    },
+    {
+      "pmid": "36097171",
+      "doi": "10.1038/s41564-022-01210-z",
+      "title": "Cryo-ET and cryo-FIB envelope ultrastructure",
+      "journal": "Nature Microbiology",
+      "year": "2022",
+      "articleUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9519445/",
+      "image": "assets/images/highlights/nmicro2022-cryo-tomography.jpg",
+      "sourceLabel": "Nature Microbiology · 2022",
+      "caption": "Cryo workflow and ultrastructure view."
+    },
+    {
+      "pmid": "35851384",
+      "doi": "10.1038/s41467-022-31261-y",
+      "title": "Salt-stress genetic screen phenotype panel",
+      "journal": "Nature Communications",
+      "year": "2022",
+      "articleUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9308384/",
+      "image": "assets/images/highlights/ncomms2022-salt-stress-screen.jpg",
+      "sourceLabel": "Nature Communications · 2022",
+      "caption": "Envelope stress phenotypes from screen."
+    },
+    {
+      "pmid": "37162900",
+      "doi": "10.1128/mbio.00345-23",
+      "title": "FacZ-dependent membrane organization",
+      "journal": "mBio",
+      "year": "2023",
+      "articleUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10168275/",
+      "image": "assets/images/publications/mbio2023saur-f2.jpg",
+      "sourceLabel": "mBio · 2023",
+      "caption": "Membrane and PG patterning during division."
+    },
+    {
+      "pmid": "37162900",
+      "doi": "10.1128/mbio.00345-23",
+      "title": "FacZ peptidoglycan enrichment profiles",
+      "journal": "mBio",
+      "year": "2023",
+      "articleUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10168275/",
+      "image": "assets/images/publications/mbio2023saur-f4.jpg",
+      "sourceLabel": "mBio · 2023",
+      "caption": "Spatial enrichment across septal architecture."
+    },
+    {
+      "pmid": "37886572",
+      "doi": "10.1128/mbio.01847-23",
+      "title": "PcdA recruitment during cytokinesis",
+      "journal": "mBio",
+      "year": "2023",
+      "articleUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10602043/",
+      "image": "assets/images/publications/mbio2023-f2.jpg",
+      "sourceLabel": "mBio · 2023",
+      "caption": "PcdA localization across division states."
+    },
+    {
+      "pmid": "37886572",
+      "doi": "10.1128/mbio.01847-23",
+      "title": "PcdA activity-state comparisons",
+      "journal": "mBio",
+      "year": "2023",
+      "articleUrl": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10602043/",
+      "image": "assets/images/publications/mbio2023-f4.jpg",
+      "sourceLabel": "mBio · 2023",
+      "caption": "Functional states across membrane classes."
+    },
+    {
+      "pmid": "32719105",
+      "doi": "10.1073/pnas.2004598117",
+      "title": "Lytic transglycosylase reaction model",
+      "journal": "Proceedings of the National Academy of Sciences",
+      "year": "2020",
+      "articleUrl": "https://www.pnas.org/doi/10.1073/pnas.2004598117",
+      "image": "assets/images/publications/pnas2004598117-fig1.jpg",
+      "sourceLabel": "PNAS · 2020",
+      "caption": "Schematic of glycan maturation steps."
+    },
+    {
+      "pmid": "32719105",
+      "doi": "10.1073/pnas.2004598117",
+      "title": "Peptidoglycan incorporation endpoint",
+      "journal": "Proceedings of the National Academy of Sciences",
+      "year": "2020",
+      "articleUrl": "https://www.pnas.org/doi/10.1073/pnas.2004598117",
+      "image": "assets/images/publications/pnas2004598117-fig2.jpg",
+      "sourceLabel": "PNAS · 2020",
+      "caption": "Completion state for mature cell wall strands."
+    },
+    {
+      "pmid": "32719105",
+      "doi": "10.1073/pnas.2004598117",
+      "title": "Envelope remodeling activity map",
+      "journal": "Proceedings of the National Academy of Sciences",
+      "year": "2020",
+      "articleUrl": "https://www.pnas.org/doi/10.1073/pnas.2004598117",
+      "image": "assets/images/publications/pnas2004598117-fig3.jpg",
+      "sourceLabel": "PNAS · 2020",
+      "caption": "Comparative reaction-state readout."
+    },
+    {
+      "pmid": "32719105",
+      "doi": "10.1073/pnas.2004598117",
+      "title": "Cell-wall maturation completion profile",
+      "journal": "Proceedings of the National Academy of Sciences",
+      "year": "2020",
+      "articleUrl": "https://www.pnas.org/doi/10.1073/pnas.2004598117",
+      "image": "assets/images/publications/pnas2004598117-fig4.jpg",
+      "sourceLabel": "PNAS · 2020",
+      "caption": "Late-stage remodeling reference panel."
+    }
+  ]
+}

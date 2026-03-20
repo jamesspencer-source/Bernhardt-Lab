@@ -14,6 +14,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List
 
+from site_builder import build_site
+
 
 SEARCH_TERM = "Bernhardt TG[Author]"
 EUTILS_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
@@ -102,7 +104,6 @@ def main() -> int:
 
     root = Path(__file__).resolve().parents[1]
     structured_path = root / "assets" / "data" / "recent-publications.json"
-    flat_path = root / "github-flat" / "recent-publications.json"
 
     term_encoded = urllib.parse.quote(SEARCH_TERM)
     esearch_url = (
@@ -192,11 +193,10 @@ def main() -> int:
 
     structured_path.parent.mkdir(parents=True, exist_ok=True)
     structured_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    flat_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-
+    build_site()
     print(f"Wrote {len(publications)} publications to:")
     print(f"  - {structured_path}")
-    print(f"  - {flat_path}")
+    print("Regenerated canonical and github-flat outputs.")
     return 0
 
 

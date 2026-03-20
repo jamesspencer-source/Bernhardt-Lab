@@ -25,12 +25,12 @@ jobs:
 
       - name: Commit refreshed video stats
         run: |
-          if git diff --quiet -- assets/data/youtube-video-stats.json github-flat/youtube-video-stats.json; then
+          if git diff --quiet -- assets/data/youtube-video-stats.json github-flat/assets/data/youtube-video-stats.json; then
             echo "No video stat changes detected."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/data/youtube-video-stats.json github-flat/youtube-video-stats.json
+          git add assets/data/youtube-video-stats.json github-flat/assets/data/youtube-video-stats.json
           git commit -m "chore: refresh featured video view stats"
           git push

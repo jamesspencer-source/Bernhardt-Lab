@@ -1,0 +1,21 @@
+name: Check Envelope Escape leaderboard
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "45 12 * * 1"
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check leaderboard worker
+        run: python scripts/check_leaderboard_worker.py
