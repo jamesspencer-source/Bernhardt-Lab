@@ -5,19 +5,19 @@
       "position": "center 42%"
     },
     {
+      "image": "assets/images/research/phage-kdj3005-hero.jpg",
+      "position": "center 36%"
+    },
+    {
       "image": "assets/images/research/fluorescence-envelope.jpg",
       "position": "center center"
     },
     {
+      "image": "assets/images/research/phage-course-061324-015-hero.jpg",
+      "position": "34% 42%"
+    },
+    {
       "image": "assets/images/research/pseudomonas-tem.jpg",
-      "position": "center center"
-    },
-    {
-      "image": "assets/images/research/coryfdaa.png",
-      "position": "center center"
-    },
-    {
-      "image": "assets/images/research/corynebacterium-phage.jpg",
       "position": "center center"
     }
   ],
