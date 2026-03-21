@@ -215,27 +215,6 @@ def replace_marker_block(text: str, start_marker: str, end_marker: str, content:
     return pattern.sub(rf"\1\n{content}\n\3", text)
 
 
-def replace_people_grid_inner(text: str, content: str) -> str:
-    pattern = re.compile(
-        r'(<div id="people-grid" class="people-grid" data-people-view="landing" aria-live="polite">)(.*?)(</div>)',
-        re.S,
-    )
-    if pattern.search(text):
-        return pattern.sub(rf"\1\n{content}\n\3", text)
-    legacy_pattern = re.compile(
-        r'(<div id="people-grid" class="people-grid" data-people-view="landing" aria-live="polite"></div>)',
-        re.S,
-    )
-    if legacy_pattern.search(text):
-        return legacy_pattern.sub(
-            '<div id="people-grid" class="people-grid" data-people-view="landing" aria-live="polite">\n'
-            f"{content}\n"
-            "</div>",
-            text,
-        )
-    raise RuntimeError("Could not locate homepage people grid container")
-
-
 def validate_people(people: list[dict[str, Any]]) -> None:
     seen_slugs: set[str] = set()
     for person in people:
@@ -556,7 +535,12 @@ def render_alumni_profile(person: dict[str, Any], flat: bool) -> str:
 def replace_template_with_people(text: str, people: list[dict[str, Any]], root_prefix: str, flat: bool, view: str) -> str:
     content = render_people_cards(people, root_prefix=root_prefix, flat=flat, view=view)
     if view == "landing":
-        return replace_people_grid_inner(text, content)
+        return replace_marker_block(
+            text,
+            "<!-- generated-home-people-grid:start -->",
+            "<!-- generated-home-people-grid:end -->",
+            content,
+        )
     text = replace_marker_block(text, "<!-- generated-people-grid:start -->", "<!-- generated-people-grid:end -->", content)
     count_label = f"Showing {len(people)} current lab {'member' if len(people) == 1 else 'members'}"
     text = replace_marker_block(
@@ -741,17 +725,40 @@ def sync_flat_redirects() -> None:
         write_text(FLAT_DIR / f"{child.name}.html", flat_text)
 
 
+def validate_homepage_team_grid(path: Path, expected_cards: int) -> None:
+    text = read_text(path)
+    if text.count('id="people-grid"') != 1:
+        raise RuntimeError(f"{path}: expected exactly one people-grid container")
+    start_marker = "<!-- generated-home-people-grid:start -->"
+    end_marker = "<!-- generated-home-people-grid:end -->"
+    if text.count(start_marker) != 1 or text.count(end_marker) != 1:
+        raise RuntimeError(f"{path}: expected exactly one homepage people-grid marker pair")
+    start_index = text.index(start_marker)
+    end_index = text.index(end_marker)
+    inner = text[start_index:end_index]
+    card_count = inner.count("person-card--landing")
+    if card_count != expected_cards:
+        raise RuntimeError(f"{path}: expected {expected_cards} landing cards inside generated block, found {card_count}")
+    outside = text[:start_index] + text[end_index + len(end_marker):]
+    if "person-card--landing" in outside:
+        raise RuntimeError(f"{path}: found landing cards outside generated homepage block")
+
+
 def build_site() -> None:
     load_gallery_items()
     load_featured_alumni_items()
     load_curated_publications()
     load_site_copy()
+    people = load_people()
     sync_runtime_config_js()
     compile_styles()
     build_canonical_pages()
     sync_flat_assets()
     build_flat_pages()
     cleanup_flat_legacy_files()
+    expected_cards = len(current_people(people))
+    validate_homepage_team_grid(ROOT / "index.html", expected_cards)
+    validate_homepage_team_grid(FLAT_DIR / "index.html", expected_cards)
 
 
 if __name__ == "__main__":
