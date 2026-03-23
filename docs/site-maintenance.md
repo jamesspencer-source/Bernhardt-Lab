@@ -1,5 +1,7 @@
 # Site Maintenance Workflow
 
+`AGENTS.md` at the repo root is the zero-context entrypoint. This file is the deeper operator workflow.
+
 ## One rule
 
 Edit canonical sources first, then rebuild.
