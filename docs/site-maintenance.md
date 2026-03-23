@@ -8,12 +8,12 @@ Do not hand-edit `github-flat/`.
 
 ## Canonical sources
 
-- People and alumni: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/people.json`
-- Gallery: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/gallery.json`
-- Featured alumni: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/featured-alumni.json`
-- Curated publications fallback: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/curated-publications.json`
-- Shared homepage/site copy: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/site-copy.json`
-- Runtime config such as the public leaderboard URL: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/runtime-config.json`
+- People and alumni: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/people.json`
+- Gallery: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/gallery.json`
+- Featured alumni: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/featured-alumni.json`
+- Curated publications fallback: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/curated-publications.json`
+- Shared homepage/site copy: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/site-copy.json`
+- Runtime config such as the public leaderboard URL: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/runtime-config.json`
 
 ## Rebuild command
 

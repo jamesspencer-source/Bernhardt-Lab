@@ -15,27 +15,27 @@ Static lab website for the Thomas Bernhardt Lab, published via GitHub Pages.
 
 Edit these first:
 
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/people.json`
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/gallery.json`
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/featured-alumni.json`
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/curated-publications.json`
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/site-copy.json`
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/runtime-config.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/people.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/gallery.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/featured-alumni.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/curated-publications.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/site-copy.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/runtime-config.json`
 
 Generated or entrypoint files you should usually not hand-edit directly:
 
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/assets/styles.css`
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/assets/envelope-escape-config.js`
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/github-flat/**`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/styles.css`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/envelope-escape-config.js`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/github-flat/**`
 
 Frontend entrypoints:
 
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/assets/main.js`
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/assets/alumni.js`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/main.js`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/alumni.js`
 
 Those entrypoints now import smaller feature modules from:
 
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/assets/js/`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/js/`
 
 ## Build the site
 
@@ -67,7 +67,7 @@ These write canonical runtime data and then regenerate dependent outputs automat
 
 The public leaderboard endpoint now comes from:
 
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/data/runtime-config.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/runtime-config.json`
 
 `assets/envelope-escape-config.js` and the flat mirror are generated from that source during the build.
 
@@ -96,16 +96,16 @@ Do not hand-edit:
 
 ## Key pages and assets
 
-- Homepage: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/index.html`
-- Team directory: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/people/index.html`
-- Alumni directory: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/alumni/index.html`
-- Shared layout styling source: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/assets/css/`
-- Profile styling: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/assets/profile.css`
-- Game code: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/assets/envelope-escape.js`
-- Leaderboard worker: `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/leaderboard-worker/`
+- Homepage: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/index.html`
+- Team directory: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/people/index.html`
+- Alumni directory: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/alumni/index.html`
+- Shared layout styling source: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/css/`
+- Profile styling: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/profile.css`
+- Game code: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/envelope-escape.js`
+- Leaderboard worker: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/leaderboard-worker/`
 
 ## Maintenance notes
 
 For a plain-language maintenance workflow, see:
 
-- `/Users/james/Documents/HMS Lab Ops/TB Lab/TB lab website/docs/site-maintenance.md`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/docs/site-maintenance.md`
