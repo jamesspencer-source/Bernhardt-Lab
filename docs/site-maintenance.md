@@ -6,6 +6,8 @@
 
 Edit canonical sources first, then rebuild.
 
+For normal website work, the default expectation is: verify, commit, and push scoped changes to `main` unless the user opts out or a real blocker prevents a safe push.
+
 Do not hand-edit `github-flat/`.
 
 ## Canonical sources
