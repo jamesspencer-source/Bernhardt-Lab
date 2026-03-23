@@ -2,6 +2,8 @@
 
 Static lab website for the Thomas Bernhardt Lab, published via GitHub Pages.
 
+For a zero-context Codex or engineer handoff, start with `AGENTS.md`.
+
 ## How the site is organized now
 
 - `data/` is the canonical hand-edited content source.
