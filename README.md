@@ -90,6 +90,8 @@ and verifies the expected response shape.
 
 Edit canonical source files only.
 
+Standard workflow for this repo is to verify, commit, and push completed scoped changes to `main` unless the user explicitly asks otherwise or a concrete blocker makes that unsafe.
+
 Do not hand-edit:
 
 - `github-flat/`

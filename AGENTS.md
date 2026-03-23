@@ -96,6 +96,8 @@ Update gallery or featured alumni:
 - Push using SSH.
 - Push from `main`.
 - Before committing, make sure you are in the repo root, not inside `github-flat/`.
+- Default workflow for this repo: after completing a scoped change, run the relevant verification, commit it, and push it to `main` unless the user explicitly asks not to or there is a concrete blocker such as unrelated dirty changes, merge conflicts, or a failed check.
+- If a push is blocked, report the blocker clearly instead of leaving the repo half-finished without explanation.
 
 ## Related docs
 
