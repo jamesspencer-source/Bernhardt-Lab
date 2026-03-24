@@ -25,6 +25,7 @@ Important canonical files:
 - `data/gallery.json`
 - `data/featured-alumni.json`
 - `data/curated-publications.json`
+- `data/scientific-media.json`
 - `data/site-copy.json`
 - `data/runtime-config.json`
 
@@ -40,6 +41,12 @@ Build the site:
 
 ```bash
 python3 scripts/build_site.py
+```
+
+Publish website updates:
+
+```bash
+python3 scripts/publish_site.py
 ```
 
 Refresh machine-generated site data:
@@ -63,7 +70,8 @@ python3 scripts/check_leaderboard_worker.py
 - Do not hand-edit generated runtime config or generated CSS bundles.
 - Stage narrowly and avoid bundling unrelated local churn.
 - `.DS_Store` should generally be discarded, not committed.
-- `github-flat` and image mirrors can show noisy local churn; do not commit those changes unless they are intentional.
+- `github-flat` is regenerated from nested `assets/` and `data/` paths. Root-level non-HTML files there are legacy baggage and should not be reintroduced.
+- Prefer `python3 scripts/publish_site.py` for the normal build/commit/push flow.
 
 ## Common tasks
 
@@ -83,6 +91,13 @@ Update gallery or featured alumni:
 1. Edit `data/gallery.json` or `data/featured-alumni.json`
 2. Run `python3 scripts/build_site.py`
 
+Update archive scientific media:
+
+1. Import stills/poster frames into `assets/images/research/`
+2. Import browser-safe local videos into `assets/media/research/`
+3. Edit `data/scientific-media.json`
+4. Run `python3 scripts/build_site.py`
+
 ## Game and leaderboard notes
 
 - The Envelope Escape frontend runtime URL comes from `data/runtime-config.json`.
@@ -97,6 +112,8 @@ Update gallery or featured alumni:
 - Push from `main`.
 - Before committing, make sure you are in the repo root, not inside `github-flat/`.
 - Default workflow for this repo: after completing a scoped change, run the relevant verification, commit it, and push it to `main` unless the user explicitly asks not to or there is a concrete blocker such as unrelated dirty changes, merge conflicts, or a failed check.
+- The preferred command-driven path is `python3 scripts/publish_site.py`.
+- That publish command cleans transient local artifacts, rebuilds the site, stages only approved website paths, commits if needed, and pushes to `origin main`.
 - If a push is blocked, report the blocker clearly instead of leaving the repo half-finished without explanation.
 
 ## Related docs
