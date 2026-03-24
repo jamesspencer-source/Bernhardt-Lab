@@ -21,6 +21,7 @@ Edit these first:
 - `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/gallery.json`
 - `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/featured-alumni.json`
 - `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/curated-publications.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/scientific-media.json`
 - `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/site-copy.json`
 - `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/runtime-config.json`
 
@@ -47,6 +48,12 @@ Run:
 python3 scripts/build_site.py
 ```
 
+Publish website updates to `main`:
+
+```bash
+python3 scripts/publish_site.py
+```
+
 This will:
 
 - validate canonical structured data
@@ -64,6 +71,29 @@ These write canonical runtime data and then regenerate dependent outputs automat
 - `python3 scripts/refresh_recent_publications.py`
 - `python3 scripts/refresh_youtube_video_stats.py`
 - `python3 scripts/refresh_research_in_motion.py`
+
+For the normal end-to-end website workflow, use:
+
+```bash
+python3 scripts/publish_site.py
+```
+
+This command will:
+
+- confirm you are on `main`
+- fetch and verify `origin/main` is not ahead
+- remove transient local noise such as `.DS_Store` and Python cache folders
+- run `python3 scripts/build_site.py`
+- stage only approved website paths
+- commit only if a real website diff remains
+- push the result to `origin main`
+
+Archive scientific media is curated manually:
+
+- import stills and poster frames into `assets/images/research/`
+- import browser-safe local videos into `assets/media/research/`
+- update `data/scientific-media.json`
+- run `python3 scripts/build_site.py`
 
 ## Global Envelope Escape leaderboard
 
@@ -91,6 +121,12 @@ and verifies the expected response shape.
 Edit canonical source files only.
 
 Standard workflow for this repo is to verify, commit, and push completed scoped changes to `main` unless the user explicitly asks otherwise or a concrete blocker makes that unsafe.
+
+The preferred command-driven path for that workflow is:
+
+```bash
+python3 scripts/publish_site.py
+```
 
 Do not hand-edit:
 

@@ -21,23 +21,8 @@ CSS_SOURCE_ORDER = [
     "home.css",
     "directory.css",
 ]
-LEGACY_FLAT_FILES = [
-    "alumni-data.js",
-    "alumni.css",
-    "alumni.js",
-    "envelope-escape-config.example.js",
-    "envelope-escape-config.js",
-    "envelope-escape.css",
-    "envelope-escape.js",
-    "main.js",
-    "profile.css",
-    "recent-publications.json",
-    "research-in-motion.json",
-    "site-freshness.js",
-    "site-freshness.json",
-    "styles.css",
-    "youtube-video-stats.json",
-]
+PRESERVED_FLAT_ROOT_FILES = {".nojekyll", "CNAME", "robots.txt", "sitemap.xml"}
+TRANSIENT_NAMES = {".DS_Store", "Thumbs.db", ".pycache", "__pycache__", ".venv"}
 
 SPECIES_PATTERNS = [
     re.compile(r"\bEscherichia\s+coli\b", re.I),
@@ -84,6 +69,25 @@ def write_text(path: Path, value: str) -> None:
 
 def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def is_numbered_duplicate(name: str) -> bool:
+    return bool(re.search(r" \d+(?=(\.[^.]+)?$)", name))
+
+
+def is_transient_name(name: str) -> bool:
+    return name in TRANSIENT_NAMES or name.startswith("._") or is_numbered_duplicate(name)
+
+
+def remove_path(path: Path) -> None:
+    if path.is_dir():
+        shutil.rmtree(path)
+    elif path.exists():
+        path.unlink()
+
+
+def ignore_generated_copy_names(_: str, names: list[str]) -> set[str]:
+    return {name for name in names if is_transient_name(name)}
 
 
 def clean_text(value: object = "") -> str:
@@ -245,6 +249,50 @@ def load_featured_alumni_items() -> list[dict[str, Any]]:
 
 def load_curated_publications() -> list[dict[str, Any]]:
     return read_json(DATA_DIR / "curated-publications.json").get("items", [])
+
+
+def validate_scientific_media_items(items: list[dict[str, Any]]) -> None:
+    seen_ids: set[str] = set()
+    for item in items:
+        item_id = clean_text(item.get("id"))
+        item_type = clean_text(item.get("type"))
+        src = clean_text(item.get("src"))
+        poster = clean_text(item.get("poster"))
+        required_text = [
+            item_id,
+            clean_text(item.get("title")),
+            clean_text(item.get("caption")),
+            clean_text(item.get("alt")),
+            src,
+            clean_text(item.get("sourceLabel")),
+            clean_text(item.get("archiveSource")),
+        ]
+        if not all(required_text):
+            raise RuntimeError(f"Scientific media item missing required fields: {item}")
+        if item_id in seen_ids:
+            raise RuntimeError(f"Duplicate scientific media id detected: {item_id}")
+        if item_type not in {"image", "video"}:
+            raise RuntimeError(f"Scientific media item has invalid type: {item}")
+        if not isinstance(item.get("featured"), bool):
+            raise RuntimeError(f"Scientific media item featured flag must be boolean: {item}")
+        if item_type == "video" and not poster:
+            raise RuntimeError(f"Scientific media video requires poster asset: {item}")
+        if item_type == "image" and poster:
+            raise RuntimeError(f"Scientific media image must not declare poster asset: {item}")
+        for asset_path in [src, poster]:
+            if not asset_path:
+                continue
+            if not asset_path.startswith("assets/"):
+                raise RuntimeError(f"Scientific media asset must live under assets/: {asset_path}")
+            if not (ROOT / asset_path).exists():
+                raise RuntimeError(f"Scientific media asset path does not exist: {asset_path}")
+        seen_ids.add(item_id)
+
+
+def load_scientific_media_items() -> list[dict[str, Any]]:
+    items = read_json(DATA_DIR / "scientific-media.json").get("items", [])
+    validate_scientific_media_items(items)
+    return items
 
 
 def load_site_copy() -> dict[str, Any]:
@@ -639,17 +687,29 @@ def build_canonical_pages() -> None:
 
 
 def sync_flat_assets() -> None:
+    FLAT_DIR.mkdir(parents=True, exist_ok=True)
     shutil.rmtree(FLAT_DIR / "assets", ignore_errors=True)
     shutil.rmtree(FLAT_DIR / "data", ignore_errors=True)
-    shutil.copytree(ASSETS_DIR, FLAT_DIR / "assets")
-    shutil.copytree(DATA_DIR, FLAT_DIR / "data")
+    shutil.copytree(ASSETS_DIR, FLAT_DIR / "assets", ignore=ignore_generated_copy_names)
+    shutil.copytree(DATA_DIR, FLAT_DIR / "data", ignore=ignore_generated_copy_names)
 
 
-def cleanup_flat_legacy_files() -> None:
-    for filename in LEGACY_FLAT_FILES:
-        path = FLAT_DIR / filename
-        if path.exists():
-            path.unlink()
+def cleanup_flat_generated_noise() -> None:
+    if not FLAT_DIR.exists():
+        return
+
+    for path in sorted(FLAT_DIR.rglob("*"), key=lambda entry: len(entry.parts), reverse=True):
+        if path == FLAT_DIR:
+            continue
+        if is_transient_name(path.name):
+            remove_path(path)
+
+    for child in FLAT_DIR.iterdir():
+        if child.is_dir():
+            continue
+        if child.suffix == ".html" or child.name in PRESERVED_FLAT_ROOT_FILES:
+            continue
+        child.unlink()
 
 
 def build_flat_pages() -> None:
@@ -748,6 +808,7 @@ def build_site() -> None:
     load_gallery_items()
     load_featured_alumni_items()
     load_curated_publications()
+    load_scientific_media_items()
     load_site_copy()
     people = load_people()
     sync_runtime_config_js()
@@ -755,7 +816,7 @@ def build_site() -> None:
     build_canonical_pages()
     sync_flat_assets()
     build_flat_pages()
-    cleanup_flat_legacy_files()
+    cleanup_flat_generated_noise()
     expected_cards = len(current_people(people))
     validate_homepage_team_grid(ROOT / "index.html", expected_cards)
     validate_homepage_team_grid(FLAT_DIR / "index.html", expected_cards)

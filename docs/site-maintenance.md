@@ -16,6 +16,7 @@ Do not hand-edit `github-flat/`.
 - Gallery: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/gallery.json`
 - Featured alumni: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/featured-alumni.json`
 - Curated publications fallback: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/curated-publications.json`
+- Scientific media archive highlights: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/scientific-media.json`
 - Shared homepage/site copy: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/site-copy.json`
 - Runtime config such as the public leaderboard URL: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/runtime-config.json`
 
@@ -24,6 +25,22 @@ Do not hand-edit `github-flat/`.
 ```bash
 python3 scripts/build_site.py
 ```
+
+## Publish command
+
+```bash
+python3 scripts/publish_site.py
+```
+
+Use this for the normal website workflow. It will:
+
+- verify you are on `main`
+- fetch `origin/main` and stop if the remote is ahead or diverged
+- remove transient local artifacts such as `.DS_Store` and Python cache folders
+- run `python3 scripts/build_site.py`
+- stage only approved website paths
+- commit only if a real website diff remains
+- push to `origin main`
 
 This regenerates:
 
@@ -63,11 +80,18 @@ That single edit will propagate to:
 
 ### Update homepage copy
 
-Edit `data/site-copy.json`, then run the build.
+Edit `data/site-copy.json`, then run `python3 scripts/publish_site.py`.
 
 ### Update gallery or featured alumni
 
-Edit `data/gallery.json` or `data/featured-alumni.json`, then run the build.
+Edit `data/gallery.json` or `data/featured-alumni.json`, then run `python3 scripts/publish_site.py`.
+
+### Update scientific archive media
+
+1. Import stills and poster frames into `assets/images/research/`
+2. Import browser-safe local videos into `assets/media/research/`
+3. Update `data/scientific-media.json`
+4. Run `python3 scripts/publish_site.py`
 
 ## Leaderboard health check
 
@@ -96,6 +120,8 @@ These are outputs, not canonical source:
 - `assets/styles.css`
 - `assets/envelope-escape-config.js`
 - `github-flat/`
+
+`github-flat/` now keeps nested `assets/` and `data/` as the authoritative generated mirror. Root-level non-HTML files there are cleaned during the build and should not be restored manually.
 
 Feature JS source now lives in:
 

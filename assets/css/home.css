@@ -563,6 +563,7 @@ body.is-scrolled .site-header {
 }
 
 .about-grid p,
+.scientific-media-head p,
 .research-video-copy p,
 .video-access-note {
   color: var(--text-mid);
@@ -614,6 +615,18 @@ body.is-scrolled .site-header {
 
 .research-media-block .media-source {
   color: #ffd6dd;
+}
+
+.scientific-media-head h3 {
+  color: #f6f8fc;
+}
+
+.scientific-media-card video {
+  background: rgba(9, 12, 20, 0.98);
+}
+
+.scientific-media-archive-note {
+  color: #dfe5ef;
 }
 
 .media-card:hover,
