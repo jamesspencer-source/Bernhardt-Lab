@@ -71,12 +71,24 @@ def read_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def is_numbered_duplicate(name: str) -> bool:
-    return bool(re.search(r" \d+(?=(\.[^.]+)?$)", name))
+def numbered_duplicate_original(name: str) -> str | None:
+    match = re.match(r"^(?P<stem>.+?)(?P<suffix> \d+)(?P<extension>\.[^.]+)?$", name)
+    if not match:
+        return None
+    return f"{match.group('stem')}{match.group('extension') or ''}"
 
 
-def is_transient_name(name: str) -> bool:
-    return name in TRANSIENT_NAMES or name.startswith("._") or is_numbered_duplicate(name)
+def is_numbered_duplicate(name: str, sibling_names: set[str] | None = None) -> bool:
+    if sibling_names is None:
+        return False
+    original_name = numbered_duplicate_original(name)
+    if not original_name:
+        return False
+    return original_name in sibling_names
+
+
+def is_transient_name(name: str, sibling_names: set[str] | None = None) -> bool:
+    return name in TRANSIENT_NAMES or name.startswith("._") or is_numbered_duplicate(name, sibling_names)
 
 
 def remove_path(path: Path) -> None:
@@ -87,7 +99,8 @@ def remove_path(path: Path) -> None:
 
 
 def ignore_generated_copy_names(_: str, names: list[str]) -> set[str]:
-    return {name for name in names if is_transient_name(name)}
+    sibling_names = set(names)
+    return {name for name in names if is_transient_name(name, sibling_names)}
 
 
 def clean_text(value: object = "") -> str:
@@ -701,7 +714,8 @@ def cleanup_flat_generated_noise() -> None:
     for path in sorted(FLAT_DIR.rglob("*"), key=lambda entry: len(entry.parts), reverse=True):
         if path == FLAT_DIR:
             continue
-        if is_transient_name(path.name):
+        sibling_names = {sibling.name for sibling in path.parent.iterdir()}
+        if is_transient_name(path.name, sibling_names):
             remove_path(path)
 
     for child in FLAT_DIR.iterdir():
