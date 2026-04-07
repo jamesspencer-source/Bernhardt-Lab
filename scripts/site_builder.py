@@ -454,7 +454,7 @@ def render_current_profile(person: dict[str, Any], flat: bool) -> str:
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="{escape(root_prefix)}assets/profile.css?v=20260320a" />
+    <link rel="stylesheet" href="{escape(root_prefix)}assets/profile.css?v=20260407d" />
     <link rel="canonical" href="{escape(canonical)}" />
   </head>
   <body>
@@ -526,7 +526,7 @@ def render_alumni_profile(person: dict[str, Any], flat: bool) -> str:
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="{escape(root_prefix)}assets/profile.css?v=20260320a" />
+    <link rel="stylesheet" href="{escape(root_prefix)}assets/profile.css?v=20260407d" />
     <link rel="canonical" href="{escape(canonical)}" />
   </head>
   <body>

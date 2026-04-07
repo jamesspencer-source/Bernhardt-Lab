@@ -450,8 +450,10 @@ p {
 }
 
 .site-footer {
-  border-top: 1px solid var(--line);
-  background: #f5efe4;
+  border-top: 1px solid rgba(220, 224, 235, 0.18);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(59, 143, 149, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(17, 20, 26, 0.99), rgba(11, 14, 20, 0.99));
   padding: 1rem 0;
 }
 
@@ -460,12 +462,12 @@ p {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  color: var(--muted);
+  color: var(--text-low);
   font-size: 0.86rem;
 }
 
 .footer-inner a {
-  color: var(--midnight-soft);
+  color: var(--text-mid);
   text-decoration: none;
   font-weight: 700;
 }
@@ -479,6 +481,7 @@ p {
 
 .footer-inner a:hover,
 .footer-inner a:focus-visible {
+  color: var(--text-high);
   text-decoration: underline;
 }
 

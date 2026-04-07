@@ -10,6 +10,7 @@
   const scoresToggleButton = document.getElementById("envelope-scores-toggle");
   const scoresPanel = document.getElementById("envelope-scores-panel");
   const canvas = document.getElementById("envelope-canvas");
+  const stageWrap = canvas ? canvas.closest(".envelope-stage-wrap") : null;
   const overlay = document.getElementById("envelope-overlay");
   const overlayTitle = document.getElementById("envelope-overlay-title");
   const overlayCopy = document.getElementById("envelope-overlay-copy");
@@ -57,6 +58,8 @@
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
+  const BASE_PLAYFIELD = { width: 1280, height: 720 };
+  const MAX_PLAYFIELD = { width: 1536, height: 864 };
   const STORAGE_VERSION = "v2";
   const BEST_KEY = `bernhardt-envelope-escape-best-${STORAGE_VERSION}`;
   const BOARD_PREFIX = `bernhardt-envelope-escape-board-${STORAGE_VERSION}-`;
@@ -418,6 +421,144 @@
 
   function easeOutCubic(t) {
     return 1 - (1 - t) ** 3;
+  }
+
+  function roundEven(value) {
+    return Math.max(2, Math.round(value / 2) * 2);
+  }
+
+  function getPlayfieldGrowth(width = canvas.width) {
+    return clamp((width - BASE_PLAYFIELD.width) / (MAX_PLAYFIELD.width - BASE_PLAYFIELD.width), 0, 1);
+  }
+
+  function getPlayfieldPaceScale(width = canvas.width) {
+    return lerp(1, 1.12, getPlayfieldGrowth(width));
+  }
+
+  function getResponsivePlayfieldSize() {
+    if (!stageWrap) {
+      return { width: canvas.width || BASE_PLAYFIELD.width, height: canvas.height || BASE_PLAYFIELD.height };
+    }
+    const rect = stageWrap.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      return { width: canvas.width || BASE_PLAYFIELD.width, height: canvas.height || BASE_PLAYFIELD.height };
+    }
+
+    const widthProgress = clamp((rect.width - 1060) / 420, 0, 1);
+    const heightProgress = clamp((rect.height - 596) / 190, 0, 1);
+    const growth = Math.max(widthProgress, heightProgress);
+    const width = roundEven(lerp(BASE_PLAYFIELD.width, MAX_PLAYFIELD.width, growth));
+    return {
+      width,
+      height: roundEven((width * 9) / 16)
+    };
+  }
+
+  function syncPlayfieldSize(options = {}) {
+    const preserveState = options.preserveState !== false;
+    const previousWidth = canvas.width || BASE_PLAYFIELD.width;
+    const previousHeight = canvas.height || BASE_PLAYFIELD.height;
+    const nextSize = getResponsivePlayfieldSize();
+    if (previousWidth === nextSize.width && previousHeight === nextSize.height) return false;
+
+    const scaleX = nextSize.width / previousWidth;
+    const scaleY = nextSize.height / previousHeight;
+    const scaleAverage = (scaleX + scaleY) * 0.5;
+
+    canvas.width = nextSize.width;
+    canvas.height = nextSize.height;
+
+    if (!preserveState) {
+      state.pointer.x = canvas.width * 0.5;
+      state.pointer.y = canvas.height * 0.5;
+      state.player = createPlayer(state.speciesId);
+      state.playerTrail = [];
+      state.backgroundMotes = seedBackgroundMotes();
+      return true;
+    }
+
+    state.pointer.x = clamp(state.pointer.x * scaleX, 0, canvas.width);
+    state.pointer.y = clamp(state.pointer.y * scaleY, 0, canvas.height);
+    state.camera.x *= scaleX;
+    state.camera.y *= scaleY;
+
+    if (state.player) {
+      state.player.x = clamp(state.player.x * scaleX, 36, canvas.width - 36);
+      state.player.y = clamp(state.player.y * scaleY, 36, canvas.height - 36);
+      state.player.vx *= scaleX;
+      state.player.vy *= scaleY;
+    }
+
+    state.fragments.forEach((fragment) => {
+      fragment.x *= scaleX;
+      fragment.y *= scaleY;
+      fragment.radius *= scaleAverage;
+      fragment.drift *= scaleAverage;
+    });
+
+    state.phages.forEach((phage) => {
+      phage.x *= scaleX;
+      phage.y *= scaleY;
+      phage.vx *= scaleX;
+      phage.vy *= scaleY;
+      phage.radius *= scaleAverage;
+      phage.speed *= scaleAverage;
+    });
+
+    state.waves.forEach((wave) => {
+      if (wave.axis === "x") {
+        wave.position *= scaleX;
+        wave.thickness *= scaleX;
+        wave.velocity *= scaleX;
+      } else {
+        wave.position *= scaleY;
+        wave.thickness *= scaleY;
+        wave.velocity *= scaleY;
+      }
+    });
+
+    state.ruptures.forEach((rupture) => {
+      rupture.x1 *= scaleX;
+      rupture.y1 *= scaleY;
+      rupture.x2 *= scaleX;
+      rupture.y2 *= scaleY;
+      rupture.vx *= scaleX;
+      rupture.vy *= scaleY;
+      rupture.width *= scaleAverage;
+    });
+
+    state.pulses.forEach((pulse) => {
+      pulse.x *= scaleX;
+      pulse.y *= scaleY;
+      pulse.radius *= scaleAverage;
+      pulse.maxRadius *= scaleAverage;
+      pulse.lineWidth *= scaleAverage;
+    });
+
+    state.floaters.forEach((floater) => {
+      floater.x *= scaleX;
+      floater.y *= scaleY;
+      floater.vy *= scaleAverage;
+    });
+
+    state.playerTrail.forEach((ghost) => {
+      ghost.x *= scaleX;
+      ghost.y *= scaleY;
+    });
+
+    if (state.deathAnimation) {
+      state.deathAnimation.x *= scaleX;
+      state.deathAnimation.y *= scaleY;
+      state.deathAnimation.shards.forEach((shard) => {
+        shard.speed *= scaleAverage;
+        shard.lift *= scaleAverage;
+        shard.sizeX *= scaleAverage;
+        shard.sizeY *= scaleAverage;
+      });
+    }
+
+    state.backgroundMotes = seedBackgroundMotes();
+    return true;
   }
 
   function getDepthScale(y) {
@@ -996,6 +1137,7 @@
 
   function spawnPhage() {
     const difficulty = getDifficultyScalar();
+    const paceScale = getPlayfieldPaceScale();
     const edge = Math.floor(Math.random() * 4);
     let x = 0;
     let y = 0;
@@ -1012,7 +1154,7 @@
       x = randomRange(40, canvas.width - 40);
       y = canvas.height + 28;
     }
-    const speed = lerp(96, 182, difficulty);
+    const speed = lerp(96, 182, difficulty) * paceScale;
     state.phages.push({
       x,
       y,
@@ -1029,10 +1171,11 @@
 
   function spawnWave() {
     const difficulty = getDifficultyScalar();
+    const paceScale = getPlayfieldPaceScale();
     const axis = Math.random() > 0.5 ? "x" : "y";
     const thickness = randomRange(84, 112);
     const fromNegative = Math.random() > 0.5;
-    const velocity = (fromNegative ? 1 : -1) * lerp(148, 236, difficulty);
+    const velocity = (fromNegative ? 1 : -1) * lerp(148, 236, difficulty) * paceScale;
     state.waves.push({
       axis,
       position: fromNegative ? -thickness : axis === "x" ? canvas.width + thickness : canvas.height + thickness,
@@ -1044,6 +1187,7 @@
 
   function spawnRupture() {
     const difficulty = getDifficultyScalar();
+    const paceScale = getPlayfieldPaceScale();
     const angle = pick([Math.PI / 4, -Math.PI / 4, (3 * Math.PI) / 4, (-3 * Math.PI) / 4]) + randomRange(-0.2, 0.2);
     const length = randomRange(260, 360);
     const directionX = Math.cos(angle);
@@ -1072,8 +1216,8 @@
       y1: centerY - directionY * half,
       x2: centerX + directionX * half,
       y2: centerY + directionY * half,
-      vx: normalX * lerp(134, 220, difficulty),
-      vy: normalY * lerp(134, 220, difficulty),
+      vx: normalX * lerp(134, 220, difficulty) * paceScale,
+      vy: normalY * lerp(134, 220, difficulty) * paceScale,
       width: randomRange(12, 18),
       life: 6.6
     });
@@ -1181,7 +1325,7 @@
       }
     }
 
-    const baseSpeed = 294 * species.speedMul;
+    const baseSpeed = 294 * species.speedMul * getPlayfieldPaceScale();
     state.player.vx = moveX * baseSpeed;
     state.player.vy = moveY * baseSpeed;
     state.player.x = clamp(state.player.x + state.player.vx * dt, 36, canvas.width - 36);
@@ -2247,10 +2391,13 @@
     state.open = true;
     modal.showModal();
     refreshLeaderboard(state.currentBoard);
-    render();
-    if (!rafId) {
-      rafId = window.requestAnimationFrame(loop);
-    }
+    window.requestAnimationFrame(() => {
+      syncPlayfieldSize({ preserveState: state.running || state.paused || state.dying });
+      render();
+      if (!rafId) {
+        rafId = window.requestAnimationFrame(loop);
+      }
+    });
   }
 
   function closeModal() {
@@ -2376,6 +2523,19 @@
 
   window.addEventListener("keydown", (event) => onKeyChange(event, true));
   window.addEventListener("keyup", (event) => onKeyChange(event, false));
+  let resizeFrame = 0;
+  window.addEventListener("resize", () => {
+    if (!state.open) return;
+    if (resizeFrame) {
+      window.cancelAnimationFrame(resizeFrame);
+    }
+    resizeFrame = window.requestAnimationFrame(() => {
+      resizeFrame = 0;
+      if (syncPlayfieldSize({ preserveState: state.running || state.paused || state.dying })) {
+        render();
+      }
+    });
+  });
 
   updateDailyNote();
   updateSpeciesInfo();
@@ -2383,6 +2543,7 @@
     playerNameInput.value = state.playerName;
     updatePlayerNameFeedback();
   }
+  syncPlayfieldSize({ preserveState: false });
   updateHud(true);
   setScoresOpen(false);
   renderLeaderboard();

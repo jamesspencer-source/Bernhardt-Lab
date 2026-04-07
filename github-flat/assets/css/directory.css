@@ -777,11 +777,6 @@ body.is-scrolled .site-header {
   min-height: 284px;
 }
 
-.site-footer {
-  border-top-color: rgba(220, 224, 235, 0.14);
-  background: rgba(12, 14, 19, 0.96);
-}
-
 .footer-inner {
   min-height: 2.4rem;
 }

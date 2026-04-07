@@ -71,13 +71,40 @@ def discover_allowed_dirs() -> set[str]:
     return allowed
 
 
+def numbered_duplicate_original(name: str) -> str | None:
+    path = PurePosixPath(name)
+    stem = path.stem
+    match = stem.rsplit(" ", 1)
+    if len(match) != 2 or not match[1].isdigit():
+        return None
+    return f"{match[0]}{path.suffix}"
+
+
+def is_numbered_duplicate(name: str, sibling_names: set[str] | None = None) -> bool:
+    if sibling_names is None:
+        return False
+    original_name = numbered_duplicate_original(name)
+    if not original_name:
+        return False
+    return original_name in sibling_names
+
+
 def is_transient_path(path_text: str) -> bool:
     path = PurePosixPath(path_text)
     parts = path.parts
     if any(part in TRANSIENT_DIR_NAMES for part in parts):
         return True
     name = parts[-1] if parts else path_text
+    sibling_names: set[str] | None = None
+    try:
+        candidate = ROOT / Path(*parts)
+        if candidate.parent.exists():
+            sibling_names = {sibling.name for sibling in candidate.parent.iterdir()}
+    except OSError:
+        sibling_names = None
     if name in TRANSIENT_FILE_NAMES or name.startswith("._"):
+        return True
+    if is_numbered_duplicate(name, sibling_names):
         return True
     if name.endswith((".pyc", ".pyo")):
         return True
@@ -138,6 +165,15 @@ def cleanup_transient_worktree_artifacts() -> None:
         for path in ROOT.rglob(dirname):
             if path.is_dir():
                 shutil.rmtree(path)
+    for path in sorted(ROOT.rglob("*"), key=lambda entry: len(entry.parts), reverse=True):
+        if not path.exists():
+            continue
+        sibling_names = {sibling.name for sibling in path.parent.iterdir()}
+        if is_numbered_duplicate(path.name, sibling_names):
+            if path.is_dir():
+                shutil.rmtree(path)
+            else:
+                path.unlink()
 
 
 def ensure_main_branch() -> None:

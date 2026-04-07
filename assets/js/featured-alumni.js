@@ -1,3 +1,4 @@
+import { observeRevealTargets } from "./site-core.js";
 import { alumniProfileHref, cleanText, prefersReducedMotion, requestJson, rootDataUrl, slugify } from "./shared.js";
 
 export async function initFeaturedAlumni() {
@@ -20,7 +21,15 @@ export async function initFeaturedAlumni() {
         .filter((item) => item.name)
     : [];
 
-  if (!alumniItems.length) return;
+  if (!alumniItems.length) {
+    root.innerHTML = `
+      <p class="publication-footnote reveal">
+        Featured alumni highlights are temporarily unavailable. Browse the <a href="alumni/">full alumni directory</a>.
+      </p>
+    `;
+    observeRevealTargets(root);
+    return;
+  }
 
   let alumniTimer = null;
   let alumniIndex = 0;
@@ -39,6 +48,7 @@ export async function initFeaturedAlumni() {
       </div>
     </div>
   `;
+  observeRevealTargets(root);
 
   const stage = document.getElementById("alumni-stage");
   const dots = document.getElementById("alumni-dots");

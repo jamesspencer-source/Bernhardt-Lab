@@ -962,11 +962,6 @@ body.is-scrolled .site-header {
   height: 3rem;
 }
 
-.site-footer {
-  border-top-color: rgba(220, 224, 235, 0.18);
-  background: #11141a;
-}
-
 .footer-inner,
 .site-credit {
   color: var(--text-low);
