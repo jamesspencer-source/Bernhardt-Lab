@@ -1838,8 +1838,10 @@ body.is-scrolled .site-header {
 }
 
 .site-footer {
-  border-top: 1px solid var(--line);
-  background: #f5efe4;
+  border-top: 1px solid rgba(220, 224, 235, 0.16);
+  background:
+    radial-gradient(circle at 12% 0%, rgba(59, 143, 149, 0.08), transparent 34%),
+    linear-gradient(180deg, rgba(17, 20, 26, 0.99), rgba(11, 14, 20, 0.99));
   padding: 1.18rem 0;
 }
 
@@ -1848,12 +1850,12 @@ body.is-scrolled .site-header {
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  color: var(--muted);
+  color: var(--text-low);
   font-size: 0.88rem;
 }
 
 .footer-inner a {
-  color: var(--midnight-soft);
+  color: var(--text-mid);
   font-weight: 700;
   text-decoration: none;
 }
@@ -1867,13 +1869,14 @@ body.is-scrolled .site-header {
 
 .footer-inner a:hover,
 .footer-inner a:focus-visible {
+  color: var(--text-high);
   text-decoration: underline;
 }
 
 .site-credit {
   font-size: 0.72rem;
   font-weight: 600;
-  color: rgba(16, 32, 59, 0.46);
+  color: rgba(184, 191, 205, 0.72);
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
@@ -2914,11 +2917,6 @@ body.is-scrolled .site-header {
   height: 3rem;
 }
 
-.site-footer {
-  border-top-color: rgba(220, 224, 235, 0.18);
-  background: #11141a;
-}
-
 .footer-inner,
 .site-credit {
   color: var(--text-low);
@@ -3775,11 +3773,6 @@ body.is-scrolled .site-header {
 
 .map-frame {
   min-height: 284px;
-}
-
-.site-footer {
-  border-top-color: rgba(220, 224, 235, 0.14);
-  background: rgba(12, 14, 19, 0.96);
 }
 
 .footer-inner {
