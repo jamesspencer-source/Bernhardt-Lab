@@ -23,7 +23,7 @@
     <link rel="icon" type="image/svg+xml" href="assets/images/brands/favicon.svg?v=20260307a" />
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brands/favicon-32.png?v=20260307a" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/brands/apple-touch-icon.png?v=20260307a" />
-    <link rel="stylesheet" href="assets/styles.css?v=20260406d" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260406e" />
     <link rel="stylesheet" href="assets/envelope-escape.css?v=20260320a" />
   </head>
   <body>
@@ -53,102 +53,104 @@
     </header>
 
     <main id="main-content">
-      <section id="home" class="hero">
-        <div class="hero-slideshow" aria-hidden="true">
-          <div class="hero-slide is-active"></div>
-          <div class="hero-slide"></div>
-        </div>
-        <div class="hero-overlay" aria-hidden="true"></div>
-        <div class="container hero-layout">
-          <div class="hero-copy reveal">
-            <p class="eyebrow">Department of Microbiology | Howard Hughes Medical Institute</p>
-            <h1>Deciphering the molecular mechanisms of bacterial growth.</h1>
-            <p>
-              The Bernhardt lab studies how bacteria build and remodel their cell envelopes with the goal of enhancing
-              our fundamental understanding of bacterial growth. The knowledge gained will enable the development of
-              novel antibiotics to combat the global threat of drug resistant bacterial infections.
-            </p>
-            <div class="hero-actions">
-              <a class="button button-primary" href="#team">Meet the team</a>
-              <a class="button button-ghost" href="#publications">See publications</a>
+      <div class="landing-stage">
+        <section id="home" class="hero">
+          <div class="hero-slideshow" aria-hidden="true">
+            <div class="hero-slide is-active"></div>
+            <div class="hero-slide"></div>
+          </div>
+          <div class="hero-overlay" aria-hidden="true"></div>
+          <div class="container hero-layout">
+            <div class="hero-copy reveal">
+              <p class="eyebrow">Department of Microbiology | Howard Hughes Medical Institute</p>
+              <h1>Deciphering the molecular mechanisms of bacterial growth.</h1>
+              <p>
+                The Bernhardt lab studies how bacteria build and remodel their cell envelopes with the goal of enhancing
+                our fundamental understanding of bacterial growth. The knowledge gained will enable the development of
+                novel antibiotics to combat the global threat of drug resistant bacterial infections.
+              </p>
+              <div class="hero-actions">
+                <a class="button button-primary" href="#team">Meet the team</a>
+                <a class="button button-ghost" href="#publications">See publications</a>
+              </div>
+              <div class="hero-slideshow-controls" role="group" aria-label="Hero background image controls">
+                <button class="hero-control" id="hero-prev" type="button" aria-label="Show previous hero image">
+                  <span class="hero-control-icon" aria-hidden="true">←</span>
+                  <span class="sr-only">Previous image</span>
+                </button>
+                <button
+                  class="hero-control"
+                  id="hero-toggle"
+                  type="button"
+                  aria-pressed="false"
+                  aria-label="Pause background image rotation"
+                >
+                  <span class="hero-control-icon" aria-hidden="true">⏸</span>
+                  <span class="sr-only" id="hero-toggle-label">Pause motion</span>
+                </button>
+                <button class="hero-control" id="hero-next" type="button" aria-label="Show next hero image">
+                  <span class="hero-control-icon" aria-hidden="true">→</span>
+                  <span class="sr-only">Next image</span>
+                </button>
+              </div>
             </div>
-            <div class="hero-slideshow-controls" role="group" aria-label="Hero background image controls">
-              <button class="hero-control" id="hero-prev" type="button" aria-label="Show previous hero image">
-                <span class="hero-control-icon" aria-hidden="true">←</span>
-                <span class="sr-only">Previous image</span>
-              </button>
-              <button
-                class="hero-control"
-                id="hero-toggle"
-                type="button"
-                aria-pressed="false"
-                aria-label="Pause background image rotation"
+
+            <aside class="hero-panel reveal" aria-label="Lab at a glance">
+              <h2>Lab at a glance</h2>
+              <ul>
+                <li>Focus: Mechanistic analysis of bacterial cell surface biogenesis and the mode-of-action of cell wall targeting antibiotics</li>
+                <li>
+                  Model Organisms: <em class="species-name">E. coli</em>, <em class="species-name">C. glutamicum</em>,
+                  <em class="species-name">A. baumannii</em>, <em class="species-name">S. aureus</em>,
+                  <em class="species-name">K. pneumoniae</em>, <em class="species-name">P. aeruginosa</em>
+                </li>
+                <li>Approach: microbial genetics integrated with imaging, biochemistry, and structural analysis</li>
+              </ul>
+            </aside>
+          </div>
+        </section>
+
+        <section class="affiliations">
+          <div class="container affiliations-inner reveal">
+            <div class="affiliations-copy">
+              <p>Affiliated with</p>
+              <h2>
+                <span class="affiliation-name">Harvard Medical School Department of Microbiology</span>
+                <span class="affiliation-separator" aria-hidden="true">+</span>
+                <span class="affiliation-name">Howard Hughes Medical Institute</span>
+              </h2>
+            </div>
+            <div class="affiliations-logos" aria-label="Institutional affiliations">
+              <a
+                class="affiliation-link affiliation-hms"
+                href="https://micro.hms.harvard.edu/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Harvard Medical School Department of Microbiology"
               >
-                <span class="hero-control-icon" aria-hidden="true">⏸</span>
-                <span class="sr-only" id="hero-toggle-label">Pause motion</span>
-              </button>
-              <button class="hero-control" id="hero-next" type="button" aria-label="Show next hero image">
-                <span class="hero-control-icon" aria-hidden="true">→</span>
-                <span class="sr-only">Next image</span>
-              </button>
+                <img
+                  src="assets/images/brands/hms-microbiology-logo.svg?v=2"
+                  alt="Harvard Medical School Department of Microbiology"
+                  loading="lazy"
+                />
+              </a>
+              <a
+                class="affiliation-link affiliation-hhmi"
+                href="https://www.hhmi.org/"
+                target="_blank"
+                rel="noreferrer"
+                aria-label="Howard Hughes Medical Institute"
+              >
+                <img
+                  src="assets/images/brands/HHMI-horizontal-signature-color.png?v=2"
+                  alt="Howard Hughes Medical Institute"
+                  loading="lazy"
+                />
+              </a>
             </div>
           </div>
-
-          <aside class="hero-panel reveal" aria-label="Lab at a glance">
-            <h2>Lab at a glance</h2>
-            <ul>
-              <li>Focus: Mechanistic analysis of bacterial cell surface biogenesis and the mode-of-action of cell wall targeting antibiotics</li>
-              <li>
-                Model Organisms: <em class="species-name">E. coli</em>, <em class="species-name">C. glutamicum</em>,
-                <em class="species-name">A. baumannii</em>, <em class="species-name">S. aureus</em>,
-                <em class="species-name">K. pneumoniae</em>, <em class="species-name">P. aeruginosa</em>
-              </li>
-              <li>Approach: microbial genetics integrated with imaging, biochemistry, and structural analysis</li>
-            </ul>
-          </aside>
-        </div>
-      </section>
-
-      <section class="affiliations">
-        <div class="container affiliations-inner reveal">
-          <div class="affiliations-copy">
-            <p>Affiliated with</p>
-            <h2>
-              <span class="affiliation-name">Harvard Medical School Department of Microbiology</span>
-              <span class="affiliation-separator" aria-hidden="true">+</span>
-              <span class="affiliation-name">Howard Hughes Medical Institute</span>
-            </h2>
-          </div>
-          <div class="affiliations-logos" aria-label="Institutional affiliations">
-            <a
-              class="affiliation-link affiliation-hms"
-              href="https://micro.hms.harvard.edu/"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Harvard Medical School Department of Microbiology"
-            >
-              <img
-                src="assets/images/brands/hms-microbiology-logo.svg?v=2"
-                alt="Harvard Medical School Department of Microbiology"
-                loading="lazy"
-              />
-            </a>
-            <a
-              class="affiliation-link affiliation-hhmi"
-              href="https://www.hhmi.org/"
-              target="_blank"
-              rel="noreferrer"
-              aria-label="Howard Hughes Medical Institute"
-            >
-              <img
-                src="assets/images/brands/HHMI-horizontal-signature-color.png?v=2"
-                alt="Howard Hughes Medical Institute"
-                loading="lazy"
-              />
-            </a>
-          </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       <section id="about" class="section section-light">
         <div class="container reveal">
