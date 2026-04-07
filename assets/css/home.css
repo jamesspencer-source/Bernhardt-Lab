@@ -688,27 +688,15 @@ body.is-scrolled .site-header {
 }
 
 .hero-panel,
-.about-grid article,
-.program-card,
 .impact-note,
 .media-card,
 .publication-item,
-.person-card,
 .alumni-rotator,
-.contact-card,
-.contact-collab,
 .gallery-grid,
 .research-media-block {
   border-color: var(--line-soft);
   background: linear-gradient(145deg, rgba(33, 37, 47, 0.95), rgba(26, 30, 39, 0.9));
   box-shadow: var(--shadow-1);
-}
-
-.person-photo-wrap {
-  background:
-    radial-gradient(circle at 20% 18%, rgba(114, 196, 203, 0.12), transparent 46%),
-    radial-gradient(circle at 80% 80%, rgba(177, 42, 61, 0.1), transparent 44%),
-    #20242d;
 }
 
 .person-photo {
@@ -910,32 +898,8 @@ body.is-scrolled .site-header {
   border-color: rgba(242, 167, 179, 0.74);
 }
 
-.contact-collab {
-  background:
-    radial-gradient(circle at 10% 12%, rgba(59, 143, 149, 0.14), transparent 42%),
-    radial-gradient(circle at 92% 88%, rgba(177, 42, 61, 0.14), transparent 44%),
-    linear-gradient(145deg, rgba(37, 42, 53, 0.96), rgba(26, 30, 39, 0.92));
-  border-color: rgba(220, 224, 235, 0.24);
-  box-shadow: var(--shadow-2);
-}
-
 .collab-showcase {
   overflow: visible;
-}
-
-
-
-.collab-card {
-  border-color: rgba(220, 224, 235, 0.22);
-  background: linear-gradient(145deg, rgba(40, 45, 57, 0.84), rgba(30, 34, 44, 0.88));
-  color: var(--text-high);
-  box-shadow: 0 14px 28px rgba(6, 7, 11, 0.34);
-  scroll-snap-align: none;
-}
-
-.collab-card p,
-.collab-visit {
-  color: var(--text-mid);
 }
 
 .map-frame,
