@@ -6,6 +6,19 @@
   --bg-elevated: #1d222b;
   --surface-glass: rgba(27, 32, 42, 0.76);
   --line-soft: rgba(220, 224, 235, 0.18);
+  --card-border: rgba(220, 224, 235, 0.18);
+  --card-border-strong: rgba(220, 224, 235, 0.24);
+  --card-border-hover: rgba(232, 236, 244, 0.34);
+  --card-surface-neutral: linear-gradient(145deg, rgba(34, 38, 47, 0.96), rgba(25, 29, 37, 0.92));
+  --card-surface-cool:
+    radial-gradient(circle at 14% 16%, rgba(114, 196, 203, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(35, 40, 49, 0.97), rgba(26, 30, 38, 0.93));
+  --card-surface-warm:
+    radial-gradient(circle at 88% 16%, rgba(177, 42, 61, 0.1), transparent 34%),
+    linear-gradient(145deg, rgba(35, 39, 48, 0.97), rgba(26, 29, 37, 0.94));
+  --card-surface-slate:
+    radial-gradient(circle at 18% 18%, rgba(114, 196, 203, 0.07), transparent 32%),
+    linear-gradient(145deg, rgba(35, 40, 49, 0.96), rgba(27, 31, 39, 0.93));
   --text-high: #f3f4f8;
   --text-mid: #d2d5de;
   --text-low: #a6acbb;
