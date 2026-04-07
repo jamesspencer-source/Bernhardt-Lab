@@ -791,7 +791,6 @@ body.is-scrolled .site-header {
 .media-source,
 .profile-link,
 .person-link,
-.alumni-item a,
 .publication-footnote a {
   color: #ffccd5;
 }
@@ -833,14 +832,11 @@ body.is-scrolled .site-header {
 }
 
 .search-wrap input,
-.alumni-nav,
 .gallery-nav,
 .gallery-stage {
   background: rgba(18, 21, 28, 0.8);
 }
 
-.alumni-nav:hover,
-.alumni-nav:focus-visible,
 .gallery-nav:hover,
 .gallery-nav:focus-visible {
   background: rgba(26, 31, 41, 0.9);
@@ -867,7 +863,6 @@ body.is-scrolled .site-header {
   box-shadow: 0 10px 18px rgba(6, 7, 11, 0.36);
 }
 
-.alumni-dot.active,
 .gallery-dot.active {
   background: rgba(18, 21, 28, 0.9);
 }
@@ -885,14 +880,11 @@ body.is-scrolled .site-header {
   border-color: rgba(177, 42, 61, 0.34);
 }
 
-.alumni-item a,
 .alumni-link {
   border-color: rgba(242, 167, 179, 0.42);
   background: rgba(177, 42, 61, 0.16);
 }
 
-.alumni-item a:hover,
-.alumni-item a:focus-visible,
 .alumni-link:hover,
 .alumni-link:focus-visible {
   border-color: rgba(242, 167, 179, 0.74);

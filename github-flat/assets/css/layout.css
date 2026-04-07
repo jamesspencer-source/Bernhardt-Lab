@@ -415,12 +415,14 @@
 }
 
 .alumni-rotator {
-  border: 1px solid var(--line);
+  border: 1px solid rgba(220, 224, 235, 0.18);
   border-radius: var(--radius-md);
   background:
-    radial-gradient(circle at 90% 15%, rgba(14, 117, 125, 0.08), transparent 44%),
-    #fff;
-  box-shadow: var(--shadow-soft);
+    radial-gradient(circle at 88% 16%, rgba(59, 143, 149, 0.12), transparent 42%),
+    linear-gradient(145deg, rgba(26, 31, 40, 0.96), rgba(18, 22, 31, 0.94));
+  box-shadow:
+    0 22px 40px rgba(6, 7, 11, 0.28),
+    inset 0 1px 0 rgba(235, 240, 248, 0.04);
   padding: 1rem;
 }
 
@@ -439,33 +441,34 @@
 
 .alumni-item .alumni-role {
   font-size: 0.76rem;
-  color: var(--teal);
+  color: rgba(217, 196, 201, 0.9);
   text-transform: uppercase;
   letter-spacing: 0.09em;
   font-weight: 800;
 }
 
 .alumni-current {
-  color: var(--muted);
+  color: var(--text-mid);
   font-size: 0.97rem;
   max-width: 66ch;
 }
 
 .alumni-source {
   font-size: 0.79rem;
-  color: #66738a;
+  color: rgba(188, 196, 210, 0.74);
 }
 
 .alumni-item a {
   width: fit-content;
   border-radius: 999px;
-  border: 1px solid rgba(165, 28, 48, 0.28);
-  background: rgba(165, 28, 48, 0.06);
+  border: 1px solid rgba(220, 224, 235, 0.2);
+  background: rgba(41, 46, 58, 0.72);
   padding: 0.3rem 0.72rem;
-  color: var(--crimson);
+  color: #f2f5fb;
   text-decoration: none;
   font-size: 0.8rem;
   font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(240, 244, 251, 0.03);
 }
 
 .alumni-link-row {
@@ -477,7 +480,9 @@
 .alumni-item a:hover,
 .alumni-item a:focus-visible {
   text-decoration: none;
-  border-color: rgba(165, 28, 48, 0.55);
+  border-color: rgba(242, 167, 179, 0.56);
+  background: rgba(177, 42, 61, 0.16);
+  color: #fff7f9;
 }
 
 .alumni-controls {
@@ -486,6 +491,10 @@
   justify-content: space-between;
   align-items: center;
   gap: 0.7rem;
+  padding: 0.72rem 0.82rem;
+  border: 1px solid rgba(220, 224, 235, 0.14);
+  border-radius: 18px;
+  background: linear-gradient(145deg, rgba(18, 22, 31, 0.88), rgba(13, 17, 24, 0.82));
 }
 
 .alumni-nav-wrap {
@@ -494,38 +503,68 @@
 }
 
 .alumni-nav {
-  border: 1px solid var(--line);
+  border: 1px solid rgba(220, 224, 235, 0.22);
   border-radius: 999px;
-  background: #fff;
-  color: var(--midnight-soft);
+  background: rgba(40, 45, 56, 0.82);
+  color: #edf3fc;
   padding: 0.33rem 0.72rem;
   font-size: 0.79rem;
   font-weight: 700;
   cursor: pointer;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    transform 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .alumni-nav:hover,
 .alumni-nav:focus-visible {
-  border-color: var(--crimson);
+  border-color: rgba(242, 167, 179, 0.56);
+  background: rgba(177, 42, 61, 0.22);
+  color: #fff9fa;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 18px rgba(6, 7, 11, 0.24);
 }
 
 .alumni-dots {
   display: inline-flex;
   gap: 0.32rem;
   flex-wrap: wrap;
+  padding: 0.34rem 0.42rem;
+  border: 1px solid rgba(220, 224, 235, 0.12);
+  border-radius: 999px;
+  background: rgba(11, 15, 22, 0.48);
 }
 
 .alumni-dot {
   width: 9px;
   height: 9px;
-  border: 0;
+  border: 1px solid rgba(220, 224, 235, 0.22);
   border-radius: 50%;
-  background: rgba(15, 32, 56, 0.26);
+  background: rgba(178, 188, 204, 0.26);
   cursor: pointer;
+  transition:
+    transform 180ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.alumni-dot:hover,
+.alumni-dot:focus-visible {
+  transform: scale(1.08);
+  border-color: rgba(240, 245, 252, 0.74);
+  background: rgba(222, 228, 238, 0.42);
 }
 
 .alumni-dot.active {
-  background: var(--crimson);
+  border-color: rgba(255, 233, 238, 0.84);
+  background: linear-gradient(135deg, rgba(177, 42, 61, 0.96), rgba(141, 30, 48, 0.94));
+  box-shadow:
+    0 0 0 3px rgba(177, 42, 61, 0.18),
+    0 8px 16px rgba(6, 7, 11, 0.24);
 }
 
 .contact-grid {
