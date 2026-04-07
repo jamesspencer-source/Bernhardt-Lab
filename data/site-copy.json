@@ -13,11 +13,15 @@
       "position": "center center"
     },
     {
-      "image": "assets/images/research/phage-course-061324-015-hero.jpg",
-      "position": "34% 42%"
+      "image": "assets/images/research/pseudomonas-tem.jpg",
+      "position": "center center"
     },
     {
-      "image": "assets/images/research/pseudomonas-tem.jpg",
+      "image": "assets/images/research/coryfdaa.png",
+      "position": "center center"
+    },
+    {
+      "image": "assets/images/research/archive-dsc-0002-plasmid-loss-screen.jpg",
       "position": "center center"
     }
   ],
