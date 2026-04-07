@@ -268,9 +268,10 @@ body.is-scrolled .site-header {
 }
 
 .hero {
-  --hero-shell-height: clamp(920px, calc(100vh + 8rem), 1380px);
-  --hero-shell-height: clamp(920px, calc(100svh + 8rem), 1380px);
+  --hero-shell-height: 100vh;
+  --hero-shell-height: 100svh;
   position: relative;
+  height: var(--hero-shell-height);
   min-height: var(--hero-shell-height);
   display: grid;
   align-items: stretch;
@@ -369,20 +370,22 @@ body.is-scrolled .site-header {
 .hero-layout {
   position: relative;
   z-index: 2;
+  box-sizing: border-box;
   display: grid;
   grid-template-columns: 2.1fr 1fr;
-  gap: clamp(1.4rem, 2.2vw, 2.4rem);
+  gap: clamp(1rem, 1.9vw, 2rem);
   align-items: center;
   align-content: center;
+  height: calc(var(--hero-shell-height) - var(--header-height));
   min-height: calc(var(--hero-shell-height) - var(--header-height));
-  padding-top: clamp(4rem, 12vh, 7.4rem);
-  padding-bottom: clamp(3.6rem, 9vh, 6rem);
+  padding-top: clamp(1.5rem, 4vh, 3rem);
+  padding-bottom: clamp(1.2rem, 3.6vh, 2.5rem);
 }
 
 .hero-copy {
   display: grid;
-  gap: 1.36rem;
-  max-width: 56rem;
+  gap: 1.08rem;
+  max-width: 48rem;
 }
 
 .hero-copy .eyebrow {
@@ -399,15 +402,15 @@ body.is-scrolled .site-header {
 
 .hero h1 {
   max-width: 9.5ch;
-  font-size: clamp(3rem, 6vw, 5.15rem);
+  font-size: clamp(2.7rem, 5vw, 4.6rem);
   text-shadow: 0 4px 20px rgba(5, 14, 28, 0.42);
 }
 
 .hero-copy p {
-  max-width: 50rem;
+  max-width: 44rem;
   color: rgba(243, 247, 255, 0.95);
-  font-size: clamp(1rem, 1.08vw, 1.12rem);
-  line-height: 1.72;
+  font-size: clamp(0.96rem, 0.95vw, 1.04rem);
+  line-height: 1.62;
   text-shadow: 0 1px 10px rgba(5, 14, 28, 0.35);
 }
 

@@ -258,13 +258,14 @@ body.is-scrolled .site-header {
 }
 
 .hero-layout {
-  grid-template-columns: minmax(0, 1.75fr) minmax(250px, 312px);
-  gap: clamp(1.3rem, 2.5vw, 2.5rem);
+  grid-template-columns: minmax(0, 1.8fr) minmax(220px, 280px);
+  gap: clamp(1rem, 2vw, 2rem);
   align-items: center;
   align-content: center;
+  height: calc(var(--hero-shell-height) - var(--header-height));
   min-height: calc(var(--hero-shell-height) - var(--header-height));
-  padding-top: clamp(4.2rem, 12vh, 7.4rem);
-  padding-bottom: clamp(3.8rem, 9vh, 6rem);
+  padding-top: clamp(1.6rem, 4.2vh, 3rem);
+  padding-bottom: clamp(1.2rem, 3.5vh, 2.4rem);
 }
 
 .hero-copy {
@@ -275,19 +276,19 @@ body.is-scrolled .site-header {
   background: none;
   box-shadow: none;
   backdrop-filter: none;
-  max-width: 46rem;
+  max-width: 40rem;
 }
 
 .hero h1 {
-  max-width: 8.9ch;
-  font-size: clamp(3.2rem, 5.9vw, 5.45rem);
+  max-width: 8.6ch;
+  font-size: clamp(2.85rem, 4.9vw, 4.85rem);
   letter-spacing: -0.03em;
 }
 
 .hero-copy p {
-  max-width: 50ch;
-  font-size: clamp(1.02rem, 1.1vw, 1.12rem);
-  line-height: 1.72;
+  max-width: 43ch;
+  font-size: clamp(0.96rem, 0.98vw, 1.02rem);
+  line-height: 1.6;
 }
 
 .hero-copy .eyebrow {
@@ -317,15 +318,15 @@ body.is-scrolled .site-header {
 }
 
 .hero-actions .button {
-  min-height: 2.7rem;
-  padding-inline: 1.08rem;
-  font-size: 0.86rem;
+  min-height: 2.56rem;
+  padding-inline: 1rem;
+  font-size: 0.82rem;
 }
 
 .hero-panel {
   align-self: center;
-  max-width: 312px;
-  padding: 0.82rem 0.92rem;
+  max-width: 280px;
+  padding: 0.72rem 0.82rem;
   border-radius: 20px;
   border-color: rgba(220, 224, 235, 0.12);
   background: linear-gradient(145deg, rgba(10, 15, 24, 0.44), rgba(14, 21, 33, 0.38));
@@ -335,15 +336,15 @@ body.is-scrolled .site-header {
 
 .hero-panel h2 {
   margin-bottom: 0.28rem;
-  font-size: 0.96rem;
+  font-size: 0.9rem;
 }
 
 .hero-panel ul {
   padding: 0;
   list-style: none;
-  gap: 0.44rem;
-  font-size: 0.79rem;
-  line-height: 1.5;
+  gap: 0.38rem;
+  font-size: 0.74rem;
+  line-height: 1.42;
 }
 
 .hero-panel li {
@@ -354,12 +355,12 @@ body.is-scrolled .site-header {
 }
 
 .hero-panel li + li {
-  padding-top: 0.44rem;
+  padding-top: 0.38rem;
   border-top: 1px solid rgba(220, 224, 235, 0.12);
 }
 
 .hero-slideshow-controls {
-  margin-top: 0.4rem;
+  margin-top: 0.18rem;
   opacity: 0.78;
 }
 
@@ -783,13 +784,14 @@ body.is-scrolled .site-header {
   }
 
   .hero-layout {
+    height: calc(var(--hero-shell-height) - var(--header-height));
     min-height: calc(var(--hero-shell-height) - var(--header-height));
     gap: 1.15rem;
     grid-template-columns: 1fr;
     align-items: center;
     align-content: center;
-    padding-top: clamp(3rem, 9vh, 4.8rem);
-    padding-bottom: clamp(3rem, 8vh, 4.4rem);
+    padding-top: clamp(1.4rem, 4vh, 2.3rem);
+    padding-bottom: clamp(1.2rem, 3.5vh, 2rem);
   }
 
   .hero-copy,
