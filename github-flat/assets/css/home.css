@@ -8,20 +8,23 @@
   }
 
   .hero {
-    --hero-shell-height: clamp(760px, 100vh, 1100px);
-    --hero-shell-height: clamp(760px, 100svh, 1100px);
+    --hero-shell-height: clamp(820px, calc(100vh + 4rem), 1180px);
+    --hero-shell-height: clamp(820px, calc(100svh + 4rem), 1180px);
     min-height: var(--hero-shell-height);
   }
 
   .hero-layout {
     grid-template-columns: 1fr;
     min-height: calc(var(--hero-shell-height) - var(--header-height));
-    padding-top: clamp(1.6rem, 6vh, 3.4rem);
-    padding-bottom: clamp(1.75rem, 4.5vh, 3rem);
+    align-items: center;
+    align-content: center;
+    gap: 1.25rem;
+    padding-top: clamp(2.8rem, 9vh, 4.6rem);
+    padding-bottom: clamp(2.8rem, 8vh, 4.2rem);
   }
 
   .hero-panel {
-    max-width: 760px;
+    max-width: 680px;
   }
 
   .research-video-feature {
@@ -122,8 +125,8 @@
   }
 
   .hero {
-    --hero-shell-height: clamp(700px, 92vh, 1020px);
-    --hero-shell-height: clamp(700px, 92svh, 1020px);
+    --hero-shell-height: clamp(700px, 94vh, 1020px);
+    --hero-shell-height: clamp(700px, 94svh, 1020px);
     min-height: var(--hero-shell-height);
   }
 
