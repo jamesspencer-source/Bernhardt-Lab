@@ -269,8 +269,8 @@ body.is-scrolled .site-header {
 }
 
 .hero {
-  --hero-shell-height: clamp(720px, 100vh, 1120px);
-  --hero-shell-height: clamp(720px, 100svh, 1120px);
+  --hero-shell-height: clamp(920px, calc(100vh + 8rem), 1380px);
+  --hero-shell-height: clamp(920px, calc(100svh + 8rem), 1380px);
   position: relative;
   min-height: var(--hero-shell-height);
   display: grid;
@@ -342,7 +342,7 @@ body.is-scrolled .site-header {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, rgba(10, 20, 35, 0.12), rgba(10, 20, 35, 0.56));
+  background: linear-gradient(180deg, rgba(10, 20, 35, 0.08), rgba(10, 20, 35, 0.24) 42%, rgba(10, 20, 35, 0.62));
   z-index: 1;
 }
 
@@ -372,18 +372,18 @@ body.is-scrolled .site-header {
   z-index: 2;
   display: grid;
   grid-template-columns: 2.1fr 1fr;
-  gap: 1.4rem;
+  gap: clamp(1.4rem, 2.2vw, 2.4rem);
   align-items: center;
-  align-content: end;
+  align-content: center;
   min-height: calc(var(--hero-shell-height) - var(--header-height));
-  padding-top: clamp(1.8rem, 6vh, 4.4rem);
-  padding-bottom: clamp(1.9rem, 5vh, 3.6rem);
+  padding-top: clamp(4rem, 12vh, 7.4rem);
+  padding-bottom: clamp(3.6rem, 9vh, 6rem);
 }
 
 .hero-copy {
   display: grid;
-  gap: 1.14rem;
-  max-width: 52rem;
+  gap: 1.36rem;
+  max-width: 56rem;
 }
 
 .hero-copy .eyebrow {
@@ -399,13 +399,16 @@ body.is-scrolled .site-header {
 }
 
 .hero h1 {
-  font-size: clamp(2.2rem, 5.2vw, 4.1rem);
+  max-width: 9.5ch;
+  font-size: clamp(3rem, 6vw, 5.15rem);
   text-shadow: 0 4px 20px rgba(5, 14, 28, 0.42);
 }
 
 .hero-copy p {
-  max-width: 46rem;
+  max-width: 50rem;
   color: rgba(243, 247, 255, 0.95);
+  font-size: clamp(1rem, 1.08vw, 1.12rem);
+  line-height: 1.72;
   text-shadow: 0 1px 10px rgba(5, 14, 28, 0.35);
 }
 
@@ -511,7 +514,7 @@ body.is-scrolled .site-header {
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: var(--radius-lg);
   background: linear-gradient(145deg, rgba(10, 24, 43, 0.56), rgba(12, 31, 54, 0.38));
-  padding: 1.1rem;
+  padding: 1.02rem 1.04rem;
   box-shadow: 0 18px 34px rgba(7, 19, 36, 0.3);
   backdrop-filter: blur(10px) saturate(118%);
 }
@@ -1895,20 +1898,23 @@ body.is-scrolled .site-header {
   }
 
   .hero {
-    --hero-shell-height: clamp(760px, 100vh, 1100px);
-    --hero-shell-height: clamp(760px, 100svh, 1100px);
+    --hero-shell-height: clamp(820px, calc(100vh + 4rem), 1180px);
+    --hero-shell-height: clamp(820px, calc(100svh + 4rem), 1180px);
     min-height: var(--hero-shell-height);
   }
 
   .hero-layout {
     grid-template-columns: 1fr;
     min-height: calc(var(--hero-shell-height) - var(--header-height));
-    padding-top: clamp(1.6rem, 6vh, 3.4rem);
-    padding-bottom: clamp(1.75rem, 4.5vh, 3rem);
+    align-items: center;
+    align-content: center;
+    gap: 1.25rem;
+    padding-top: clamp(2.8rem, 9vh, 4.6rem);
+    padding-bottom: clamp(2.8rem, 8vh, 4.2rem);
   }
 
   .hero-panel {
-    max-width: 760px;
+    max-width: 680px;
   }
 
   .research-video-feature {
@@ -2009,8 +2015,8 @@ body.is-scrolled .site-header {
   }
 
   .hero {
-    --hero-shell-height: clamp(700px, 92vh, 1020px);
-    --hero-shell-height: clamp(700px, 92svh, 1020px);
+    --hero-shell-height: clamp(700px, 94vh, 1020px);
+    --hero-shell-height: clamp(700px, 94svh, 1020px);
     min-height: var(--hero-shell-height);
   }
 
@@ -3074,13 +3080,13 @@ body.is-scrolled .site-header {
 }
 
 .hero-layout {
-  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 340px);
-  gap: clamp(1rem, 2vw, 1.5rem);
+  grid-template-columns: minmax(0, 1.75fr) minmax(250px, 312px);
+  gap: clamp(1.3rem, 2.5vw, 2.5rem);
   align-items: center;
-  align-content: end;
+  align-content: center;
   min-height: calc(var(--hero-shell-height) - var(--header-height));
-  padding-top: clamp(2rem, 8vh, 5rem);
-  padding-bottom: clamp(2rem, 5vh, 3.5rem);
+  padding-top: clamp(4.2rem, 12vh, 7.4rem);
+  padding-bottom: clamp(3.8rem, 9vh, 6rem);
 }
 
 .hero-copy {
@@ -3091,19 +3097,19 @@ body.is-scrolled .site-header {
   background: none;
   box-shadow: none;
   backdrop-filter: none;
-  max-width: 41rem;
+  max-width: 46rem;
 }
 
 .hero h1 {
-  max-width: 10ch;
-  font-size: clamp(2.65rem, 5.1vw, 4.45rem);
+  max-width: 8.9ch;
+  font-size: clamp(3.2rem, 5.9vw, 5.45rem);
   letter-spacing: -0.03em;
 }
 
 .hero-copy p {
-  max-width: 47ch;
-  font-size: clamp(0.98rem, 1vw, 1.06rem);
-  line-height: 1.64;
+  max-width: 50ch;
+  font-size: clamp(1.02rem, 1.1vw, 1.12rem);
+  line-height: 1.72;
 }
 
 .hero-copy .eyebrow {
@@ -3113,7 +3119,7 @@ body.is-scrolled .site-header {
 }
 
 .hero-overlay {
-  background: linear-gradient(180deg, rgba(10, 20, 35, 0.14), rgba(10, 20, 35, 0.22) 34%, rgba(10, 20, 35, 0.56));
+  background: linear-gradient(180deg, rgba(10, 20, 35, 0.08), rgba(10, 20, 35, 0.24) 38%, rgba(10, 20, 35, 0.66));
 }
 
 .hero::before {
@@ -3140,8 +3146,8 @@ body.is-scrolled .site-header {
 
 .hero-panel {
   align-self: center;
-  max-width: 340px;
-  padding: 0.88rem 0.95rem;
+  max-width: 312px;
+  padding: 0.82rem 0.92rem;
   border-radius: 20px;
   border-color: rgba(220, 224, 235, 0.12);
   background: linear-gradient(145deg, rgba(10, 15, 24, 0.44), rgba(14, 21, 33, 0.38));
@@ -3150,16 +3156,16 @@ body.is-scrolled .site-header {
 }
 
 .hero-panel h2 {
-  margin-bottom: 0.3rem;
-  font-size: 1rem;
+  margin-bottom: 0.28rem;
+  font-size: 0.96rem;
 }
 
 .hero-panel ul {
   padding: 0;
   list-style: none;
   gap: 0.44rem;
-  font-size: 0.82rem;
-  line-height: 1.52;
+  font-size: 0.79rem;
+  line-height: 1.5;
 }
 
 .hero-panel li {
@@ -3602,15 +3608,15 @@ body.is-scrolled .site-header {
     min-height: calc(var(--hero-shell-height) - var(--header-height));
     gap: 1.15rem;
     grid-template-columns: 1fr;
-    align-items: end;
-    align-content: end;
-    padding-top: clamp(1.6rem, 6vh, 3.8rem);
-    padding-bottom: clamp(1.8rem, 5vh, 3rem);
+    align-items: center;
+    align-content: center;
+    padding-top: clamp(3rem, 9vh, 4.8rem);
+    padding-bottom: clamp(3rem, 8vh, 4.4rem);
   }
 
   .hero-copy,
   .hero-panel {
-    align-self: end;
+    align-self: center;
   }
 
   .hero-panel {

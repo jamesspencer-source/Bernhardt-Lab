@@ -258,13 +258,13 @@ body.is-scrolled .site-header {
 }
 
 .hero-layout {
-  grid-template-columns: minmax(0, 1.5fr) minmax(260px, 340px);
-  gap: clamp(1rem, 2vw, 1.5rem);
+  grid-template-columns: minmax(0, 1.75fr) minmax(250px, 312px);
+  gap: clamp(1.3rem, 2.5vw, 2.5rem);
   align-items: center;
-  align-content: end;
+  align-content: center;
   min-height: calc(var(--hero-shell-height) - var(--header-height));
-  padding-top: clamp(2rem, 8vh, 5rem);
-  padding-bottom: clamp(2rem, 5vh, 3.5rem);
+  padding-top: clamp(4.2rem, 12vh, 7.4rem);
+  padding-bottom: clamp(3.8rem, 9vh, 6rem);
 }
 
 .hero-copy {
@@ -275,19 +275,19 @@ body.is-scrolled .site-header {
   background: none;
   box-shadow: none;
   backdrop-filter: none;
-  max-width: 41rem;
+  max-width: 46rem;
 }
 
 .hero h1 {
-  max-width: 10ch;
-  font-size: clamp(2.65rem, 5.1vw, 4.45rem);
+  max-width: 8.9ch;
+  font-size: clamp(3.2rem, 5.9vw, 5.45rem);
   letter-spacing: -0.03em;
 }
 
 .hero-copy p {
-  max-width: 47ch;
-  font-size: clamp(0.98rem, 1vw, 1.06rem);
-  line-height: 1.64;
+  max-width: 50ch;
+  font-size: clamp(1.02rem, 1.1vw, 1.12rem);
+  line-height: 1.72;
 }
 
 .hero-copy .eyebrow {
@@ -297,7 +297,7 @@ body.is-scrolled .site-header {
 }
 
 .hero-overlay {
-  background: linear-gradient(180deg, rgba(10, 20, 35, 0.14), rgba(10, 20, 35, 0.22) 34%, rgba(10, 20, 35, 0.56));
+  background: linear-gradient(180deg, rgba(10, 20, 35, 0.08), rgba(10, 20, 35, 0.24) 38%, rgba(10, 20, 35, 0.66));
 }
 
 .hero::before {
@@ -324,8 +324,8 @@ body.is-scrolled .site-header {
 
 .hero-panel {
   align-self: center;
-  max-width: 340px;
-  padding: 0.88rem 0.95rem;
+  max-width: 312px;
+  padding: 0.82rem 0.92rem;
   border-radius: 20px;
   border-color: rgba(220, 224, 235, 0.12);
   background: linear-gradient(145deg, rgba(10, 15, 24, 0.44), rgba(14, 21, 33, 0.38));
@@ -334,16 +334,16 @@ body.is-scrolled .site-header {
 }
 
 .hero-panel h2 {
-  margin-bottom: 0.3rem;
-  font-size: 1rem;
+  margin-bottom: 0.28rem;
+  font-size: 0.96rem;
 }
 
 .hero-panel ul {
   padding: 0;
   list-style: none;
   gap: 0.44rem;
-  font-size: 0.82rem;
-  line-height: 1.52;
+  font-size: 0.79rem;
+  line-height: 1.5;
 }
 
 .hero-panel li {
@@ -786,15 +786,15 @@ body.is-scrolled .site-header {
     min-height: calc(var(--hero-shell-height) - var(--header-height));
     gap: 1.15rem;
     grid-template-columns: 1fr;
-    align-items: end;
-    align-content: end;
-    padding-top: clamp(1.6rem, 6vh, 3.8rem);
-    padding-bottom: clamp(1.8rem, 5vh, 3rem);
+    align-items: center;
+    align-content: center;
+    padding-top: clamp(3rem, 9vh, 4.8rem);
+    padding-bottom: clamp(3rem, 8vh, 4.4rem);
   }
 
   .hero-copy,
   .hero-panel {
-    align-self: end;
+    align-self: center;
   }
 
   .hero-panel {
