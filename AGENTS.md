@@ -120,4 +120,5 @@ Update archive scientific media:
 
 - `README.md` is the main repo overview.
 - `docs/site-maintenance.md` is the deeper operator workflow.
+- `docs/editorial-style-guide.md` is the visual source of truth for editorial style, card cohesion, and pre-publish UI QA.
 - `leaderboard-worker/README.md` explains the global leaderboard backend and deployment.

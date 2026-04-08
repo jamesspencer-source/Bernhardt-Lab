@@ -10,6 +10,12 @@ For normal website work, the default expectation is: verify, commit, and push sc
 
 Do not hand-edit `github-flat/`.
 
+## Editorial guardrail
+
+For visual or interface changes, treat `docs/editorial-style-guide.md` as the style source of truth before publishing.
+
+Do not hand-repaint isolated modules in late CSS layers unless the exception is intentional and documented. Shared surface identity should live in the shared CSS source layers, with page-level files used mainly for layout and responsive composition.
+
 ## Canonical sources
 
 - People and alumni: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/people.json`
@@ -41,6 +47,16 @@ Use this for the normal website workflow. It will:
 - stage only approved website paths
 - commit only if a real website diff remains
 - push to `origin main`
+
+For homepage or visual styling updates, add a small visual QA pass before publish. At minimum, review:
+
+- homepage first screen
+- Featured Video / Research block
+- Team page
+- Alumni page
+- one profile page
+
+Confirm the changed surfaces still read as part of one editorial system before publishing.
 
 This regenerates:
 
