@@ -408,12 +408,17 @@ function parseViewCount(rawCount) {
   return Math.floor(normalized);
 }
 
+function formatViewCountInMillions(views) {
+  if (!Number.isFinite(views) || views < 0) return null;
+  return `${(views / 1_000_000).toFixed(1)} million views`;
+}
+
 async function fetchYouTubeViewMetrics(videoId) {
   if (!videoId) return null;
   const statsPayload = await requestJson(`${assetDataUrl("youtube-video-stats.json")}?t=${Date.now()}`);
   const statsCount = parseViewCount(statsPayload?.viewCount);
   if (statsCount !== null && (!statsPayload?.videoId || cleanText(statsPayload.videoId) === cleanText(videoId))) {
-    return { views: statsCount, updatedAt: statsPayload?.generatedAt || statsPayload?.updatedAt || null };
+    return { views: statsCount };
   }
   return null;
 }
@@ -431,17 +436,12 @@ async function setupYouTubeViewCounter() {
       counter.hidden = true;
       return;
     }
-    const viewsText = new Intl.NumberFormat("en-US").format(metrics.views);
-    const updatedDate = metrics.updatedAt ? new Date(metrics.updatedAt) : new Date();
-    const validUpdatedDate =
-      Number.isNaN(updatedDate.getTime()) || !Number.isFinite(updatedDate.getTime()) ? new Date() : updatedDate;
-    const updatedText = new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    }).format(validUpdatedDate);
-    counter.textContent = `${viewsText} views · updated ${updatedText}`;
+    const viewsText = formatViewCountInMillions(metrics.views);
+    if (!viewsText) {
+      counter.hidden = true;
+      return;
+    }
+    counter.textContent = viewsText;
     counter.hidden = false;
   };
 
