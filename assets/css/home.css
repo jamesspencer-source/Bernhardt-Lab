@@ -616,12 +616,6 @@ body.is-scrolled .site-header {
   color: var(--text-mid);
 }
 
-.hero-copy .eyebrow {
-  color: #e5d5d8;
-  border-color: rgba(177, 42, 61, 0.42);
-  background: rgba(18, 20, 27, 0.46);
-}
-
 .hero h1 {
   color: var(--text-high);
 }

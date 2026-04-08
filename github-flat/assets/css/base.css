@@ -444,22 +444,9 @@ body.is-scrolled .site-header {
 .hero-copy {
   display: grid;
   align-self: end;
-  gap: 0.82rem;
+  gap: 0.88rem;
   max-width: 43rem;
   padding-left: clamp(0rem, 1.4vw, 1rem);
-}
-
-.hero-copy .eyebrow {
-  color: #a7dde0;
-  display: inline-flex;
-  width: fit-content;
-  padding: 0.24rem 0.64rem;
-  border-radius: 999px;
-  border: 1px solid rgba(167, 221, 224, 0.32);
-  background: rgba(7, 18, 33, 0.4);
-  backdrop-filter: blur(7px);
-  text-shadow: 0 1px 6px rgba(5, 14, 28, 0.65);
-  font-size: 0.69rem;
 }
 
 .hero h1 {
