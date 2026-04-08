@@ -856,3 +856,58 @@ body.is-scrolled .site-header {
     margin-bottom: 0.16rem;
   }
 }
+
+/* Editorial science refinement */
+.section-head {
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  max-width: 54rem;
+}
+
+.section-head :is(h1, h2) {
+  max-width: 13ch;
+  font-size: clamp(2.15rem, 4vw, 3.4rem);
+}
+
+.section-intro {
+  max-width: 68ch;
+  line-height: 1.72;
+}
+
+.directory-panel {
+  padding: 1.08rem;
+  border-radius: 26px;
+}
+
+.people-grid {
+  gap: 1.2rem;
+}
+
+.person-body {
+  padding: 1.04rem;
+}
+
+.search-wrap input,
+.sort-wrap select,
+.role-filters button,
+.alumni-filters button,
+.gallery-nav,
+.alumni-nav {
+  min-height: 2.92rem;
+}
+
+.publication-archive-item {
+  padding: 1.08rem 1.1rem;
+}
+
+.publication-archive-title {
+  font-size: 1.06rem;
+}
+
+.gallery-grid,
+.research-media-block,
+.alumni-rotator,
+.contact-card,
+.contact-collab {
+  box-shadow: 0 20px 38px rgba(6, 7, 11, 0.3);
+}

@@ -732,3 +732,179 @@ p {
 .site-footer a {
   color: var(--text-mid);
 }
+
+/* Editorial science refinement */
+.topbar {
+  border-bottom-color: var(--line-soft);
+  background: rgba(14, 16, 22, 0.88);
+  box-shadow: 0 16px 32px rgba(6, 7, 11, 0.28);
+}
+
+.brand-text strong {
+  color: var(--text-high);
+}
+
+.brand-text small {
+  color: var(--text-low);
+}
+
+.top-links {
+  gap: 0.52rem;
+}
+
+.top-links a {
+  min-height: 2.78rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.42rem 0.92rem;
+  border: 1px solid rgba(220, 224, 235, 0.18);
+  border-radius: 999px;
+  background: rgba(28, 32, 41, 0.7);
+  color: var(--text-mid);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.top-links a:hover,
+.top-links a:focus-visible {
+  transform: translateY(-1px);
+  border-color: rgba(255, 214, 221, 0.5);
+  background: rgba(42, 47, 59, 0.96);
+  color: var(--text-high);
+  box-shadow: 0 10px 20px rgba(6, 7, 11, 0.24);
+}
+
+.main {
+  margin: 2.35rem auto 2.8rem;
+}
+
+.profile-shell {
+  gap: 1.35rem;
+}
+
+.profile-hero {
+  border-color: rgba(220, 224, 235, 0.2);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 84% 14%, rgba(59, 143, 149, 0.08), transparent 38%),
+    linear-gradient(145deg, rgba(31, 35, 44, 0.95), rgba(24, 28, 36, 0.92));
+  box-shadow: 0 22px 42px rgba(6, 7, 11, 0.32);
+}
+
+.profile-copy {
+  padding: 1.8rem 1.9rem 1.65rem;
+  gap: 0.88rem;
+}
+
+.profile-copy h1 {
+  color: var(--text-high);
+  font-size: clamp(2.35rem, 4.8vw, 4rem);
+}
+
+.role,
+.bio,
+.profile-panel p {
+  color: var(--text-mid);
+}
+
+.bio {
+  max-width: 64ch;
+  line-height: 1.72;
+}
+
+.profile-lab-dates {
+  border-color: rgba(220, 224, 235, 0.24);
+  background: rgba(40, 45, 56, 0.54);
+  color: var(--text-mid);
+}
+
+.actions {
+  gap: 0.68rem;
+}
+
+.button {
+  border: 1px solid transparent;
+  box-shadow: inset 0 1px 0 rgba(248, 250, 255, 0.04);
+}
+
+.button-secondary {
+  color: var(--text-high);
+  border-color: rgba(220, 224, 235, 0.22);
+  background: rgba(31, 35, 44, 0.76);
+}
+
+.button-secondary:hover,
+.button-secondary:focus-visible {
+  border-color: rgba(255, 214, 221, 0.42);
+  background: rgba(42, 47, 59, 0.96);
+}
+
+.profile-photo-wrap {
+  border-left-color: rgba(220, 224, 235, 0.16);
+  background:
+    radial-gradient(circle at 22% 18%, rgba(59, 143, 149, 0.09), transparent 46%),
+    radial-gradient(circle at 84% 78%, rgba(177, 42, 61, 0.12), transparent 46%),
+    rgba(28, 32, 41, 0.92);
+  padding: 1.16rem;
+}
+
+.profile-photo {
+  border-color: rgba(220, 224, 235, 0.24);
+  background: rgba(22, 25, 33, 0.88);
+  border-radius: 18px;
+}
+
+.profile-grid {
+  gap: 1.08rem;
+}
+
+.profile-panel {
+  min-height: 136px;
+  border-color: rgba(220, 224, 235, 0.2);
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(33, 37, 47, 0.95), rgba(26, 30, 39, 0.9));
+  box-shadow: 0 18px 34px rgba(6, 7, 11, 0.26);
+  padding: 1.08rem;
+}
+
+.profile-panel:first-child {
+  background:
+    radial-gradient(circle at 86% 14%, rgba(59, 143, 149, 0.08), transparent 46%),
+    linear-gradient(145deg, rgba(33, 37, 47, 0.95), rgba(26, 30, 39, 0.9));
+}
+
+.profile-panel h2 {
+  color: var(--text-high);
+}
+
+.profile-link {
+  color: #f2a7b3;
+}
+
+.site-footer {
+  border-top-color: rgba(220, 224, 235, 0.16);
+  background: rgba(12, 14, 19, 0.96);
+}
+
+@media (max-width: 760px) {
+  .top-links a {
+    flex: 0 0 auto;
+    width: auto;
+  }
+
+  .profile-copy {
+    padding: 1.12rem;
+  }
+
+  .profile-panel {
+    border-radius: 22px;
+  }
+}

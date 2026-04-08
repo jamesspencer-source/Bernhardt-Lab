@@ -1,21 +1,20 @@
 /* Source slice for layout.css. */
 
-}
-
 .publication-item {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  padding: 0.98rem 1rem;
-  background: #fff;
-  box-shadow: var(--shadow-soft);
+  border: 1px solid var(--card-border-strong);
+  border-radius: 24px;
+  padding: 1.06rem 1.08rem;
+  background: var(--card-surface-neutral);
+  box-shadow: var(--shadow-1);
   display: grid;
-  gap: 0.42rem;
-  transition: transform 280ms ease, box-shadow 280ms ease;
+  gap: 0.5rem;
+  transition: transform 240ms ease, border-color 240ms ease, box-shadow 240ms ease;
 }
 
 .publication-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 14px 28px rgba(12, 24, 43, 0.12);
+  transform: translateY(-4px);
+  border-color: var(--card-border-hover);
+  box-shadow: 0 20px 38px rgba(6, 7, 11, 0.32);
 }
 
 .publication-item h3 {
@@ -24,7 +23,7 @@
 
 .publication-item a {
   text-decoration: none;
-  color: var(--midnight);
+  color: var(--text-high);
 }
 
 .publication-item a:hover,
@@ -46,12 +45,13 @@
 }
 
 .publication-meta span {
-  font-size: 0.76rem;
-  font-weight: 700;
-  color: var(--teal);
-  border: 1px solid rgba(14, 117, 125, 0.28);
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--text-mid);
+  border: 1px solid var(--card-border);
   border-radius: 999px;
-  padding: 0.2rem 0.58rem;
+  padding: 0.22rem 0.6rem;
+  background: rgba(20, 24, 32, 0.66);
 }
 
 .publication-footnote {
@@ -68,7 +68,7 @@
 #publications-source-note {
   margin-top: 0.45rem;
   font-size: 0.78rem;
-  color: #6a768b;
+  color: var(--text-low);
 }
 
 .research-motion-note {
@@ -103,17 +103,25 @@
   display: grid;
   gap: 0.42rem;
   font-size: 0.84rem;
-  color: var(--midnight-soft);
+  color: var(--text-mid);
   font-weight: 700;
 }
 
 .search-wrap input {
-  border: 1px solid var(--line);
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--card-border);
   border-radius: 999px;
-  background: #fff;
-  color: var(--text);
+  background: var(--surface-control);
+  color: var(--text-high);
+  font-family: inherit;
   font-size: 0.93rem;
   padding: 0.73rem 0.93rem;
+  box-shadow: inset 0 1px 0 rgba(246, 249, 255, 0.03);
+}
+
+.search-wrap input::placeholder {
+  color: rgba(166, 172, 187, 0.82);
 }
 
 .search-wrap input:focus-visible {
@@ -128,21 +136,28 @@
 }
 
 .role-filters button {
-  border: 1px solid var(--line);
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--card-border);
   border-radius: 999px;
-  background: #fff;
-  color: var(--midnight-soft);
+  background: var(--surface-control);
+  color: var(--text-mid);
+  font-family: inherit;
   padding: 0.39rem 0.85rem;
   font-size: 0.81rem;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
-  transition: border-color 210ms ease, transform 210ms ease;
+  box-shadow: inset 0 1px 0 rgba(246, 249, 255, 0.03);
+  transition: border-color 210ms ease, background-color 210ms ease, color 210ms ease, transform 210ms ease, box-shadow 210ms ease;
 }
 
 .role-filters button:hover,
 .role-filters button:focus-visible {
   transform: translateY(-1px);
-  border-color: var(--crimson);
+  border-color: var(--card-border-hover);
+  color: var(--text-high);
+  background: var(--surface-control-hover);
+  box-shadow: 0 10px 18px rgba(6, 7, 11, 0.2);
 }
 
 .role-filters button.active {
@@ -301,20 +316,22 @@
 }
 
 .people-empty {
-  border: 1px dashed var(--line);
+  border: 1px dashed var(--card-border);
   border-radius: var(--radius-md);
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(23, 27, 35, 0.72);
   padding: 1rem;
-  color: var(--muted);
+  color: var(--text-mid);
   font-size: 0.9rem;
 }
 
 .gallery-grid {
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid var(--card-border-strong);
   border-radius: var(--radius-lg);
-  padding: 0.88rem;
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: 0 14px 34px rgba(4, 14, 29, 0.28);
+  padding: 1rem;
+  background:
+    radial-gradient(circle at 84% 14%, rgba(114, 196, 203, 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(33, 37, 47, 0.95), rgba(26, 30, 39, 0.9));
+  box-shadow: var(--shadow-1);
 }
 
 .gallery-stage {
@@ -324,7 +341,7 @@
   min-height: clamp(260px, 40vw, 460px);
   display: grid;
   place-items: center;
-  background: rgba(7, 16, 28, 0.5);
+  background: rgba(9, 13, 19, 0.78);
 }
 
 .gallery-stage img {
@@ -363,14 +380,18 @@
 }
 
 .gallery-nav {
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  color: #fff;
-  background: rgba(255, 255, 255, 0.12);
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--card-border);
+  color: var(--text-high);
+  background: var(--surface-control);
   border-radius: 999px;
-  padding: 0.33rem 0.72rem;
-  font-size: 0.8rem;
-  font-weight: 700;
+  font-family: inherit;
+  padding: 0.36rem 0.8rem;
+  font-size: 0.79rem;
+  font-weight: 800;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(246, 249, 255, 0.03);
 }
 
 .gallery-nav[aria-pressed="true"],
@@ -394,14 +415,15 @@
 .gallery-dot {
   width: 10px;
   height: 10px;
-  border: 0;
+  border: 1px solid rgba(220, 224, 235, 0.22);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.38);
+  background: rgba(178, 188, 204, 0.26);
   cursor: pointer;
 }
 
 .gallery-dot.active {
-  background: #fff;
+  border-color: rgba(255, 233, 238, 0.84);
+  background: linear-gradient(135deg, rgba(177, 42, 61, 0.96), rgba(141, 30, 48, 0.94));
 }
 
 .alumni-grid {
@@ -415,15 +437,15 @@
 }
 
 .alumni-rotator {
-  border: 1px solid rgba(220, 224, 235, 0.18);
-  border-radius: var(--radius-md);
+  border: 1px solid var(--card-border-strong);
+  border-radius: 24px;
   background:
     radial-gradient(circle at 88% 16%, rgba(59, 143, 149, 0.12), transparent 42%),
     linear-gradient(145deg, rgba(26, 31, 40, 0.96), rgba(18, 22, 31, 0.94));
   box-shadow:
     0 22px 40px rgba(6, 7, 11, 0.28),
     inset 0 1px 0 rgba(235, 240, 248, 0.04);
-  padding: 1rem;
+  padding: 1.08rem;
 }
 
 .alumni-stage {
@@ -461,8 +483,8 @@
 .alumni-item a {
   width: fit-content;
   border-radius: 999px;
-  border: 1px solid rgba(220, 224, 235, 0.2);
-  background: rgba(41, 46, 58, 0.72);
+  border: 1px solid var(--card-border);
+  background: var(--surface-control);
   padding: 0.3rem 0.72rem;
   color: #f2f5fb;
   text-decoration: none;
@@ -492,9 +514,9 @@
   align-items: center;
   gap: 0.7rem;
   padding: 0.72rem 0.82rem;
-  border: 1px solid rgba(220, 224, 235, 0.14);
+  border: 1px solid var(--card-border);
   border-radius: 18px;
-  background: linear-gradient(145deg, rgba(18, 22, 31, 0.88), rgba(13, 17, 24, 0.82));
+  background: linear-gradient(145deg, rgba(18, 22, 31, 0.92), rgba(13, 17, 24, 0.86));
 }
 
 .alumni-nav-wrap {
@@ -503,13 +525,16 @@
 }
 
 .alumni-nav {
-  border: 1px solid rgba(220, 224, 235, 0.22);
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--card-border);
   border-radius: 999px;
-  background: rgba(40, 45, 56, 0.82);
-  color: #edf3fc;
-  padding: 0.33rem 0.72rem;
+  background: var(--surface-control-strong);
+  color: var(--text-high);
+  font-family: inherit;
+  padding: 0.36rem 0.8rem;
   font-size: 0.79rem;
-  font-weight: 700;
+  font-weight: 800;
   cursor: pointer;
   transition:
     border-color 180ms ease,
@@ -533,9 +558,9 @@
   gap: 0.32rem;
   flex-wrap: wrap;
   padding: 0.34rem 0.42rem;
-  border: 1px solid rgba(220, 224, 235, 0.12);
+  border: 1px solid var(--card-border);
   border-radius: 999px;
-  background: rgba(11, 15, 22, 0.48);
+  background: rgba(11, 15, 22, 0.58);
 }
 
 .alumni-dot {
@@ -757,10 +782,10 @@
 
 .contact-visual-wrap {
   margin: 0;
-  border: 1px solid var(--line);
+  border: 1px solid var(--card-border);
   border-radius: 12px;
   overflow: hidden;
-  background: #fff;
+  background: rgba(18, 21, 28, 0.88);
 }
 
 .contact-visual {
@@ -774,9 +799,9 @@
 .contact-visual-wrap figcaption {
   padding: 0.45rem 0.65rem;
   font-size: 0.78rem;
-  color: var(--muted);
-  border-top: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.95);
+  color: var(--text-low);
+  border-top: 1px solid var(--card-border);
+  background: rgba(29, 33, 42, 0.9);
 }
 
 .scroll-meter {
