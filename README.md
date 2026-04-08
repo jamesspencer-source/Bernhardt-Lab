@@ -4,6 +4,10 @@ Static lab website for the Thomas Bernhardt Lab, published via GitHub Pages.
 
 For a zero-context Codex or engineer handoff, start with `AGENTS.md`.
 
+For visual and interface work, also use:
+
+- `docs/editorial-style-guide.md`
+
 ## How the site is organized now
 
 - `data/` is the canonical hand-edited content source.
@@ -149,3 +153,4 @@ Do not hand-edit:
 For a plain-language maintenance workflow, see:
 
 - `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/docs/site-maintenance.md`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/docs/editorial-style-guide.md`
