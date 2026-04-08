@@ -34,8 +34,8 @@ STATIC_ALLOWED_DIRS = {
     "research-library",
     "scripts",
 }
-EXCLUDED_ROOT_DIRS = {".git", ".venv", ".pycache", "__pycache__", "tmp"}
-TRANSIENT_DIR_NAMES = {".venv", ".pycache", "__pycache__", ".pytest_cache"}
+EXCLUDED_ROOT_DIRS = {".git", ".venv", ".pycache", "__pycache__", ".playwright-cli", "output", "tmp"}
+TRANSIENT_DIR_NAMES = {".venv", ".pycache", "__pycache__", ".pytest_cache", ".playwright-cli", "output"}
 TRANSIENT_FILE_NAMES = {".DS_Store", "Thumbs.db"}
 
 
