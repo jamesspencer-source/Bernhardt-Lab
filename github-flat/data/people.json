@@ -762,7 +762,7 @@
     {
       "slug": "chris-lok-to-sham",
       "status": "alumni",
-      "name": "Chris Lok-To Sham",
+      "name": "Chris (Lok-To) Sham",
       "labRole": "Graduate Student",
       "group": "",
       "bio": "",
@@ -1238,30 +1238,6 @@
         "verifiedSource": "University of Georgia (Hummels Lab)"
       },
       "profileSummary": "I investigated outer membrane biosynthesis and homeostasis in <em class=\"species-name\">Pseudomonas aeruginosa</em>."
-    },
-    {
-      "slug": "kevin-scott-bonham",
-      "status": "alumni",
-      "name": "Kevin Scott Bonham",
-      "labRole": "Lecturer on Microbiology and Immunobiology",
-      "group": "",
-      "bio": "",
-      "image": "assets/images/hms-gordon-hall.jpg",
-      "focus": {
-        "x": 0.5,
-        "y": 0.5
-      },
-      "labDates": "2014 \u2013 2017",
-      "currentRole": "Assistant Professor, Tufts University School of Medicine",
-      "profileType": "alumni",
-      "email": "",
-      "links": [],
-      "verification": {
-        "sourceLabel": "Bernhardt lab records",
-        "url": "https://gsbs.tufts.edu/academics/basic-science-phd-programs/molecular-microbiology/molecular-microbiology-faculty",
-        "verifiedSource": "Tufts GSBS Molecular Microbiology faculty"
-      },
-      "profileSummary": "Former member of the Bernhardt Lab. Assistant Professor, Tufts University School of Medicine"
     },
     {
       "slug": "lamya-el-mortaji",

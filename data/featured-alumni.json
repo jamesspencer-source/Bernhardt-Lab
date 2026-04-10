@@ -1,14 +1,6 @@
 {
   "items": [
     {
-      "name": "Catherine Paradis-Bleau",
-      "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Assistant Professor, Department of Microbiology, Infectious Diseases and Immunology, Universite de Montreal",
-      "source": "https://microbiologie.umontreal.ca/recherche/professeurs-chercheurs/catherine-paradis-bleau/",
-      "sourceLabel": "Universite de Montreal",
-      "profileSlug": "catherine-paradis-bleau"
-    },
-    {
       "name": "Kate Hummels",
       "roleInLab": "Former postdoctoral fellow",
       "currentRole": "Assistant Professor, Department of Microbiology, University of Georgia",
@@ -89,12 +81,33 @@
       "profileSlug": "andrew-fenton"
     },
     {
-      "name": "Chris Lok-To Sham",
+      "name": "Chris (Lok-To) Sham",
       "roleInLab": "Former graduate student",
       "currentRole": "Assistant Professor, Department of Microbiology and Immunology, National University of Singapore",
       "source": "https://discovery.nus.edu.sg/11874-lok-to-sham",
       "sourceLabel": "National University of Singapore",
       "profileSlug": "chris-lok-to-sham"
+    },
+    {
+      "name": "Jackson Buss",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Scientist, New England Biolabs",
+      "sourceLabel": "Bernhardt lab records",
+      "profileSlug": "jackson-buss"
+    },
+    {
+      "name": "Hoong Chuin Lim",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Senior Scientist, Manifold Biotechnologies",
+      "sourceLabel": "Bernhardt lab records",
+      "profileSlug": "hoong-chuin-lim"
+    },
+    {
+      "name": "Thao Truong",
+      "roleInLab": "Former graduate student",
+      "currentRole": "CPEP Medical Microbiology and Public Health postdoctoral fellow, Children's Hospital Los Angeles / University of Southern California",
+      "sourceLabel": "Bernhardt lab records",
+      "profileSlug": "thao-truong"
     },
     {
       "name": "Neil Greene",
@@ -103,14 +116,6 @@
       "source": "https://web.uri.edu/cmb/meet/neil-greene/",
       "sourceLabel": "University of Rhode Island",
       "profileSlug": "neil-greene"
-    },
-    {
-      "name": "Derek Lau",
-      "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Lecturer in Residence, Department of Biology, Emmanuel College",
-      "source": "https://www.emmanuel.edu/derek-lau",
-      "sourceLabel": "Emmanuel College",
-      "profileSlug": "derek-lau"
     }
   ]
 }
