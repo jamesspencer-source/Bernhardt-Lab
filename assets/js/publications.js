@@ -1,7 +1,9 @@
-import { assetDataUrl, cleanText, formatSpeciesAwareText, requestJson, rootDataUrl } from "./shared.js";
+import { cleanText, formatSpeciesAwareText, requestJson, rootDataUrl } from "./shared.js";
 import { observeRevealTargets } from "./site-core.js";
 
 function publicationLink(item = {}) {
+  const articleUrl = cleanText(item.articleUrl);
+  if (articleUrl) return articleUrl;
   const doi = cleanText(item.doi);
   if (doi) return `https://doi.org/${doi}`;
   const pmid = cleanText(item.pmid);
@@ -42,9 +44,7 @@ export async function initRecentPublications() {
   const curatedPayload = await requestJson(rootDataUrl("curated-publications.json"));
   const curated = Array.isArray(curatedPayload?.items) ? curatedPayload.items : [];
   const whyLookup = buildWhyLookup(curated);
-
-  const runtimePayload = await requestJson(`${assetDataUrl("recent-publications.json")}?t=${Date.now()}`);
-  const publications = Array.isArray(runtimePayload?.items) && runtimePayload.items.length ? runtimePayload.items : curated;
+  const publications = curated;
 
   recentPublicationsRoot.innerHTML = `
     <ol class="publication-archive-list reveal">
