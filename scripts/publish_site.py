@@ -18,6 +18,8 @@ ALLOWED_ROOT_FILES = {
     "README.md",
     "alumni.html",
     "index.html",
+    "package-lock.json",
+    "package.json",
     "people.html",
 }
 STATIC_ALLOWED_DIRS = {
@@ -28,13 +30,14 @@ STATIC_ALLOWED_DIRS = {
     "assets",
     "data",
     "docs",
+    "game-src",
     "github-flat",
     "leaderboard-worker",
     "people",
     "research-library",
     "scripts",
 }
-EXCLUDED_ROOT_DIRS = {".git", ".venv", ".pycache", "__pycache__", ".playwright-cli", "output", "tmp"}
+EXCLUDED_ROOT_DIRS = {".git", ".venv", ".pycache", "__pycache__", ".playwright-cli", "node_modules", "output", "tmp"}
 TRANSIENT_DIR_NAMES = {".venv", ".pycache", "__pycache__", ".pytest_cache", ".playwright-cli", "output"}
 TRANSIENT_FILE_NAMES = {".DS_Store", "Thumbs.db"}
 
@@ -203,6 +206,16 @@ def build_site() -> None:
     run_command([sys.executable, "scripts/build_site.py"])
 
 
+def build_game() -> None:
+    if not (ROOT / "package.json").exists() or not (ROOT / "game-src" / "envelope-escape").exists():
+        return
+    npm = shutil.which("npm")
+    if not npm:
+        raise RuntimeError("npm is required to build the Envelope Escape V2 runtime before publishing.")
+    print_step("Running Envelope Escape game build")
+    run_command([npm, "run", "game:build"])
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--message", default=DEFAULT_MESSAGE, help="Commit message to use for the publish commit")
@@ -226,6 +239,7 @@ def main() -> int:
             + "\n".join(f"  - {path}" for path in outside_scope)
         )
 
+    build_game()
     build_site()
     cleanup_transient_worktree_artifacts()
 

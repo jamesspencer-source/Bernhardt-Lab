@@ -1,0 +1,20 @@
+{
+  "name": "bernhardt-lab-site",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "game:check": "tsc -p game-src/envelope-escape/tsconfig.json --noEmit",
+    "game:build": "vite build --config game-src/envelope-escape/vite.config.ts",
+    "game:dev": "vite --config game-src/envelope-escape/vite.config.ts --host 127.0.0.1",
+    "site:build": "npm run game:build && python3 scripts/build_site.py",
+    "check": "npm run game:check && npm run game:build && python3 scripts/build_site.py"
+  },
+  "dependencies": {
+    "phaser": "^3.90.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.2.4"
+  }
+}

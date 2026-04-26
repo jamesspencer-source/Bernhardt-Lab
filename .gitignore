@@ -3,6 +3,7 @@ Thumbs.db
 ._*
 
 .venv/
+node_modules/
 .pycache/
 __pycache__/
 *.py[cod]

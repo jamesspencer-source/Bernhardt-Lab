@@ -1,0 +1,11 @@
+name = "bernhardt-lab-leaderboard"
+main = "worker.js"
+compatibility_date = "2025-01-15"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bernhardt_lab_leaderboard"
+database_id = "8e2defcf-605a-4c24-8134-9196f8929bfd"
+
+[vars]
+ALLOWED_ORIGINS = "https://bernhardtlab.com,https://www.bernhardtlab.com,https://jamesspencer-source.github.io"

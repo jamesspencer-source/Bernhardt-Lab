@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Envelope Escape V2 Dev</title>
+    <link rel="stylesheet" href="../../assets/css/envelope-game.css" />
+  </head>
+  <body style="margin: 0; background: #050d18; min-height: 100vh">
+    <button id="dev-open" type="button">Open Envelope Escape</button>
+    <script type="module">
+      import { openEnvelopeEscapeV2 } from "./src/main.ts";
+      document.getElementById("dev-open").addEventListener("click", () => openEnvelopeEscapeV2());
+    </script>
+  </body>
+</html>
