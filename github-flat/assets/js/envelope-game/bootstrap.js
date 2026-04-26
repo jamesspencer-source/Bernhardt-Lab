@@ -5,10 +5,8 @@ if (wantsV2) {
   const trigger = document.getElementById("envelope-trigger");
   if (trigger) {
     let v2Failed = false;
-    trigger.setAttribute("title", "Open Envelope Escape V2 beta");
+    trigger.setAttribute("title", "...");
     trigger.setAttribute("aria-label", "Open Envelope Escape V2 beta");
-    const visible = trigger.querySelector('[aria-hidden="true"]');
-    if (visible) visible.textContent = "Envelope Escape V2";
     const sr = trigger.querySelector(".sr-only");
     if (sr) sr.textContent = "Open Envelope Escape V2 beta";
     trigger.addEventListener(

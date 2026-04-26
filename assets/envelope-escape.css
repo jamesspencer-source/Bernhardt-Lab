@@ -21,36 +21,42 @@
 
 .footer-secret-trigger {
   appearance: none;
-  border: 1px solid rgba(167, 234, 240, 0.16);
-  background: rgba(255, 255, 255, 0.04);
-  color: rgba(219, 239, 246, 0.46);
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(219, 239, 246, 0.28);
   border-radius: 999px;
-  min-height: 1.36rem;
-  min-width: 1.36rem;
+  min-height: 1.25rem;
+  min-width: 1.25rem;
   padding: 0;
   font: inherit;
-  font-size: 0.78rem;
+  font-size: 0.82rem;
   font-weight: 800;
   line-height: 1;
   cursor: pointer;
-  opacity: 0.44;
+  opacity: 0.32;
   transition: opacity 180ms ease, transform 180ms ease, border-color 180ms ease, color 180ms ease, background 180ms ease;
 }
 
 .footer-secret-trigger--game {
-  min-width: 0;
-  min-height: 1.7rem;
-  padding: 0.18rem 0.62rem;
-  color: rgba(219, 239, 246, 0.62);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.45rem;
+  min-width: 1.45rem;
+  height: 1.45rem;
+  min-height: 1.45rem;
+  padding: 0;
+  color: rgba(219, 239, 246, 0.3);
+  letter-spacing: 0.08em;
+  text-transform: none;
 }
 
 .footer-secret-trigger:hover {
-  opacity: 0.78;
-  border-color: rgba(143, 210, 215, 0.36);
-  color: rgba(243, 251, 255, 0.92);
-  background: rgba(59, 143, 149, 0.16);
+  opacity: 0.72;
+  transform: translateY(-1px);
+  border-color: rgba(143, 210, 215, 0.24);
+  color: rgba(243, 251, 255, 0.72);
+  background: rgba(59, 143, 149, 0.08);
 }
 
 .footer-secret-trigger:focus-visible {
