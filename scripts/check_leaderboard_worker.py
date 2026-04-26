@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 
-REQUIRED_KEYS = ("entries", "totalEntries", "updatedAt", "board")
+REQUIRED_KEYS = ("entries", "totalEntries", "updatedAt")
 
 
 def fetch_url(url: str, timeout: int = 20) -> str:
@@ -65,7 +65,7 @@ def daily_board_name() -> str:
     return f"daily-{datetime.now(timezone.utc).date().isoformat()}"
 
 
-def validate_payload(board: str, payload: Dict[str, Any]) -> None:
+def validate_payload(board: str, payload: Dict[str, Any], require_board_routing: bool) -> list[str]:
     if not isinstance(payload, dict):
         raise RuntimeError(f"{board}: response is not a JSON object")
     missing = [key for key in REQUIRED_KEYS if key not in payload]
@@ -77,28 +77,53 @@ def validate_payload(board: str, payload: Dict[str, Any]) -> None:
         raise RuntimeError(f"{board}: `totalEntries` is not an integer")
     if not isinstance(payload.get("updatedAt"), int):
         raise RuntimeError(f"{board}: `updatedAt` is not an integer")
-    if str(payload.get("board", "")).strip() != board:
+
+    payload_board = str(payload.get("board", "")).strip()
+    if payload_board == board:
+        return []
+
+    if payload_board:
         raise RuntimeError(f"{board}: response board `{payload.get('board')}` did not match request")
+
+    if require_board_routing:
+        raise RuntimeError(f"{board}: missing response key: board")
+
+    if board == "classic":
+        return ["legacy response without `board`; treating it as the classic board"]
+    return ["worker did not echo `board`; shared daily boards remain disabled until the worker is redeployed"]
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--url", default="", help="Optional leaderboard endpoint override")
     parser.add_argument("--timeout", type=int, default=20, help="Request timeout in seconds")
+    parser.add_argument(
+        "--require-board-routing",
+        action="store_true",
+        help="Fail unless the worker echoes the requested board in each response",
+    )
     args = parser.parse_args()
 
     root = Path(__file__).resolve().parents[1]
     endpoint = load_endpoint(root, args.url)
     boards = ("classic", daily_board_name())
 
-    print(f"Checking leaderboard worker: {endpoint}")
+    warning_count = 0
+
+    print(f"Checking leaderboard worker: {endpoint}", flush=True)
     for board in boards:
         query = urllib.parse.urlencode({"board": board})
         payload = fetch_json(f"{endpoint}?{query}", timeout=args.timeout)
-        validate_payload(board, payload)
+        warnings = validate_payload(board, payload, args.require_board_routing)
         print(f"  OK {board}: {len(payload['entries'])} entries, totalEntries={payload['totalEntries']}")
+        for warning in warnings:
+            warning_count += 1
+            print(f"  WARN {board}: {warning}")
 
-    print("Leaderboard worker smoke check passed.")
+    if warning_count:
+        print("Leaderboard worker smoke check passed with board-routing warnings.")
+    else:
+        print("Leaderboard worker smoke check passed.")
     return 0
 
 

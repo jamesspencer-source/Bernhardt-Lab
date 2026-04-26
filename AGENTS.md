@@ -63,6 +63,12 @@ Check the live leaderboard worker:
 python3 scripts/check_leaderboard_worker.py
 ```
 
+After redeploying board-aware worker changes, verify board routing explicitly:
+
+```bash
+python3 scripts/check_leaderboard_worker.py --require-board-routing
+```
+
 ## Editing rules
 
 - Edit canonical sources first, then rebuild.
