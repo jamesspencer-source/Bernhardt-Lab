@@ -32,6 +32,15 @@ Do not hand-repaint isolated modules in late CSS layers unless the exception is 
 python3 scripts/build_site.py
 ```
 
+If Envelope Escape V2 source under `game-src/envelope-escape/` changes, run the game checks first:
+
+```bash
+npm install
+npm run game:check
+npm run game:build
+python3 scripts/build_site.py
+```
+
 ## Publish command
 
 ```bash
@@ -43,6 +52,7 @@ Use this for the normal website workflow. It will:
 - verify you are on `main`
 - fetch `origin/main` and stop if the remote is ahead or diverged
 - remove transient local artifacts such as `.DS_Store` and Python cache folders
+- run `npm run game:build` when the game build exists
 - run `python3 scripts/build_site.py`
 - stage only approved website paths
 - commit only if a real website diff remains
@@ -64,6 +74,7 @@ This regenerates:
 - people and alumni directory pages
 - all current-member and alumni profile pages
 - generated CSS bundle
+- generated Envelope Escape V2 runtime bundle
 - generated game runtime config
 - generated `github-flat/` mirror
 
@@ -140,12 +151,30 @@ If it fails, check:
 - D1 binding / schema drift
 - whether the live worker has been redeployed after repo-side leaderboard API changes
 
+## Envelope Escape V2 beta
+
+V1 remains the public footer game until V2 clears art, browser, and leaderboard gates. V2 loads only when the homepage URL includes:
+
+```text
+index.html?envelopeV2=1
+```
+
+Source and output:
+
+- `game-src/envelope-escape/` is the Phaser + TypeScript source.
+- `assets/game/envelope-escape/` contains game art and the generated runtime bundle.
+- `docs/envelope-escape-game-upgrade.md` tracks the production migration.
+- `docs/envelope-escape-art-direction.md` tracks the asset brief and QA checklist.
+
+Do not edit `assets/game/envelope-escape/runtime/envelope-escape-v2.js` by hand. Rebuild it with `npm run game:build`.
+
 ## Generated assets
 
 These are outputs, not canonical source:
 
 - `assets/styles.css`
 - `assets/envelope-escape-config.js`
+- `assets/game/envelope-escape/runtime/envelope-escape-v2.js`
 - `github-flat/`
 
 `github-flat/` now keeps nested `assets/` and `data/` as the authoritative generated mirror. Root-level non-HTML files there are cleaned during the build and should not be restored manually.

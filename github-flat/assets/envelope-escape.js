@@ -8,6 +8,8 @@
   const restartButton = document.getElementById("envelope-restart");
   const responseButton = document.getElementById("envelope-response");
   const scoresToggleButton = document.getElementById("envelope-scores-toggle");
+  const audioToggleButton = document.getElementById("envelope-audio-toggle");
+  const motionSelect = document.getElementById("envelope-motion-select");
   const scoresPanel = document.getElementById("envelope-scores-panel");
   const canvas = document.getElementById("envelope-canvas");
   const stageWrap = canvas ? canvas.closest(".envelope-stage-wrap") : null;
@@ -37,6 +39,8 @@
   const leaderboardMetaEl = document.getElementById("envelope-leaderboard-meta");
   const leaderboardListEl = document.getElementById("envelope-leaderboard-list");
   const rankSummaryEl = document.getElementById("envelope-rank-summary");
+  const runReportEl = document.getElementById("envelope-run-report");
+  const liveStatusEl = document.getElementById("envelope-live-status");
 
   if (
     !trigger ||
@@ -65,14 +69,31 @@
   const BOARD_PREFIX = `bernhardt-envelope-escape-board-${STORAGE_VERSION}-`;
   const MODEL_KEY = `bernhardt-envelope-escape-model-${STORAGE_VERSION}`;
   const NAME_KEY = `bernhardt-envelope-escape-name-${STORAGE_VERSION}`;
+  const SOUND_KEY = `bernhardt-envelope-escape-sound-${STORAGE_VERSION}`;
+  const MOTION_KEY = `bernhardt-envelope-escape-motion-${STORAGE_VERSION}`;
   const LEADERBOARD_SIZE = 25;
   const GLOBAL_LEADERBOARD_URL = String(window.ENVELOPE_LEADERBOARD_URL || "").trim();
   const REQUEST_TIMEOUT_MS = 9000;
   const LAB_TIMEZONE = "America/New_York";
   const TAU = Math.PI * 2;
   const BOARD_PATTERN = /^(classic|daily-\d{4}-\d{2}-\d{2})$/;
+  const HITBOX = {
+    playerRadius: 22,
+    pickupRadius: 26,
+    phagePadding: 22,
+    wavePadding: 18,
+    rupturePadding: 14
+  };
+  const TELEGRAPH = {
+    phage: 0.56,
+    wave: 0.72,
+    rupture: 0.82
+  };
   const prefersReducedMotion =
     typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const world = { width: BASE_PLAYFIELD.width, height: BASE_PLAYFIELD.height, dpr: 1 };
+  let activeRandom = Math.random;
+  let audioContext = null;
 
   const SPECIES = {
     ecoli: {
@@ -303,6 +324,8 @@
       lastFrame: 0,
       selectedSpeciesId,
       speciesId: selectedSpeciesId,
+      audioEnabled: readStorageText(SOUND_KEY) === "on",
+      motionMode: normalizeMotionMode(readStorageText(MOTION_KEY)),
       dailyChallenge: buildDailyChallenge(),
       currentMode: "classic",
       currentBoard: "classic",
@@ -314,28 +337,37 @@
       leaderboardMode: GLOBAL_LEADERBOARD_URL ? "fallback" : "local",
       leaderboardStats: { totalEntries: 0, updatedAt: 0, board: "classic" },
       leaderboardMessage: "",
+      leaderboardRequestId: 0,
       dailyBoardReady: false,
       lastPlacement: null,
       elapsed: 0,
       score: 0,
+      runSeed: 0,
+      assemblyCycles: 0,
+      lastDamageKind: "",
+      responseChoice: "patch",
+      responseChoiceTimer: 0,
       integrity: 100,
       repairProgress: 0,
       repairNeeded: 4,
       responseCharge: 0,
+      responseAnnounced: false,
       responseReadyFlash: 0,
       safeWindow: 0,
+      boostWindow: 0,
       phaseIndex: 0,
       hitFlash: 0,
       banner: null,
       deathAnimation: null,
       camera: { x: 0, y: 0, zoom: 1, shake: 0, idle: randomRange(0, TAU) },
       input: { up: false, down: false, left: false, right: false },
-      pointer: { active: false, x: canvas.width * 0.5, y: canvas.height * 0.5 },
+      pointer: { active: false, x: world.width * 0.5, y: world.height * 0.5 },
       fragments: [],
       phages: [],
       waves: [],
       ruptures: [],
       pulses: [],
+      sparks: [],
       floaters: [],
       playerTrail: [],
       backgroundMotes: seedBackgroundMotes(),
@@ -346,8 +378,8 @@
 
   function seedBackgroundMotes() {
     return Array.from({ length: 34 }, () => ({
-      x: randomRange(0, canvas.width),
-      y: randomRange(0, canvas.height),
+      x: randomRange(0, world.width),
+      y: randomRange(0, world.height),
       radius: randomRange(1, 4),
       drift: randomRange(10, 28),
       driftX: randomRange(-6, 6),
@@ -360,8 +392,8 @@
 
   function createPlayer(speciesId) {
     return {
-      x: canvas.width * 0.5,
-      y: canvas.height * 0.55,
+      x: world.width * 0.5,
+      y: world.height * 0.55,
       vx: 0,
       vy: 0,
       angle: -Math.PI / 2,
@@ -376,6 +408,10 @@
   function normalizeBoard(value) {
     const raw = String(value || "").trim().toLowerCase();
     return BOARD_PATTERN.test(raw) ? raw : "classic";
+  }
+
+  function normalizeMotionMode(value) {
+    return ["full", "calm", "off"].includes(value) ? value : prefersReducedMotion ? "calm" : "full";
   }
 
   function readStorageText(key) {
@@ -427,21 +463,21 @@
     return Math.max(2, Math.round(value / 2) * 2);
   }
 
-  function getPlayfieldGrowth(width = canvas.width) {
+  function getPlayfieldGrowth(width = world.width) {
     return clamp((width - BASE_PLAYFIELD.width) / (MAX_PLAYFIELD.width - BASE_PLAYFIELD.width), 0, 1);
   }
 
-  function getPlayfieldPaceScale(width = canvas.width) {
+  function getPlayfieldPaceScale(width = world.width) {
     return lerp(1, 1.12, getPlayfieldGrowth(width));
   }
 
   function getResponsivePlayfieldSize() {
     if (!stageWrap) {
-      return { width: canvas.width || BASE_PLAYFIELD.width, height: canvas.height || BASE_PLAYFIELD.height };
+      return { width: world.width || BASE_PLAYFIELD.width, height: world.height || BASE_PLAYFIELD.height };
     }
     const rect = stageWrap.getBoundingClientRect();
     if (!rect.width || !rect.height) {
-      return { width: canvas.width || BASE_PLAYFIELD.width, height: canvas.height || BASE_PLAYFIELD.height };
+      return { width: world.width || BASE_PLAYFIELD.width, height: world.height || BASE_PLAYFIELD.height };
     }
 
     const widthProgress = clamp((rect.width - 1060) / 420, 0, 1);
@@ -454,37 +490,55 @@
     };
   }
 
+  function getCanvasDpr() {
+    return clamp(Number(window.devicePixelRatio) || 1, 1, 2);
+  }
+
+  function applyCanvasBackingSize(width = world.width, height = world.height) {
+    const dpr = getCanvasDpr();
+    const backingWidth = Math.max(2, Math.round(width * dpr));
+    const backingHeight = Math.max(2, Math.round(height * dpr));
+    world.width = width;
+    world.height = height;
+    world.dpr = dpr;
+    if (canvas.width !== backingWidth) canvas.width = backingWidth;
+    if (canvas.height !== backingHeight) canvas.height = backingHeight;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
   function syncPlayfieldSize(options = {}) {
     const preserveState = options.preserveState !== false;
-    const previousWidth = canvas.width || BASE_PLAYFIELD.width;
-    const previousHeight = canvas.height || BASE_PLAYFIELD.height;
+    const previousWidth = world.width || BASE_PLAYFIELD.width;
+    const previousHeight = world.height || BASE_PLAYFIELD.height;
     const nextSize = getResponsivePlayfieldSize();
-    if (previousWidth === nextSize.width && previousHeight === nextSize.height) return false;
+    const nextDpr = getCanvasDpr();
+    if (previousWidth === nextSize.width && previousHeight === nextSize.height && world.dpr === nextDpr) {
+      return false;
+    }
 
     const scaleX = nextSize.width / previousWidth;
     const scaleY = nextSize.height / previousHeight;
     const scaleAverage = (scaleX + scaleY) * 0.5;
 
-    canvas.width = nextSize.width;
-    canvas.height = nextSize.height;
+    applyCanvasBackingSize(nextSize.width, nextSize.height);
 
     if (!preserveState) {
-      state.pointer.x = canvas.width * 0.5;
-      state.pointer.y = canvas.height * 0.5;
+      state.pointer.x = world.width * 0.5;
+      state.pointer.y = world.height * 0.5;
       state.player = createPlayer(state.speciesId);
       state.playerTrail = [];
       state.backgroundMotes = seedBackgroundMotes();
       return true;
     }
 
-    state.pointer.x = clamp(state.pointer.x * scaleX, 0, canvas.width);
-    state.pointer.y = clamp(state.pointer.y * scaleY, 0, canvas.height);
+    state.pointer.x = clamp(state.pointer.x * scaleX, 0, world.width);
+    state.pointer.y = clamp(state.pointer.y * scaleY, 0, world.height);
     state.camera.x *= scaleX;
     state.camera.y *= scaleY;
 
     if (state.player) {
-      state.player.x = clamp(state.player.x * scaleX, 36, canvas.width - 36);
-      state.player.y = clamp(state.player.y * scaleY, 36, canvas.height - 36);
+      state.player.x = clamp(state.player.x * scaleX, 36, world.width - 36);
+      state.player.y = clamp(state.player.y * scaleY, 36, world.height - 36);
       state.player.vx *= scaleX;
       state.player.vy *= scaleY;
     }
@@ -535,6 +589,14 @@
       pulse.lineWidth *= scaleAverage;
     });
 
+    state.sparks.forEach((spark) => {
+      spark.x *= scaleX;
+      spark.y *= scaleY;
+      spark.vx *= scaleAverage;
+      spark.vy *= scaleAverage;
+      spark.radius *= scaleAverage;
+    });
+
     state.floaters.forEach((floater) => {
       floater.x *= scaleX;
       floater.y *= scaleY;
@@ -562,7 +624,7 @@
   }
 
   function getDepthScale(y) {
-    return lerp(0.86, 1.15, clamp(y / canvas.height, 0, 1));
+    return lerp(0.86, 1.15, clamp(y / world.height, 0, 1));
   }
 
   function drawGroundShadow(x, y, width, height, alpha) {
@@ -578,17 +640,17 @@
 
   function applyWorldTransform() {
     const { x, y, zoom } = state.camera;
-    ctx.translate(canvas.width * 0.5 + x, canvas.height * 0.5 + y);
+    ctx.translate(world.width * 0.5 + x, world.height * 0.5 + y);
     ctx.scale(zoom, zoom);
-    ctx.translate(-canvas.width * 0.5, -canvas.height * 0.5);
+    ctx.translate(-world.width * 0.5, -world.height * 0.5);
   }
 
-  function randomRange(min, max) {
-    return min + Math.random() * (max - min);
+  function randomRange(min, max, rng = activeRandom) {
+    return min + rng() * (max - min);
   }
 
-  function pick(list) {
-    return list[Math.floor(Math.random() * list.length)];
+  function pick(list, rng = activeRandom) {
+    return list[Math.floor(rng() * list.length)];
   }
 
   function hashString(value) {
@@ -807,10 +869,10 @@
 
   function pointToCanvas(event) {
     const rect = canvas.getBoundingClientRect();
-    if (!rect.width || !rect.height) return { x: canvas.width * 0.5, y: canvas.height * 0.5 };
+    if (!rect.width || !rect.height) return { x: world.width * 0.5, y: world.height * 0.5 };
     return {
-      x: ((event.clientX - rect.left) / rect.width) * canvas.width,
-      y: ((event.clientY - rect.top) / rect.height) * canvas.height
+      x: ((event.clientX - rect.left) / rect.width) * world.width,
+      y: ((event.clientY - rect.top) / rect.height) * world.height
     };
   }
 
@@ -821,6 +883,30 @@
       const li = document.createElement("li");
       li.textContent = item;
       overlayPoints.append(li);
+    });
+  }
+
+  function renderRunReport(best) {
+    if (!runReportEl) return;
+    const phase = getPhaseForElapsed(state.elapsed);
+    const causeMap = {
+      phage: "phage adsorption",
+      wave: "beta-lactam pulse",
+      rupture: "autolysin breach"
+    };
+    const items = [
+      ["Phase reached", phase.title],
+      ["Assembly cycles", String(state.assemblyCycles)],
+      ["Lysis pressure", causeMap[state.lastDamageKind] || "cumulative envelope stress"],
+      ["Best score", String(best)]
+    ];
+    runReportEl.innerHTML = "";
+    items.forEach(([label, value]) => {
+      const dt = document.createElement("dt");
+      const dd = document.createElement("dd");
+      dt.textContent = label;
+      dd.textContent = value;
+      runReportEl.append(dt, dd);
     });
   }
 
@@ -839,13 +925,20 @@
     state.overlayMode = mode;
     overlay.classList.remove("is-hidden");
     setScoresOpen(mode === "ended");
+    if (runReportEl) {
+      runReportEl.hidden = mode !== "ended";
+      if (mode !== "ended") runReportEl.innerHTML = "";
+    }
 
     if (mode === "start") {
-      overlayTitle.textContent = "Keep the envelope intact.";
+      overlayTitle.textContent = "Envelope Stress Test Chamber";
       overlayCopy.textContent =
-        "Collect envelope biogenesis factors, restore PG assembly, and outlast phages, beta-lactam pulses, and autolysin breaches.";
-      overlayStatus.textContent = "Collect 4 envelope factors, then induce the stress response when the meter is full.";
-      setOverlayPoints(["Difficulty rises slowly, so clean movement matters more than memorizing patterns."]);
+        "Pilot a bacterial cell through an animated envelope assay: build PG, manage rupture pressure, and fire the stress response before lysis.";
+      overlayStatus.textContent = "Collect envelope assembly units, then induce the stress response when the meter is full.";
+      setOverlayPoints([
+        "Phage edge pings, beta-lactam sweeps, and autolysin cracks now telegraph before impact.",
+        "Completed assembly cycles generate a protective PG pulse around the cell."
+      ]);
       startButton.textContent = "Start Classic Run";
       dailyStartButton.textContent = "Play Daily Challenge";
     } else if (mode === "paused") {
@@ -869,9 +962,11 @@
       overlayStatus.textContent = state.lastPlacement
         ? state.lastPlacement.summary
         : "Score saved. Try another strain or jump into the daily challenge for a new rhythm.";
+      renderRunReport(best);
       setOverlayPoints([
         `Personal best on this board: ${best}.`,
-        `Species used: ${getSpecies().label}.`
+        `Species used: ${getSpecies().label}.`,
+        `Run seed: ${state.runSeed}.`
       ]);
       startButton.textContent = state.currentMode === "daily" ? "Replay Daily Challenge" : "Run Classic Again";
       dailyStartButton.textContent = state.currentMode === "daily" ? "Play Classic" : "Try Daily Challenge";
@@ -894,6 +989,12 @@
     restartButton.disabled = !state.running && state.overlayMode === "start";
     responseButton.disabled = !activeRun || state.responseCharge < 100;
     responseButton.classList.toggle("is-ready", activeRun && state.responseCharge >= 100);
+    if (activeRun && state.responseCharge >= 100) {
+      const choices = ["Patch Wall", "Purge Phages", "Boost Motility"];
+      responseButton.textContent = choices[state.assemblyCycles % choices.length];
+    } else {
+      responseButton.textContent = "Induce Stress Response";
+    }
     pauseButton.textContent = state.paused ? "Resume" : "Pause";
   }
 
@@ -934,10 +1035,100 @@
 
   function setBanner(title, copy, timer = 2.2) {
     state.banner = { title, copy, timer };
+    announce(`${title}. ${copy}`);
   }
 
   function addFloater(x, y, text, color = "#d8fbff") {
     state.floaters.push({ x, y, text, color, life: 1.15, vy: -24 });
+  }
+
+  function addImpactSparks(x, y, color = "#d8fbff", count = 10) {
+    if (getMotionScale() <= 0 && count > 6) count = 6;
+    for (let index = 0; index < count; index += 1) {
+      const angle = (index / Math.max(1, count)) * TAU + randomRange(-0.34, 0.34);
+      const speed = randomRange(48, 180);
+      state.sparks.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius: randomRange(1.8, 4.8),
+        color,
+        life: randomRange(0.32, 0.72),
+        maxLife: 0.72
+      });
+    }
+  }
+
+  function resetInputState() {
+    state.input.up = false;
+    state.input.down = false;
+    state.input.left = false;
+    state.input.right = false;
+    state.pointer.active = false;
+    state.pointer.x = world.width * 0.5;
+    state.pointer.y = world.height * 0.5;
+  }
+
+  function announce(message) {
+    if (!liveStatusEl) return;
+    liveStatusEl.textContent = message;
+  }
+
+  function getMotionScale() {
+    if (prefersReducedMotion || state.motionMode === "off") return 0;
+    return state.motionMode === "calm" ? 0.42 : 1;
+  }
+
+  function addCameraImpulse(amount) {
+    state.camera.shake = Math.max(state.camera.shake, amount * getMotionScale());
+  }
+
+  function createRunSeed(mode) {
+    return hashString(`${mode}-${state.currentBoard}-${state.speciesId}-${Date.now()}-${Math.floor(Math.random() * 1e9)}`);
+  }
+
+  function playAssayTone(kind) {
+    if (!state.audioEnabled) return;
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    if (!audioContext) audioContext = new AudioContext();
+    if (audioContext.state === "suspended") {
+      audioContext.resume().catch(() => {});
+    }
+    const now = audioContext.currentTime;
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+    const toneMap = {
+      pickup: [660, 0.05, 0.07],
+      repair: [420, 0.08, 0.16],
+      damage: [150, 0.11, 0.18],
+      response: [260, 0.09, 0.42],
+      phase: [520, 0.06, 0.2],
+      lysis: [92, 0.13, 0.45]
+    };
+    const [frequency, volume, duration] = toneMap[kind] || toneMap.pickup;
+    oscillator.type = kind === "damage" || kind === "lysis" ? "sawtooth" : "sine";
+    oscillator.frequency.setValueAtTime(frequency, now);
+    if (kind === "response") oscillator.frequency.exponentialRampToValueAtTime(760, now + duration);
+    if (kind === "lysis") oscillator.frequency.exponentialRampToValueAtTime(48, now + duration);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(volume, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+    oscillator.start(now);
+    oscillator.stop(now + duration + 0.04);
+  }
+
+  function updateAudioControl() {
+    if (!audioToggleButton) return;
+    audioToggleButton.textContent = state.audioEnabled ? "Sound On" : "Sound Off";
+    audioToggleButton.setAttribute("aria-pressed", String(state.audioEnabled));
+  }
+
+  function updateMotionControl() {
+    if (motionSelect) motionSelect.value = state.motionMode;
   }
 
   function createLysisAnimation() {
@@ -993,12 +1184,20 @@
     state.currentBoard = mode === "daily" ? state.dailyChallenge.board : "classic";
     state.currentBoardLabel = mode === "daily" ? "Daily challenge" : "Classic board";
     state.speciesId = mode === "daily" ? state.dailyChallenge.speciesId : state.selectedSpeciesId;
+    state.runSeed = createRunSeed(mode);
+    activeRandom = createSeededRandom(state.runSeed);
     state.elapsed = 0;
     state.score = 0;
+    state.assemblyCycles = 0;
+    state.lastDamageKind = "";
+    state.responseChoice = "patch";
+    state.responseChoiceTimer = 0;
     state.integrity = 100;
     state.responseCharge = 0;
+    state.responseAnnounced = false;
     state.responseReadyFlash = 0;
     state.safeWindow = 0;
+    state.boostWindow = 0;
     state.hitFlash = 0;
     state.phaseIndex = 0;
     state.repairNeeded = Math.max(4, Math.floor(getModeModifiers().repairNeeded || 4));
@@ -1011,6 +1210,7 @@
     state.waves = [];
     state.ruptures = [];
     state.pulses = [];
+    state.sparks = [];
     state.floaters = [];
     state.playerTrail = [];
     state.player = createPlayer(state.speciesId);
@@ -1021,6 +1221,7 @@
     state.paused = false;
     state.lastFrame = 0;
     state.deathAnimation = null;
+    resetInputState();
     hideOverlay();
     setBanner("Surveillance engaged", "Collect envelope factors to complete your first cycle.");
     refreshLeaderboard(state.currentBoard);
@@ -1031,6 +1232,7 @@
   function pauseRun() {
     if (!state.running || state.dying) return;
     state.paused = true;
+    resetInputState();
     showOverlay("paused");
   }
 
@@ -1038,6 +1240,7 @@
     if (!state.running || state.dying) return;
     state.paused = false;
     state.lastFrame = 0;
+    resetInputState();
     hideOverlay();
     updateControlState();
   }
@@ -1049,10 +1252,13 @@
     if (kind === "rupture") {
       adjusted *= species.ruptureDamageMul;
     }
+    state.lastDamageKind = kind;
     state.integrity = clamp(state.integrity - adjusted, 0, 100);
     state.safeWindow = 0.65;
-    state.hitFlash = 0.32;
-    state.camera.shake = Math.max(state.camera.shake, 1);
+    state.hitFlash = 0.32 * Math.max(0.35, getMotionScale());
+    addCameraImpulse(1);
+    addImpactSparks(hitX, hitY, "#ffb6c4", prefersReducedMotion ? 5 : 14);
+    playAssayTone("damage");
     addFloater(hitX, hitY, `-${Math.round(adjusted)}`, "#ffb6c4");
     if (state.integrity <= 0) {
       endRun();
@@ -1064,11 +1270,12 @@
     const species = getSpecies();
     const scoreBonus = Math.round(320 * getModeModifiers().score + state.elapsed * 0.3);
     state.repairProgress = 0;
+    state.assemblyCycles += 1;
     state.score += scoreBonus;
     state.integrity = clamp(state.integrity + 12 + species.healBonus, 0, 100);
     state.responseCharge = clamp(state.responseCharge + 18, 0, 100);
     state.safeWindow = Math.max(state.safeWindow, 0.85);
-    state.camera.shake = Math.max(state.camera.shake, 0.4);
+    addCameraImpulse(0.4);
     const radius = species.burstRadius;
     clearHazardsAroundPlayer(radius);
     state.pulses.push({
@@ -1082,29 +1289,50 @@
     });
     setBanner("Assembly complete", "A productive cycle cleared nearby stressors.");
     addFloater(state.player.x, state.player.y - 36, `+${scoreBonus}`, "#b9ffd4");
+    addImpactSparks(state.player.x, state.player.y, species.palette.pulse, prefersReducedMotion ? 6 : 18);
+    playAssayTone("repair");
   }
 
   function triggerStressResponse() {
     if (!state.running || state.paused || state.responseCharge < 100) return;
     const species = getSpecies();
+    const choices = ["patch", "purge", "boost"];
+    state.responseChoice = choices[state.assemblyCycles % choices.length];
+    state.responseChoiceTimer = 1.2;
     state.responseCharge = 0;
+    state.responseAnnounced = false;
     state.responseReadyFlash = 0;
     state.safeWindow = Math.max(state.safeWindow, 1.15);
-    state.camera.shake = Math.max(state.camera.shake, 0.72);
-    state.integrity = clamp(state.integrity + 14 + species.healBonus, 0, 100);
-    clearHazardsAroundPlayer(species.burstRadius + 28);
+    addCameraImpulse(0.72);
+    let responseLabel = "Patch Wall";
+    let burstRadius = species.burstRadius + 28;
+    if (state.responseChoice === "patch") {
+      state.integrity = clamp(state.integrity + 24 + species.healBonus, 0, 100);
+    } else if (state.responseChoice === "purge") {
+      responseLabel = "Purge Phages";
+      burstRadius += 54;
+      state.integrity = clamp(state.integrity + 10 + species.healBonus, 0, 100);
+    } else {
+      responseLabel = "Boost Motility";
+      state.integrity = clamp(state.integrity + 12 + species.healBonus, 0, 100);
+      state.safeWindow = Math.max(state.safeWindow, 1.65);
+      state.boostWindow = 2.35;
+    }
+    clearHazardsAroundPlayer(burstRadius);
     state.pulses.push({
       x: state.player.x,
       y: state.player.y,
       radius: 16,
-      maxRadius: species.burstRadius + 64,
+      maxRadius: burstRadius + 42,
       lineWidth: 14,
       color: species.palette.pulse,
       life: 0.74
     });
+    addImpactSparks(state.player.x, state.player.y, species.palette.pulse, prefersReducedMotion ? 8 : 26);
     state.score += 120;
-    setBanner("Response induced", "A protected window is active. Reposition now.");
-    addFloater(state.player.x, state.player.y - 40, "Response induced", "#d7fbff");
+    setBanner(responseLabel, "Envelope stress response fired. Reposition before the next pressure wave.");
+    addFloater(state.player.x, state.player.y - 40, responseLabel, "#d7fbff");
+    playAssayTone("response");
     updateControlState();
   }
 
@@ -1116,11 +1344,11 @@
     const kind = pick(FRAGMENT_TYPES);
     const margin = 72;
     let attempts = 0;
-    let x = canvas.width * 0.5;
-    let y = canvas.height * 0.5;
+    let x = world.width * 0.5;
+    let y = world.height * 0.5;
     while (attempts < 18) {
-      x = randomRange(margin, canvas.width - margin);
-      y = randomRange(margin, canvas.height - margin);
+      x = randomRange(margin, world.width - margin);
+      y = randomRange(margin, world.height - margin);
       const distanceToPlayer = Math.hypot(x - state.player.x, y - state.player.y);
       if (distanceToPlayer > 120) break;
       attempts += 1;
@@ -1138,21 +1366,21 @@
   function spawnPhage() {
     const difficulty = getDifficultyScalar();
     const paceScale = getPlayfieldPaceScale();
-    const edge = Math.floor(Math.random() * 4);
+    const edge = Math.floor(activeRandom() * 4);
     let x = 0;
     let y = 0;
     if (edge === 0) {
       x = -28;
-      y = randomRange(40, canvas.height - 40);
+      y = randomRange(40, world.height - 40);
     } else if (edge === 1) {
-      x = canvas.width + 28;
-      y = randomRange(40, canvas.height - 40);
+      x = world.width + 28;
+      y = randomRange(40, world.height - 40);
     } else if (edge === 2) {
-      x = randomRange(40, canvas.width - 40);
+      x = randomRange(40, world.width - 40);
       y = -28;
     } else {
-      x = randomRange(40, canvas.width - 40);
-      y = canvas.height + 28;
+      x = randomRange(40, world.width - 40);
+      y = world.height + 28;
     }
     const speed = lerp(96, 182, difficulty) * paceScale;
     state.phages.push({
@@ -1163,6 +1391,8 @@
       radius: randomRange(12, 15),
       speed,
       turnRate: lerp(1.4, 2.5, difficulty),
+      warning: TELEGRAPH.phage,
+      maxWarning: TELEGRAPH.phage,
       nearActive: false,
       nearAwarded: false,
       spin: randomRange(0, TAU)
@@ -1172,16 +1402,18 @@
   function spawnWave() {
     const difficulty = getDifficultyScalar();
     const paceScale = getPlayfieldPaceScale();
-    const axis = Math.random() > 0.5 ? "x" : "y";
+    const axis = activeRandom() > 0.5 ? "x" : "y";
     const thickness = randomRange(84, 112);
-    const fromNegative = Math.random() > 0.5;
+    const fromNegative = activeRandom() > 0.5;
     const velocity = (fromNegative ? 1 : -1) * lerp(148, 236, difficulty) * paceScale;
     state.waves.push({
       axis,
-      position: fromNegative ? -thickness : axis === "x" ? canvas.width + thickness : canvas.height + thickness,
+      position: fromNegative ? -thickness : axis === "x" ? world.width + thickness : world.height + thickness,
       velocity,
       thickness,
-      hue: Math.random() > 0.5 ? "#77dfff" : "#91f3ff"
+      hue: activeRandom() > 0.5 ? "#77dfff" : "#91f3ff",
+      warning: TELEGRAPH.wave,
+      maxWarning: TELEGRAPH.wave
     });
   }
 
@@ -1194,21 +1426,21 @@
     const directionY = Math.sin(angle);
     const normalX = -directionY;
     const normalY = directionX;
-    const edge = Math.floor(Math.random() * 4);
+    const edge = Math.floor(activeRandom() * 4);
     let centerX = 0;
     let centerY = 0;
     if (edge === 0) {
       centerX = -80;
-      centerY = randomRange(60, canvas.height - 60);
+      centerY = randomRange(60, world.height - 60);
     } else if (edge === 1) {
-      centerX = canvas.width + 80;
-      centerY = randomRange(60, canvas.height - 60);
+      centerX = world.width + 80;
+      centerY = randomRange(60, world.height - 60);
     } else if (edge === 2) {
-      centerX = randomRange(60, canvas.width - 60);
+      centerX = randomRange(60, world.width - 60);
       centerY = -80;
     } else {
-      centerX = randomRange(60, canvas.width - 60);
-      centerY = canvas.height + 80;
+      centerX = randomRange(60, world.width - 60);
+      centerY = world.height + 80;
     }
     const half = length * 0.5;
     state.ruptures.push({
@@ -1219,6 +1451,8 @@
       vx: normalX * lerp(134, 220, difficulty) * paceScale,
       vy: normalY * lerp(134, 220, difficulty) * paceScale,
       width: randomRange(12, 18),
+      warning: TELEGRAPH.rupture,
+      maxWarning: TELEGRAPH.rupture,
       life: 6.6
     });
   }
@@ -1325,11 +1559,11 @@
       }
     }
 
-    const baseSpeed = 294 * species.speedMul * getPlayfieldPaceScale();
+    const baseSpeed = 294 * species.speedMul * getPlayfieldPaceScale() * (state.boostWindow > 0 ? 1.22 : 1);
     state.player.vx = moveX * baseSpeed;
     state.player.vy = moveY * baseSpeed;
-    state.player.x = clamp(state.player.x + state.player.vx * dt, 36, canvas.width - 36);
-    state.player.y = clamp(state.player.y + state.player.vy * dt, 36, canvas.height - 36);
+    state.player.x = clamp(state.player.x + state.player.vx * dt, 36, world.width - 36);
+    state.player.y = clamp(state.player.y + state.player.vy * dt, 36, world.height - 36);
     if (Math.abs(state.player.vx) + Math.abs(state.player.vy) > 12) {
       state.player.angle = Math.atan2(state.player.vy, state.player.vx);
     }
@@ -1362,12 +1596,21 @@
         fragment.y -= ((fragment.y - state.player.y) / distance) * pull * dt;
       }
 
-      if (distance < 26) {
+      if (distance < HITBOX.pickupRadius) {
         state.fragments.splice(index, 1);
         state.score += 60;
-        state.repairProgress += 1;
+        state.repairProgress += fragment.kind.id === "lipid-ii" ? 2 : 1;
+        if (fragment.kind.id === "hydrolase-restraint") {
+          state.safeWindow = Math.max(state.safeWindow, 0.78);
+          state.ruptures = state.ruptures.filter((rupture) => {
+            const ruptureDistance = pointSegmentDistance(fragment.x, fragment.y, rupture.x1, rupture.y1, rupture.x2, rupture.y2);
+            return ruptureDistance > 190;
+          });
+        }
         state.responseCharge = clamp(state.responseCharge + 19 * species.responseGainMul * getModeModifiers().response, 0, 100);
         addFloater(fragment.x, fragment.y, fragment.kind.label, fragment.kind.color);
+        addImpactSparks(fragment.x, fragment.y, fragment.kind.color, prefersReducedMotion ? 4 : 10);
+        playAssayTone("pickup");
         if (state.responseCharge >= 100) {
           state.responseReadyFlash = 0.48;
         }
@@ -1382,6 +1625,10 @@
     const difficulty = getDifficultyScalar();
     for (let index = state.phages.length - 1; index >= 0; index -= 1) {
       const phage = state.phages[index];
+      if (phage.warning > 0) {
+        phage.warning = Math.max(0, phage.warning - dt);
+        continue;
+      }
       const toPlayerX = state.player.x - phage.x;
       const toPlayerY = state.player.y - phage.y;
       const distance = Math.hypot(toPlayerX, toPlayerY) || 1;
@@ -1393,7 +1640,7 @@
       phage.y += phage.vy * dt;
       phage.spin += dt * (1.3 + difficulty);
 
-      const collisionRadius = 22 + phage.radius;
+      const collisionRadius = HITBOX.playerRadius + phage.radius;
       if (distance <= collisionRadius) {
         state.phages.splice(index, 1);
         applyDamage(13, "phage", phage.x, phage.y);
@@ -1410,7 +1657,7 @@
         addFloater(phage.x, phage.y, "Close call", "#d2faff");
       }
 
-      if (phage.x < -60 || phage.x > canvas.width + 60 || phage.y < -60 || phage.y > canvas.height + 60) {
+      if (phage.x < -60 || phage.x > world.width + 60 || phage.y < -60 || phage.y > world.height + 60) {
         state.phages.splice(index, 1);
       }
     }
@@ -1419,14 +1666,18 @@
   function updateWaves(dt) {
     for (let index = state.waves.length - 1; index >= 0; index -= 1) {
       const wave = state.waves[index];
+      if (wave.warning > 0) {
+        wave.warning = Math.max(0, wave.warning - dt);
+        continue;
+      }
       wave.position += wave.velocity * dt;
       const collisionDistance = wave.axis === "x" ? Math.abs(state.player.x - wave.position) : Math.abs(state.player.y - wave.position);
-      if (collisionDistance < wave.thickness * 0.5 + 18) {
+      if (collisionDistance < wave.thickness * 0.5 + HITBOX.wavePadding) {
         state.waves.splice(index, 1);
         applyDamage(17, "wave", state.player.x, state.player.y);
         continue;
       }
-      const limit = wave.axis === "x" ? canvas.width : canvas.height;
+      const limit = wave.axis === "x" ? world.width : world.height;
       if (wave.position < -wave.thickness * 1.5 || wave.position > limit + wave.thickness * 1.5) {
         state.waves.splice(index, 1);
       }
@@ -1436,13 +1687,17 @@
   function updateRuptures(dt) {
     for (let index = state.ruptures.length - 1; index >= 0; index -= 1) {
       const rupture = state.ruptures[index];
+      if (rupture.warning > 0) {
+        rupture.warning = Math.max(0, rupture.warning - dt);
+        continue;
+      }
       rupture.x1 += rupture.vx * dt;
       rupture.y1 += rupture.vy * dt;
       rupture.x2 += rupture.vx * dt;
       rupture.y2 += rupture.vy * dt;
       rupture.life -= dt;
       const distance = pointSegmentDistance(state.player.x, state.player.y, rupture.x1, rupture.y1, rupture.x2, rupture.y2);
-      if (distance <= rupture.width + 14) {
+      if (distance <= rupture.width + HITBOX.rupturePadding) {
         state.ruptures.splice(index, 1);
         applyDamage(16, "rupture", state.player.x, state.player.y);
         continue;
@@ -1450,9 +1705,9 @@
       if (
         rupture.life <= 0 ||
         (rupture.x1 < -220 && rupture.x2 < -220) ||
-        (rupture.x1 > canvas.width + 220 && rupture.x2 > canvas.width + 220) ||
+        (rupture.x1 > world.width + 220 && rupture.x2 > world.width + 220) ||
         (rupture.y1 < -220 && rupture.y2 < -220) ||
-        (rupture.y1 > canvas.height + 220 && rupture.y2 > canvas.height + 220)
+        (rupture.y1 > world.height + 220 && rupture.y2 > world.height + 220)
       ) {
         state.ruptures.splice(index, 1);
       }
@@ -1461,8 +1716,10 @@
 
   function updateEffects(dt) {
     state.safeWindow = Math.max(0, state.safeWindow - dt);
+    state.boostWindow = Math.max(0, state.boostWindow - dt);
     state.hitFlash = Math.max(0, state.hitFlash - dt);
     state.responseReadyFlash = Math.max(0, state.responseReadyFlash - dt);
+    state.responseChoiceTimer = Math.max(0, state.responseChoiceTimer - dt);
 
     if (state.banner) {
       state.banner.timer -= dt;
@@ -1497,14 +1754,26 @@
         state.pulses.splice(index, 1);
       }
     }
+
+    for (let index = state.sparks.length - 1; index >= 0; index -= 1) {
+      const spark = state.sparks[index];
+      spark.life -= dt;
+      spark.x += spark.vx * dt;
+      spark.y += spark.vy * dt;
+      spark.vx *= 1 - Math.min(0.08, dt * 1.8);
+      spark.vy *= 1 - Math.min(0.08, dt * 1.8);
+      if (spark.life <= 0) {
+        state.sparks.splice(index, 1);
+      }
+    }
   }
 
   function updateBackground(dt) {
-    const focusX = ((state.player?.x || canvas.width * 0.5) - canvas.width * 0.5) / (canvas.width * 0.5);
-    const focusY = ((state.player?.y || canvas.height * 0.55) - canvas.height * 0.56) / canvas.height;
+    const focusX = ((state.player?.x || world.width * 0.5) - world.width * 0.5) / (world.width * 0.5);
+    const focusY = ((state.player?.y || world.height * 0.55) - world.height * 0.56) / world.height;
     state.camera.idle += dt;
     state.camera.shake = Math.max(0, state.camera.shake - dt * 3.6);
-    const shakeMagnitude = state.camera.shake * state.camera.shake * 10;
+    const shakeMagnitude = state.camera.shake * state.camera.shake * 10 * getMotionScale();
     const shockX = Math.sin(state.camera.idle * 52) * shakeMagnitude;
     const shockY = Math.cos(state.camera.idle * 47) * shakeMagnitude * 0.7;
     const targetX = -focusX * 34 + Math.sin(state.camera.idle * 0.43) * 4 + shockX;
@@ -1518,12 +1787,12 @@
       mote.twinkle += dt * mote.twinkleSpeed;
       mote.y += mote.drift * mote.depth * dt;
       mote.x += mote.driftX * mote.depth * dt;
-      if (mote.y > canvas.height + 8) {
+      if (mote.y > world.height + 8) {
         mote.y = -8;
-        mote.x = randomRange(0, canvas.width);
+        mote.x = randomRange(0, world.width);
       }
-      if (mote.x < -12) mote.x = canvas.width + 12;
-      if (mote.x > canvas.width + 12) mote.x = -12;
+      if (mote.x < -12) mote.x = world.width + 12;
+      if (mote.x > world.width + 12) mote.x = -12;
     });
   }
 
@@ -1535,6 +1804,7 @@
     if (nextPhaseIndex !== state.phaseIndex) {
       state.phaseIndex = nextPhaseIndex;
       setBanner(nextPhase.title, nextPhase.note);
+      playAssayTone("phase");
     }
 
     state.score += dt * 28 * getModeModifiers().score;
@@ -1572,6 +1842,13 @@
     if (repairBarEl) repairBarEl.style.width = `${(clamp(state.repairProgress, 0, state.repairNeeded) / state.repairNeeded) * 100}%`;
     if (responseChargeEl) responseChargeEl.textContent = `${Math.round(state.responseCharge)}%`;
     if (responseBarEl) responseBarEl.style.width = `${clamp(state.responseCharge, 0, 100)}%`;
+    if (state.responseCharge >= 100 && !state.responseAnnounced && state.running) {
+      state.responseAnnounced = true;
+      announce("Stress response ready.");
+      playAssayTone("phase");
+    } else if (state.responseCharge < 100) {
+      state.responseAnnounced = false;
+    }
     if (phaseEl) phaseEl.textContent = phase.title;
     if (phaseNoteEl) phaseNoteEl.textContent = phase.note;
     if (traitTitleEl) traitTitleEl.textContent = getSpecies().passiveTitle;
@@ -1587,61 +1864,81 @@
 
   function drawBackground() {
     const phase = getPhaseForElapsed(state.elapsed);
-    const vanishX = canvas.width * 0.5 + state.camera.x * 4.5;
-    const horizonY = canvas.height * 0.18 + state.camera.y * 0.35;
-    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    gradient.addColorStop(0, "#071522");
-    gradient.addColorStop(0.5, "#0c2237");
-    gradient.addColorStop(1, "#08131f");
+    const gradient = ctx.createLinearGradient(0, 0, world.width, world.height);
+    gradient.addColorStop(0, "#06101b");
+    gradient.addColorStop(0.45, "#0b2034");
+    gradient.addColorStop(1, "#040912");
     ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, world.width, world.height);
 
-    const accent = ctx.createRadialGradient(canvas.width * 0.2, canvas.height * 0.18, 10, canvas.width * 0.2, canvas.height * 0.18, canvas.width * 0.72);
+    const accent = ctx.createRadialGradient(world.width * 0.2, world.height * 0.18, 10, world.width * 0.2, world.height * 0.18, world.width * 0.72);
     accent.addColorStop(0, phase.tintA);
     accent.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = accent;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, world.width, world.height);
 
-    const accentB = ctx.createRadialGradient(canvas.width * 0.82, canvas.height * 0.8, 10, canvas.width * 0.82, canvas.height * 0.8, canvas.width * 0.62);
+    const accentB = ctx.createRadialGradient(world.width * 0.82, world.height * 0.8, 10, world.width * 0.82, world.height * 0.8, world.width * 0.62);
     accentB.addColorStop(0, phase.tintB);
     accentB.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = accentB;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, world.width, world.height);
 
     ctx.save();
-    ctx.fillStyle = "rgba(180, 236, 242, 0.05)";
-    ctx.fillRect(0, horizonY - 1, canvas.width, 2);
-    const floorGradient = ctx.createLinearGradient(0, horizonY, 0, canvas.height);
-    floorGradient.addColorStop(0, "rgba(127, 197, 214, 0.03)");
-    floorGradient.addColorStop(1, "rgba(127, 197, 214, 0.12)");
-    ctx.fillStyle = floorGradient;
-    ctx.beginPath();
-    ctx.moveTo(0, horizonY);
-    ctx.lineTo(canvas.width, horizonY);
-    ctx.lineTo(canvas.width, canvas.height);
-    ctx.lineTo(0, canvas.height);
-    ctx.closePath();
-    ctx.fill();
+    const stress = clamp(state.elapsed / 280, 0, 1);
+    const drift = state.camera.idle * 0.24;
+    const bands = [
+      { y: 0.15, thickness: 34, color: "rgba(136, 229, 232, 0.12)", edge: "rgba(198, 247, 248, 0.2)" },
+      { y: 0.5, thickness: 22, color: "rgba(101, 194, 205, 0.09)", edge: "rgba(165, 235, 239, 0.16)" },
+      { y: 0.84, thickness: 38, color: "rgba(155, 226, 205, 0.12)", edge: "rgba(218, 255, 236, 0.18)" }
+    ];
+    bands.forEach((band, index) => {
+      const y = world.height * band.y + Math.sin(drift + index * 1.8) * 8 + state.camera.y * 0.18;
+      const thickness = band.thickness + Math.sin(drift * 0.8 + index) * 4;
+      const membrane = ctx.createLinearGradient(0, y - thickness, 0, y + thickness);
+      membrane.addColorStop(0, "rgba(255,255,255,0)");
+      membrane.addColorStop(0.45, band.color);
+      membrane.addColorStop(0.55, band.color);
+      membrane.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = membrane;
+      ctx.fillRect(0, y - thickness, world.width, thickness * 2);
+      ctx.strokeStyle = band.edge;
+      ctx.lineWidth = 1.2;
+      for (let strand = -1; strand <= 1; strand += 2) {
+        ctx.beginPath();
+        for (let x = -40; x <= world.width + 40; x += 36) {
+          const waveY = y + strand * thickness * 0.42 + Math.sin(x * 0.018 + drift + index) * 5;
+          if (x === -40) ctx.moveTo(x, waveY);
+          else ctx.lineTo(x, waveY);
+        }
+        ctx.stroke();
+      }
+    });
 
-    ctx.strokeStyle = "rgba(165, 227, 241, 0.1)";
-    for (let index = -8; index <= 8; index += 1) {
-      const baseX = canvas.width * 0.5 + index * 118 + state.camera.x * 1.4;
+    ctx.lineWidth = 1;
+    for (let row = 0; row < 9; row += 1) {
+      const y = world.height * 0.24 + row * world.height * 0.065 + Math.sin(drift + row) * 7;
+      ctx.strokeStyle = `rgba(167, 236, 220, ${0.055 + stress * 0.04})`;
       ctx.beginPath();
-      ctx.moveTo(baseX, canvas.height + 30);
-      ctx.lineTo(vanishX + index * 18, horizonY);
+      for (let x = -80; x <= world.width + 80; x += 46) {
+        const offset = Math.sin(x * 0.016 + drift * 1.5 + row) * 12;
+        if (x === -80) ctx.moveTo(x, y + offset);
+        else ctx.lineTo(x, y + offset);
+      }
       ctx.stroke();
     }
-
-    for (let row = 0; row < 10; row += 1) {
-      const depth = row / 9;
-      const eased = depth * depth;
-      const y = lerp(horizonY + 12, canvas.height + 40, eased);
-      const width = lerp(44, canvas.width * 1.18, eased);
-      const alpha = lerp(0.04, 0.14, eased);
+    for (let column = 0; column < 16; column += 1) {
+      const x = column * (world.width / 15) + Math.sin(drift + column) * 12;
+      ctx.strokeStyle = `rgba(117, 202, 214, ${0.035 + stress * 0.04})`;
       ctx.beginPath();
-      ctx.strokeStyle = `rgba(165, 227, 241, ${alpha})`;
-      ctx.moveTo(vanishX - width * 0.5, y);
-      ctx.lineTo(vanishX + width * 0.5, y);
+      ctx.moveTo(x, world.height * 0.2);
+      ctx.bezierCurveTo(
+        x + Math.sin(column) * 26,
+        world.height * 0.42,
+        x - Math.cos(column) * 32,
+        world.height * 0.64,
+        x + Math.sin(column * 1.7) * 24,
+        world.height * 0.82
+      );
       ctx.stroke();
     }
     ctx.restore();
@@ -1651,21 +1948,27 @@
       const x = mote.x + state.camera.x * mote.depth * 0.6;
       const y = mote.y + state.camera.y * mote.depth * 0.9;
       const radius = mote.radius * (0.7 + mote.depth * 0.7);
-      ctx.fillStyle = `rgba(178, 235, 245, ${mote.alpha * twinkle})`;
+      ctx.fillStyle = `rgba(178, 235, 245, ${mote.alpha * twinkle * (1 + stress * 0.35)})`;
       ctx.beginPath();
       ctx.arc(x, y, radius, 0, TAU);
       ctx.fill();
+      if (mote.depth > 0.72) {
+        ctx.strokeStyle = `rgba(168, 255, 210, ${mote.alpha * 0.6})`;
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 4, 0, TAU);
+        ctx.stroke();
+      }
     });
 
     if (state.hitFlash > 0) {
       ctx.fillStyle = `rgba(255, 120, 147, ${state.hitFlash * 0.22})`;
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillRect(0, 0, world.width, world.height);
     }
   }
 
   function drawAtmosphereOverlay() {
     const phase = getPhaseForElapsed(state.elapsed);
-    const beamGradient = ctx.createLinearGradient(canvas.width * 0.5, 0, canvas.width * 0.5, canvas.height * 0.72);
+    const beamGradient = ctx.createLinearGradient(world.width * 0.5, 0, world.width * 0.5, world.height * 0.72);
     beamGradient.addColorStop(0, "rgba(194, 241, 246, 0.12)");
     beamGradient.addColorStop(0.35, "rgba(194, 241, 246, 0.05)");
     beamGradient.addColorStop(1, "rgba(194, 241, 246, 0)");
@@ -1674,74 +1977,99 @@
     ctx.globalCompositeOperation = "screen";
     ctx.fillStyle = beamGradient;
     ctx.beginPath();
-    ctx.moveTo(canvas.width * 0.34 + state.camera.x * 0.4, 0);
-    ctx.lineTo(canvas.width * 0.46 + state.camera.x * 0.28, 0);
-    ctx.lineTo(canvas.width * 0.62 + state.camera.x * 0.1, canvas.height * 0.74);
-    ctx.lineTo(canvas.width * 0.22 + state.camera.x * 0.2, canvas.height * 0.74);
+    ctx.moveTo(world.width * 0.34 + state.camera.x * 0.4, 0);
+    ctx.lineTo(world.width * 0.46 + state.camera.x * 0.28, 0);
+    ctx.lineTo(world.width * 0.62 + state.camera.x * 0.1, world.height * 0.74);
+    ctx.lineTo(world.width * 0.22 + state.camera.x * 0.2, world.height * 0.74);
     ctx.closePath();
     ctx.fill();
 
     const phaseGlow = ctx.createRadialGradient(
-      canvas.width * 0.78,
-      canvas.height * 0.14,
+      world.width * 0.78,
+      world.height * 0.14,
       20,
-      canvas.width * 0.78,
-      canvas.height * 0.14,
-      canvas.width * 0.34
+      world.width * 0.78,
+      world.height * 0.14,
+      world.width * 0.34
     );
     phaseGlow.addColorStop(0, phase.tintB.replace(/0\.\d+\)/, "0.22)"));
     phaseGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
     ctx.fillStyle = phaseGlow;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, world.width, world.height);
     ctx.restore();
 
     const vignette = ctx.createRadialGradient(
-      canvas.width * 0.5,
-      canvas.height * 0.52,
-      canvas.width * 0.2,
-      canvas.width * 0.5,
-      canvas.height * 0.52,
-      canvas.width * 0.82
+      world.width * 0.5,
+      world.height * 0.52,
+      world.width * 0.2,
+      world.width * 0.5,
+      world.height * 0.52,
+      world.width * 0.82
     );
     vignette.addColorStop(0, "rgba(4, 9, 17, 0)");
     vignette.addColorStop(0.72, "rgba(4, 9, 17, 0.1)");
     vignette.addColorStop(1, "rgba(4, 9, 17, 0.42)");
     ctx.fillStyle = vignette;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, world.width, world.height);
   }
 
   function drawFragments() {
     state.fragments.forEach((fragment) => {
       const bob = Math.sin(fragment.pulse) * 4;
       const depth = getDepthScale(fragment.y);
-      drawGroundShadow(fragment.x, fragment.y + 16, 18 * depth, 7 * depth, 0.18);
+      drawGroundShadow(fragment.x, fragment.y + 16, 24 * depth, 8 * depth, 0.18);
       ctx.save();
       ctx.translate(fragment.x, fragment.y + bob);
       ctx.scale(depth, depth);
       ctx.beginPath();
-      ctx.ellipse(0, 8, 12, 5, 0, 0, TAU);
+      ctx.ellipse(0, 10, 18, 6, 0, 0, TAU);
       ctx.fillStyle = fragment.kind.halo;
       ctx.fill();
-      ctx.fillStyle = "rgba(255, 255, 255, 0.15)";
-      ctx.beginPath();
-      ctx.moveTo(-8, -2);
-      ctx.lineTo(0, -12);
-      ctx.lineTo(8, -2);
-      ctx.lineTo(0, 3);
-      ctx.closePath();
-      ctx.fill();
+
+      ctx.shadowColor = fragment.kind.color;
+      ctx.shadowBlur = prefersReducedMotion ? 0 : 14;
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(244, 255, 255, 0.84)";
       ctx.fillStyle = fragment.kind.color;
-      ctx.beginPath();
-      for (let index = 0; index < 6; index += 1) {
-        const angle = -Math.PI / 2 + (index / 6) * TAU;
-        const radius = index % 2 === 0 ? 10 : 6;
-        const x = Math.cos(angle) * radius;
-        const y = Math.sin(angle) * radius;
-        if (index === 0) ctx.moveTo(x, y);
-        else ctx.lineTo(x, y);
+      if (fragment.kind.id === "lipid-ii") {
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 10, 15, 0.22, 0, TAU);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(2, -4);
+        ctx.lineTo(12, -14);
+        ctx.moveTo(4, 1);
+        ctx.lineTo(15, -4);
+        ctx.stroke();
+      } else if (fragment.kind.id === "hydrolase-restraint") {
+        roundRect(ctx, -14, -10, 28, 20, 6);
+        ctx.fill();
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(-8, 0);
+        ctx.lineTo(8, 0);
+        ctx.moveTo(0, -7);
+        ctx.lineTo(0, 7);
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.arc(0, 0, 11, 0, TAU);
+        ctx.fill();
+        ctx.stroke();
+        for (let index = 0; index < 6; index += 1) {
+          const angle = (index / 6) * TAU;
+          ctx.beginPath();
+          ctx.moveTo(Math.cos(angle) * 10, Math.sin(angle) * 10);
+          ctx.lineTo(Math.cos(angle) * 17, Math.sin(angle) * 17);
+          ctx.stroke();
+        }
       }
-      ctx.closePath();
-      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = "rgba(3, 18, 28, 0.64)";
+      ctx.font = "800 8px Manrope, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText(fragment.kind.id === "lipid-ii" ? "LII" : fragment.kind.id === "hydrolase-restraint" ? "HR" : "PG", 0, 3);
       ctx.restore();
     });
   }
@@ -1749,6 +2077,23 @@
   function drawPhages() {
     state.phages.forEach((phage) => {
       const depth = getDepthScale(phage.y);
+      if (phage.warning > 0) {
+        const alpha = clamp(phage.warning / phage.maxWarning, 0, 1);
+        ctx.save();
+        ctx.strokeStyle = `rgba(210, 248, 255, ${0.26 + alpha * 0.34})`;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 8]);
+        ctx.beginPath();
+        ctx.arc(phage.x, phage.y, 38 * depth + (1 - alpha) * 18, 0, TAU);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = `rgba(210, 248, 255, ${0.08 + alpha * 0.12})`;
+        ctx.beginPath();
+        ctx.arc(phage.x, phage.y, 16 * depth, 0, TAU);
+        ctx.fill();
+        ctx.restore();
+        return;
+      }
       drawGroundShadow(phage.x, phage.y + phage.radius + 12, 17 * depth, 7 * depth, 0.22);
       ctx.save();
       ctx.translate(phage.x, phage.y);
@@ -1776,10 +2121,20 @@
       }
       ctx.beginPath();
       ctx.moveTo(0, phage.radius + 2);
-      ctx.lineTo(0, phage.radius + 16);
-      ctx.moveTo(-7, phage.radius + 11);
-      ctx.lineTo(7, phage.radius + 11);
+      ctx.lineTo(0, phage.radius + 22);
+      ctx.moveTo(-8, phage.radius + 14);
+      ctx.lineTo(8, phage.radius + 14);
+      ctx.moveTo(-10, phage.radius + 24);
+      ctx.lineTo(0, phage.radius + 17);
+      ctx.lineTo(10, phage.radius + 24);
       ctx.stroke();
+      if (phage.nearActive) {
+        ctx.strokeStyle = "rgba(255, 226, 160, 0.78)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, phage.radius + 18 + Math.sin(state.camera.idle * 12) * 2, 0, TAU);
+        ctx.stroke();
+      }
       ctx.restore();
     });
   }
@@ -1788,25 +2143,37 @@
     state.waves.forEach((wave) => {
       ctx.save();
       const coreAlpha = wave.hue === "#77dfff" ? 0.26 : 0.22;
-      ctx.fillStyle = wave.hue === "#77dfff" ? `rgba(119, 223, 255, ${coreAlpha})` : `rgba(145, 243, 255, ${coreAlpha})`;
+      const warningAlpha = wave.warning > 0 ? clamp(1 - wave.warning / wave.maxWarning, 0, 1) : 1;
+      ctx.fillStyle =
+        wave.hue === "#77dfff"
+          ? `rgba(119, 223, 255, ${coreAlpha * warningAlpha})`
+          : `rgba(145, 243, 255, ${coreAlpha * warningAlpha})`;
       ctx.strokeStyle = wave.hue;
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = wave.warning > 0 ? 1.5 : 2.5;
+      if (wave.warning > 0) ctx.setLineDash([12, 10]);
       if (wave.axis === "x") {
-        ctx.fillRect(wave.position - wave.thickness * 0.5, 0, wave.thickness, canvas.height);
+        ctx.fillRect(wave.position - wave.thickness * 0.5, 0, wave.thickness, world.height);
         ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-        ctx.fillRect(wave.position - wave.thickness * 0.18, 0, wave.thickness * 0.1, canvas.height);
+        ctx.fillRect(wave.position - wave.thickness * 0.18, 0, wave.thickness * 0.1, world.height);
         ctx.beginPath();
         ctx.moveTo(wave.position, 0);
-        ctx.lineTo(wave.position, canvas.height);
+        ctx.lineTo(wave.position, world.height);
         ctx.stroke();
       } else {
-        ctx.fillRect(0, wave.position - wave.thickness * 0.5, canvas.width, wave.thickness);
+        ctx.fillRect(0, wave.position - wave.thickness * 0.5, world.width, wave.thickness);
         ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
-        ctx.fillRect(0, wave.position - wave.thickness * 0.18, canvas.width, wave.thickness * 0.1);
+        ctx.fillRect(0, wave.position - wave.thickness * 0.18, world.width, wave.thickness * 0.1);
         ctx.beginPath();
         ctx.moveTo(0, wave.position);
-        ctx.lineTo(canvas.width, wave.position);
+        ctx.lineTo(world.width, wave.position);
         ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      if (wave.warning <= 0) {
+        ctx.globalCompositeOperation = "screen";
+        ctx.fillStyle = "rgba(207, 255, 255, 0.08)";
+        if (wave.axis === "x") ctx.fillRect(wave.position - 3, 0, 6, world.height);
+        else ctx.fillRect(0, wave.position - 3, world.width, 6);
       }
       ctx.restore();
     });
@@ -1816,23 +2183,38 @@
     state.ruptures.forEach((rupture) => {
       const depth = getDepthScale((rupture.y1 + rupture.y2) * 0.5);
       ctx.save();
-      ctx.strokeStyle = "rgba(255, 196, 145, 0.95)";
+      const warning = rupture.warning > 0;
+      const warningProgress = warning ? clamp(1 - rupture.warning / rupture.maxWarning, 0, 1) : 1;
+      ctx.strokeStyle = warning ? `rgba(255, 212, 150, ${0.28 + warningProgress * 0.36})` : "rgba(255, 196, 145, 0.95)";
       ctx.shadowColor = "rgba(255, 174, 109, 0.55)";
-      ctx.shadowBlur = 18 * depth;
+      ctx.shadowBlur = warning ? 8 * depth : 18 * depth;
       ctx.lineWidth = rupture.width * depth;
       ctx.lineCap = "round";
-      ctx.setLineDash([12, 10]);
+      ctx.setLineDash(warning ? [6, 12] : [12, 10]);
       ctx.beginPath();
       ctx.moveTo(rupture.x1, rupture.y1);
       ctx.lineTo(rupture.x2, rupture.y2);
       ctx.stroke();
       ctx.setLineDash([]);
       ctx.strokeStyle = "rgba(255, 239, 214, 0.9)";
-      ctx.lineWidth = 2;
+      ctx.lineWidth = warning ? 1 : 2;
       ctx.beginPath();
       ctx.moveTo(rupture.x1, rupture.y1);
       ctx.lineTo(rupture.x2, rupture.y2);
       ctx.stroke();
+      if (!warning) {
+        ctx.strokeStyle = "rgba(255, 123, 88, 0.42)";
+        ctx.lineWidth = 1.2;
+        for (let index = 1; index < 5; index += 1) {
+          const t = index / 5;
+          const x = lerp(rupture.x1, rupture.x2, t);
+          const y = lerp(rupture.y1, rupture.y2, t);
+          ctx.beginPath();
+          ctx.moveTo(x, y);
+          ctx.lineTo(x + Math.sin(index * 2.4) * 24, y + Math.cos(index * 1.7) * 18);
+          ctx.stroke();
+        }
+      }
       ctx.restore();
     });
   }
@@ -1853,6 +2235,22 @@
       ctx.beginPath();
       ctx.arc(pulse.x, pulse.y, pulse.radius * 0.72, 0, TAU);
       ctx.stroke();
+      ctx.restore();
+    });
+  }
+
+  function drawSparks() {
+    state.sparks.forEach((spark) => {
+      const alpha = clamp(spark.life / spark.maxLife, 0, 1);
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = spark.color;
+      ctx.shadowColor = spark.color;
+      ctx.shadowBlur = prefersReducedMotion ? 0 : 10;
+      ctx.beginPath();
+      ctx.arc(spark.x, spark.y, spark.radius, 0, TAU);
+      ctx.fill();
       ctx.restore();
     });
   }
@@ -1881,6 +2279,23 @@
     ctx.fillStyle = gradient;
     ctx.strokeStyle = species.palette.outline;
     ctx.lineWidth = 2.5;
+
+    if (species.shape === "encapsulated-rod" || species.shape === "diplococcus") {
+      ctx.save();
+      ctx.globalAlpha = 0.34;
+      ctx.strokeStyle = species.palette.pulse;
+      ctx.lineWidth = 5;
+      if (species.shape === "diplococcus") {
+        ctx.beginPath();
+        ctx.ellipse(-10, 0, 21, 18, 0, 0, TAU);
+        ctx.ellipse(10, 0, 21, 18, 0, 0, TAU);
+        ctx.stroke();
+      } else {
+        roundRect(ctx, -34, -20, 68, 40, 19);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
 
     if (species.shape === "coccus") {
       ctx.beginPath();
@@ -1919,10 +2334,27 @@
       }
     }
 
+    ctx.save();
+    ctx.globalAlpha = 0.42;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.78)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(0, -13);
+    ctx.lineTo(0, 13);
+    ctx.stroke();
+    ctx.restore();
+
     ctx.fillStyle = species.palette.core;
     ctx.beginPath();
     ctx.ellipse(0, 0, 10, 7, 0, 0, TAU);
     ctx.fill();
+
+    ctx.strokeStyle = "rgba(4, 19, 31, 0.34)";
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    ctx.moveTo(-7, -1);
+    ctx.bezierCurveTo(-2, -8, 4, 7, 9, 0);
+    ctx.stroke();
 
     ctx.fillStyle = "rgba(255, 255, 255, 0.16)";
     ctx.beginPath();
@@ -2027,10 +2459,10 @@
     ctx.translate(x, y);
     ctx.rotate(angle);
     ctx.scale(depth, depth);
-    if (state.safeWindow > 0) {
-      ctx.fillStyle = `rgba(179, 245, 255, ${0.12 + state.safeWindow * 0.16})`;
+    if (state.safeWindow > 0 || state.boostWindow > 0) {
+      ctx.fillStyle = state.boostWindow > 0 ? "rgba(255, 226, 147, 0.18)" : `rgba(179, 245, 255, ${0.12 + state.safeWindow * 0.16})`;
       ctx.beginPath();
-      ctx.ellipse(0, 4, 34, 24, 0, 0, TAU);
+      ctx.ellipse(0, 4, state.boostWindow > 0 ? 42 : 34, state.boostWindow > 0 ? 28 : 24, 0, 0, TAU);
       ctx.fill();
     }
 
@@ -2038,11 +2470,46 @@
     ctx.restore();
   }
 
+  function drawAttractScene() {
+    if (state.running || state.dying || state.overlayMode !== "start") return;
+    const species = getSpecies(state.selectedSpeciesId);
+    const centerX = world.width * 0.67;
+    const centerY = world.height * 0.55;
+    ctx.save();
+    ctx.globalAlpha = 0.72;
+    drawGroundShadow(centerX, centerY + 22, 44, 14, 0.22);
+    ctx.translate(centerX, centerY);
+    ctx.rotate(-0.18 + Math.sin(state.camera.idle * 0.8) * 0.04);
+    ctx.scale(1.45, 1.45);
+    drawCellGlyph(species, 0);
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.strokeStyle = "rgba(255, 211, 143, 0.34)";
+    ctx.lineWidth = 10;
+    ctx.setLineDash([18, 18]);
+    ctx.beginPath();
+    ctx.moveTo(world.width * 0.12, world.height * 0.72);
+    ctx.lineTo(world.width * 0.88, world.height * 0.28);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.strokeStyle = "rgba(144, 236, 255, 0.42)";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(centerX - 190, centerY - 130, 34 + Math.sin(state.camera.idle * 2) * 4, 0, TAU);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(centerX + 210, centerY + 80, 46 + Math.cos(state.camera.idle * 2.4) * 5, 0, TAU);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   function drawBanner() {
     if (!state.banner) return;
     const width = 420;
     const height = 78;
-    const x = (canvas.width - width) * 0.5;
+    const x = (world.width - width) * 0.5;
     const y = 28;
     ctx.save();
     ctx.fillStyle = "rgba(7, 19, 31, 0.78)";
@@ -2087,6 +2554,8 @@
   }
 
   function render() {
+    ctx.setTransform(world.dpr, 0, 0, world.dpr, 0, 0);
+    ctx.clearRect(0, 0, world.width, world.height);
     drawBackground();
     drawAtmosphereOverlay();
     ctx.save();
@@ -2096,8 +2565,12 @@
     drawFragments();
     drawPhages();
     drawPulses();
+    drawSparks();
     drawPlayerTrail();
-    drawPlayer();
+    if (state.running || state.dying || state.overlayMode !== "start") {
+      drawPlayer();
+    }
+    drawAttractScene();
     drawFloaters();
     ctx.restore();
     drawBanner();
@@ -2223,6 +2696,8 @@
 
   async function refreshLeaderboard(board) {
     const normalizedBoard = normalizeBoard(board);
+    const requestId = state.leaderboardRequestId + 1;
+    state.leaderboardRequestId = requestId;
     state.leaderboard = readLocalLeaderboard(normalizedBoard);
     state.leaderboardStats = { totalEntries: state.leaderboard.length, updatedAt: Date.now(), board: normalizedBoard };
     state.leaderboardMode = GLOBAL_LEADERBOARD_URL ? "fallback" : "local";
@@ -2234,6 +2709,9 @@
 
     try {
       const payload = await fetchLeaderboardPayload(normalizedBoard);
+      if (requestId !== state.leaderboardRequestId || normalizedBoard !== state.currentBoard) {
+        return;
+      }
       if (!acceptRemoteBoard(normalizedBoard, payload?.board)) {
         if (normalizedBoard !== "classic") state.dailyBoardReady = false;
         state.leaderboardMode = "fallback";
@@ -2255,6 +2733,9 @@
       writeLocalLeaderboard(normalizedBoard, state.leaderboard);
       renderLeaderboard();
     } catch {
+      if (requestId !== state.leaderboardRequestId || normalizedBoard !== state.currentBoard) {
+        return;
+      }
       state.leaderboardMode = "fallback";
       renderLeaderboard();
     }
@@ -2333,9 +2814,10 @@
     state.dying = true;
     state.paused = false;
     state.banner = null;
-    state.pointer.active = false;
-    state.camera.shake = Math.max(state.camera.shake, 1.4);
+    resetInputState();
+    addCameraImpulse(1.4);
     state.deathAnimation = createLysisAnimation();
+    playAssayTone("lysis");
     updateControlState();
   }
 
@@ -2409,6 +2891,7 @@
       state.deathAnimation = null;
     }
     state.open = false;
+    resetInputState();
     modal.close();
     if (rafId) {
       window.cancelAnimationFrame(rafId);
@@ -2478,6 +2961,7 @@
       rafId = 0;
     }
     state.open = false;
+    resetInputState();
   });
   modelSelect.addEventListener("change", () => {
     state.selectedSpeciesId = normalizeSpeciesId(modelSelect.value);
@@ -2492,6 +2976,21 @@
       state.playerName = normalizeName(playerNameInput.value);
       writeStorageText(NAME_KEY, playerNameInput.value);
       updatePlayerNameFeedback();
+    });
+  }
+  if (audioToggleButton) {
+    audioToggleButton.addEventListener("click", () => {
+      state.audioEnabled = !state.audioEnabled;
+      writeStorageText(SOUND_KEY, state.audioEnabled ? "on" : "off");
+      updateAudioControl();
+      if (state.audioEnabled) playAssayTone("pickup");
+    });
+  }
+  if (motionSelect) {
+    motionSelect.addEventListener("change", () => {
+      state.motionMode = normalizeMotionMode(motionSelect.value);
+      writeStorageText(MOTION_KEY, state.motionMode);
+      updateMotionControl();
     });
   }
 
@@ -2539,6 +3038,8 @@
 
   updateDailyNote();
   updateSpeciesInfo();
+  updateAudioControl();
+  updateMotionControl();
   if (playerNameInput) {
     playerNameInput.value = state.playerName;
     updatePlayerNameFeedback();

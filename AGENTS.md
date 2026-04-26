@@ -33,6 +33,7 @@ Generated outputs you should usually not edit directly:
 
 - `assets/styles.css`
 - `assets/envelope-escape-config.js`
+- `assets/game/envelope-escape/runtime/envelope-escape-v2.js`
 - `github-flat/**`
 
 ## Primary commands
@@ -40,6 +41,15 @@ Generated outputs you should usually not edit directly:
 Build the site:
 
 ```bash
+python3 scripts/build_site.py
+```
+
+Build the hidden Envelope Escape V2 game after TypeScript source changes:
+
+```bash
+npm install
+npm run game:check
+npm run game:build
 python3 scripts/build_site.py
 ```
 
@@ -108,6 +118,10 @@ Update archive scientific media:
 
 - The Envelope Escape frontend runtime URL comes from `data/runtime-config.json`.
 - The generated frontend config file is `assets/envelope-escape-config.js`.
+- V1 production game code lives in `assets/envelope-escape.js`.
+- V2 beta source lives in `game-src/envelope-escape/`.
+- V2 beta static output lives in `assets/game/envelope-escape/runtime/`.
+- V2 beta loads only with `?envelopeV2=1`; `?envelopeLegacy=1` keeps the legacy path.
 - The Cloudflare Worker + D1 backend lives in `leaderboard-worker/`.
 - Repo-side changes do not redeploy the worker automatically.
 - If leaderboard API or schema behavior changes, the live worker may need a separate redeploy.
@@ -127,4 +141,6 @@ Update archive scientific media:
 - `README.md` is the main repo overview.
 - `docs/site-maintenance.md` is the deeper operator workflow.
 - `docs/editorial-style-guide.md` is the visual source of truth for editorial style, card cohesion, and pre-publish UI QA.
+- `docs/envelope-escape-game-upgrade.md` tracks the Phaser + TypeScript game rebuild.
+- `docs/envelope-escape-art-direction.md` tracks the Envelope Escape asset brief and QA checklist.
 - `leaderboard-worker/README.md` explains the global leaderboard backend and deployment.

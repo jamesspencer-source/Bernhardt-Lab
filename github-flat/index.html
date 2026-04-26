@@ -24,7 +24,8 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brands/favicon-32.png?v=20260307a" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/brands/apple-touch-icon.png?v=20260307a" />
     <link rel="stylesheet" href="assets/styles.css?v=20260410a" />
-    <link rel="stylesheet" href="assets/envelope-escape.css?v=20260407d" />
+    <link rel="stylesheet" href="assets/envelope-escape.css?v=20260424a" />
+    <link rel="stylesheet" href="assets/css/envelope-game.css?v=20260425a" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -770,13 +771,13 @@
           <a href="accessibility.html">Accessibility</a>
           <button
             id="envelope-trigger"
-            class="footer-secret-trigger"
+            class="footer-secret-trigger footer-secret-trigger--game"
             type="button"
-            aria-label="Open hidden lab console game"
-            title="More"
+            aria-label="Open Envelope Escape game"
+            title="Open Envelope Escape"
           >
-            <span aria-hidden="true">⋯</span>
-            <span class="sr-only">Open hidden lab console game</span>
+            <span aria-hidden="true">Envelope Escape</span>
+            <span class="sr-only">Open Envelope Escape game</span>
           </button>
         </div>
       </div>
@@ -786,13 +787,27 @@
       <div class="envelope-shell">
         <header class="envelope-header">
           <div>
-            <p class="envelope-eyebrow">Hidden Game</p>
-            <h2 id="envelope-title">Envelope Escape</h2>
+            <p class="envelope-eyebrow">Lab Arcade</p>
+            <h2 id="envelope-title">Envelope Escape: Stress Test Chamber</h2>
           </div>
           <button id="envelope-close" class="envelope-close" type="button" aria-label="Close game">Close</button>
         </header>
 
         <p class="envelope-stage-hint">Move with WASD or the arrow keys, drag on touch, and press Space to induce the envelope stress response.</p>
+        <div class="envelope-console-bar" aria-label="Envelope Escape settings">
+          <span>Envelope Stress Assay</span>
+          <button id="envelope-audio-toggle" class="envelope-secondary" type="button" aria-pressed="false">
+            Sound Off
+          </button>
+          <label class="envelope-motion-control" for="envelope-motion-select">
+            Motion
+            <select id="envelope-motion-select" name="envelope-motion">
+              <option value="full">Full</option>
+              <option value="calm">Calm</option>
+              <option value="off">Off</option>
+            </select>
+          </label>
+        </div>
 
         <div class="envelope-stage-wrap">
           <canvas
@@ -852,7 +867,7 @@
 
           <div id="envelope-overlay" class="envelope-overlay">
             <div class="envelope-overlay-inner">
-              <p class="envelope-overlay-kicker">Arcade survival</p>
+              <p class="envelope-overlay-kicker">Envelope Stress Assay</p>
               <h3 id="envelope-overlay-title">Keep the envelope intact.</h3>
               <p id="envelope-overlay-copy">
                 Collect envelope biogenesis factors, restore PG assembly, and outlast phages, beta-lactam pulses, and autolysin breaches.
@@ -886,11 +901,12 @@
               </div>
               <div class="envelope-overlay-briefing" aria-label="Run overview">
                 <p id="envelope-overlay-status" class="envelope-overlay-status">
-                  Collect 4 envelope factors, then induce the stress response when the meter is full.
+                  Collect envelope assembly units, then induce the stress response when the meter is full.
                 </p>
                 <ul id="envelope-overlay-points" class="envelope-overlay-points">
                   <li>Difficulty rises slowly, so clean movement matters more than memorizing patterns.</li>
                 </ul>
+                <dl id="envelope-run-report" class="envelope-run-report" hidden></dl>
               </div>
               <div class="envelope-overlay-meta">
                 <div class="envelope-trait-brief">
@@ -930,6 +946,7 @@
         </div>
       </div>
     </dialog>
+    <p id="envelope-live-status" class="sr-only" aria-live="polite"></p>
 
     <dialog id="lightbox" class="lightbox">
       <form method="dialog">
@@ -942,6 +959,7 @@
     <script src="assets/site-freshness.js" data-freshness-path="assets/data/site-freshness.json"></script>
     <script type="module" src="assets/main.js?v=20260410a"></script>
     <script src="assets/envelope-escape-config.js?v=20260318a"></script>
-    <script src="assets/envelope-escape.js?v=20260407d"></script>
+    <script type="module" src="assets/js/envelope-game/bootstrap.js?v=20260425a"></script>
+    <script src="assets/envelope-escape.js?v=20260424a"></script>
   </body>
 </html>
