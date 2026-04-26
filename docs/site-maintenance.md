@@ -122,6 +122,17 @@ This verifies the live Cloudflare Worker still responds correctly for:
 - classic board
 - current daily board
 
+The scheduled GitHub Actions check validates the response shape needed by the
+public site. A legacy worker that does not echo the requested `board` prints a
+warning rather than failing, because the game can still use the shared classic
+board and save daily challenge runs locally until the worker is redeployed.
+
+To require board-aware worker behavior after a redeploy, run:
+
+```bash
+python3 scripts/check_leaderboard_worker.py --require-board-routing
+```
+
 If it fails, check:
 
 - `data/runtime-config.json`

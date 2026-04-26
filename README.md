@@ -118,7 +118,16 @@ This checks:
 - `GET /leaderboard?board=classic`
 - `GET /leaderboard?board=daily-YYYY-MM-DD`
 
-and verifies the expected response shape.
+and verifies the response shape the public site needs to load shared scores. If the
+live worker still has the legacy boardless response shape, the check prints a
+board-routing warning instead of failing; the game uses the shared classic board
+and falls back to a local daily board in that state.
+
+After redeploying the board-aware worker, enforce the stricter contract with:
+
+```bash
+python3 scripts/check_leaderboard_worker.py --require-board-routing
+```
 
 ## Important editing rule
 
