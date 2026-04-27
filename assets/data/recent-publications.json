@@ -1,9 +1,20 @@
 {
-  "generatedAt": "2026-04-20T11:43:55+00:00",
+  "generatedAt": "2026-04-27T12:01:12+00:00",
   "source": "pubmed-esummary-last-author-filter",
   "query": "Bernhardt TG[Author]",
   "count": 5,
   "items": [
+    {
+      "pmid": "42008678",
+      "doi": "10.1073/pnas.2606687123",
+      "title": "Bacteriophages target membrane-anchored glycopolymers to promote host cell lysis and progeny release",
+      "journal": "Proceedings of the National Academy of Sciences of the United States of America",
+      "year": "2026",
+      "pubDate": "2026 Apr 28",
+      "authorsShort": "McKitterick AC, Lyerly EW, Bernhardt TG",
+      "articleUrl": "https://doi.org/10.1073/pnas.2606687123",
+      "sourceLabel": "PubMed (Bernhardt TG last author)"
+    },
     {
       "pmid": "39992125",
       "doi": "10.1128/mbio.03950-24",
@@ -46,17 +57,6 @@
       "pubDate": "2024 Jun",
       "authorsShort": "Fivenson EM, Dubois L, Bernhardt TG",
       "articleUrl": "https://doi.org/10.1016/j.mib.2024.102479",
-      "sourceLabel": "PubMed (Bernhardt TG last author)"
-    },
-    {
-      "pmid": "38443581",
-      "doi": "10.1038/s41564-024-01607-y",
-      "title": "FacZ is a GpsB-interacting protein that prevents aberrant division-site placement in Staphylococcus aureus",
-      "journal": "Nature microbiology",
-      "year": "2024",
-      "pubDate": "2024 Mar",
-      "authorsShort": "Bartlett TM, Sisley TA, Mychack A, et al.",
-      "articleUrl": "https://doi.org/10.1038/s41564-024-01607-y",
       "sourceLabel": "PubMed (Bernhardt TG last author)"
     }
   ]
