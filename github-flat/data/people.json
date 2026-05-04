@@ -712,30 +712,6 @@
       "profileSummary": "I studied shape maintenance and cell elongation in Streptococcus pneumoniae."
     },
     {
-      "slug": "catherine-paradis-bleau",
-      "status": "alumni",
-      "name": "Catherine Paradis-Bleau",
-      "labRole": "Postdoctoral Fellow",
-      "group": "",
-      "bio": "",
-      "image": "assets/images/hms-gordon-hall.jpg",
-      "focus": {
-        "x": 0.5,
-        "y": 0.5
-      },
-      "labDates": "2008 \u2013 2015",
-      "currentRole": "Assistant professor, University of Montreal",
-      "profileType": "alumni",
-      "email": "",
-      "links": [],
-      "verification": {
-        "sourceLabel": "Bernhardt lab records",
-        "url": "https://microbiologie.umontreal.ca/recherche/professeurs-chercheurs/catherine-paradis-bleau/",
-        "verifiedSource": "Universite de Montreal"
-      },
-      "profileSummary": "Former member of the Bernhardt Lab. Assistant professor, University of Montreal"
-    },
-    {
       "slug": "celeste-peterson",
       "status": "alumni",
       "name": "Celeste Peterson",
@@ -880,30 +856,6 @@
       "profileSummary": "Former member of the Bernhardt Lab. Undergraduate student, Northeastern University"
     },
     {
-      "slug": "derek-lau",
-      "status": "alumni",
-      "name": "Derek Lau",
-      "labRole": "Postdoctoral Fellow",
-      "group": "",
-      "bio": "",
-      "image": "assets/images/hms-gordon-hall.jpg",
-      "focus": {
-        "x": 0.5,
-        "y": 0.5
-      },
-      "labDates": "2012 \u2013 2016",
-      "currentRole": "Lecturer in residence, Department of Biology, Emmanuel College",
-      "profileType": "alumni",
-      "email": "",
-      "links": [],
-      "verification": {
-        "sourceLabel": "Bernhardt lab records",
-        "url": "https://www.emmanuel.edu/derek-lau",
-        "verifiedSource": "Emmanuel College"
-      },
-      "profileSummary": "Former member of the Bernhardt Lab. Lecturer in residence, Department of Biology, Emmanuel College"
-    },
-    {
       "slug": "desiree-yang",
       "status": "alumni",
       "name": "Desiree Yang",
@@ -1012,14 +964,14 @@
         "y": 0.5
       },
       "labDates": "2016 \u2013 2021",
-      "currentRole": "Graduate student, University of California, Los Angeles",
+      "currentRole": "PhD candidate, UCLA Department of Microbiology, Immunology & Molecular Genetics",
       "profileType": "alumni",
       "email": "",
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://mimg.ucla.edu/people/grasiela-torres",
+        "verifiedSource": "UCLA MIMG"
       },
       "profileSummary": "I developed tools for genetic manipulation of Pseudomonas aeruginosa."
     },
@@ -1108,14 +1060,14 @@
         "y": 0.5
       },
       "labDates": "2014 \u2013 2019",
-      "currentRole": "Scientist, New England Biolabs",
+      "currentRole": "Research Scientist, New England Biolabs",
       "profileType": "alumni",
       "email": "",
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://www.neb.com/en-us/tools-and-resources/video-library/automating-and-miniaturizing-neb-workflows-for-high-throughput-dna-assembly-and-protein-expression",
+        "verifiedSource": "New England Biolabs"
       },
       "profileSummary": "My work focused on how bacteria grow and divide, using quantitative fluorescence microscopy, next-generation sequencing, and chemical-genetic screening to identify vulnerabilities in essential envelope processes."
     },
@@ -1138,8 +1090,8 @@
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://dunster.harvard.edu/people/jeanna-qui",
+        "verifiedSource": "Harvard Dunster House"
       },
       "profileSummary": "I investigated rod-complex proteins required for cell wall elongation in Escherichia coli."
     },
@@ -1186,8 +1138,8 @@
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://ir.tscan.com/news-releases/news-release-details/tscan-therapeutics-announces-upcoming-poster-presentations-37th",
+        "verifiedSource": "TScan Therapeutics"
       },
       "profileSummary": "I studied regulatory mechanisms governing growth and division in Corynebacterium glutamicum."
     },
@@ -1330,8 +1282,8 @@
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://pubmed.ncbi.nlm.nih.gov/40543847/",
+        "verifiedSource": "PubMed affiliation"
       },
       "profileSummary": "I investigated molecular machines that build and remodel the bacterial cell wall, including penicillin-binding proteins and their lipoprotein activators."
     },
@@ -1348,16 +1300,16 @@
         "y": 0.5
       },
       "labDates": "2010 \u2013 2016",
-      "currentRole": "Postdoctoral fellow, MIT",
+      "currentRole": "Postdoctoral fellow, Peter MacCallum Cancer Centre",
       "profileType": "alumni",
       "email": "",
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://pubmed.ncbi.nlm.nih.gov/39372038/",
+        "verifiedSource": "PubMed affiliation"
       },
-      "profileSummary": "Former member of the Bernhardt Lab. Postdoctoral fellow, MIT"
+      "profileSummary": "Former member of the Bernhardt Lab. Postdoctoral fellow, Peter MacCallum Cancer Centre"
     },
     {
       "slug": "matt-siebel",
@@ -1468,16 +1420,16 @@
         "y": 0.5
       },
       "labDates": "2006 \u2013 2012",
-      "currentRole": "Staff fellow, FDA",
+      "currentRole": "Manager, Regulatory Affairs, Thermo Fisher Scientific",
       "profileType": "alumni",
       "email": "",
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://pda.org/global-event-calendar/conferences/speaker/monica-markovski-commerford-phd-1075445",
+        "verifiedSource": "PDA speaker profile"
       },
-      "profileSummary": "Former member of the Bernhardt Lab. Staff fellow, FDA"
+      "profileSummary": "Former member of the Bernhardt Lab. Manager, Regulatory Affairs, Thermo Fisher Scientific"
     },
     {
       "slug": "neil-greene",
@@ -1564,14 +1516,14 @@
         "y": 0.5
       },
       "labDates": "2015 \u2013 2019",
-      "currentRole": "Postdoctoral fellow, Baylor College of Medicine",
+      "currentRole": "Research Scientist, Cemvita Factory Inc.",
       "profileType": "alumni",
       "email": "",
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://lsrf.org/alumni-fellows/",
+        "verifiedSource": "Life Sciences Research Foundation"
       },
       "profileSummary": "I investigated rod-complex function during cell wall synthesis in Escherichia coli to understand how bacterial shape and envelope integrity are maintained."
     },
@@ -1684,14 +1636,14 @@
         "y": 0.5
       },
       "labDates": "2016 \u2013 2018",
-      "currentRole": "Graduate student, University of California, Berkeley",
+      "currentRole": "Postdoctoral Scholar, Cardiovascular Research Institute, UCSF School of Medicine",
       "profileType": "alumni",
       "email": "",
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://profiles.ucsf.edu/sue.sim",
+        "verifiedSource": "UCSF Profiles"
       },
       "profileSummary": "I used biochemical approaches to study bacterial cell wall biogenesis."
     },
@@ -1732,14 +1684,14 @@
         "y": 0.5
       },
       "labDates": "2016 \u2013 2020",
-      "currentRole": "CPEP Medical Microbiology and Public Health postdoctoral fellow, Children's Hospital Los Angeles / University of Southern California",
+      "currentRole": "Assistant Professor, Department of Laboratory Medicine & Pathology, University of Washington; Director, Microbiology and Molecular Microbiology Laboratories",
       "profileType": "alumni",
       "email": "",
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://dlmp.uw.edu/faculty/truong-thao",
+        "verifiedSource": "UW Medicine"
       },
       "profileSummary": "I studied how cells establish spatiotemporal control of septal-ring positioning and coordinate division with the cell cycle in Escherichia coli."
     },
@@ -1876,16 +1828,16 @@
         "y": 0.5
       },
       "labDates": "2007 \u2013 2011",
-      "currentRole": "Lab Head in Antibacterial Discovery, Novartis Institutes for Biomedical Research",
+      "currentRole": "Scientist, Venatorx Pharmaceuticals, Malvern, PA",
       "profileType": "alumni",
       "email": "",
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://pubmed.ncbi.nlm.nih.gov/40167371/",
+        "verifiedSource": "PubMed affiliation"
       },
-      "profileSummary": "Former member of the Bernhardt Lab. Lab Head in Antibacterial Discovery, Novartis Institutes for Biomedical Research"
+      "profileSummary": "Former member of the Bernhardt Lab. Scientist, Venatorx Pharmaceuticals, Malvern, PA"
     },
     {
       "slug": "zabari-bell",
@@ -1930,8 +1882,8 @@
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "",
-        "verifiedSource": ""
+        "url": "https://pubmed.ncbi.nlm.nih.gov/38531897/",
+        "verifiedSource": "PubMed affiliation"
       },
       "profileSummary": "I studied metabolic regulation that supports bacterial proliferation and cell growth."
     }

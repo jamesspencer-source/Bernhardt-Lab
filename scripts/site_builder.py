@@ -406,6 +406,28 @@ def render_alumni_cards(people: list[dict[str, Any]], root_prefix: str, flat: bo
         verified_url = clean_text(verification.get("url"))
         verified_source = clean_text(verification.get("verifiedSource"))
         source_label = clean_text(verification.get("sourceLabel")) or "Bernhardt lab records"
+        current_role = clean_text(person.get("currentRole"))
+        lab_dates = clean_text(person.get("labDates"))
+        lab_dates_html = (
+            f'\n            <p class="alumni-role"><strong>Lab dates:</strong> {escape(lab_dates)}</p>'
+            if lab_dates
+            else ""
+        )
+        current_role_html = (
+            f'\n            <p class="alumni-current"><strong>Current / latest role:</strong> {escape(current_role)}</p>'
+            if current_role
+            else ""
+        )
+        verified_html = (
+            f'\n            <p class="alumni-source"><strong>Verified by:</strong> <a class="alumni-inline-link" href="{escape(verified_url)}" target="_blank" rel="noreferrer">{escape(verified_source or "Institutional profile")}</a></p>'
+            if verified_url
+            else ""
+        )
+        verified_link_html = (
+            f'<a class="alumni-link" href="{escape(verified_url)}" target="_blank" rel="noreferrer">View current institutional profile</a>'
+            if verified_url
+            else ""
+        )
         bucket = normalize_role_bucket(clean_text(person.get("labRole")))
         search_blob = clean_text(
             " ".join(
@@ -413,7 +435,7 @@ def render_alumni_cards(people: list[dict[str, Any]], root_prefix: str, flat: bo
                     clean_text(person.get("name")),
                     clean_text(person.get("labRole")),
                     clean_text(person.get("labDates")),
-                    clean_text(person.get("currentRole")),
+                    current_role,
                     bucket,
                 ]
             )
@@ -422,14 +444,11 @@ def render_alumni_cards(people: list[dict[str, Any]], root_prefix: str, flat: bo
             f'''          <article class="alumni-card" data-name="{escape(person.get("name"))}" data-role-in-lab="{escape(person.get("labRole"))}" data-lab-dates="{escape(person.get("labDates"))}" data-current-role="{escape(person.get("currentRole"))}" data-bucket="{escape(bucket)}" data-sort-recent="{escape(parse_lab_end_sort_key(clean_text(person.get("labDates"))))}" data-sort-last-name="{escape(last_name_key(clean_text(person.get("name"))))}" data-search="{escape(search_blob)}">
             <div class="alumni-top">{'<span class="alumni-verified">Verified profile</span>' if verified_url else ''}</div>
             <h3>{escape(person.get("name"))}</h3>
-            <p class="alumni-role"><strong>Role in lab:</strong> {escape(person.get("labRole") or "Former lab member")}</p>
-            {f'<p class="alumni-role"><strong>Lab dates:</strong> {escape(person.get("labDates"))}</p>' if clean_text(person.get("labDates")) else ''}
-            <p class="alumni-current"><strong>Current / latest role:</strong> {escape(person.get("currentRole") or "Role update pending")}</p>
-            <p class="alumni-source"><strong>Source:</strong> {escape(source_label)}</p>
-            {f'<p class="alumni-source"><strong>Verified by:</strong> <a class="alumni-inline-link" href="{escape(verified_url)}" target="_blank" rel="noreferrer">{escape(verified_source or "Institutional profile")}</a></p>' if verified_url else '<p class="alumni-source"><strong>External verification:</strong> not available</p>'}
+            <p class="alumni-role"><strong>Role in lab:</strong> {escape(person.get("labRole") or "Former lab member")}</p>{lab_dates_html}{current_role_html}
+            <p class="alumni-source"><strong>Source:</strong> {escape(source_label)}</p>{verified_html}
             <div class="alumni-links">
               <a class="alumni-link" href="{escape(alumni_profile_href(person, root_prefix, flat))}">Open alumni profile</a>
-              {f'<a class="alumni-link" href="{escape(verified_url)}" target="_blank" rel="noreferrer">View current institutional profile</a>' if verified_url else ''}
+              {verified_link_html}
             </div>
           </article>'''
         )
@@ -547,6 +566,33 @@ def render_alumni_profile(person: dict[str, Any], flat: bool) -> str:
     verified_source = clean_text(verification.get("verifiedSource"))
     source_label = clean_text(verification.get("sourceLabel")) or "Bernhardt lab records"
     name = clean_text(person.get("name"))
+    current_role = clean_text(person.get("currentRole"))
+    lab_dates = clean_text(person.get("labDates"))
+    lab_dates_html = (
+        f'\n              <p class="profile-lab-dates"><strong>Lab dates:</strong> {escape(lab_dates)}</p>'
+        if lab_dates
+        else ""
+    )
+    profile_summary = clean_text(person.get("profileSummary"))
+    if not profile_summary:
+        profile_summary = (
+            f"Former member of the Bernhardt Lab. {current_role}"
+            if current_role
+            else "Former member of the Bernhardt Lab."
+        )
+    current_role_panel = (
+        f'''\n            <article class="profile-panel">
+              <h2>Current / Latest Role</h2>
+              <p>{escape(current_role)}</p>
+            </article>'''
+        if current_role
+        else ""
+    )
+    verified_source_html = (
+        f'\n              <p><strong>Verified by:</strong> <a class="profile-link" href="{escape(verified_url)}" target="_blank" rel="noreferrer">{escape(verified_source or "Institutional profile")}</a></p>'
+        if verified_url
+        else ""
+    )
     canonical = f"{CANONICAL_SITE_URL}/alumni-profiles/{clean_text(person.get('slug'))}.html"
     return f'''<!doctype html>
 <html lang="en">
@@ -583,9 +629,8 @@ def render_alumni_profile(person: dict[str, Any], flat: bool) -> str:
             <div class="profile-copy">
               <p class="eyebrow">Alumni Profile</p>
               <h1>{escape(name)}</h1>
-              <p class="role">{escape(person.get("labRole") or "Former lab member")}</p>
-              {f'<p class="profile-lab-dates"><strong>Lab dates:</strong> {escape(person.get("labDates"))}</p>' if clean_text(person.get("labDates")) else ''}
-              <p class="bio">{format_species_text(clean_text(person.get("profileSummary") or f"Former member of the Bernhardt Lab. {clean_text(person.get('currentRole'))}"))}</p>
+              <p class="role">{escape(person.get("labRole") or "Former lab member")}</p>{lab_dates_html}
+              <p class="bio">{format_species_text(profile_summary)}</p>
               <div class="actions">
                 <a class="button button-primary" href="{escape(site_link("alumni", root_prefix, flat))}">Back to alumni directory</a>
                 {f'<a class="button button-secondary" href="{escape(verified_url)}" target="_blank" rel="noreferrer">Current Institutional Profile</a>' if verified_url else ''}
@@ -600,15 +645,10 @@ def render_alumni_profile(person: dict[str, Any], flat: bool) -> str:
             <article class="profile-panel">
               <h2>Role In The Lab</h2>
               <p>{escape(person.get("labRole") or "Former lab member")}</p>
-            </article>
-            <article class="profile-panel">
-              <h2>Current / Latest Role</h2>
-              <p>{escape(person.get("currentRole") or "Role update pending")}</p>
-            </article>
+            </article>{current_role_panel}
             <article class="profile-panel">
               <h2>Sources</h2>
-              <p><strong>Source:</strong> {escape(source_label)}</p>
-              {f'<p><strong>Verified by:</strong> <a class="profile-link" href="{escape(verified_url)}" target="_blank" rel="noreferrer">{escape(verified_source or "Institutional profile")}</a></p>' if verified_url else '<p><strong>External verification:</strong> not available</p>'}
+              <p><strong>Source:</strong> {escape(source_label)}</p>{verified_source_html}
             </article>
           </div>
           <p class="profile-update-link">
