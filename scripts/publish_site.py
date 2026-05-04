@@ -17,6 +17,7 @@ ALLOWED_ROOT_FILES = {
     "AGENTS.md",
     "README.md",
     "alumni.html",
+    "favicon.ico",
     "index.html",
     "package-lock.json",
     "package.json",
