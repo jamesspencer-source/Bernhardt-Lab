@@ -15,14 +15,29 @@ DATA_DIR = ROOT / "data"
 ASSETS_DIR = ROOT / "assets"
 FLAT_DIR = ROOT / "github-flat"
 CANONICAL_SITE_URL = "https://jamesspencer-source.github.io/Bernhardt-Lab"
+FAVICON_VERSION = "20260504b"
 CSS_SOURCE_ORDER = [
     "base.css",
     "layout.css",
     "home.css",
     "directory.css",
 ]
-PRESERVED_FLAT_ROOT_FILES = {".nojekyll", "CNAME", "robots.txt", "sitemap.xml"}
+PRESERVED_FLAT_ROOT_FILES = {".nojekyll", "CNAME", "robots.txt", "sitemap.xml", "favicon.ico"}
 TRANSIENT_NAMES = {".DS_Store", "Thumbs.db", ".pycache", "__pycache__", ".venv"}
+PUBLIC_HTML_EXCLUDED_DIRS = {
+    ".git",
+    ".github",
+    "assets",
+    "data",
+    "docs",
+    "game-src",
+    "github-flat",
+    "leaderboard-worker",
+    "node_modules",
+    "output",
+    "scripts",
+    "tmp",
+}
 
 SPECIES_PATTERNS = [
     re.compile(r"\bEscherichia\s+coli\b", re.I),
@@ -42,6 +57,10 @@ SPECIES_PATTERNS = [
 ]
 
 HTML_TAG_PATTERN = re.compile(r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s+[^<>]*)?>")
+FAVICON_LINK_PATTERN = re.compile(
+    r"\n\s*<link\s+rel=\"(?:icon|shortcut icon|apple-touch-icon)\"[^>]*>",
+    re.I,
+)
 PEOPLE_PLAIN_TEXT_FIELDS = [
     "name",
     "labRole",
@@ -122,6 +141,30 @@ def clean_text(value: object = "") -> str:
 
 def escape(value: object = "") -> str:
     return html.escape(clean_text(value), quote=True)
+
+
+def favicon_links(root_prefix: str) -> str:
+    prefix = clean_text(root_prefix)
+    return "\n".join(
+        [
+            f'    <link rel="icon" type="image/svg+xml" href="{escape(prefix)}assets/images/brands/favicon.svg?v={FAVICON_VERSION}" />',
+            f'    <link rel="icon" type="image/png" sizes="32x32" href="{escape(prefix)}assets/images/brands/favicon-32.png?v={FAVICON_VERSION}" />',
+            f'    <link rel="apple-touch-icon" sizes="180x180" href="{escape(prefix)}assets/images/brands/apple-touch-icon.png?v={FAVICON_VERSION}" />',
+            f'    <link rel="shortcut icon" href="{escape(prefix)}favicon.ico?v={FAVICON_VERSION}" />',
+        ]
+    )
+
+
+def ensure_favicon_links(text: str, root_prefix: str) -> str:
+    cleaned = FAVICON_LINK_PATTERN.sub("", text)
+    links = f"\n{favicon_links(root_prefix)}"
+    stylesheet_match = re.search(r"\n\s*<link\s+rel=\"stylesheet\"", cleaned)
+    if stylesheet_match:
+        return f"{cleaned[:stylesheet_match.start()]}{links}{cleaned[stylesheet_match.start():]}"
+    head_close = cleaned.find("\n  </head>")
+    if head_close == -1:
+        raise RuntimeError("Could not locate </head> while adding favicon links")
+    return f"{cleaned[:head_close]}{links}{cleaned[head_close:]}"
 
 
 def slugify(value: str) -> str:
@@ -506,6 +549,7 @@ def render_current_profile(person: dict[str, Any], flat: bool) -> str:
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+{favicon_links(root_prefix)}
     <link rel="stylesheet" href="{escape(root_prefix)}assets/profile.css?v=20260407m" />
     <link rel="canonical" href="{escape(canonical)}" />
   </head>
@@ -605,6 +649,7 @@ def render_alumni_profile(person: dict[str, Any], flat: bool) -> str:
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet" />
+{favicon_links(root_prefix)}
     <link rel="stylesheet" href="{escape(root_prefix)}assets/profile.css?v=20260407m" />
     <link rel="canonical" href="{escape(canonical)}" />
   </head>
@@ -746,24 +791,51 @@ def compile_styles() -> None:
     write_text(ASSETS_DIR / "styles.css", "\n\n".join(chunks))
 
 
+def sync_canonical_redirect_favicons() -> None:
+    for path in sorted(ROOT.glob("*.html")):
+        if path.name == "index.html":
+            continue
+        text = read_text(path)
+        if '<meta http-equiv="refresh"' in text:
+            write_text(path, ensure_favicon_links(text, ""))
+
+    for child in ROOT.iterdir():
+        if not child.is_dir() or child.name in PUBLIC_HTML_EXCLUDED_DIRS:
+            continue
+        index_path = child / "index.html"
+        if not index_path.exists():
+            continue
+        text = read_text(index_path)
+        if '<meta http-equiv="refresh"' in text:
+            write_text(index_path, ensure_favicon_links(text, "../"))
+
+
 def build_canonical_pages() -> None:
     people = current_people(load_people())
     alumni = alumni_people(load_people())
 
     index_text = read_text(ROOT / "index.html")
-    write_text(ROOT / "index.html", replace_template_with_people(index_text, people, root_prefix="", flat=False, view="landing"))
+    write_text(
+        ROOT / "index.html",
+        replace_template_with_people(ensure_favicon_links(index_text, ""), people, root_prefix="", flat=False, view="landing"),
+    )
 
     people_text = read_text(ROOT / "people" / "index.html")
     write_text(
         ROOT / "people" / "index.html",
-        replace_template_with_people(people_text, people, root_prefix="../", flat=False, view="directory"),
+        replace_template_with_people(ensure_favicon_links(people_text, "../"), people, root_prefix="../", flat=False, view="directory"),
     )
 
     alumni_text = read_text(ROOT / "alumni" / "index.html")
     write_text(
         ROOT / "alumni" / "index.html",
-        replace_template_with_alumni(alumni_text, alumni, root_prefix="../", flat=False),
+        replace_template_with_alumni(ensure_favicon_links(alumni_text, "../"), alumni, root_prefix="../", flat=False),
     )
+
+    for nested_page in (ROOT / "accessibility" / "index.html", ROOT / "research-library" / "index.html"):
+        write_text(nested_page, ensure_favicon_links(read_text(nested_page), "../"))
+
+    sync_canonical_redirect_favicons()
 
     for person in people:
         write_text(ROOT / clean_text(person.get("slug")) / "index.html", render_current_profile(person, flat=False))
@@ -778,6 +850,7 @@ def sync_flat_assets() -> None:
     shutil.rmtree(FLAT_DIR / "data", ignore_errors=True)
     shutil.copytree(ASSETS_DIR, FLAT_DIR / "assets", ignore=ignore_generated_copy_names)
     shutil.copytree(DATA_DIR, FLAT_DIR / "data", ignore=ignore_generated_copy_names)
+    shutil.copy2(ROOT / "favicon.ico", FLAT_DIR / "favicon.ico")
 
 
 def cleanup_flat_generated_noise() -> None:
@@ -869,6 +942,7 @@ def sync_flat_redirects() -> None:
         canonical_match = re.search(r'<link rel="canonical" href="([^"]+)"', flat_text)
         if canonical_match:
             flat_text = flat_text.replace(canonical_match.group(1), canonical_match.group(1))
+        flat_text = nested_page_to_flat(flat_text)
         write_text(FLAT_DIR / f"{child.name}.html", flat_text)
 
 
@@ -891,6 +965,71 @@ def validate_homepage_team_grid(path: Path, expected_cards: int) -> None:
         raise RuntimeError(f"{path}: found landing cards outside generated homepage block")
 
 
+def iter_public_html_paths() -> list[Path]:
+    paths: set[Path] = set()
+    for path in ROOT.glob("*.html"):
+        paths.add(path)
+
+    for child in ROOT.iterdir():
+        if not child.is_dir() or child.name in PUBLIC_HTML_EXCLUDED_DIRS:
+            continue
+        if child.name == "alumni-profiles":
+            paths.update(child.glob("*.html"))
+            continue
+        index_path = child / "index.html"
+        if index_path.exists():
+            paths.add(index_path)
+
+    if FLAT_DIR.exists():
+        paths.update(FLAT_DIR.glob("*.html"))
+
+    return sorted(paths)
+
+
+def validate_favicon_assets() -> None:
+    required_assets = [
+        ROOT / "favicon.ico",
+        ASSETS_DIR / "images" / "brands" / "favicon.svg",
+        ASSETS_DIR / "images" / "brands" / "favicon-32.png",
+        ASSETS_DIR / "images" / "brands" / "apple-touch-icon.png",
+        FLAT_DIR / "favicon.ico",
+        FLAT_DIR / "assets" / "images" / "brands" / "favicon.svg",
+        FLAT_DIR / "assets" / "images" / "brands" / "favicon-32.png",
+        FLAT_DIR / "assets" / "images" / "brands" / "apple-touch-icon.png",
+    ]
+    missing = [str(path.relative_to(ROOT)) for path in required_assets if not path.exists()]
+    if missing:
+        raise RuntimeError(f"Missing favicon assets: {', '.join(missing)}")
+
+
+def validate_favicon_links() -> None:
+    validate_favicon_assets()
+    required_tokens = [
+        'rel="icon" type="image/svg+xml"',
+        f"favicon.svg?v={FAVICON_VERSION}",
+        'rel="icon" type="image/png" sizes="32x32"',
+        f"favicon-32.png?v={FAVICON_VERSION}",
+        'rel="apple-touch-icon" sizes="180x180"',
+        f"apple-touch-icon.png?v={FAVICON_VERSION}",
+        'rel="shortcut icon"',
+        f"favicon.ico?v={FAVICON_VERSION}",
+    ]
+    missing_pages: list[str] = []
+    for path in iter_public_html_paths():
+        text = read_text(path)
+        head = text.split("</head>", 1)[0]
+        hrefs = re.findall(
+            r'<link\s+rel="(?:icon|shortcut icon|apple-touch-icon)"[^>]*href="([^"]+)"',
+            head,
+            re.I,
+        )
+        flat_path_has_parent_reference = path.is_relative_to(FLAT_DIR) and any(href.startswith("../") for href in hrefs)
+        if any(token not in head for token in required_tokens) or flat_path_has_parent_reference:
+            missing_pages.append(str(path.relative_to(ROOT)))
+    if missing_pages:
+        raise RuntimeError(f"Missing favicon metadata on public pages: {', '.join(missing_pages)}")
+
+
 def build_site() -> None:
     load_gallery_items()
     load_featured_alumni_items()
@@ -907,6 +1046,7 @@ def build_site() -> None:
     expected_cards = len(current_people(people))
     validate_homepage_team_grid(ROOT / "index.html", expected_cards)
     validate_homepage_team_grid(FLAT_DIR / "index.html", expected_cards)
+    validate_favicon_links()
 
 
 if __name__ == "__main__":
