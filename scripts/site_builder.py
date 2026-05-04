@@ -41,6 +41,19 @@ SPECIES_PATTERNS = [
     re.compile(r"\bA\.\s*baumannii\b", re.I),
 ]
 
+HTML_TAG_PATTERN = re.compile(r"</?[A-Za-z][A-Za-z0-9:-]*(?:\s+[^<>]*)?>")
+PEOPLE_PLAIN_TEXT_FIELDS = [
+    "name",
+    "labRole",
+    "group",
+    "bio",
+    "labDates",
+    "currentRole",
+    "profileType",
+    "email",
+    "profileSummary",
+]
+
 MONTH_INDEX = {
     "jan": 1,
     "feb": 2,
@@ -243,6 +256,26 @@ def validate_people(people: list[dict[str, Any]]) -> None:
         if slug in seen_slugs:
             raise RuntimeError(f"Duplicate slug detected: {slug}")
         seen_slugs.add(slug)
+        validate_people_plain_text(person)
+
+
+def validate_no_html_tags(value: object, context: str) -> None:
+    text = clean_text(value)
+    if text and HTML_TAG_PATTERN.search(text):
+        raise RuntimeError(f"{context} must be plain text, not pasted HTML: {text}")
+
+
+def validate_people_plain_text(person: dict[str, Any]) -> None:
+    slug = clean_text(person.get("slug")) or "<missing slug>"
+    for field in PEOPLE_PLAIN_TEXT_FIELDS:
+        validate_no_html_tags(person.get(field), f"Person {slug} field {field}")
+
+    for index, link in enumerate(person.get("links") or []):
+        validate_no_html_tags((link or {}).get("label"), f"Person {slug} links[{index}].label")
+
+    verification = person.get("verification") or {}
+    validate_no_html_tags(verification.get("sourceLabel"), f"Person {slug} verification.sourceLabel")
+    validate_no_html_tags(verification.get("verifiedSource"), f"Person {slug} verification.verifiedSource")
 
 
 def load_people() -> list[dict[str, Any]]:
@@ -552,7 +585,7 @@ def render_alumni_profile(person: dict[str, Any], flat: bool) -> str:
               <h1>{escape(name)}</h1>
               <p class="role">{escape(person.get("labRole") or "Former lab member")}</p>
               {f'<p class="profile-lab-dates"><strong>Lab dates:</strong> {escape(person.get("labDates"))}</p>' if clean_text(person.get("labDates")) else ''}
-              <p class="bio">{escape(person.get("profileSummary") or f"Former member of the Bernhardt Lab. {clean_text(person.get('currentRole'))}")}</p>
+              <p class="bio">{format_species_text(clean_text(person.get("profileSummary") or f"Former member of the Bernhardt Lab. {clean_text(person.get('currentRole'))}"))}</p>
               <div class="actions">
                 <a class="button button-primary" href="{escape(site_link("alumni", root_prefix, flat))}">Back to alumni directory</a>
                 {f'<a class="button button-secondary" href="{escape(verified_url)}" target="_blank" rel="noreferrer">Current Institutional Profile</a>' if verified_url else ''}
