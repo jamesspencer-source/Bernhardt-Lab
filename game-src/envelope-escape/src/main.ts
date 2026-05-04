@@ -11,6 +11,7 @@ declare global {
 
 let shell: ReturnType<typeof createShell> | null = null;
 let controller: EnvelopeGameController | null = null;
+const LAB_TIMEZONE = "America/New_York";
 
 interface ShellRefs {
   close: HTMLButtonElement;
@@ -128,7 +129,7 @@ function createShell() {
         <div class="envelope-v2-controls">
           <button class="envelope-v2-secondary" data-action="pause" type="button">Pause</button>
           <button class="envelope-v2-secondary" data-action="restart" type="button">Restart</button>
-          <button class="envelope-v2-secondary" data-action="scores" type="button" aria-expanded="false">Scores</button>
+          <button class="envelope-v2-secondary" data-action="scores" type="button">Refresh Scores</button>
         </div>
         <div class="envelope-v2-responses" aria-label="Stress response choices">
           <button data-response="patch" type="button">1 Patch Wall</button>
@@ -136,7 +137,7 @@ function createShell() {
           <button data-response="boost" type="button">3 Boost Motility</button>
         </div>
       </footer>
-      <aside class="envelope-v2-score-drawer" data-panel="scores" hidden>
+      <aside class="envelope-v2-score-drawer" data-panel="scores">
         <div>
           <strong data-hud="score-mode">Local board</strong>
           <p data-hud="score-meta">Finish a run to record a score.</p>
@@ -209,10 +210,7 @@ function createShell() {
       refs.pauseButton.addEventListener("click", () => nextController.togglePause());
       dialog.querySelector('[data-action="restart"]')?.addEventListener("click", () => nextController.restart());
       refs.scoresButton.addEventListener("click", () => {
-        const open = refs.scoresPanel.hidden;
-        refs.scoresPanel.hidden = !open;
-        refs.scoresButton.setAttribute("aria-expanded", String(open));
-        if (open) void nextController.refreshScores();
+        void nextController.refreshScores();
       });
       dialog.querySelectorAll<HTMLButtonElement>("[data-response]").forEach((button) => {
         button.addEventListener("click", () => nextController.triggerResponse(button.dataset.response || "patch"));
@@ -326,7 +324,7 @@ function createUi(dialog: HTMLDialogElement, refs: ShellRefs) {
     }
     payload.entries.forEach((entry, index) => {
       const li = document.createElement("li");
-      li.innerHTML = `<span>#${index + 1}</span><strong>${escapeHtml(entry.name)}</strong><em>${Number(entry.score).toLocaleString()} pts - ${escapeHtml(SPECIES[entry.species]?.shortLabel || entry.species)}</em>`;
+      li.innerHTML = `<span>#${index + 1}</span><strong>${escapeHtml(entry.name)}</strong><em>${Number(entry.score).toLocaleString()} pts - ${escapeHtml(SPECIES[entry.species]?.shortLabel || entry.species)}</em><small class="envelope-v2-score-date">${escapeHtml(formatScoreTimestamp(entry.playedAt))}</small>`;
       refs.scoreList.append(li);
     });
   }
@@ -357,6 +355,24 @@ function requireElement<T extends Element>(root: ParentNode, selector: string): 
 
 function percent(value: number): number {
   return Math.max(0, Math.min(100, value * 100));
+}
+
+function formatScoreTimestamp(value: unknown): string {
+  const timestamp = Math.floor(Number(value) || 0);
+  if (!timestamp) return "Completion time unavailable";
+  const date = new Date(timestamp);
+  if (Number.isNaN(date.getTime())) return "Completion time unavailable";
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: LAB_TIMEZONE,
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short"
+  })
+    .format(date)
+    .replace(/\bE[DS]T\b/, "ET");
 }
 
 function readStorageText(key: string): string {

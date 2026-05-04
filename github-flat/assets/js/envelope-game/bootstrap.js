@@ -16,7 +16,7 @@ if (wantsV2) {
         event.preventDefault();
         event.stopImmediatePropagation();
         try {
-          const game = await import("../../game/envelope-escape/runtime/envelope-escape-v2.js");
+          const game = await import("../../game/envelope-escape/runtime/envelope-escape-v2.js?v=20260504a");
           await game.openEnvelopeEscapeV2();
         } catch (error) {
           console.error("Envelope Escape V2 failed to start; falling back to V1.", error);

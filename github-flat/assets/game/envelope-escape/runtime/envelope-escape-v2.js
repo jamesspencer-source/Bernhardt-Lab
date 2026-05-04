@@ -26415,8 +26415,9 @@ function kt(p, m, t, f, u) {
   });
 }
 let mt = null, Ct = null;
-async function Si(p = {}) {
-  return mt = mt || wi(), Ct || (Ct = Ti({
+const wi = "America/New_York";
+async function Ai(p = {}) {
+  return mt = mt || bi(), Ct || (Ct = Ti({
     parent: mt.gameRoot,
     ui: mt.ui,
     leaderboardUrl: String(window.ENVELOPE_LEADERBOARD_URL || ""),
@@ -26424,14 +26425,14 @@ async function Si(p = {}) {
     audio: mt.audio
   }), mt.bindController(Ct)), mt.dialog.open || mt.dialog.showModal(), mt.ui.showMenu(Ct.state), p.autostart && Ct.startRun(p.mode || "classic", p.speciesId || mt.getSpeciesId(), mt.getPlayerName()), { ok: !0, controller: Ct };
 }
-function Ei() {
+function Ci() {
   const p = Ct, m = mt;
   Ct = null, mt = null, p?.destroy(), m?.dialog.open && m.dialog.close(), m?.dialog.remove();
 }
-function Ai() {
+function _i() {
   return !!Ct;
 }
-function wi() {
+function bi() {
   const p = Pe(), m = document.createElement("dialog");
   m.className = "envelope-v2-modal", m.setAttribute("aria-labelledby", "envelope-v2-title"), m.innerHTML = `
     <div class="envelope-v2-shell">
@@ -26496,7 +26497,7 @@ function wi() {
         <div class="envelope-v2-controls">
           <button class="envelope-v2-secondary" data-action="pause" type="button">Pause</button>
           <button class="envelope-v2-secondary" data-action="restart" type="button">Restart</button>
-          <button class="envelope-v2-secondary" data-action="scores" type="button" aria-expanded="false">Scores</button>
+          <button class="envelope-v2-secondary" data-action="scores" type="button">Refresh Scores</button>
         </div>
         <div class="envelope-v2-responses" aria-label="Stress response choices">
           <button data-response="patch" type="button">1 Patch Wall</button>
@@ -26504,7 +26505,7 @@ function wi() {
           <button data-response="boost" type="button">3 Boost Motility</button>
         </div>
       </footer>
-      <aside class="envelope-v2-score-drawer" data-panel="scores" hidden>
+      <aside class="envelope-v2-score-drawer" data-panel="scores">
         <div>
           <strong data-hud="score-mode">Local board</strong>
           <p data-hud="score-meta">Finish a run to record a score.</p>
@@ -26532,7 +26533,7 @@ function wi() {
     const r = document.createElement("option");
     r.value = u, r.textContent = dt[u].label, t.species.append(r);
   }), t.name.value = fe("bernhardt-envelope-escape-name-v3"), t.motion.value = fe("bernhardt-envelope-escape-motion-v3") || "full", t.audioButton.textContent = p.enabled ? "Sound On" : "Sound Off", t.audioButton.setAttribute("aria-pressed", String(p.enabled));
-  const f = bi(m, t);
+  const f = Si(m, t);
   return {
     dialog: m,
     gameRoot: t.gameRoot,
@@ -26549,15 +26550,14 @@ function wi() {
       }), t.audioButton.addEventListener("click", () => {
         p.setEnabled(!p.enabled), t.audioButton.textContent = p.enabled ? "Sound On" : "Sound Off", t.audioButton.setAttribute("aria-pressed", String(p.enabled));
       }), m.querySelector('[data-action="classic"]')?.addEventListener("click", () => u.startRun("classic", t.species.value, t.name.value)), m.querySelector('[data-action="daily"]')?.addEventListener("click", () => u.startRun("daily", t.species.value, t.name.value)), t.pauseButton.addEventListener("click", () => u.togglePause()), m.querySelector('[data-action="restart"]')?.addEventListener("click", () => u.restart()), t.scoresButton.addEventListener("click", () => {
-        const r = t.scoresPanel.hidden;
-        t.scoresPanel.hidden = !r, t.scoresButton.setAttribute("aria-expanded", String(r)), r && u.refreshScores();
+        u.refreshScores();
       }), m.querySelectorAll("[data-response]").forEach((r) => {
         r.addEventListener("click", () => u.triggerResponse(r.dataset.response || "patch"));
       });
     }
   };
 }
-function bi(p, m) {
+function Si(p, m) {
   const t = (h) => yt(p, `[data-hud="${h}"]`), f = Array.from(p.querySelectorAll("[data-response]"));
   let u = 0;
   function r(h) {
@@ -26616,7 +26616,7 @@ function bi(p, m) {
     }
     h.entries.forEach((l, g) => {
       const v = document.createElement("li");
-      v.innerHTML = `<span>#${g + 1}</span><strong>${At(l.name)}</strong><em>${Number(l.score).toLocaleString()} pts - ${At(dt[l.species]?.shortLabel || l.species)}</em>`, m.scoreList.append(v);
+      v.innerHTML = `<span>#${g + 1}</span><strong>${At(l.name)}</strong><em>${Number(l.score).toLocaleString()} pts - ${At(dt[l.species]?.shortLabel || l.species)}</em><small class="envelope-v2-score-date">${At(Ei(l.playedAt))}</small>`, m.scoreList.append(v);
     });
   }
   function i(h, d = "") {
@@ -26638,6 +26638,20 @@ function yt(p, m) {
 function qt(p) {
   return Math.max(0, Math.min(100, p * 100));
 }
+function Ei(p) {
+  const m = Math.floor(Number(p) || 0);
+  if (!m) return "Completion time unavailable";
+  const t = new Date(m);
+  return Number.isNaN(t.getTime()) ? "Completion time unavailable" : new Intl.DateTimeFormat("en-US", {
+    timeZone: wi,
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short"
+  }).format(t).replace(/\bE[DS]T\b/, "ET");
+}
 function fe(p) {
   try {
     return window.localStorage.getItem(p) || "";
@@ -26655,7 +26669,7 @@ function At(p) {
   return String(p ?? "").replace(/[&<>"']/g, (m) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[m]);
 }
 export {
-  Ei as destroyEnvelopeEscapeV2,
-  Ai as isEnvelopeEscapeV2Ready,
-  Si as openEnvelopeEscapeV2
+  Ci as destroyEnvelopeEscapeV2,
+  _i as isEnvelopeEscapeV2Ready,
+  Ai as openEnvelopeEscapeV2
 };

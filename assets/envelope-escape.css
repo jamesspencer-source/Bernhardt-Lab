@@ -67,8 +67,8 @@
 }
 
 .envelope-modal {
-  width: min(96vw, 1600px);
-  max-width: 1600px;
+  width: min(98vw, 1680px);
+  max-width: 1680px;
   max-height: 92svh;
   border: 0;
   background: transparent;
@@ -86,10 +86,12 @@
 }
 
 .envelope-shell {
-  --envelope-stage-height: min(clamp(37rem, 72svh, 53rem), calc(92svh - 13.4rem));
+  --envelope-stage-height: min(clamp(34rem, 68svh, 50rem), calc(92svh - 8.4rem));
   position: relative;
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem);
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  column-gap: 0.82rem;
   min-height: min(92svh, 980px);
   max-height: 92svh;
   border: 1px solid rgba(154, 226, 235, 0.18);
@@ -105,6 +107,7 @@
 }
 
 .envelope-header {
+  grid-column: 1 / -1;
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -175,6 +178,7 @@
 }
 
 .envelope-stage-hint {
+  grid-column: 1;
   margin: 0 1.12rem 0.42rem;
   color: rgba(196, 228, 238, 0.68);
   font-size: 0.8rem;
@@ -183,6 +187,7 @@
 }
 
 .envelope-console-bar {
+  grid-column: 1;
   margin: 0 1.12rem 0.56rem;
   display: flex;
   align-items: center;
@@ -222,6 +227,7 @@
 }
 
 .envelope-stage-wrap {
+  grid-column: 1;
   position: relative;
   margin: 0 auto;
   width: min(calc(100% - 2.24rem), calc(var(--envelope-stage-height) * 16 / 9));
@@ -617,9 +623,15 @@
 }
 
 .envelope-drawer {
-  margin: 0.7rem 1.12rem 1.08rem;
+  grid-column: 2;
+  grid-row: 2 / 5;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  margin: 0 1.12rem 1.08rem 0;
   padding: 0.78rem 0.92rem 0.92rem;
-  max-height: min(22svh, 17rem);
+  max-height: none;
   border: 1px solid rgba(170, 235, 241, 0.14);
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(8, 20, 33, 0.82), rgba(7, 17, 29, 0.72));
@@ -663,6 +675,10 @@
 .envelope-leaderboard {
   margin-top: 0.7rem;
   padding: 0.94rem;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
   border-radius: 18px;
   border: 1px solid rgba(170, 235, 241, 0.14);
   background: rgba(7, 20, 33, 0.62);
@@ -694,6 +710,8 @@
   list-style: none;
   display: grid;
   gap: 0.52rem;
+  overflow: auto;
+  padding-right: 0.16rem;
 }
 
 .envelope-leaderboard-list li {
@@ -732,6 +750,40 @@
 .envelope-leaderboard-meta-line {
   color: rgba(201, 231, 241, 0.72);
   font-size: 0.88rem;
+}
+
+.envelope-leaderboard-date {
+  color: rgba(171, 210, 222, 0.66);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 1120px) {
+  .envelope-shell {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto auto;
+    overflow: auto;
+  }
+
+  .envelope-stage-hint,
+  .envelope-console-bar,
+  .envelope-stage-wrap,
+  .envelope-drawer {
+    grid-column: 1;
+  }
+
+  .envelope-drawer {
+    grid-row: auto;
+    margin: 0.7rem 1.12rem 1.08rem;
+    max-height: none;
+  }
+
+  .envelope-leaderboard {
+    flex: none;
+  }
+
+  .envelope-leaderboard-list {
+    max-height: min(26svh, 18rem);
+  }
 }
 
 @media (max-width: 980px) {
