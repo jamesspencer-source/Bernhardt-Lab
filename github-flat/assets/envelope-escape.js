@@ -330,7 +330,6 @@
       currentMode: "classic",
       currentBoard: "classic",
       currentBoardLabel: "Classic board",
-      scoresOpen: false,
       playerName: readStorageText(NAME_KEY),
       bestByBoard: readStorageJson(BEST_KEY, {}),
       leaderboard: [],
@@ -697,6 +696,24 @@
     }).format(date);
   }
 
+  function formatLeaderboardTimestamp(value) {
+    const timestamp = Math.floor(Number(value) || 0);
+    if (!timestamp) return "Completion time unavailable";
+    const date = new Date(timestamp);
+    if (Number.isNaN(date.getTime())) return "Completion time unavailable";
+    return new Intl.DateTimeFormat("en-US", {
+      timeZone: LAB_TIMEZONE,
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZoneName: "short"
+    })
+      .format(date)
+      .replace(/\bE[DS]T\b/, "ET");
+  }
+
   function buildDailyChallenge() {
     const dateKey = getLabDateKey();
     const rng = createSeededRandom(hashString(`envelope-daily-${dateKey}`));
@@ -914,17 +931,16 @@
     overlay.classList.add("is-hidden");
   }
 
-  function setScoresOpen(nextOpen) {
-    state.scoresOpen = Boolean(nextOpen);
-    scoresPanel.hidden = !state.scoresOpen;
-    scoresToggleButton.setAttribute("aria-expanded", String(state.scoresOpen));
-    scoresToggleButton.textContent = state.scoresOpen ? "Hide Scores" : "Scores";
+  function showScoresPanel() {
+    scoresPanel.hidden = false;
+    scoresToggleButton.removeAttribute("aria-expanded");
+    scoresToggleButton.textContent = "Refresh Scores";
   }
 
   function showOverlay(mode) {
     state.overlayMode = mode;
     overlay.classList.remove("is-hidden");
-    setScoresOpen(mode === "ended");
+    showScoresPanel();
     if (runReportEl) {
       runReportEl.hidden = mode !== "ended";
       if (mode !== "ended") runReportEl.innerHTML = "";
@@ -1204,7 +1220,7 @@
     state.repairProgress = 0;
     state.lastPlacement = null;
     state.banner = null;
-    setScoresOpen(false);
+    showScoresPanel();
     state.fragments = [];
     state.phages = [];
     state.waves = [];
@@ -2637,7 +2653,10 @@
         const meta = document.createElement("span");
         meta.className = "envelope-leaderboard-meta-line";
         meta.textContent = `${entry.score.toLocaleString()} pts · ${getSpecies(entry.species).label}`;
-        main.append(label, meta);
+        const playedAt = document.createElement("span");
+        playedAt.className = "envelope-leaderboard-date";
+        playedAt.textContent = formatLeaderboardTimestamp(entry.playedAt);
+        main.append(label, meta, playedAt);
         li.append(rank, main);
         leaderboardListEl.append(li);
       });
@@ -2857,7 +2876,7 @@
       state.currentBoard = "classic";
       state.currentBoardLabel = "Classic board";
       state.speciesId = state.selectedSpeciesId;
-      setScoresOpen(false);
+      showScoresPanel();
     }
     updateDailyNote();
     updateSpeciesInfo();
@@ -2953,7 +2972,7 @@
   });
   responseButton.addEventListener("click", triggerStressResponse);
   scoresToggleButton.addEventListener("click", () => {
-    setScoresOpen(!state.scoresOpen);
+    refreshLeaderboard(state.currentBoard);
   });
   modal.addEventListener("close", () => {
     if (rafId) {
@@ -3046,7 +3065,7 @@
   }
   syncPlayfieldSize({ preserveState: false });
   updateHud(true);
-  setScoresOpen(false);
+  showScoresPanel();
   renderLeaderboard();
   render();
 })();
