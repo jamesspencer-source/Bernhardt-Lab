@@ -44,6 +44,14 @@ Build the site:
 python3 scripts/build_site.py
 ```
 
+Run Tom feedback compliance only:
+
+```bash
+python3 scripts/validate_tom_compliance.py
+```
+
+`build_site.py` and `publish_site.py` both enforce this gate. It prevents future updates from reintroducing Tom-removed alumni, incorrect homepage publication links, removed gallery items, placeholder alumni text, or escaped raw formatting markup.
+
 Build the hidden Envelope Escape V2 game after TypeScript source changes:
 
 ```bash
@@ -88,6 +96,7 @@ python3 scripts/check_leaderboard_worker.py --require-board-routing
 - `.DS_Store` should generally be discarded, not committed.
 - `github-flat` is regenerated from nested `assets/` and `data/` paths. Root-level non-HTML files there are legacy baggage and should not be reintroduced.
 - Prefer `python3 scripts/publish_site.py` for the normal build/commit/push flow.
+- Do not bypass the Tom feedback compliance gate; if it fails, fix the canonical source rather than patching generated HTML.
 
 ## Common tasks
 

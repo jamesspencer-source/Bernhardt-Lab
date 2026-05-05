@@ -16,6 +16,16 @@ For visual or interface changes, treat `docs/editorial-style-guide.md` as the st
 
 Do not hand-repaint isolated modules in late CSS layers unless the exception is intentional and documented. Shared surface identity should live in the shared CSS source layers, with page-level files used mainly for layout and responsive composition.
 
+## Tom feedback compliance
+
+Tom's requested content rules are now enforced as a hard build gate. The normal build and publish commands run:
+
+```bash
+python3 scripts/validate_tom_compliance.py
+```
+
+This protects the curated homepage publication set, corrected Betsy/Lindsey links, Tom-removed alumni, required featured alumni, gallery removals/caption wording, omitted alumni placeholder text, and species-name formatting. If this gate fails, edit the canonical source in `data/` or the relevant template, then rebuild. Do not patch generated HTML to work around the failure.
+
 ## Canonical sources
 
 - People and alumni: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/people.json`
@@ -31,6 +41,8 @@ Do not hand-repaint isolated modules in late CSS layers unless the exception is 
 ```bash
 python3 scripts/build_site.py
 ```
+
+This command now runs data validation, generated-page validation, favicon validation, and the Tom feedback compliance gate.
 
 If Envelope Escape V2 source under `game-src/envelope-escape/` changes, run the game checks first:
 
