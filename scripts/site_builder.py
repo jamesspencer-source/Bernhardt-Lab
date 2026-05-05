@@ -9,6 +9,8 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+from validate_tom_compliance import validate_tom_compliance
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
@@ -1047,6 +1049,7 @@ def build_site() -> None:
     validate_homepage_team_grid(ROOT / "index.html", expected_cards)
     validate_homepage_team_grid(FLAT_DIR / "index.html", expected_cards)
     validate_favicon_links()
+    validate_tom_compliance(ROOT)
 
 
 if __name__ == "__main__":

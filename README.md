@@ -55,6 +55,14 @@ Run:
 python3 scripts/build_site.py
 ```
 
+The normal build also runs the Tom feedback compliance gate. To run that gate by itself:
+
+```bash
+python3 scripts/validate_tom_compliance.py
+```
+
+That validator blocks regressions against Tom's requested content rules: the curated six-paper homepage publication set, removed alumni, required featured alumni, corrected gallery caption, omitted placeholder verification/role text, and pasted raw formatting artifacts.
+
 If Envelope Escape V2 source changes, build the game first:
 
 ```bash
