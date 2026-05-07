@@ -69,6 +69,7 @@ class EnvelopeV3Controller {
   private frame = 0;
   private lastTime = performance.now();
   private reportRendered = false;
+  private upgradesRenderedKey = "";
 
   constructor(options: OpenOptions) {
     this.dialog = createDialog();
@@ -132,6 +133,14 @@ class EnvelopeV3Controller {
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
     if (!this.dialog.open || event.target instanceof HTMLInputElement || event.target instanceof HTMLSelectElement) return;
+    if (this.sim.state.status === "upgrade") {
+      const upgradeIndex = ["1", "2", "3"].indexOf(event.key);
+      if (upgradeIndex >= 0) {
+        event.preventDefault();
+        this.chooseUpgradeByIndex(upgradeIndex);
+      }
+      return;
+    }
     if (applyKey(this.input, event, true)) event.preventDefault();
     if (event.key === "1") this.triggerCommand("pg");
     if (event.key === "2") this.triggerCommand("membrane");
@@ -150,6 +159,7 @@ class EnvelopeV3Controller {
 
   private startRun(mode: "classic" | "daily", speciesId: string): void {
     this.reportRendered = false;
+    this.upgradesRenderedKey = "";
     this.seenEffects.clear();
     this.sim.start({ mode, speciesId, playerName: this.refs.name.value });
     this.sim.beginRun();
@@ -210,21 +220,34 @@ class EnvelopeV3Controller {
 
   private renderUpgrades(): void {
     show(this.refs.upgrades);
+    const key = this.sim.state.upgradeChoices.join("|");
+    if (key && key === this.upgradesRenderedKey && this.refs.upgradesList.children.length > 0) return;
+
+    this.upgradesRenderedKey = key;
     this.refs.upgradesList.innerHTML = "";
-    this.sim.state.upgradeChoices.forEach((id) => {
+    this.sim.state.upgradeChoices.forEach((id, index) => {
       const upgrade = UPGRADES[id];
       const button = document.createElement("button");
       button.type = "button";
       button.className = "envelope-v3-upgrade-card";
-      button.innerHTML = `<span>${escapeHtml(upgrade.command || "system")}</span><strong>${escapeHtml(upgrade.title)}</strong><p>${escapeHtml(upgrade.copy)}</p>`;
-      button.addEventListener("click", () => {
-        this.sim.chooseUpgrade(id);
-        hide(this.refs.upgrades);
-        this.audio.play("upgrade");
-        this.renderState();
-      });
+      button.innerHTML = `<span>${index + 1} | ${escapeHtml(upgrade.command || "system")}</span><strong>${escapeHtml(upgrade.title)}</strong><p>${escapeHtml(upgrade.copy)}</p>`;
+      button.addEventListener("click", () => this.chooseUpgrade(id));
       this.refs.upgradesList.append(button);
     });
+  }
+
+  private chooseUpgradeByIndex(index: number): void {
+    const id = this.sim.state.upgradeChoices[index];
+    if (id) this.chooseUpgrade(id);
+  }
+
+  private chooseUpgrade(id: UpgradeId): void {
+    if (this.sim.state.status !== "upgrade" || !this.sim.state.upgradeChoices.includes(id)) return;
+    this.sim.chooseUpgrade(id);
+    this.upgradesRenderedKey = "";
+    hide(this.refs.upgrades);
+    this.audio.play("upgrade");
+    this.renderState();
   }
 
   private renderReport(report: RunReport): void {
