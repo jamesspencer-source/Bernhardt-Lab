@@ -16,7 +16,13 @@ ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = ROOT / "data"
 ASSETS_DIR = ROOT / "assets"
 FLAT_DIR = ROOT / "github-flat"
-CANONICAL_SITE_URL = "https://jamesspencer-source.github.io/Bernhardt-Lab"
+CANONICAL_SITE_URL = "https://bernhardtlab.com"
+TEAM_ROUTE = "team"
+LEGACY_TEAM_ROUTE = "people"
+ALUMNI_ROUTE = "alumni"
+LEGACY_ALUMNI_PROFILE_ROUTE = "alumni-profiles"
+RESEARCH_ROUTE = "research"
+LEGACY_RESEARCH_ROUTE = "research-library"
 FAVICON_VERSION = "20260504b"
 CSS_SOURCE_ORDER = [
     "base.css",
@@ -63,6 +69,7 @@ FAVICON_LINK_PATTERN = re.compile(
     r"\n\s*<link\s+rel=\"(?:icon|shortcut icon|apple-touch-icon)\"[^>]*>",
     re.I,
 )
+CANONICAL_LINK_PATTERN = re.compile(r"\n\s*<link\s+rel=\"canonical\"[^>]*>", re.I)
 PEOPLE_PLAIN_TEXT_FIELDS = [
     "name",
     "labRole",
@@ -155,6 +162,22 @@ def favicon_links(root_prefix: str) -> str:
             f'    <link rel="shortcut icon" href="{escape(prefix)}favicon.ico?v={FAVICON_VERSION}" />',
         ]
     )
+
+
+def canonical_url(path: str = "") -> str:
+    normalized = clean_text(path).strip("/")
+    if not normalized:
+        return f"{CANONICAL_SITE_URL}/"
+    return f"{CANONICAL_SITE_URL}/{normalized}/"
+
+
+def ensure_canonical_link(text: str, url: str) -> str:
+    cleaned = CANONICAL_LINK_PATTERN.sub("", text)
+    link = f'\n    <link rel="canonical" href="{escape(url)}" />'
+    head_close = cleaned.find("\n  </head>")
+    if head_close == -1:
+        raise RuntimeError("Could not locate </head> while adding canonical link")
+    return f"{cleaned[:head_close]}{link}{cleaned[head_close:]}"
 
 
 def ensure_favicon_links(text: str, root_prefix: str) -> str:
@@ -258,27 +281,31 @@ def resolve_asset_path(path: str, root_prefix: str) -> str:
 
 def current_profile_href(person: dict[str, Any], root_prefix: str, flat: bool) -> str:
     slug = clean_text(person.get("slug"))
-    return f"{slug}.html" if flat else f"{root_prefix}{slug}/"
+    return f"team-{slug}.html" if flat else f"{root_prefix}{TEAM_ROUTE}/{slug}/"
 
 
 def alumni_profile_href(person: dict[str, Any], root_prefix: str, flat: bool) -> str:
     slug = clean_text(person.get("slug"))
-    return f"alumni-{slug}.html" if flat else f"{root_prefix}alumni-profiles/{slug}.html"
+    return f"alumni-{slug}.html" if flat else f"{root_prefix}{ALUMNI_ROUTE}/{slug}/"
 
 
 def site_link(path: str, root_prefix: str, flat: bool) -> str:
     normalized = clean_text(path).strip("/")
+    if normalized == LEGACY_TEAM_ROUTE:
+        normalized = TEAM_ROUTE
+    if normalized == LEGACY_RESEARCH_ROUTE:
+        normalized = RESEARCH_ROUTE
     if not normalized:
         return "index.html" if flat else f"{root_prefix}index.html"
     if flat:
-        if normalized == "people":
-            return "people.html"
-        if normalized == "alumni":
+        if normalized == TEAM_ROUTE:
+            return "team.html"
+        if normalized == ALUMNI_ROUTE:
             return "alumni.html"
         if normalized == "accessibility":
             return "accessibility.html"
-        if normalized == "research-library":
-            return "research-library.html"
+        if normalized == RESEARCH_ROUTE:
+            return "research.html"
         return f"{normalized}.html"
     return f"{root_prefix}{normalized}/"
 
@@ -501,8 +528,8 @@ def render_alumni_cards(people: list[dict[str, Any]], root_prefix: str, flat: bo
 
 
 def render_profile_nav(root_prefix: str, flat: bool, current_section: str) -> str:
-    team_href = site_link("people", root_prefix, flat)
-    alumni_href = site_link("alumni", root_prefix, flat)
+    team_href = site_link(TEAM_ROUTE, root_prefix, flat)
+    alumni_href = site_link(ALUMNI_ROUTE, root_prefix, flat)
     team_current = ' aria-current="page"' if current_section == "team" else ""
     alumni_current = ' aria-current="page"' if current_section == "alumni" else ""
     return f'''          <nav class="top-links" aria-label="Profile navigation">
@@ -516,7 +543,7 @@ def render_profile_nav(root_prefix: str, flat: bool, current_section: str) -> st
 
 
 def render_current_profile(person: dict[str, Any], flat: bool) -> str:
-    root_prefix = "" if flat else "../"
+    root_prefix = "" if flat else "../../"
     role = clean_text(person.get("labRole"))
     name = clean_text(person.get("name"))
     lab_dates = clean_text(person.get("labDates"))
@@ -524,7 +551,7 @@ def render_current_profile(person: dict[str, Any], flat: bool) -> str:
     links = person.get("links") or []
     action_links = []
     action_links.append(
-        f'<a class="button button-primary" href="{escape(root_prefix)}index.html#team">Back to team directory</a>'
+        f'<a class="button button-primary" href="{escape(site_link(TEAM_ROUTE, root_prefix, flat))}">Back to team directory</a>'
     )
     if email:
         first_name = clean_text(name.split()[0] if name else "the lab")
@@ -539,7 +566,7 @@ def render_current_profile(person: dict[str, Any], flat: bool) -> str:
         action_links.append(
             f'<a class="button button-secondary" href="{escape(href)}" target="_blank" rel="noreferrer">{escape(label)}</a>'
         )
-    canonical = f"{CANONICAL_SITE_URL}/{clean_text(person.get('slug'))}/"
+    canonical = canonical_url(f"{TEAM_ROUTE}/{clean_text(person.get('slug'))}")
     return f'''<!doctype html>
 <html lang="en">
   <head>
@@ -606,7 +633,7 @@ def render_current_profile(person: dict[str, Any], flat: bool) -> str:
 
 
 def render_alumni_profile(person: dict[str, Any], flat: bool) -> str:
-    root_prefix = "" if flat else "../"
+    root_prefix = "" if flat else "../../"
     verification = person.get("verification") or {}
     verified_url = clean_text(verification.get("url"))
     verified_source = clean_text(verification.get("verifiedSource"))
@@ -639,7 +666,7 @@ def render_alumni_profile(person: dict[str, Any], flat: bool) -> str:
         if verified_url
         else ""
     )
-    canonical = f"{CANONICAL_SITE_URL}/alumni-profiles/{clean_text(person.get('slug'))}.html"
+    canonical = canonical_url(f"{ALUMNI_ROUTE}/{clean_text(person.get('slug'))}")
     return f'''<!doctype html>
 <html lang="en">
   <head>
@@ -746,13 +773,57 @@ def replace_template_with_alumni(text: str, people: list[dict[str, Any]], root_p
     return text
 
 
+def normalize_canonical_route_links(text: str) -> str:
+    replacements = [
+        ('href="people/"', f'href="{TEAM_ROUTE}/"'),
+        ('href="../people/"', f'href="../{TEAM_ROUTE}/"'),
+        ('href="../../people/"', f'href="../../{TEAM_ROUTE}/"'),
+        ('href="research-library/"', f'href="{RESEARCH_ROUTE}/"'),
+        ('href="../research-library/"', f'href="../{RESEARCH_ROUTE}/"'),
+        ('href="../../research-library/"', f'href="../../{RESEARCH_ROUTE}/"'),
+        ('href="alumni-profiles/', f'href="{ALUMNI_ROUTE}/'),
+        ('href="../alumni-profiles/', f'href="../{ALUMNI_ROUTE}/'),
+        ('href="../../alumni-profiles/', f'href="../../{ALUMNI_ROUTE}/'),
+    ]
+    for old, new in replacements:
+        text = text.replace(old, new)
+    return text
+
+
+def render_redirect_page(target_href: str, canonical: str, root_prefix: str, title: str = "Redirecting") -> str:
+    target = clean_text(target_href)
+    page_title = clean_text(title) or "Redirecting"
+    full_title = page_title if "Thomas Bernhardt Lab" in page_title else f"{page_title} | Thomas Bernhardt Lab"
+    return f'''<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url={escape(target)}" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{escape(full_title)}</title>
+    <link rel="canonical" href="{escape(canonical)}" />
+    <script>window.location.replace({json.dumps(target)});</script>
+{favicon_links(root_prefix)}
+  </head>
+  <body>
+    <main>
+      <p>Redirecting to the current Bernhardt Lab page.</p>
+      <p><a href="{escape(target)}">Continue to the current page</a></p>
+    </main>
+  </body>
+</html>
+'''
+
+
 def root_page_to_flat(text: str) -> str:
     replacements = [
         ('content="canonical"', 'content="flat"'),
-        ('href="people/"', 'href="people.html"'),
+        ('href="people/"', 'href="team.html"'),
+        ('href="team/"', 'href="team.html"'),
         ('href="alumni/"', 'href="alumni.html"'),
         ('href="accessibility/"', 'href="accessibility.html"'),
-        ('href="research-library/"', 'href="research-library.html"'),
+        ('href="research-library/"', 'href="research.html"'),
+        ('href="research/"', 'href="research.html"'),
     ]
     for old, new in replacements:
         text = text.replace(old, new)
@@ -764,10 +835,12 @@ def nested_page_to_flat(text: str) -> str:
         ('content="canonical"', 'content="flat"'),
         ('href="../index.html"', 'href="index.html"'),
         ('href="../index.html#', 'href="index.html#'),
-        ('href="../people/"', 'href="people.html"'),
+        ('href="../people/"', 'href="team.html"'),
+        ('href="../team/"', 'href="team.html"'),
         ('href="../alumni/"', 'href="alumni.html"'),
         ('href="../accessibility/"', 'href="accessibility.html"'),
-        ('href="../research-library/"', 'href="research-library.html"'),
+        ('href="../research-library/"', 'href="research.html"'),
+        ('href="../research/"', 'href="research.html"'),
         ('href="../', 'href="'),
         ('src="../', 'src="'),
         ('data-freshness-path="../assets/data/', 'data-freshness-path="assets/data/'),
@@ -812,38 +885,153 @@ def sync_canonical_redirect_favicons() -> None:
             write_text(index_path, ensure_favicon_links(text, "../"))
 
 
+def page_template(primary: Path, fallback: Path) -> str:
+    if primary.exists():
+        return read_text(primary)
+    return read_text(fallback)
+
+
+def classify_legacy_target(target: str, current_slugs: set[str], alumni_slugs: set[str]) -> tuple[str, str] | None:
+    normalized = clean_text(target)
+    if normalized.startswith("../"):
+        normalized = normalized[3:]
+    normalized = normalized.strip("/")
+    normalized = normalized.removesuffix("/index.html")
+    normalized = normalized.removesuffix(".html")
+
+    if normalized.startswith(f"{TEAM_ROUTE}/"):
+        slug = normalized.split("/", 1)[1].strip("/")
+        return ("team", slug) if slug in current_slugs else None
+    if normalized.startswith(f"{ALUMNI_ROUTE}/"):
+        slug = normalized.split("/", 1)[1].strip("/")
+        return ("alumni", slug) if slug in alumni_slugs else None
+    if normalized.startswith(f"{LEGACY_ALUMNI_PROFILE_ROUTE}/"):
+        slug = normalized.split("/", 1)[1].strip("/")
+        return ("alumni", slug) if slug in alumni_slugs else None
+    if normalized in current_slugs:
+        return ("team", normalized)
+    if normalized in alumni_slugs:
+        return ("alumni", normalized)
+    return None
+
+
+def collect_legacy_profile_redirects(current_slugs: set[str], alumni_slugs: set[str]) -> dict[str, tuple[str, str]]:
+    redirects: dict[str, tuple[str, str]] = {slug: ("team", slug) for slug in current_slugs}
+    excluded = PUBLIC_HTML_EXCLUDED_DIRS | {
+        TEAM_ROUTE,
+        ALUMNI_ROUTE,
+        LEGACY_TEAM_ROUTE,
+        RESEARCH_ROUTE,
+        LEGACY_RESEARCH_ROUTE,
+    }
+    for child in ROOT.iterdir():
+        if not child.is_dir() or child.name in excluded:
+            continue
+        index_path = child / "index.html"
+        if not index_path.exists():
+            continue
+        text = read_text(index_path)
+        refresh_match = re.search(r'<meta http-equiv="refresh" content="0; url=([^"]+)"', text)
+        if not refresh_match:
+            continue
+        target = classify_legacy_target(refresh_match.group(1), current_slugs, alumni_slugs)
+        if target:
+            redirects[child.name] = target
+    return redirects
+
+
+def sync_legacy_redirects(
+    people: list[dict[str, Any]],
+    alumni: list[dict[str, Any]],
+    profile_redirects: dict[str, tuple[str, str]],
+) -> None:
+    write_text(
+        ROOT / "people.html",
+        render_redirect_page("team/", canonical_url(TEAM_ROUTE), "", "Team Redirect"),
+    )
+    write_text(
+        ROOT / LEGACY_TEAM_ROUTE / "index.html",
+        render_redirect_page(f"../{TEAM_ROUTE}/", canonical_url(TEAM_ROUTE), "../", "Team Redirect"),
+    )
+    write_text(
+        ROOT / "alumni.html",
+        render_redirect_page("alumni/", canonical_url(ALUMNI_ROUTE), "", "Alumni Redirect"),
+    )
+    write_text(
+        ROOT / "research-library.html",
+        render_redirect_page("research/", canonical_url(RESEARCH_ROUTE), "", "Research Redirect"),
+    )
+    write_text(
+        ROOT / LEGACY_RESEARCH_ROUTE / "index.html",
+        render_redirect_page(f"../{RESEARCH_ROUTE}/", canonical_url(RESEARCH_ROUTE), "../", "Research Redirect"),
+    )
+
+    for alias, (section, slug) in sorted(profile_redirects.items()):
+        if section == "team":
+            target_href = f"../{TEAM_ROUTE}/{slug}/"
+            target_url = canonical_url(f"{TEAM_ROUTE}/{slug}")
+        else:
+            target_href = f"../{ALUMNI_ROUTE}/{slug}/"
+            target_url = canonical_url(f"{ALUMNI_ROUTE}/{slug}")
+        write_text(ROOT / alias / "index.html", render_redirect_page(target_href, target_url, "../", f"{slug} Redirect"))
+
+    for person in alumni:
+        slug = clean_text(person.get("slug"))
+        write_text(
+            ROOT / LEGACY_ALUMNI_PROFILE_ROUTE / f"{slug}.html",
+            render_redirect_page(f"../{ALUMNI_ROUTE}/{slug}/", canonical_url(f"{ALUMNI_ROUTE}/{slug}"), "../", f"{clean_text(person.get('name'))} Redirect"),
+        )
+
+
 def build_canonical_pages() -> None:
     people = current_people(load_people())
     alumni = alumni_people(load_people())
+    current_slugs = {clean_text(person.get("slug")) for person in people}
+    alumni_slugs = {clean_text(person.get("slug")) for person in alumni}
+    profile_redirects = collect_legacy_profile_redirects(current_slugs, alumni_slugs)
 
     index_text = read_text(ROOT / "index.html")
+    index_text = normalize_canonical_route_links(index_text)
+    index_text = ensure_canonical_link(index_text, canonical_url())
     write_text(
         ROOT / "index.html",
         replace_template_with_people(ensure_favicon_links(index_text, ""), people, root_prefix="", flat=False, view="landing"),
     )
 
-    people_text = read_text(ROOT / "people" / "index.html")
+    team_text = page_template(ROOT / TEAM_ROUTE / "index.html", ROOT / LEGACY_TEAM_ROUTE / "index.html")
+    team_text = normalize_canonical_route_links(team_text)
+    team_text = ensure_canonical_link(team_text, canonical_url(TEAM_ROUTE))
     write_text(
-        ROOT / "people" / "index.html",
-        replace_template_with_people(ensure_favicon_links(people_text, "../"), people, root_prefix="../", flat=False, view="directory"),
+        ROOT / TEAM_ROUTE / "index.html",
+        replace_template_with_people(ensure_favicon_links(team_text, "../"), people, root_prefix="../", flat=False, view="directory"),
     )
 
     alumni_text = read_text(ROOT / "alumni" / "index.html")
+    alumni_text = normalize_canonical_route_links(alumni_text)
+    alumni_text = ensure_canonical_link(alumni_text, canonical_url(ALUMNI_ROUTE))
     write_text(
-        ROOT / "alumni" / "index.html",
+        ROOT / ALUMNI_ROUTE / "index.html",
         replace_template_with_alumni(ensure_favicon_links(alumni_text, "../"), alumni, root_prefix="../", flat=False),
     )
 
-    for nested_page in (ROOT / "accessibility" / "index.html", ROOT / "research-library" / "index.html"):
-        write_text(nested_page, ensure_favicon_links(read_text(nested_page), "../"))
+    research_text = page_template(ROOT / RESEARCH_ROUTE / "index.html", ROOT / LEGACY_RESEARCH_ROUTE / "index.html")
+    research_text = normalize_canonical_route_links(research_text)
+    research_text = ensure_canonical_link(research_text, canonical_url(RESEARCH_ROUTE))
+    write_text(ROOT / RESEARCH_ROUTE / "index.html", ensure_favicon_links(research_text, "../"))
 
-    sync_canonical_redirect_favicons()
+    accessibility_text = read_text(ROOT / "accessibility" / "index.html")
+    accessibility_text = normalize_canonical_route_links(accessibility_text)
+    accessibility_text = ensure_canonical_link(accessibility_text, canonical_url("accessibility"))
+    write_text(ROOT / "accessibility" / "index.html", ensure_favicon_links(accessibility_text, "../"))
 
     for person in people:
-        write_text(ROOT / clean_text(person.get("slug")) / "index.html", render_current_profile(person, flat=False))
+        write_text(ROOT / TEAM_ROUTE / clean_text(person.get("slug")) / "index.html", render_current_profile(person, flat=False))
 
     for person in alumni:
-        write_text(ROOT / "alumni-profiles" / f"{clean_text(person.get('slug'))}.html", render_alumni_profile(person, flat=False))
+        write_text(ROOT / ALUMNI_ROUTE / clean_text(person.get("slug")) / "index.html", render_alumni_profile(person, flat=False))
+
+    sync_legacy_redirects(people, alumni, profile_redirects)
+    sync_canonical_redirect_favicons()
 
 
 def sync_flat_assets() -> None:
@@ -882,19 +1070,21 @@ def build_flat_pages() -> None:
     index_text = replace_template_with_people(index_text, people, root_prefix="", flat=True, view="landing")
     write_text(FLAT_DIR / "index.html", index_text)
 
-    people_text = nested_page_to_flat(read_text(ROOT / "people" / "index.html"))
-    people_text = replace_template_with_people(people_text, people, root_prefix="", flat=True, view="directory")
-    write_text(FLAT_DIR / "people.html", people_text)
+    team_text = nested_page_to_flat(read_text(ROOT / TEAM_ROUTE / "index.html"))
+    team_text = replace_template_with_people(team_text, people, root_prefix="", flat=True, view="directory")
+    write_text(FLAT_DIR / "team.html", team_text)
+    write_text(FLAT_DIR / "people.html", render_redirect_page("team.html", canonical_url(TEAM_ROUTE), "", "Team Redirect"))
 
-    alumni_text = nested_page_to_flat(read_text(ROOT / "alumni" / "index.html"))
+    alumni_text = nested_page_to_flat(read_text(ROOT / ALUMNI_ROUTE / "index.html"))
     alumni_text = replace_template_with_alumni(alumni_text, alumni, root_prefix="", flat=True)
     write_text(FLAT_DIR / "alumni.html", alumni_text)
 
     write_text(FLAT_DIR / "accessibility.html", nested_page_to_flat(read_text(ROOT / "accessibility" / "index.html")))
-    write_text(FLAT_DIR / "research-library.html", nested_page_to_flat(read_text(ROOT / "research-library" / "index.html")))
+    write_text(FLAT_DIR / "research.html", nested_page_to_flat(read_text(ROOT / RESEARCH_ROUTE / "index.html")))
+    write_text(FLAT_DIR / "research-library.html", render_redirect_page("research.html", canonical_url(RESEARCH_ROUTE), "", "Research Redirect"))
 
     for person in people:
-        write_text(FLAT_DIR / f"{clean_text(person.get('slug'))}.html", render_current_profile(person, flat=True))
+        write_text(FLAT_DIR / f"team-{clean_text(person.get('slug'))}.html", render_current_profile(person, flat=True))
 
     for person in alumni:
         write_text(FLAT_DIR / f"alumni-{clean_text(person.get('slug'))}.html", render_alumni_profile(person, flat=True))
@@ -909,22 +1099,43 @@ def convert_redirect_target(value: str) -> str:
     if target.startswith("../"):
         target = target[3:]
     target = target.strip("/")
-    if target == "people":
-        return "people.html"
-    if target == "alumni":
+    target = target.removesuffix("/index.html").removesuffix(".html")
+    if target in {LEGACY_TEAM_ROUTE, TEAM_ROUTE}:
+        return "team.html"
+    if target == ALUMNI_ROUTE:
         return "alumni.html"
     if target == "accessibility":
         return "accessibility.html"
-    if target == "research-library":
-        return "research-library.html"
-    if target.startswith("alumni-profiles/"):
+    if target in {LEGACY_RESEARCH_ROUTE, RESEARCH_ROUTE}:
+        return "research.html"
+    if target.startswith(f"{TEAM_ROUTE}/"):
+        slug = target.split("/", 1)[1].strip("/")
+        return f"team-{slug}.html"
+    if target.startswith(f"{ALUMNI_ROUTE}/"):
+        slug = target.split("/", 1)[1].strip("/")
+        return f"alumni-{slug}.html" if slug else "alumni.html"
+    if target.startswith(f"{LEGACY_ALUMNI_PROFILE_ROUTE}/"):
         slug = target.split("/")[-1].replace(".html", "")
         return f"alumni-{slug}.html"
     return f"{target}.html"
 
 
 def sync_flat_redirects() -> None:
-    excluded = {"people", "alumni", "accessibility", "research-library", "assets", "data", "github-flat", ".git", ".github", "scripts", "docs"}
+    excluded = {
+        LEGACY_TEAM_ROUTE,
+        TEAM_ROUTE,
+        ALUMNI_ROUTE,
+        "accessibility",
+        LEGACY_RESEARCH_ROUTE,
+        RESEARCH_ROUTE,
+        "assets",
+        "data",
+        "github-flat",
+        ".git",
+        ".github",
+        "scripts",
+        "docs",
+    }
     for child in ROOT.iterdir():
         if not child.is_dir() or child.name in excluded:
             continue
@@ -936,16 +1147,41 @@ def sync_flat_redirects() -> None:
         if not refresh_match:
             continue
         flat_target = convert_redirect_target(refresh_match.group(1))
-        flat_text = re.sub(
-            r'(<meta http-equiv="refresh" content="0; url=)([^"]+)(" />)',
-            rf'\1{flat_target}\3',
-            text,
-        )
-        canonical_match = re.search(r'<link rel="canonical" href="([^"]+)"', flat_text)
-        if canonical_match:
-            flat_text = flat_text.replace(canonical_match.group(1), canonical_match.group(1))
-        flat_text = nested_page_to_flat(flat_text)
-        write_text(FLAT_DIR / f"{child.name}.html", flat_text)
+        canonical_match = re.search(r'<link rel="canonical" href="([^"]+)"', text)
+        title_match = re.search(r"<title>(.*?)</title>", text, re.S)
+        title = re.sub(r"\s+", " ", title_match.group(1)).strip() if title_match else f"{child.name} Redirect"
+        canonical = canonical_match.group(1) if canonical_match else canonical_url()
+        write_text(FLAT_DIR / f"{child.name}.html", render_redirect_page(flat_target, canonical, "", title))
+
+
+def canonical_route_paths(people: list[dict[str, Any]]) -> list[str]:
+    current = current_people(people)
+    alumni = alumni_people(people)
+    routes = [
+        "",
+        TEAM_ROUTE,
+        *[f"{TEAM_ROUTE}/{clean_text(person.get('slug'))}" for person in current],
+        ALUMNI_ROUTE,
+        *[f"{ALUMNI_ROUTE}/{clean_text(person.get('slug'))}" for person in alumni],
+        RESEARCH_ROUTE,
+        "accessibility",
+    ]
+    return routes
+
+
+def render_sitemap(routes: list[str]) -> str:
+    locs = "\n".join(f"  <url><loc>{escape(canonical_url(route))}</loc></url>" for route in routes)
+    return f'''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{locs}
+</urlset>
+'''
+
+
+def write_sitemaps(people: list[dict[str, Any]]) -> None:
+    sitemap = render_sitemap(canonical_route_paths(people))
+    write_text(ROOT / "sitemap.xml", sitemap)
+    write_text(FLAT_DIR / "sitemap.xml", sitemap)
 
 
 def validate_homepage_team_grid(path: Path, expected_cards: int) -> None:
@@ -969,18 +1205,11 @@ def validate_homepage_team_grid(path: Path, expected_cards: int) -> None:
 
 def iter_public_html_paths() -> list[Path]:
     paths: set[Path] = set()
-    for path in ROOT.glob("*.html"):
+    for path in ROOT.rglob("*.html"):
+        relative_parts = path.relative_to(ROOT).parts
+        if any(part in PUBLIC_HTML_EXCLUDED_DIRS for part in relative_parts):
+            continue
         paths.add(path)
-
-    for child in ROOT.iterdir():
-        if not child.is_dir() or child.name in PUBLIC_HTML_EXCLUDED_DIRS:
-            continue
-        if child.name == "alumni-profiles":
-            paths.update(child.glob("*.html"))
-            continue
-        index_path = child / "index.html"
-        if index_path.exists():
-            paths.add(index_path)
 
     if FLAT_DIR.exists():
         paths.update(FLAT_DIR.glob("*.html"))
@@ -1032,6 +1261,139 @@ def validate_favicon_links() -> None:
         raise RuntimeError(f"Missing favicon metadata on public pages: {', '.join(missing_pages)}")
 
 
+def extract_canonical_href(path: Path) -> str:
+    match = re.search(r'<link\s+rel="canonical"\s+href="([^"]+)"', read_text(path), re.I)
+    return match.group(1) if match else ""
+
+
+def assert_page_canonical(path: Path, expected_url: str, errors: list[str]) -> None:
+    if not path.exists():
+        errors.append(f"Missing canonical route page: {path.relative_to(ROOT)}")
+        return
+    actual = extract_canonical_href(path)
+    if actual != expected_url:
+        errors.append(f"{path.relative_to(ROOT)} canonical must be {expected_url}, found {actual or '<missing>'}")
+
+
+def assert_redirect_target(path: Path, expected_target: str, expected_canonical: str, errors: list[str]) -> None:
+    if not path.exists():
+        errors.append(f"Missing legacy redirect page: {path.relative_to(ROOT)}")
+        return
+    text = read_text(path)
+    refresh = re.search(r'<meta http-equiv="refresh" content="0; url=([^"]+)"', text)
+    if not refresh or refresh.group(1) != expected_target:
+        errors.append(
+            f"{path.relative_to(ROOT)} redirect target must be {expected_target}, "
+            f"found {refresh.group(1) if refresh else '<missing>'}"
+        )
+    actual_canonical = extract_canonical_href(path)
+    if actual_canonical != expected_canonical:
+        errors.append(
+            f"{path.relative_to(ROOT)} redirect canonical must be {expected_canonical}, "
+            f"found {actual_canonical or '<missing>'}"
+        )
+
+
+def validate_premium_url_scheme(people: list[dict[str, Any]]) -> None:
+    current = current_people(people)
+    alumni = alumni_people(people)
+    current_slugs = {clean_text(person.get("slug")) for person in current}
+    alumni_slugs = {clean_text(person.get("slug")) for person in alumni}
+    errors: list[str] = []
+
+    for route in ("", TEAM_ROUTE, ALUMNI_ROUTE, RESEARCH_ROUTE, "accessibility"):
+        page_path = ROOT / "index.html" if not route else ROOT / route / "index.html"
+        assert_page_canonical(page_path, canonical_url(route), errors)
+
+    for slug in sorted(current_slugs):
+        assert_page_canonical(ROOT / TEAM_ROUTE / slug / "index.html", canonical_url(f"{TEAM_ROUTE}/{slug}"), errors)
+        assert_redirect_target(
+            ROOT / slug / "index.html",
+            f"../{TEAM_ROUTE}/{slug}/",
+            canonical_url(f"{TEAM_ROUTE}/{slug}"),
+            errors,
+        )
+
+    for slug in sorted(alumni_slugs):
+        assert_page_canonical(ROOT / ALUMNI_ROUTE / slug / "index.html", canonical_url(f"{ALUMNI_ROUTE}/{slug}"), errors)
+        assert_redirect_target(
+            ROOT / LEGACY_ALUMNI_PROFILE_ROUTE / f"{slug}.html",
+            f"../{ALUMNI_ROUTE}/{slug}/",
+            canonical_url(f"{ALUMNI_ROUTE}/{slug}"),
+            errors,
+        )
+
+    assert_redirect_target(ROOT / "people.html", f"{TEAM_ROUTE}/", canonical_url(TEAM_ROUTE), errors)
+    assert_redirect_target(ROOT / LEGACY_TEAM_ROUTE / "index.html", f"../{TEAM_ROUTE}/", canonical_url(TEAM_ROUTE), errors)
+    assert_redirect_target(ROOT / "research-library.html", f"{RESEARCH_ROUTE}/", canonical_url(RESEARCH_ROUTE), errors)
+    assert_redirect_target(ROOT / LEGACY_RESEARCH_ROUTE / "index.html", f"../{RESEARCH_ROUTE}/", canonical_url(RESEARCH_ROUTE), errors)
+
+    legacy_route_tokens = [
+        f"{CANONICAL_SITE_URL}/{LEGACY_TEAM_ROUTE}/",
+        f"{CANONICAL_SITE_URL}/{LEGACY_ALUMNI_PROFILE_ROUTE}/",
+        f"{CANONICAL_SITE_URL}/{LEGACY_RESEARCH_ROUTE}/",
+    ]
+    legacy_link_tokens = [
+        'href="people/',
+        'href="../people/',
+        'href="../../people/',
+        'href="alumni-profiles/',
+        'href="../alumni-profiles/',
+        'href="../../alumni-profiles/',
+        'href="research-library/',
+        'href="../research-library/',
+        'href="../../research-library/',
+    ]
+    legacy_target_tokens = [
+        "people/",
+        "../people/",
+        "../../people/",
+        "alumni-profiles/",
+        "../alumni-profiles/",
+        "../../alumni-profiles/",
+        "research-library/",
+        "../research-library/",
+        "../../research-library/",
+    ]
+
+    for path in iter_public_html_paths():
+        text = read_text(path)
+        canonical_href = extract_canonical_href(path)
+        if any(token in canonical_href for token in legacy_route_tokens):
+            errors.append(f"{path.relative_to(ROOT)} uses legacy canonical URL {canonical_href}")
+        refresh_match = re.search(r'<meta http-equiv="refresh" content="0; url=([^"]+)"', text)
+        if refresh_match:
+            refresh_target = refresh_match.group(1)
+            if any(token in refresh_target for token in legacy_target_tokens):
+                errors.append(f"{path.relative_to(ROOT)} redirects to legacy route {refresh_target}")
+            script_match = re.search(r"window\.location\.replace\((['\"])(.*?)\1\)", text)
+            if path.is_relative_to(FLAT_DIR) and script_match and script_match.group(2) != refresh_target:
+                errors.append(
+                    f"{path.relative_to(ROOT)} flat redirect script target {script_match.group(2)} "
+                    f"does not match meta refresh {refresh_target}"
+                )
+        if path.is_relative_to(FLAT_DIR):
+            continue
+        if '<meta http-equiv="refresh"' in text:
+            continue
+        for token in legacy_link_tokens:
+            if token in text:
+                errors.append(f"{path.relative_to(ROOT)} links to legacy route token {token}")
+                break
+
+    sitemap_text = read_text(ROOT / "sitemap.xml") if (ROOT / "sitemap.xml").exists() else ""
+    for route in canonical_route_paths(people):
+        expected = canonical_url(route)
+        if expected not in sitemap_text:
+            errors.append(f"sitemap.xml is missing {expected}")
+    for token in legacy_route_tokens:
+        if token in sitemap_text:
+            errors.append(f"sitemap.xml includes legacy route {token}")
+
+    if errors:
+        raise RuntimeError("Premium URL scheme validation failed:\n- " + "\n- ".join(errors))
+
+
 def build_site() -> None:
     load_gallery_items()
     load_featured_alumni_items()
@@ -1044,11 +1406,13 @@ def build_site() -> None:
     build_canonical_pages()
     sync_flat_assets()
     build_flat_pages()
+    write_sitemaps(people)
     cleanup_flat_generated_noise()
     expected_cards = len(current_people(people))
     validate_homepage_team_grid(ROOT / "index.html", expected_cards)
     validate_homepage_team_grid(FLAT_DIR / "index.html", expected_cards)
     validate_favicon_links()
+    validate_premium_url_scheme(people)
     validate_tom_compliance(ROOT)
 
 

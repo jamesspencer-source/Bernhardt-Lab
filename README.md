@@ -1,6 +1,6 @@
 # Thomas Bernhardt Lab Website
 
-Static lab website for the Thomas Bernhardt Lab, published via GitHub Pages.
+Static lab website for the Thomas Bernhardt Lab, published via GitHub Pages at `https://bernhardtlab.com`.
 
 For a zero-context Codex or engineer handoff, start with `AGENTS.md`.
 
@@ -17,35 +17,52 @@ For visual and interface work, also use:
 - `assets/styles.css` is generated from `assets/css/`.
 - `game-src/envelope-escape/` contains the Phaser + TypeScript source for the hidden Envelope Escape V2 beta.
 - `assets/game/envelope-escape/runtime/` contains the generated V2 browser bundle.
+- `game-src/envelope-escape-v3/` contains the hidden Envelope Escape V3 Three.js + Rapier beta.
+- `assets/game/envelope-escape-v3/runtime/` contains the generated V3 browser bundle.
 - `github-flat/` is generated output only. Do not hand-edit it.
+
+## Canonical URL scheme
+
+The branded public URL map is:
+
+- `/` homepage
+- `/team/` current team directory
+- `/team/{person-slug}/` current member profiles
+- `/alumni/` alumni directory
+- `/alumni/{person-slug}/` alumni profiles
+- `/research/` research library
+- `/accessibility/` accessibility page
+
+Legacy paths such as `/people/`, `/research-library/`, root-level profile slugs, and `alumni-profiles/*.html` are redirect-only compatibility pages. Canonical pages, internal links, and `sitemap.xml` should use only the branded route map above.
 
 ## Canonical content sources
 
 Edit these first:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/people.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/gallery.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/featured-alumni.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/curated-publications.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/scientific-media.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/site-copy.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/runtime-config.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/people.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/gallery.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/featured-alumni.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/curated-publications.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/scientific-media.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/site-copy.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/runtime-config.json`
 
 Generated or entrypoint files you should usually not hand-edit directly:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/styles.css`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/envelope-escape-config.js`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/game/envelope-escape/runtime/envelope-escape-v2.js`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/github-flat/**`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/styles.css`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/envelope-escape-config.js`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/game/envelope-escape/runtime/envelope-escape-v2.js`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/game/envelope-escape-v3/runtime/envelope-escape-v3.js`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/github-flat/**`
 
 Frontend entrypoints:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/main.js`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/alumni.js`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/main.js`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/alumni.js`
 
 Those entrypoints now import smaller feature modules from:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/js/`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/js/`
 
 ## Build the site
 
@@ -63,7 +80,7 @@ python3 scripts/validate_tom_compliance.py
 
 That validator blocks regressions against Tom's requested content rules: the curated six-paper homepage publication set, removed alumni, required featured alumni, corrected gallery caption, omitted placeholder verification/role text, and pasted raw formatting artifacts.
 
-If Envelope Escape V2 source changes, build the game first:
+If Envelope Escape V2 or V3 source changes, build the game first:
 
 ```bash
 npm install
@@ -82,10 +99,10 @@ This will:
 
 - validate canonical structured data
 - regenerate homepage team/alumni slices
-- regenerate `people/index.html` and `alumni/index.html`
+- regenerate `team/index.html` and `alumni/index.html`
 - regenerate current-member and alumni profile pages
 - rebuild `assets/styles.css`
-- rebuild the Envelope Escape V2 runtime when publishing
+- rebuild the Envelope Escape V2 and V3 runtimes when publishing
 - regenerate `assets/envelope-escape-config.js`
 - refresh the generated `github-flat/` mirror
 
@@ -121,7 +138,7 @@ Archive scientific media is curated manually:
 - update `data/scientific-media.json`
 - run `python3 scripts/build_site.py`
 
-## Envelope Escape V2 beta
+## Envelope Escape betas
 
 V1 remains the public footer game. V2 is a hidden Phaser + TypeScript beta that loads only with:
 
@@ -129,12 +146,27 @@ V1 remains the public footer game. V2 is a hidden Phaser + TypeScript beta that 
 index.html?envelopeV2=1
 ```
 
+V3 is a hidden desktop-first Three.js + Rapier beta that loads only with:
+
+```text
+index.html?envelopeV3=1
+```
+
+V3 is not the default footer game until custom art, browser QA, performance, fallback, and leaderboard gates pass. The legacy path remains:
+
+```text
+index.html?envelopeLegacy=1
+```
+
 Source and build outputs:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/game-src/envelope-escape/`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/game/envelope-escape/`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/docs/envelope-escape-game-upgrade.md`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/docs/envelope-escape-art-direction.md`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/game-src/envelope-escape/`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/game-src/envelope-escape-v3/`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/game/envelope-escape/`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/game/envelope-escape-v3/`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/docs/envelope-escape-game-upgrade.md`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/docs/envelope-escape-art-direction.md`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/docs/envelope-escape-v3.md`
 
 Run `npm run game:check` and `npm run game:build` before publishing game changes. `python3 scripts/publish_site.py` also runs the game build before the Python site build.
 
@@ -142,7 +174,7 @@ Run `npm run game:check` and `npm run game:build` before publishing game changes
 
 The public leaderboard endpoint now comes from:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/runtime-config.json`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/runtime-config.json`
 
 `assets/envelope-escape-config.js` and the flat mirror are generated from that source during the build.
 
@@ -188,18 +220,19 @@ Do not hand-edit:
 
 ## Key pages and assets
 
-- Homepage: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/index.html`
-- Team directory: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/people/index.html`
-- Alumni directory: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/alumni/index.html`
-- Shared layout styling source: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/css/`
-- Profile styling: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/profile.css`
-- Production game code: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/assets/envelope-escape.js`
-- V2 game source: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/game-src/envelope-escape/`
-- Leaderboard worker: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/leaderboard-worker/`
+- Homepage: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/index.html`
+- Team directory: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/team/index.html`
+- Alumni directory: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/alumni/index.html`
+- Shared layout styling source: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/css/`
+- Profile styling: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/profile.css`
+- Production game code: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/envelope-escape.js`
+- V2 game source: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/game-src/envelope-escape/`
+- V3 game source: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/game-src/envelope-escape-v3/`
+- Leaderboard worker: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/leaderboard-worker/`
 
 ## Maintenance notes
 
 For a plain-language maintenance workflow, see:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/docs/site-maintenance.md`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/docs/editorial-style-guide.md`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/docs/site-maintenance.md`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/docs/editorial-style-guide.md`

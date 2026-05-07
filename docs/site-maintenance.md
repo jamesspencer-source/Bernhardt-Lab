@@ -26,15 +26,31 @@ python3 scripts/validate_tom_compliance.py
 
 This protects the curated homepage publication set, corrected Betsy/Lindsey links, Tom-removed alumni, required featured alumni, gallery removals/caption wording, omitted alumni placeholder text, and species-name formatting. If this gate fails, edit the canonical source in `data/` or the relevant template, then rebuild. Do not patch generated HTML to work around the failure.
 
+## Canonical URL scheme
+
+The public brand URL is `https://bernhardtlab.com`.
+
+Use only these canonical routes for public links, canonical tags, and `sitemap.xml`:
+
+- `/`
+- `/team/`
+- `/team/{person-slug}/`
+- `/alumni/`
+- `/alumni/{person-slug}/`
+- `/research/`
+- `/accessibility/`
+
+Legacy routes are redirect-only compatibility outputs. Keep `/people/`, `/people.html`, root-level profile slugs, `/research-library/`, and `alumni-profiles/*.html` working as redirects, but do not link to them from canonical pages.
+
 ## Canonical sources
 
-- People and alumni: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/people.json`
-- Gallery: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/gallery.json`
-- Featured alumni: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/featured-alumni.json`
-- Curated publications fallback: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/curated-publications.json`
-- Scientific media archive highlights: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/scientific-media.json`
-- Shared homepage/site copy: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/site-copy.json`
-- Runtime config such as the public leaderboard URL: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website/data/runtime-config.json`
+- People and alumni: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/people.json`
+- Gallery: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/gallery.json`
+- Featured alumni: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/featured-alumni.json`
+- Curated publications fallback: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/curated-publications.json`
+- Scientific media archive highlights: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/scientific-media.json`
+- Shared homepage/site copy: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/site-copy.json`
+- Runtime config such as the public leaderboard URL: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/runtime-config.json`
 
 ## Rebuild command
 
@@ -44,7 +60,7 @@ python3 scripts/build_site.py
 
 This command now runs data validation, generated-page validation, favicon validation, and the Tom feedback compliance gate.
 
-If Envelope Escape V2 source under `game-src/envelope-escape/` changes, run the game checks first:
+If Envelope Escape V2 source under `game-src/envelope-escape/` or V3 source under `game-src/envelope-escape-v3/` changes, run the game checks first:
 
 ```bash
 npm install
@@ -86,7 +102,7 @@ This regenerates:
 - people and alumni directory pages
 - all current-member and alumni profile pages
 - generated CSS bundle
-- generated Envelope Escape V2 runtime bundle
+- generated Envelope Escape V2 and V3 runtime bundles
 - generated game runtime config
 - generated `github-flat/` mirror
 
@@ -180,6 +196,24 @@ Source and output:
 
 Do not edit `assets/game/envelope-escape/runtime/envelope-escape-v2.js` by hand. Rebuild it with `npm run game:build`.
 
+## Envelope Escape V3 beta
+
+V3 is a hidden desktop-first Three.js + Rapier beta. It loads only when the homepage URL includes:
+
+```text
+index.html?envelopeV3=1
+```
+
+V3 source and output:
+
+- `game-src/envelope-escape-v3/` is the TypeScript source.
+- `assets/game/envelope-escape-v3/runtime/` contains the generated V3 runtime bundle.
+- `docs/envelope-escape-v3.md` documents the renderer-agnostic simulation foundation.
+
+Do not edit `assets/game/envelope-escape-v3/runtime/envelope-escape-v3.js` by hand. Rebuild it with `npm run game:v3:build` or the full `npm run game:build`.
+
+V3 should remain a hidden beta until custom art, browser QA, performance, fallback, and leaderboard gates pass. V1/V2 rollback paths must remain available through `?envelopeLegacy=1` and `?envelopeV2=1`.
+
 ## Generated assets
 
 These are outputs, not canonical source:
@@ -187,6 +221,7 @@ These are outputs, not canonical source:
 - `assets/styles.css`
 - `assets/envelope-escape-config.js`
 - `assets/game/envelope-escape/runtime/envelope-escape-v2.js`
+- `assets/game/envelope-escape-v3/runtime/envelope-escape-v3.js`
 - `github-flat/`
 
 `github-flat/` now keeps nested `assets/` and `data/` as the authoritative generated mirror. Root-level non-HTML files there are cleaned during the build and should not be restored manually.

@@ -22,6 +22,8 @@ ALLOWED_ROOT_FILES = {
     "package-lock.json",
     "package.json",
     "people.html",
+    "research-library.html",
+    "sitemap.xml",
 }
 STATIC_ALLOWED_DIRS = {
     ".github",
@@ -35,8 +37,10 @@ STATIC_ALLOWED_DIRS = {
     "github-flat",
     "leaderboard-worker",
     "people",
+    "research",
     "research-library",
     "scripts",
+    "team",
 }
 EXCLUDED_ROOT_DIRS = {".git", ".venv", ".pycache", "__pycache__", ".playwright-cli", "node_modules", "output", "tmp"}
 TRANSIENT_DIR_NAMES = {".venv", ".pycache", "__pycache__", ".pytest_cache", ".playwright-cli", "output"}
