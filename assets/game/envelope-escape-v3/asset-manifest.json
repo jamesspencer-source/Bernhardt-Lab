@@ -1,0 +1,49 @@
+{
+  "version": "v3-lab-bench-world-20260507",
+  "runtimePath": "assets/game/envelope-escape-v3/runtime/envelope-escape-v3.js",
+  "artDirection": "Premium stylized science lab-bench miniatures with optimized GLB-ready procedural fallbacks.",
+  "assets": [
+    {
+      "key": "lab-prop.research-plus-pipette",
+      "kind": "labProp",
+      "targetGlb": "assets/game/envelope-escape-v3/models/research-plus-pipette.glb",
+      "fallback": "procedural-pipette"
+    },
+    {
+      "key": "lab-prop.petri-dish-plaque-assay",
+      "kind": "labProp",
+      "targetGlb": "assets/game/envelope-escape-v3/models/petri-dish-plaque-assay.glb",
+      "fallback": "procedural-petri-dish"
+    },
+    {
+      "key": "lab-prop.fernbach-flask",
+      "kind": "labProp",
+      "targetGlb": "assets/game/envelope-escape-v3/models/fernbach-flask.glb",
+      "fallback": "procedural-fernbach-flask"
+    },
+    {
+      "key": "lab-prop.centrifuge-rotor",
+      "kind": "labProp",
+      "targetGlb": "assets/game/envelope-escape-v3/models/centrifuge-rotor.glb",
+      "fallback": "procedural-centrifuge"
+    },
+    {
+      "key": "lab-prop.test-tube-rack",
+      "kind": "labProp",
+      "targetGlb": "assets/game/envelope-escape-v3/models/test-tube-rack.glb",
+      "fallback": "procedural-tube-rack"
+    },
+    {
+      "key": "pickup.pipette-tip",
+      "kind": "pickup",
+      "targetGlb": "assets/game/envelope-escape-v3/models/pipette-tip.glb",
+      "fallback": "procedural-pipette-tip"
+    },
+    {
+      "key": "hazard.phage-plaque",
+      "kind": "hazard",
+      "targetGlb": "assets/game/envelope-escape-v3/models/phage-plaque.glb",
+      "fallback": "procedural-phage-plaque"
+    }
+  ]
+}

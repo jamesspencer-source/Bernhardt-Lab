@@ -10,9 +10,11 @@ export type SpeciesId =
 export type RunMode = "classic" | "daily";
 export type RunStatus = "menu" | "briefing" | "running" | "command" | "upgrade" | "paused" | "ended";
 export type CommandId = "pg" | "membrane" | "phage" | "motility";
-export type StressId = "homeostasis" | "betaLactam" | "phageBloom" | "autolysin" | "rupture" | "lysis";
-export type HazardKind = "phage" | "shock" | "crack" | "rupture";
-export type PickupKind = "pg" | "lipid" | "restraint" | "capsule";
+export type StressId = "slideTraining" | "pipettePulse" | "petriBloom" | "centrifugeSweep" | "rackSeal" | "lysisStorm";
+export type WorldZoneId = "microscopeSlide" | "pipetteZone" | "petriDish" | "fernbachFlask" | "centrifuge" | "tubeRack";
+export type LabPropKind = "pipette" | "petriDish" | "fernbachFlask" | "centrifuge" | "tubeRack" | "microscopeSlide" | "spill" | "tipBox";
+export type HazardKind = "phage" | "shock" | "crack" | "rupture" | "droplet" | "rotor" | "plaque" | "spill";
+export type PickupKind = "pipetteTip" | "reagentDroplet" | "agarPlug" | "mediaBead";
 export type UpgradeId =
   | "ponA-overdrive"
   | "lpoB-tether"
@@ -27,6 +29,42 @@ export type UpgradeId =
 export interface Vec2 {
   x: number;
   z: number;
+}
+
+export interface Bounds {
+  x: number;
+  z: number;
+  width: number;
+  depth: number;
+}
+
+export type CollisionProxy =
+  | { type: "circle"; x: number; z: number; radius: number }
+  | { type: "box"; x: number; z: number; width: number; depth: number };
+
+export interface WorldZone {
+  id: WorldZoneId;
+  label: string;
+  shortLabel: string;
+  bounds: Bounds;
+  color: number;
+  accent: number;
+  objectiveHint: string;
+}
+
+export interface LabProp {
+  id: string;
+  kind: LabPropKind;
+  label: string;
+  zoneId: WorldZoneId;
+  x: number;
+  z: number;
+  width: number;
+  depth: number;
+  height?: number;
+  radius?: number;
+  angle?: number;
+  collision?: CollisionProxy[];
 }
 
 export interface InputState {
@@ -57,6 +95,7 @@ export interface PhaseDefinition {
   id: StressId;
   title: string;
   objective: string;
+  targetZone: WorldZoneId;
   startsAt: number;
   target: number;
   boss: string;
@@ -82,6 +121,7 @@ export interface UpgradeDefinition {
 export interface HazardEntity {
   id: number;
   kind: HazardKind;
+  zoneId: WorldZoneId;
   x: number;
   z: number;
   vx: number;
@@ -93,6 +133,7 @@ export interface HazardEntity {
   telegraph: number;
   duration: number;
   damage: number;
+  angularSpeed?: number;
 }
 
 export interface PickupEntity {
@@ -129,7 +170,9 @@ export interface GameState {
   assembly: number;
   assemblyTarget: number;
   phaseIndex: number;
+  phaseTime: number;
   phaseProgress: number;
+  zoneId: WorldZoneId;
   upgrades: UpgradeId[];
   upgradeChoices: UpgradeId[];
   lysisCause: string;
@@ -148,6 +191,7 @@ export interface HudSnapshot {
   commandCharge: number;
   phaseTitle: string;
   phasePressure: string;
+  zoneLabel: string;
   objective: string;
   objectiveProgress: number;
   objectiveTarget: number;

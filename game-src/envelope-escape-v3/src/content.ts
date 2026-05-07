@@ -1,10 +1,171 @@
-import type { CommandDefinition, PhaseDefinition, SpeciesDefinition, SpeciesId, UpgradeDefinition } from "./types";
+import type { CommandDefinition, LabProp, PhaseDefinition, SpeciesDefinition, SpeciesId, UpgradeDefinition, WorldZone } from "./types";
 
 export const CHAMBER = {
-  width: 34,
-  depth: 20,
-  safeMargin: 1.2
+  width: 120,
+  depth: 70,
+  safeMargin: 3.2
 } as const;
+
+export const WORLD_ZONES: WorldZone[] = [
+  {
+    id: "microscopeSlide",
+    label: "Microscope slide staging area",
+    shortLabel: "Slide",
+    bounds: { x: -42, z: 22, width: 34, depth: 20 },
+    color: 0x6dddec,
+    accent: 0xd6fbff,
+    objectiveHint: "Practice movement, then push toward the pipette zone."
+  },
+  {
+    id: "pipetteZone",
+    label: "Research Plus pipette lane",
+    shortLabel: "Pipette",
+    bounds: { x: -39, z: -20, width: 42, depth: 20 },
+    color: 0x74dce6,
+    accent: 0x2a8aa4,
+    objectiveHint: "Route through droplet pulses and collect sterile tips."
+  },
+  {
+    id: "petriDish",
+    label: "Petri dish plaque assay",
+    shortLabel: "Petri dish",
+    bounds: { x: 11, z: -22, width: 34, depth: 26 },
+    color: 0xf3c278,
+    accent: 0x9c6530,
+    objectiveHint: "Clear plaques before the phage bloom overtakes the agar."
+  },
+  {
+    id: "fernbachFlask",
+    label: "Fernbach flask media current",
+    shortLabel: "Fernbach",
+    bounds: { x: -6, z: 6, width: 30, depth: 20 },
+    color: 0x9be4d8,
+    accent: 0x2a786f,
+    objectiveHint: "Use membrane repair to cross swirling spill currents."
+  },
+  {
+    id: "centrifuge",
+    label: "Centrifuge rotor hazard",
+    shortLabel: "Centrifuge",
+    bounds: { x: 42, z: 8, width: 36, depth: 28 },
+    color: 0x91b7ff,
+    accent: 0x3b578e,
+    objectiveHint: "Time motility bursts through the rotor sweep."
+  },
+  {
+    id: "tubeRack",
+    label: "Test tube rack maze",
+    shortLabel: "Tube rack",
+    bounds: { x: 15, z: 26, width: 38, depth: 20 },
+    color: 0xf0a8c5,
+    accent: 0x7d3d58,
+    objectiveHint: "Thread between tubes and seal rupture points."
+  }
+];
+
+export const LAB_PROPS: LabProp[] = [
+  {
+    id: "slide-start",
+    kind: "microscopeSlide",
+    label: "Microscope slide",
+    zoneId: "microscopeSlide",
+    x: -44,
+    z: 22,
+    width: 26,
+    depth: 13,
+    height: 0.14
+  },
+  {
+    id: "research-plus-pipette",
+    kind: "pipette",
+    label: "Oversized Research Plus pipette",
+    zoneId: "pipetteZone",
+    x: -42,
+    z: -29,
+    width: 38,
+    depth: 4,
+    height: 2.5,
+    angle: -0.12,
+    collision: [{ type: "box", x: -42, z: -29, width: 34, depth: 4.2 }]
+  },
+  {
+    id: "sterile-tip-box",
+    kind: "tipBox",
+    label: "Sterile pipette tip box",
+    zoneId: "pipetteZone",
+    x: -22,
+    z: -11,
+    width: 11,
+    depth: 8,
+    height: 2.1,
+    collision: [{ type: "box", x: -22, z: -11, width: 10.5, depth: 7.5 }]
+  },
+  {
+    id: "plaque-assay-dish",
+    kind: "petriDish",
+    label: "Plaque assay petri dish",
+    zoneId: "petriDish",
+    x: 11,
+    z: -22,
+    width: 27,
+    depth: 27,
+    height: 0.6,
+    radius: 13.5
+  },
+  {
+    id: "fernbach-flask",
+    kind: "fernbachFlask",
+    label: "Fernbach flask",
+    zoneId: "fernbachFlask",
+    x: -7,
+    z: 4,
+    width: 16,
+    depth: 16,
+    height: 9,
+    radius: 8,
+    collision: [{ type: "circle", x: -7, z: 4, radius: 6.4 }]
+  },
+  {
+    id: "media-spill",
+    kind: "spill",
+    label: "Media spill",
+    zoneId: "fernbachFlask",
+    x: 6,
+    z: 10,
+    width: 16,
+    depth: 9,
+    height: 0.08
+  },
+  {
+    id: "bench-centrifuge",
+    kind: "centrifuge",
+    label: "Centrifuge rotor",
+    zoneId: "centrifuge",
+    x: 42,
+    z: 8,
+    width: 25,
+    depth: 25,
+    height: 4.2,
+    radius: 12.5,
+    collision: [{ type: "circle", x: 42, z: 8, radius: 4.2 }]
+  },
+  {
+    id: "tube-rack",
+    kind: "tubeRack",
+    label: "Test tube rack",
+    zoneId: "tubeRack",
+    x: 15,
+    z: 26,
+    width: 28,
+    depth: 13,
+    height: 3.4,
+    collision: [
+      { type: "box", x: 7, z: 20, width: 4, depth: 8 },
+      { type: "box", x: 15, z: 26, width: 4, depth: 8 },
+      { type: "box", x: 23, z: 32, width: 4, depth: 8 }
+    ]
+  }
+];
 
 export const SPECIES_ORDER: SpeciesId[] = [
   "ecoli",
@@ -164,62 +325,68 @@ export const COMMANDS: Record<string, CommandDefinition> = {
 
 export const PHASES: PhaseDefinition[] = [
   {
-    id: "homeostasis",
-    title: "Homeostasis",
-    objective: "Collect envelope modules and complete the first wall cycle.",
+    id: "slideTraining",
+    title: "Bench launch",
+    objective: "Reach the oversized pipette lane.",
+    targetZone: "pipetteZone",
     startsAt: 0,
-    target: 5,
-    boss: "Tutorialized pressure pulse",
+    target: 4,
+    boss: "Microscope slide pressure pulse",
     tint: 0x0b3443,
-    pressure: "Balanced load"
+    pressure: "Orientation"
   },
   {
-    id: "betaLactam",
-    title: "Beta-lactam front",
-    objective: "Read lane telegraphs and command PG synthesis at the right moment.",
-    startsAt: 38,
-    target: 6,
-    boss: "Cross-chamber antibiotic sweep",
-    tint: 0x173d58,
-    pressure: "Antibiotic shock"
-  },
-  {
-    id: "phageBloom",
-    title: "Phage bloom",
-    objective: "Bait adsorption arcs, then purge the bloom.",
-    startsAt: 84,
-    target: 7,
-    boss: "Orbiting phage rosette",
-    tint: 0x254967,
-    pressure: "Adsorption swarm"
-  },
-  {
-    id: "autolysin",
-    title: "Autolysin breach",
-    objective: "Seal jagged cracks before they cross the chamber.",
-    startsAt: 135,
+    id: "pipettePulse",
+    title: "Pipette pulse",
+    objective: "Collect sterile tips and route through droplet pulses.",
+    targetZone: "pipetteZone",
+    startsAt: 30,
     target: 8,
-    boss: "Branching breach pattern",
-    tint: 0x563657,
-    pressure: "Wall hydrolysis"
+    boss: "Timed reagent stream",
+    tint: 0x173d58,
+    pressure: "Droplet pressure"
   },
   {
-    id: "rupture",
-    title: "Rupture cascade",
-    objective: "Relocate through expanding pressure zones.",
-    startsAt: 190,
+    id: "petriBloom",
+    title: "Plaque assay bloom",
+    objective: "Enter the petri dish and clear expanding plaques.",
+    targetZone: "petriDish",
+    startsAt: 78,
+    target: 10,
+    boss: "Expanding phage plaque",
+    tint: 0x3d3420,
+    pressure: "Phage bloom"
+  },
+  {
+    id: "centrifugeSweep",
+    title: "Rotor crossing",
+    objective: "Cross the centrifuge field during safe pockets.",
+    targetZone: "centrifuge",
+    startsAt: 130,
     target: 9,
-    boss: "Osmotic rupture cascade",
-    tint: 0x62334b,
-    pressure: "Osmotic failure"
+    boss: "Rotor sweep",
+    tint: 0x27365a,
+    pressure: "Mechanical shear"
   },
   {
-    id: "lysis",
+    id: "rackSeal",
+    title: "Rack rupture route",
+    objective: "Navigate the tube rack and seal three rupture points.",
+    targetZone: "tubeRack",
+    startsAt: 190,
+    target: 11,
+    boss: "Tube-rack rupture cascade",
+    tint: 0x563657,
+    pressure: "Wall rupture"
+  },
+  {
+    id: "lysisStorm",
     title: "Final lysis storm",
-    objective: "Chain commands and survive for score.",
-    startsAt: 250,
-    target: 12,
-    boss: "Full chamber collapse",
+    objective: "Return to the slide and survive the lab-bench collapse.",
+    targetZone: "microscopeSlide",
+    startsAt: 260,
+    target: 18,
+    boss: "Whole-bench lysis storm",
     tint: 0x6e2e3a,
     pressure: "Lytic collapse"
   }
