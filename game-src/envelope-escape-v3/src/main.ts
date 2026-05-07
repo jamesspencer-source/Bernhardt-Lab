@@ -1,8 +1,8 @@
-import RAPIER from "@dimforge/rapier3d-compat";
 import { COMMANDS, SPECIES, SPECIES_ORDER, UPGRADES } from "./content";
 import { createAudioController } from "./audio";
 import { createLeaderboardClient } from "./leaderboard";
 import { createV3Renderer, type V3Renderer } from "./render";
+import { loadV3AssetRegistry, type V3AssetRegistry } from "./render/assets";
 import { detectEnvelopeV3WebGLSupport } from "./render/webgl-support";
 import { V3Simulation, createInputState } from "./simulation";
 import type { CommandId, HudSnapshot, InputState, LeaderboardPayload, RunReport, RunStatus, UpgradeId } from "./types";
@@ -17,8 +17,6 @@ declare global {
 const LAB_TIMEZONE = "America/New_York";
 const NAME_KEY = "bernhardt-envelope-escape-v3-name";
 const MOTION_KEY = "bernhardt-envelope-escape-v3-motion";
-const RAPIER_WASM_FILE = "rapier_wasm3d_bg.wasm";
-const RAPIER_WASM_URL = new URL(RAPIER_WASM_FILE, import.meta.url).href;
 
 let active: EnvelopeV3Controller | null = null;
 
@@ -39,14 +37,8 @@ export async function openEnvelopeEscapeV3(options: OpenOptions = {}): Promise<{
     active.open();
     return { ok: true, controller: active };
   }
-  try {
-    await (RAPIER.init as (options?: { module_or_path?: string }) => Promise<void>)({ module_or_path: RAPIER_WASM_URL });
-  } catch {
-    const reason = "Rapier physics failed to initialize in this browser.";
-    openEnvelopeV3Fallback(reason);
-    return { ok: false, reason };
-  }
-  active = new EnvelopeV3Controller(options);
+  const assetRegistry = await loadV3AssetRegistry();
+  active = new EnvelopeV3Controller(options, assetRegistry);
   active.open();
   return { ok: true, controller: active };
 }
@@ -71,10 +63,10 @@ class EnvelopeV3Controller {
   private reportRendered = false;
   private upgradesRenderedKey = "";
 
-  constructor(options: OpenOptions) {
+  constructor(options: OpenOptions, assetRegistry: V3AssetRegistry) {
     this.dialog = createDialog();
     this.refs = collectRefs(this.dialog);
-    this.renderer = createV3Renderer(this.refs.gameRoot);
+    this.renderer = createV3Renderer(this.refs.gameRoot, assetRegistry);
     this.resizeObserver = new ResizeObserver(() => this.renderer.resize());
     this.resizeObserver.observe(this.refs.gameRoot);
     populateSpecies(this.refs.species);
@@ -313,6 +305,8 @@ function createDialog(): HTMLDialogElement {
             <div><span>Time</span><strong data-v3-hud="time">0:00</strong></div>
             <div><span>Integrity</span><strong data-v3-hud="integrity">100%</strong></div>
             <div><span>Command</span><strong data-v3-hud="charge">0%</strong></div>
+            <div><span>Carry</span><strong data-v3-hud="carry">empty</strong></div>
+            <div><span>Combo</span><strong data-v3-hud="combo">ready</strong></div>
             <div><span>Zone</span><strong data-v3-hud="zone">Slide</strong></div>
           </section>
           <section class="envelope-v3-objective">
@@ -421,10 +415,12 @@ function renderHud(refs: ReturnType<typeof collectRefs>, snapshot: HudSnapshot):
   refs.hud("time").textContent = snapshot.timeLabel;
   refs.hud("integrity").textContent = `${snapshot.integrity}%`;
   refs.hud("charge").textContent = `${snapshot.commandCharge}%`;
+  refs.hud("carry").textContent = snapshot.carriedLabel;
+  refs.hud("combo").textContent = snapshot.comboLabel;
   refs.hud("zone").textContent = snapshot.zoneLabel;
   refs.hud("phase").textContent = snapshot.phaseTitle;
   refs.hud("objective").textContent = `${snapshot.objective} (${snapshot.objectiveProgress}/${snapshot.objectiveTarget})`;
-  refs.hud("pressure").textContent = snapshot.phasePressure;
+  refs.hud("pressure").textContent = `${snapshot.jobStep} | Next: ${snapshot.nextHazardLabel} | ${snapshot.phasePressure}`;
 }
 
 function renderScores(refs: ReturnType<typeof collectRefs>, payload: LeaderboardPayload): void {

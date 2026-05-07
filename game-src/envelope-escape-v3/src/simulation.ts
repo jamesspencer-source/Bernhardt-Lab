@@ -25,6 +25,12 @@ const LAB_TIMEZONE = "America/New_York";
 const FINAL_PHASE_INDEX = PHASES.length - 1;
 
 const ZONES_BY_ID = Object.fromEntries(WORLD_ZONES.map((zone) => [zone.id, zone])) as Record<WorldZoneId, WorldZone>;
+const PICKUP_LABELS: Record<PickupEntity["kind"], string> = {
+  pipetteTip: "sterile tip",
+  reagentDroplet: "reagent droplet",
+  agarPlug: "agar plug",
+  mediaBead: "media bead"
+};
 const PICKUPS_BY_ZONE: Record<WorldZoneId, PickupEntity["kind"][]> = {
   microscopeSlide: ["mediaBead", "agarPlug"],
   pipetteZone: ["pipetteTip", "reagentDroplet"],
@@ -122,6 +128,10 @@ export class V3Simulation {
     this.state.phaseProgress = 0;
     this.state.phaseTime = 0;
     this.state.assembly = 0;
+    this.state.carriedPickup = "";
+    this.state.combo = 0;
+    this.state.jobStage = 0;
+    this.state.jobStep = "";
     this.state.phaseIndex = Math.min(this.state.phaseIndex + 1, FINAL_PHASE_INDEX);
     this.state.status = "running";
     this.state.previousStatus = "running";
@@ -142,23 +152,26 @@ export class V3Simulation {
       const bonus = upgraded("ponA-overdrive") ? 1.45 : 1;
       state.assembly += upgraded("lpoB-tether") ? 2 : 1;
       state.integrity = clamp(state.integrity + 15 * species.repairGain * bonus, 0, species.integrity + 18);
-      cleared = clearHazards(state, state.player, 9.5, ["shock", "plaque"]);
+      cleared = clearHazards(state, state.player, 9.5, ["shock"]);
       state.score += 260 + cleared * 115;
-      advanceObjective(state, 1.6 + cleared * 0.6);
+      if (PHASES[state.phaseIndex].id === "rackSeal") this.sealNearbyBreaks(["rupture", "crack"], "PG patch");
+      if (PHASES[state.phaseIndex].id === "lysisStorm") advanceObjective(state, 0.4 + cleared * 0.2);
     } else if (commandId === "membrane") {
       state.integrity = clamp(state.integrity + 30 * species.repairGain, 0, species.integrity + 20);
       cleared = clearHazards(state, state.player, upgraded("omp-buffer") ? 12 : 9.2, ["rupture", "crack", "spill"]);
       state.score += 240 + cleared * 100;
-      advanceObjective(state, 1.8 + cleared * 0.7);
+      if (PHASES[state.phaseIndex].id === "fernbachCurrent" || PHASES[state.phaseIndex].id === "rackSeal") this.sealNearbyBreaks(["rupture", "crack", "spill"], "membrane seal");
+      if (PHASES[state.phaseIndex].id === "lysisStorm") advanceObjective(state, 0.5 + cleared * 0.25);
     } else if (commandId === "phage") {
       cleared = clearHazards(state, state.player, upgraded("restriction-burst") ? 14.5 : 10.8, ["phage", "plaque"]);
       state.score += 200 + cleared * 160;
-      advanceObjective(state, 1 + Math.max(1, cleared) * 0.7);
+      if (PHASES[state.phaseIndex].id === "petriBloom") advanceObjective(state, Math.max(1, cleared) * 0.8);
+      if (PHASES[state.phaseIndex].id === "lysisStorm") advanceObjective(state, Math.max(0.4, cleared * 0.25));
     } else {
       state.player.dashTimer = upgraded("chemoreflex") ? 1.45 : 0.95;
       state.player.dashCooldown = 0;
       state.score += 260 + (state.zoneId === "centrifuge" ? 160 : 0);
-      advanceObjective(state, state.zoneId === "centrifuge" ? 2.2 : 1);
+      if (PHASES[state.phaseIndex].id === "centrifugeSweep" && state.zoneId === "centrifuge") advanceObjective(state, 0.75);
     }
     state.effects.push(effect("command", state.player.x, state.player.z, COMMANDS[commandId].shortLabel));
     return true;
@@ -198,7 +211,11 @@ export class V3Simulation {
       objectiveTarget: phase.target,
       board: this.state.board,
       speciesLabel: SPECIES[this.state.speciesId].label,
-      upgradeCount: this.state.upgrades.length
+      upgradeCount: this.state.upgrades.length,
+      carriedLabel: this.state.carriedPickup ? PICKUP_LABELS[this.state.carriedPickup] : "empty",
+      comboLabel: this.state.combo > 1 ? `x${this.state.combo}` : "ready",
+      nextHazardLabel: this.state.nextHazardLabel || "watch telegraphs",
+      jobStep: this.state.jobStep || stationStep(this.state)
     };
   }
 
@@ -250,11 +267,11 @@ export class V3Simulation {
 
   private updateObjective(dt: number): void {
     const phase = PHASES[this.state.phaseIndex];
-    const inTargetZone = this.state.zoneId === phase.targetZone;
-    if (inTargetZone) {
-      const base = this.state.phaseIndex === 0 ? 2.3 : this.state.phaseIndex === FINAL_PHASE_INDEX ? 0.55 : 0.42;
-      advanceObjective(this.state, dt * base);
-    }
+    this.state.jobStep = stationStep(this.state);
+    this.tryDepositCarriedResource();
+    if (phase.id === "petriBloom") this.tagNearbyPlaques();
+    if (phase.id === "centrifugeSweep") this.updateRotorCrossing();
+    if (phase.id === "lysisStorm") this.state.score += dt * (8 + this.state.combo * 2);
     if (this.state.phaseIndex === FINAL_PHASE_INDEX && this.state.phaseProgress >= phase.target) {
       this.state.score += 700;
       this.state.phaseProgress = phase.target * 0.55;
@@ -265,13 +282,30 @@ export class V3Simulation {
   private updateSpawns(dt: number): void {
     const phase = PHASES[this.state.phaseIndex];
     const pressure = 1 + this.state.phaseIndex * 0.22 + Math.min(0.45, this.state.phaseTime / 160);
-    this.tickTimer("pickup", dt, Math.max(0.7, 2.1 - this.state.phaseIndex * 0.12), () => this.spawnPickup(this.random() > 0.68 ? this.state.zoneId : phase.targetZone));
-    this.tickTimer("phage", dt, Math.max(0.72, 2.7 / pressure), () => this.spawnHazard(this.state.phaseIndex >= 2 ? pick(this.random, ["phage", "plaque"] as HazardKind[]) : "phage", phase.targetZone));
-    if (this.state.phaseIndex >= 1) this.tickTimer("droplet", dt, Math.max(0.9, 2.2 / pressure), () => this.spawnHazard(pick(this.random, ["droplet", "shock"] as HazardKind[]), this.state.phaseIndex === 1 ? "pipetteZone" : phase.targetZone));
-    if (this.state.phaseIndex >= 3) this.tickTimer("rotor", dt, Math.max(1.1, 3.6 / pressure), () => this.spawnHazard("rotor", "centrifuge"));
-    if (this.state.phaseIndex >= 4) this.tickTimer("crack", dt, Math.max(1.3, 4.2 / pressure), () => this.spawnHazard(pick(this.random, ["crack", "rupture", "spill"] as HazardKind[]), phase.targetZone));
-    if (this.state.phaseIndex >= FINAL_PHASE_INDEX) {
-      this.tickTimer("rupture", dt, Math.max(0.85, 3.2 / pressure), () => this.spawnHazard(pick(this.random, ["rupture", "shock", "phage", "spill"] as HazardKind[]), pick(this.random, WORLD_ZONES).id));
+    this.tickTimer("pickup", dt, Math.max(0.65, 1.9 - this.state.phaseIndex * 0.1), () => this.spawnPickup(this.random() > 0.65 ? this.state.zoneId : phase.targetZone));
+    if (phase.id === "slideTraining") {
+      this.state.nextHazardLabel = "light slide pulses";
+      this.tickTimer("droplet", dt, 3.1, () => this.spawnHazard("droplet", "microscopeSlide"));
+    } else if (phase.id === "pipettePulse") {
+      this.state.nextHazardLabel = "droplet lane incoming";
+      this.tickTimer("droplet", dt, Math.max(0.74, 1.9 / pressure), () => this.spawnHazard(pick(this.random, ["droplet", "shock"] as HazardKind[]), "pipetteZone"));
+    } else if (phase.id === "petriBloom") {
+      this.state.nextHazardLabel = "plaque seam expanding";
+      this.tickTimer("phage", dt, Math.max(0.85, 2.0 / pressure), () => this.spawnHazard(pick(this.random, ["phage", "plaque"] as HazardKind[]), "petriDish"));
+    } else if (phase.id === "fernbachCurrent") {
+      this.state.nextHazardLabel = "media current swelling";
+      this.tickTimer("spill", dt, Math.max(1.15, 2.8 / pressure), () => this.spawnHazard(pick(this.random, ["spill", "droplet", "rupture"] as HazardKind[]), "fernbachFlask"));
+    } else if (phase.id === "centrifugeSweep") {
+      this.state.nextHazardLabel = "rotor sweep window";
+      this.tickTimer("rotor", dt, Math.max(0.9, 2.5 / pressure), () => this.spawnHazard("rotor", "centrifuge"));
+      this.tickTimer("shock", dt, Math.max(1.3, 3.4 / pressure), () => this.spawnHazard("shock", "centrifuge"));
+    } else if (phase.id === "rackSeal") {
+      this.state.nextHazardLabel = "rupture site growing";
+      this.tickTimer("crack", dt, Math.max(0.92, 2.7 / pressure), () => this.spawnHazard(pick(this.random, ["crack", "rupture", "spill"] as HazardKind[]), "tubeRack"));
+    } else {
+      this.state.nextHazardLabel = "full bench collapse";
+      this.tickTimer("phage", dt, Math.max(0.7, 2.0 / pressure), () => this.spawnHazard(pick(this.random, ["phage", "plaque", "shock"] as HazardKind[]), pick(this.random, WORLD_ZONES).id));
+      this.tickTimer("rupture", dt, Math.max(0.85, 2.5 / pressure), () => this.spawnHazard(pick(this.random, ["rupture", "shock", "phage", "spill", "rotor"] as HazardKind[]), pick(this.random, WORLD_ZONES).id));
     }
     this.tickTimer("boss", dt, Math.max(10, 22 - this.state.phaseIndex * 1.8), () => {
       this.state.effects.push(effect("phase", this.state.player.x, this.state.player.z, phase.boss));
@@ -281,11 +315,13 @@ export class V3Simulation {
   }
 
   private phaseHazards(): HazardKind[] {
-    if (this.state.phaseIndex === 0) return ["phage", "droplet"];
-    if (this.state.phaseIndex === 1) return ["droplet", "shock"];
-    if (this.state.phaseIndex === 2) return ["phage", "plaque"];
-    if (this.state.phaseIndex === 3) return ["rotor", "shock"];
-    if (this.state.phaseIndex === 4) return ["crack", "rupture", "spill"];
+    const phaseId = PHASES[this.state.phaseIndex].id;
+    if (phaseId === "slideTraining") return ["phage", "droplet"];
+    if (phaseId === "pipettePulse") return ["droplet", "shock"];
+    if (phaseId === "petriBloom") return ["phage", "plaque"];
+    if (phaseId === "fernbachCurrent") return ["spill", "droplet", "rupture"];
+    if (phaseId === "centrifugeSweep") return ["rotor", "shock"];
+    if (phaseId === "rackSeal") return ["crack", "rupture", "spill"];
     return ["phage", "shock", "rupture", "plaque", "spill"];
   }
 
@@ -417,14 +453,82 @@ export class V3Simulation {
     this.state.commandCharge = clamp(this.state.commandCharge + (pickup.kind === "pipetteTip" ? 24 : 15) * species.commandGain * commandBonus, 0, 100);
     if (pickup.kind === "reagentDroplet") this.state.integrity = clamp(this.state.integrity + 5 * species.repairGain, 0, species.integrity + 18);
     this.state.score += pickup.kind === "mediaBead" ? 135 : 105;
-    this.state.effects.push(effect("pickup", pickup.x, pickup.z, pickup.kind));
-    advanceObjective(this.state, repair * (this.state.zoneId === PHASES[this.state.phaseIndex].targetZone ? 0.9 : 0.45));
+    if (!this.state.carriedPickup) this.state.carriedPickup = pickup.kind;
+    this.state.effects.push(effect("pickup", pickup.x, pickup.z, `carry ${PICKUP_LABELS[pickup.kind]}`));
     if (this.state.assembly >= this.state.assemblyTarget) {
       this.state.assembly = 0;
       this.state.integrity = clamp(this.state.integrity + 13 * species.repairGain, 0, species.integrity + 16);
       this.state.score += 440;
       this.state.effects.push(effect("command", this.state.player.x, this.state.player.z, "wall cycle"));
     }
+  }
+
+  private tryDepositCarriedResource(): void {
+    const state = this.state;
+    if (!state.carriedPickup) return;
+    const point = depositPointForPhase(state);
+    const distance = Math.hypot(state.player.x - point.x, state.player.z - point.z);
+    if (distance > 4.2) return;
+    const phase = PHASES[state.phaseIndex];
+    const label = PICKUP_LABELS[state.carriedPickup];
+    const fastBonus = Math.max(0, 18 - state.phaseTime) * 8;
+    state.combo = Math.min(12, state.combo + 1);
+    state.score += 340 + state.combo * 70 + fastBonus;
+    state.commandCharge = clamp(state.commandCharge + 18, 0, 100);
+    state.integrity = clamp(state.integrity + (state.carriedPickup === "reagentDroplet" ? 8 : 4), 0, SPECIES[state.speciesId].integrity + 20);
+    state.effects.push(effect("pickup", point.x, point.z, `deposited ${label}`));
+    state.carriedPickup = "";
+    if (phase.id === "slideTraining" || phase.id === "pipettePulse" || phase.id === "fernbachCurrent" || phase.id === "lysisStorm") advanceObjective(state, 1);
+  }
+
+  private tagNearbyPlaques(): void {
+    const state = this.state;
+    state.hazards.forEach((hazard) => {
+      if (hazard.kind !== "plaque" || hazard.tagged) return;
+      if (Math.hypot(state.player.x - hazard.x, state.player.z - hazard.z) > hazard.radius + 2.2) return;
+      hazard.tagged = true;
+      state.combo = Math.min(12, state.combo + 1);
+      state.score += 240 + state.combo * 60;
+      state.effects.push(effect("command", hazard.x, hazard.z, "plaque tagged"));
+      advanceObjective(state, 1);
+    });
+  }
+
+  private updateRotorCrossing(): void {
+    const state = this.state;
+    if (state.zoneId !== "centrifuge") return;
+    if (state.player.x < 32 && (state.jobStage < 1 || state.jobStage >= 3)) {
+      state.jobStage = 1;
+      state.score += 90;
+      state.effects.push(effect("phase", state.player.x, state.player.z, "entry pocket"));
+    } else if (state.player.x > 42 && state.jobStage === 1) {
+      state.jobStage = 2;
+      state.combo = Math.min(12, state.combo + 1);
+      state.score += 420 + state.combo * 55;
+      state.effects.push(effect("phase", state.player.x, state.player.z, "sample crossed"));
+      advanceObjective(state, 1);
+    } else if (state.player.x > 52 && state.jobStage === 2) {
+      state.jobStage = 3;
+      state.combo = Math.min(12, state.combo + 1);
+      state.score += 520 + state.combo * 60;
+      state.effects.push(effect("phase", state.player.x, state.player.z, "escape lane"));
+      advanceObjective(state, 1);
+    }
+  }
+
+  private sealNearbyBreaks(kinds: HazardKind[], label: string): void {
+    const state = this.state;
+    let sealed = 0;
+    state.hazards = state.hazards.filter((hazard) => {
+      if (!kinds.includes(hazard.kind) || Math.hypot(state.player.x - hazard.x, state.player.z - hazard.z) > hazard.radius + 5.5) return true;
+      sealed += 1;
+      state.effects.push(effect("command", hazard.x, hazard.z, label));
+      return false;
+    });
+    if (!sealed) return;
+    state.combo = Math.min(12, state.combo + sealed);
+    state.score += sealed * (360 + state.combo * 45);
+    advanceObjective(state, sealed);
   }
 
   private updateHazards(dt: number): void {
@@ -502,6 +606,11 @@ function createInitialState(): GameState {
     commandCharge: 0,
     assembly: 0,
     assemblyTarget: 5,
+    carriedPickup: "",
+    combo: 0,
+    jobStage: 0,
+    jobStep: "",
+    nextHazardLabel: "watch telegraphs",
     phaseIndex: 0,
     phaseTime: 0,
     phaseProgress: 0,
@@ -515,6 +624,31 @@ function createInitialState(): GameState {
     effects: [],
     timers: { pickup: 0.2, phage: 1.2, shock: 3.2, crack: 6, rupture: 8.5, droplet: 1.8, rotor: 4.5, plaque: 4.2, spill: 6.6, boss: 13 }
   };
+}
+
+function depositPointForPhase(state: GameState): { x: number; z: number } {
+  const phase = PHASES[state.phaseIndex];
+  if (phase.id === "fernbachCurrent") return { x: 6, z: 10 };
+  if (phase.id === "centrifugeSweep") return { x: 52, z: 8 };
+  if (phase.id === "rackSeal") return { x: 15, z: 26 };
+  return { x: -44, z: 22 };
+}
+
+function stationStep(state: GameState): string {
+  const phase = PHASES[state.phaseIndex];
+  if (state.carriedPickup) return `Carry ${PICKUP_LABELS[state.carriedPickup]} to ${phase.id === "fernbachCurrent" ? "the spill" : "the slide checkpoint"}.`;
+  if (phase.id === "slideTraining") return "Pick up a bead or agar plug, then deposit it on the slide.";
+  if (phase.id === "pipettePulse") return "Collect sterile pipette tips, dodge reagent lanes, and return tips to the slide.";
+  if (phase.id === "petriBloom") return "Skim plaque edges to tag them; use Phage Defense for clustered clears.";
+  if (phase.id === "fernbachCurrent") return "Collect reagent droplets and use Membrane Repair near media spills.";
+  if (phase.id === "centrifugeSweep") {
+    if (state.jobStage < 1) return "Enter the left safe pocket before the rotor sweep.";
+    if (state.jobStage < 2) return "Cross through the center pocket during the opening.";
+    if (state.jobStage < 3) return "Escape to the far pocket before spin-up.";
+    return "Collect another sample or use Motility for a high-risk crossing.";
+  }
+  if (phase.id === "rackSeal") return "Find rupture sites in the rack and seal them with PG or Membrane commands.";
+  return "Chain deposits and command clears while the full bench collapses.";
 }
 
 function advanceObjective(state: GameState, amount: number): void {
