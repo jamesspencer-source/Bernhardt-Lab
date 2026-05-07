@@ -297,7 +297,7 @@ function createDialog(): HTMLDialogElement {
       <header class="envelope-v3-topbar">
         <div>
           <p class="envelope-v3-eyebrow">Hidden Lab Arcade</p>
-          <h2 id="envelope-v3-title">Envelope Escape V3: Stress Command Chamber</h2>
+          <h2 id="envelope-v3-title">Envelope Escape V3: Lab-Bench Stress Run</h2>
         </div>
         <div class="envelope-v3-actions">
           <button data-v3="sound" type="button" aria-pressed="false">Sound Off</button>
@@ -313,6 +313,7 @@ function createDialog(): HTMLDialogElement {
             <div><span>Time</span><strong data-v3-hud="time">0:00</strong></div>
             <div><span>Integrity</span><strong data-v3-hud="integrity">100%</strong></div>
             <div><span>Command</span><strong data-v3-hud="charge">0%</strong></div>
+            <div><span>Zone</span><strong data-v3-hud="zone">Slide</strong></div>
           </section>
           <section class="envelope-v3-objective">
             <span data-v3-hud="phase">Homeostasis</span>
@@ -326,9 +327,9 @@ function createDialog(): HTMLDialogElement {
             <button data-command="motility" type="button">4 <strong>Motility</strong><span>Evade</span></button>
           </section>
           <section class="envelope-v3-menu">
-            <p class="envelope-v3-kicker">3D microscope survival</p>
-            <h3>Command the envelope before it fails.</h3>
-            <p>Move through the chamber, read stress telegraphs, hold Space for slow-time commands, and draft upgrades between assay events.</p>
+            <p class="envelope-v3-kicker">3D lab-bench survival</p>
+            <h3>Navigate the bench before the envelope fails.</h3>
+            <p>Move through oversized lab landmarks, route around pipette pulses, plaque blooms, rotor sweeps, and tube-rack ruptures, then use slow-time envelope commands to solve each stress event.</p>
             <div class="envelope-v3-fields">
               <label>Model bacterium <select data-v3="species"></select></label>
               <label>Leaderboard name <input data-v3="name" maxlength="24" autocomplete="nickname" placeholder="Anonymous" /></label>
@@ -369,7 +370,7 @@ function createDialog(): HTMLDialogElement {
         </aside>
       </main>
       <footer class="envelope-v3-controls">
-        <span>WASD/arrows move | Shift dash | Hold Space command wheel | 1-4 command | P pause</span>
+        <span>WASD/arrows move | Shift dash | Hold Space command wheel | 1-4 command | Navigate pipette, petri, rotor, flask, and tube-rack zones</span>
         <button data-v3="pause" type="button">Pause</button>
         <button data-v3="restart" type="button">Restart</button>
         <button data-v3="refresh-scores" type="button">Refresh Scores</button>
@@ -420,6 +421,7 @@ function renderHud(refs: ReturnType<typeof collectRefs>, snapshot: HudSnapshot):
   refs.hud("time").textContent = snapshot.timeLabel;
   refs.hud("integrity").textContent = `${snapshot.integrity}%`;
   refs.hud("charge").textContent = `${snapshot.commandCharge}%`;
+  refs.hud("zone").textContent = snapshot.zoneLabel;
   refs.hud("phase").textContent = snapshot.phaseTitle;
   refs.hud("objective").textContent = `${snapshot.objective} (${snapshot.objectiveProgress}/${snapshot.objectiveTarget})`;
   refs.hud("pressure").textContent = snapshot.phasePressure;
