@@ -93,5 +93,5 @@ export async function requestJson(url, timeoutMs = 6000) {
 }
 
 export function alumniProfileHref(slug) {
-  return buildMode() === "flat" ? `alumni-${slug}.html` : `alumni-profiles/${slug}.html`;
+  return buildMode() === "flat" ? `alumni-${slug}.html` : `alumni/${slug}/`;
 }

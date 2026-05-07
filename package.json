@@ -4,16 +4,25 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "game:check": "tsc -p game-src/envelope-escape/tsconfig.json --noEmit",
-    "game:build": "vite build --config game-src/envelope-escape/vite.config.ts",
-    "game:dev": "vite --config game-src/envelope-escape/vite.config.ts --host 127.0.0.1",
+    "game:v2:check": "tsc -p game-src/envelope-escape/tsconfig.json --noEmit",
+    "game:v2:build": "vite build --config game-src/envelope-escape/vite.config.ts",
+    "game:v2:dev": "vite --config game-src/envelope-escape/vite.config.ts --host 127.0.0.1",
+    "game:v3:check": "tsc -p game-src/envelope-escape-v3/tsconfig.json --noEmit",
+    "game:v3:build": "vite build --config game-src/envelope-escape-v3/vite.config.ts",
+    "game:v3:dev": "vite --config game-src/envelope-escape-v3/vite.config.ts --host 127.0.0.1",
+    "game:check": "npm run game:v2:check && npm run game:v3:check",
+    "game:build": "npm run game:v2:build && npm run game:v3:build",
+    "game:dev": "npm run game:v3:dev",
     "site:build": "npm run game:build && python3 scripts/build_site.py",
     "check": "npm run game:check && npm run game:build && python3 scripts/build_site.py"
   },
   "dependencies": {
-    "phaser": "^3.90.0"
+    "@dimforge/rapier3d-compat": "^0.19.3",
+    "phaser": "^3.90.0",
+    "three": "^0.184.0"
   },
   "devDependencies": {
+    "@types/three": "^0.184.1",
     "typescript": "^5.9.3",
     "vite": "^7.2.4"
   }

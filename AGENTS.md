@@ -7,9 +7,9 @@ Start here if you are a fresh Codex thread or any engineer opening this repo wit
 This repository contains the static Bernhardt Lab website, published via GitHub Pages.
 
 - Canonical working directory:
-  `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/TB lab website`
+  `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab`
 - Current public site URL:
-  `https://jamesspencer-source.github.io/Bernhardt-Lab/`
+  `https://bernhardtlab.com/`
 
 ## Source of truth
 
@@ -18,6 +18,8 @@ Edit canonical sources first.
 - `data/` is the canonical hand-edited content source.
 - `assets/data/` is runtime/generated data for the live site.
 - `github-flat/` is generated output only. Do not hand-edit it.
+- Canonical branded URLs use `/team/`, `/team/{slug}/`, `/alumni/`, `/alumni/{slug}/`, `/research/`, and `/accessibility/`.
+- Legacy URLs such as `/people/`, `/research-library/`, root-level profile slugs, and `alumni-profiles/*.html` should remain redirect-only compatibility pages.
 
 Important canonical files:
 
@@ -34,6 +36,7 @@ Generated outputs you should usually not edit directly:
 - `assets/styles.css`
 - `assets/envelope-escape-config.js`
 - `assets/game/envelope-escape/runtime/envelope-escape-v2.js`
+- `assets/game/envelope-escape-v3/runtime/envelope-escape-v3.js`
 - `github-flat/**`
 
 ## Primary commands
@@ -52,7 +55,7 @@ python3 scripts/validate_tom_compliance.py
 
 `build_site.py` and `publish_site.py` both enforce this gate. It prevents future updates from reintroducing Tom-removed alumni, incorrect homepage publication links, removed gallery items, placeholder alumni text, or escaped raw formatting markup.
 
-Build the hidden Envelope Escape V2 game after TypeScript source changes:
+Build the hidden Envelope Escape V2/V3 games after TypeScript source changes:
 
 ```bash
 npm install
@@ -130,7 +133,12 @@ Update archive scientific media:
 - V1 production game code lives in `assets/envelope-escape.js`.
 - V2 beta source lives in `game-src/envelope-escape/`.
 - V2 beta static output lives in `assets/game/envelope-escape/runtime/`.
-- V2 beta loads only with `?envelopeV2=1`; `?envelopeLegacy=1` keeps the legacy path.
+- V3 beta source lives in `game-src/envelope-escape-v3/`.
+- V3 beta static output lives in `assets/game/envelope-escape-v3/runtime/`.
+- V2 beta loads only with `?envelopeV2=1`.
+- V3 beta loads only with `?envelopeV3=1`.
+- `?envelopeLegacy=1` keeps the legacy path.
+- V3 must not become the default footer game until custom art, browser QA, performance, fallback, and leaderboard gates pass.
 - The Cloudflare Worker + D1 backend lives in `leaderboard-worker/`.
 - Repo-side changes do not redeploy the worker automatically.
 - If leaderboard API or schema behavior changes, the live worker may need a separate redeploy.
@@ -152,4 +160,5 @@ Update archive scientific media:
 - `docs/editorial-style-guide.md` is the visual source of truth for editorial style, card cohesion, and pre-publish UI QA.
 - `docs/envelope-escape-game-upgrade.md` tracks the Phaser + TypeScript game rebuild.
 - `docs/envelope-escape-art-direction.md` tracks the Envelope Escape asset brief and QA checklist.
+- `docs/envelope-escape-v3.md` tracks the Three.js + Rapier simulation foundation.
 - `leaderboard-worker/README.md` explains the global leaderboard backend and deployment.
