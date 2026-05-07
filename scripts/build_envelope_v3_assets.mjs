@@ -4,6 +4,7 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as THREE from "three";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
+import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
 
 globalThis.FileReader = class {
   readAsArrayBuffer(blob) {
@@ -36,16 +37,23 @@ mkdirSync(modelDir, { recursive: true });
 const exporter = new GLTFExporter();
 
 const materials = {
-  pipetteWhite: standard(0xf4f1ea, { roughness: 0.45, metalness: 0.04 }),
-  pipetteBlue: standard(0x33a8c7, { roughness: 0.34, metalness: 0.06, emissive: 0x06384a, emissiveIntensity: 0.1 }),
+  pipetteWhite: standard(0xf7f3ea, { roughness: 0.36, metalness: 0.04 }),
+  pipetteIvoryShadow: standard(0xd8d2c7, { roughness: 0.5, metalness: 0.04 }),
+  pipetteBlue: standard(0x2a9fc4, { roughness: 0.28, metalness: 0.06, emissive: 0x06384a, emissiveIntensity: 0.1 }),
+  pipetteDeepBlue: standard(0x187599, { roughness: 0.33, metalness: 0.08, emissive: 0x042a3c, emissiveIntensity: 0.12 }),
   darkDisplay: standard(0x111821, { roughness: 0.22, metalness: 0.1, emissive: 0x02070b, emissiveIntensity: 0.3 }),
   glass: physical(0xdffbff, { roughness: 0.08, transmission: 0.55, opacity: 0.34, thickness: 0.45 }),
+  glassEdge: physical(0xbfefff, { roughness: 0.1, transmission: 0.38, opacity: 0.5, thickness: 0.34 }),
   agar: standard(0xf4c37c, { roughness: 0.62, emissive: 0x3f2108, emissiveIntensity: 0.12 }),
+  agarDark: standard(0xc98644, { roughness: 0.7, emissive: 0x2a1305, emissiveIntensity: 0.08 }),
   plaque: basic(0x7e4f2a, 0.42),
   media: physical(0x65d5bd, { roughness: 0.28, transmission: 0.18, opacity: 0.58, emissive: 0x06453c, emissiveIntensity: 0.16 }),
-  centrifugeShell: standard(0xd7dde4, { roughness: 0.48, metalness: 0.08 }),
+  centrifugeShell: standard(0xdde3e8, { roughness: 0.42, metalness: 0.08 }),
+  centrifugeShadow: standard(0xb8c3cc, { roughness: 0.58, metalness: 0.08 }),
   centrifugeBlue: standard(0x5b7fa9, { roughness: 0.38, metalness: 0.16, emissive: 0x0d2743, emissiveIntensity: 0.12 }),
+  centrifugeTrim: standard(0x32445a, { roughness: 0.42, metalness: 0.1 }),
   rack: standard(0x20344a, { roughness: 0.58, metalness: 0.05, emissive: 0x071827, emissiveIntensity: 0.18 }),
+  rackEdge: standard(0x38546f, { roughness: 0.44, metalness: 0.06, emissive: 0x08192a, emissiveIntensity: 0.12 }),
   warning: standard(0xf3ca5d, { roughness: 0.42, emissive: 0x573a04, emissiveIntensity: 0.16 }),
   rupture: standard(0xff8a8f, { roughness: 0.52, emissive: 0x5e1422, emissiveIntensity: 0.62 }),
   phage: standard(0xffd17f, { roughness: 0.42, emissive: 0x6d3c0c, emissiveIntensity: 0.44 }),
@@ -58,6 +66,7 @@ const ASSETS = [
     path: "models/research-plus-pipette.glb",
     fallback: "procedural-pipette",
     budget: 42000,
+    byteBudget: 2100000,
     bounds: { width: 38, depth: 7, height: 6 },
     collision: [{ type: "box", x: -42, z: -29, width: 34, depth: 4.2 }],
     build: buildPipette
@@ -67,6 +76,7 @@ const ASSETS = [
     path: "models/petri-dish-plaque-assay.glb",
     fallback: "procedural-petri-dish",
     budget: 36000,
+    byteBudget: 1250000,
     bounds: { width: 28, depth: 28, height: 2.8 },
     collision: [],
     build: buildPetriDish
@@ -76,6 +86,7 @@ const ASSETS = [
     path: "models/fernbach-flask.glb",
     fallback: "procedural-fernbach-flask",
     budget: 42000,
+    byteBudget: 700000,
     bounds: { width: 17, depth: 17, height: 12 },
     collision: [{ type: "circle", x: -7, z: 4, radius: 6.4 }],
     build: buildFernbachFlask
@@ -85,6 +96,7 @@ const ASSETS = [
     path: "models/centrifuge-rotor.glb",
     fallback: "procedural-centrifuge",
     budget: 48000,
+    byteBudget: 3600000,
     bounds: { width: 27, depth: 27, height: 7 },
     collision: [{ type: "circle", x: 42, z: 8, radius: 4.2 }],
     build: buildCentrifuge
@@ -94,6 +106,7 @@ const ASSETS = [
     path: "models/test-tube-rack.glb",
     fallback: "procedural-tube-rack",
     budget: 52000,
+    byteBudget: 2700000,
     bounds: { width: 29, depth: 14, height: 6 },
     collision: [
       { type: "box", x: 7, z: 20, width: 4, depth: 8 },
@@ -107,6 +120,7 @@ const ASSETS = [
     path: "models/microscope-slide.glb",
     fallback: "procedural-microscope-slide",
     budget: 12000,
+    byteBudget: 550000,
     bounds: { width: 26, depth: 13, height: 0.5 },
     collision: [],
     build: buildMicroscopeSlide
@@ -116,6 +130,7 @@ const ASSETS = [
     path: "models/tip-box.glb",
     fallback: "procedural-tip-box",
     budget: 22000,
+    byteBudget: 1300000,
     bounds: { width: 11, depth: 8, height: 3 },
     collision: [{ type: "box", x: -22, z: -11, width: 10.5, depth: 7.5 }],
     build: buildTipBox
@@ -125,6 +140,7 @@ const ASSETS = [
     path: "models/pipette-tip.glb",
     fallback: "procedural-pipette-tip",
     budget: 4000,
+    byteBudget: 60000,
     bounds: { width: 1, depth: 1, height: 1.6 },
     collision: [],
     build: buildPipetteTip
@@ -134,6 +150,7 @@ const ASSETS = [
     path: "models/reagent-droplet.glb",
     fallback: "procedural-reagent-droplet",
     budget: 4500,
+    byteBudget: 80000,
     bounds: { width: 1.2, depth: 1.2, height: 1.2 },
     collision: [],
     build: buildReagentDroplet
@@ -143,6 +160,7 @@ const ASSETS = [
     path: "models/agar-plug.glb",
     fallback: "procedural-agar-plug",
     budget: 4200,
+    byteBudget: 80000,
     bounds: { width: 1.2, depth: 1.2, height: 0.7 },
     collision: [],
     build: buildAgarPlug
@@ -152,6 +170,7 @@ const ASSETS = [
     path: "models/media-bead.glb",
     fallback: "procedural-media-bead",
     budget: 3800,
+    byteBudget: 50000,
     bounds: { width: 1.1, depth: 1.1, height: 1.1 },
     collision: [],
     build: buildMediaBead
@@ -161,6 +180,7 @@ const ASSETS = [
     path: "models/phage-particle.glb",
     fallback: "procedural-phage-particle",
     budget: 7000,
+    byteBudget: 90000,
     bounds: { width: 1.6, depth: 1.6, height: 2.2 },
     collision: [],
     build: buildPhage
@@ -170,6 +190,7 @@ const ASSETS = [
     path: "models/phage-plaque.glb",
     fallback: "procedural-phage-plaque",
     budget: 6000,
+    byteBudget: 90000,
     bounds: { width: 2.2, depth: 2.2, height: 0.1 },
     collision: [],
     build: buildPlaque
@@ -179,6 +200,7 @@ const ASSETS = [
     path: "models/membrane-rupture.glb",
     fallback: "procedural-membrane-rupture",
     budget: 6500,
+    byteBudget: 60000,
     bounds: { width: 7, depth: 1.4, height: 0.2 },
     collision: [],
     build: buildRupture
@@ -188,6 +210,7 @@ const ASSETS = [
     path: "models/media-spill.glb",
     fallback: "procedural-media-spill",
     budget: 4000,
+    byteBudget: 50000,
     bounds: { width: 3.5, depth: 2.4, height: 0.1 },
     collision: [],
     build: buildSpill
@@ -197,6 +220,7 @@ const ASSETS = [
     path: "models/rotor-sweep.glb",
     fallback: "procedural-rotor-sweep",
     budget: 3500,
+    byteBudget: 50000,
     bounds: { width: 2, depth: 26, height: 0.2 },
     collision: [],
     build: buildRotorSweep
@@ -225,14 +249,15 @@ for (const asset of ASSETS) {
     byteLength: bytes.byteLength,
     sha256: createHash("sha256").update(bytes).digest("hex"),
     triangles,
-    triangleBudget: asset.budget
+    triangleBudget: asset.budget,
+    byteBudget: asset.byteBudget
   });
 }
 
 const manifest = {
-  version: "v3-premium-assets-20260507",
+  version: "v3-premium-assets-20260507b",
   runtimePath: "runtime/envelope-escape-v3.js",
-  artDirection: "Premium stylized science lab-bench miniatures with GLB assets and procedural fallbacks.",
+  artDirection: "Premium stylized science lab-bench miniatures with bevelled instrument bodies, identifiable controls, glass depth, and procedural fallbacks.",
   generatedBy: "scripts/build_envelope_v3_assets.mjs",
   assets: manifestEntries
 };
@@ -242,82 +267,141 @@ console.log(`Generated ${manifestEntries.length} Envelope Escape V3 GLB assets.`
 
 function buildPipette() {
   const group = new THREE.Group();
-  const body = mesh(new THREE.CapsuleGeometry(1.45, 15.5, 16, 36), materials.pipetteWhite, "rounded_white_body");
-  body.rotation.z = Math.PI / 2;
-  body.scale.y = 0.78;
-  body.position.y = 1.25;
+
+  const body = roundedBox(15.4, 2.7, 2.55, 0.95, 8, materials.pipetteWhite, "ergonomic_rounded_white_body");
+  body.position.set(-1.0, 1.42, 0);
   group.add(body);
 
-  const grip = mesh(new THREE.CapsuleGeometry(0.9, 5.8, 12, 24), materials.pipetteBlue, "blue_finger_grip");
-  grip.rotation.z = Math.PI / 2;
-  grip.scale.y = 0.58;
-  grip.position.set(-2.8, 1.7, 0);
+  const palmBulge = mesh(new THREE.CapsuleGeometry(1.16, 4.2, 14, 32), materials.pipetteWhite, "raised_palm_bulge");
+  palmBulge.rotation.z = Math.PI / 2;
+  palmBulge.scale.set(1, 0.62, 0.9);
+  palmBulge.position.set(-4.25, 1.68, 0);
+  group.add(palmBulge);
+
+  const lowerShadow = roundedBox(11.4, 0.42, 2.6, 0.26, 5, materials.pipetteIvoryShadow, "subtle_lower_body_shadow");
+  lowerShadow.position.set(0.8, 0.28, 0);
+  group.add(lowerShadow);
+
+  const grip = roundedBox(5.6, 1.85, 2.72, 0.62, 8, materials.pipetteBlue, "sculpted_blue_finger_grip");
+  grip.position.set(-3.3, 2.1, 0);
   group.add(grip);
 
-  const plunger = mesh(new THREE.CylinderGeometry(1.4, 1.4, 1.15, 32), materials.pipetteBlue, "round_thumb_plunger");
-  plunger.rotation.z = Math.PI / 2;
-  plunger.position.set(-9.2, 1.45, 0);
+  const plungerStem = mesh(new THREE.CylinderGeometry(0.42, 0.42, 2.25, 28), materials.pipetteDeepBlue, "vertical_plunger_stem");
+  plungerStem.position.set(-9.35, 2.78, 0);
+  group.add(plungerStem);
+
+  const plunger = mesh(new THREE.CylinderGeometry(1.42, 1.42, 0.6, 40), materials.pipetteBlue, "wide_round_thumb_plunger");
+  plunger.position.set(-9.35, 4.05, 0);
   group.add(plunger);
 
-  const ejector = mesh(new THREE.CylinderGeometry(0.58, 0.58, 2.1, 24), materials.pipetteBlue, "side_tip_ejector_button");
-  ejector.rotation.x = Math.PI / 2;
-  ejector.position.set(-6.4, 2.55, -1.05);
+  const ejector = roundedBox(1.1, 2.3, 0.54, 0.24, 5, materials.pipetteDeepBlue, "side_tip_ejector_button");
+  ejector.position.set(-6.65, 2.82, -1.42);
   group.add(ejector);
 
-  const display = mesh(new THREE.BoxGeometry(3.7, 0.18, 1.35), materials.darkDisplay, "dark_volume_display_window");
-  display.position.set(-1.45, 2.72, -0.08);
-  group.add(display);
-  addDisplayTicks(group, -1.45, 2.84, -0.78);
+  const ejectorRail = roundedBox(7.4, 0.34, 0.34, 0.14, 4, materials.pipetteDeepBlue, "blue_tip_ejector_sleeve_rail");
+  ejectorRail.position.set(5.6, 1.72, -1.3);
+  group.add(ejectorRail);
 
-  const hook = mesh(new THREE.TorusGeometry(1.38, 0.16, 12, 36, Math.PI * 1.35), materials.pipetteBlue, "curved_finger_hook");
-  hook.rotation.set(Math.PI / 2, 0, -0.4);
-  hook.position.set(-4.9, 0.58, 0);
+  const display = roundedBox(3.85, 0.2, 1.46, 0.18, 4, materials.darkDisplay, "dark_volume_display_window");
+  display.position.set(-1.1, 2.96, -0.08);
+  group.add(display);
+  const displayBezel = roundedBox(4.24, 0.14, 1.8, 0.2, 4, materials.pipetteIvoryShadow, "raised_display_bezel");
+  displayBezel.position.set(-1.1, 2.86, -0.08);
+  group.add(displayBezel);
+  addDisplayTicks(group, -1.1, 3.11, -0.78);
+
+  const hook = mesh(new THREE.TorusGeometry(1.72, 0.18, 14, 56, Math.PI * 1.42), materials.pipetteDeepBlue, "curved_finger_hook");
+  hook.rotation.set(Math.PI / 2, 0, -0.32);
+  hook.position.set(-5.4, 0.42, 0);
   group.add(hook);
 
-  const cone = mesh(new THREE.ConeGeometry(0.88, 6.4, 32), materials.pipetteBlue, "tapered_nose_cone");
+  const collar = mesh(new THREE.CylinderGeometry(1.04, 1.04, 0.85, 36), materials.pipetteDeepBlue, "blue_nose_collar");
+  collar.rotation.z = Math.PI / 2;
+  collar.position.set(6.78, 1.12, 0);
+  group.add(collar);
+
+  const cone = mesh(new THREE.ConeGeometry(0.94, 6.35, 40), materials.pipetteBlue, "long_tapered_nose_cone");
   cone.rotation.z = -Math.PI / 2;
-  cone.position.set(8.15, 1.1, 0);
+  cone.position.set(9.35, 1.1, 0);
   group.add(cone);
 
-  const tip = mesh(new THREE.ConeGeometry(0.42, 6.8, 24), physical(0xb8f4ff, { opacity: 0.45, transmission: 0.35, roughness: 0.16 }), "translucent_attached_tip");
+  const tip = mesh(new THREE.ConeGeometry(0.42, 7.25, 30), physical(0xb8f4ff, { opacity: 0.45, transmission: 0.35, roughness: 0.16 }), "long_translucent_attached_tip");
   tip.rotation.z = -Math.PI / 2;
-  tip.position.set(13.85, 1.08, 0);
+  tip.position.set(15.1, 1.08, 0);
   group.add(tip);
+
+  for (let index = 0; index < 4; index += 1) {
+    const seam = roundedBox(0.08, 0.08, 2.62, 0.04, 2, materials.pipetteIvoryShadow, `body_mold_seam_${index}`);
+    seam.position.set(-7.4 + index * 3.4, 2.78, 0);
+    group.add(seam);
+  }
   return group;
 }
 
 function buildPetriDish() {
   const group = new THREE.Group();
-  group.add(mesh(new THREE.CylinderGeometry(7.8, 8.1, 0.42, 96), materials.agar, "amber_agar_surface"));
-  const lid = mesh(new THREE.CylinderGeometry(8.8, 8.8, 0.55, 96, 1, true), materials.glass, "transparent_lid_wall");
-  lid.position.y = 0.6;
+  const bottomGlass = mesh(new THREE.CylinderGeometry(8.45, 8.65, 0.5, 128, 1, true), materials.glassEdge, "clear_bottom_dish_wall");
+  bottomGlass.position.y = 0.22;
+  group.add(bottomGlass);
+  group.add(mesh(new THREE.CylinderGeometry(7.75, 8.05, 0.38, 128), materials.agar, "amber_agar_surface"));
+
+  const agarLow = mesh(new THREE.CylinderGeometry(8.05, 8.15, 0.16, 128), materials.agarDark, "darker_agar_sidewall");
+  agarLow.position.y = -0.2;
+  group.add(agarLow);
+
+  const lid = mesh(new THREE.CylinderGeometry(8.95, 8.95, 0.82, 128, 1, true), materials.glass, "transparent_lid_wall_with_depth");
+  lid.position.y = 0.72;
   group.add(lid);
-  const rimTop = mesh(new THREE.TorusGeometry(8.85, 0.16, 12, 128), materials.glass, "raised_clear_lid_rim");
+  const rimTop = mesh(new THREE.TorusGeometry(8.92, 0.22, 16, 160), materials.glassEdge, "raised_clear_lid_rim");
   rimTop.rotation.x = Math.PI / 2;
-  rimTop.position.y = 0.9;
+  rimTop.position.y = 1.18;
   group.add(rimTop);
-  const agarRim = mesh(new THREE.TorusGeometry(7.85, 0.08, 8, 96), standard(0xdb9f55, { roughness: 0.62 }), "agar_meniscus_rim");
+  const rimBottom = mesh(new THREE.TorusGeometry(8.48, 0.18, 12, 128), materials.glassEdge, "thick_clear_bottom_rim");
+  rimBottom.rotation.x = Math.PI / 2;
+  rimBottom.position.y = 0.02;
+  group.add(rimBottom);
+  const agarRim = mesh(new THREE.TorusGeometry(7.85, 0.08, 8, 128), standard(0xdb9f55, { roughness: 0.62 }), "agar_meniscus_rim");
   agarRim.rotation.x = Math.PI / 2;
   agarRim.position.y = 0.27;
   group.add(agarRim);
-  for (let index = 0; index < 20; index += 1) {
+
+  for (let index = 0; index < 34; index += 1) {
     const angle = index * 2.399;
-    const radius = 1.2 + (index % 7) * 0.78;
-    const colony = mesh(new THREE.CylinderGeometry(0.12 + (index % 3) * 0.05, 0.12 + (index % 3) * 0.05, 0.035, 16), standard(0xf7e6b6, { roughness: 0.7 }), `small_colony_${index}`);
+    const radius = 0.8 + (index % 9) * 0.72;
+    const colony = mesh(new THREE.CylinderGeometry(0.1 + (index % 4) * 0.045, 0.1 + (index % 4) * 0.045, 0.04, 18), standard(0xf7e6b6, { roughness: 0.7 }), `raised_bacterial_colony_${index}`);
     colony.position.set(Math.cos(angle) * radius, 0.5, Math.sin(angle) * radius);
     group.add(colony);
   }
-  for (let index = 0; index < 7; index += 1) {
+
+  for (let index = 0; index < 8; index += 1) {
     const angle = index * 1.17 + 0.5;
     const radius = 2.8 + (index % 3) * 1.25;
-    const plaque = mesh(new THREE.CylinderGeometry(0.5 + (index % 2) * 0.22, 0.5 + (index % 2) * 0.22, 0.04, 32), materials.plaque, `cloudy_phage_plaque_${index}`);
-    plaque.position.set(Math.cos(angle) * radius, 0.54, Math.sin(angle) * radius);
+    const plaqueRadius = 0.56 + (index % 3) * 0.2;
+    const plaque = mesh(new THREE.CylinderGeometry(plaqueRadius, plaqueRadius * 1.08, 0.045, 40), materials.plaque, `cloudy_phage_plaque_${index}`);
+    plaque.position.set(Math.cos(angle) * radius, 0.55, Math.sin(angle) * radius);
+    plaque.scale.x = 1 + (index % 2) * 0.35;
     group.add(plaque);
+    const plaqueEdge = mesh(new THREE.TorusGeometry(plaqueRadius * 0.95, 0.028, 6, 40), basic(0xf4d194, 0.3), `faint_plaque_edge_${index}`);
+    plaqueEdge.rotation.x = Math.PI / 2;
+    plaqueEdge.position.copy(plaque.position);
+    plaqueEdge.position.y += 0.03;
+    plaqueEdge.scale.x = plaque.scale.x;
+    group.add(plaqueEdge);
   }
-  for (let index = 0; index < 24; index += 1) {
-    const tick = mesh(new THREE.BoxGeometry(0.04, 0.05, index % 4 === 0 ? 0.8 : 0.42), materials.darkDisplay, `rim_measurement_tick_${index}`);
-    const angle = (index / 24) * Math.PI * 2;
-    tick.position.set(Math.cos(angle) * 8.35, 1.02, Math.sin(angle) * 8.35);
+
+  const labelStrip = roundedBox(4.8, 0.05, 1.12, 0.1, 3, standard(0xf2f0df, { roughness: 0.68 }), "cream_side_label_tape");
+  labelStrip.position.set(-2.3, 1.25, 8.65);
+  group.add(labelStrip);
+  for (let index = 0; index < 4; index += 1) {
+    const line = mesh(new THREE.BoxGeometry(0.72 + index * 0.2, 0.04, 0.045), materials.darkDisplay, `tiny_label_line_${index}`);
+    line.position.set(-3.85 + index * 0.86, 1.31, 9.23);
+    group.add(line);
+  }
+
+  for (let index = 0; index < 36; index += 1) {
+    const tick = mesh(new THREE.BoxGeometry(0.045, 0.055, index % 6 === 0 ? 0.92 : 0.46), materials.darkDisplay, `rim_measurement_tick_${index}`);
+    const angle = (index / 36) * Math.PI * 2;
+    tick.position.set(Math.cos(angle) * 8.36, 1.28, Math.sin(angle) * 8.36);
     tick.rotation.y = -angle;
     group.add(tick);
   }
@@ -327,77 +411,164 @@ function buildPetriDish() {
 function buildFernbachFlask() {
   const group = new THREE.Group();
   const points = [
-    new THREE.Vector2(0.8, 0),
-    new THREE.Vector2(5.2, 0.35),
-    new THREE.Vector2(7.2, 1.8),
-    new THREE.Vector2(6.1, 3.3),
-    new THREE.Vector2(2.3, 5.5),
-    new THREE.Vector2(1.05, 9.2),
-    new THREE.Vector2(1.15, 11.2)
+    new THREE.Vector2(0.7, 0),
+    new THREE.Vector2(4.8, 0.22),
+    new THREE.Vector2(7.6, 1.3),
+    new THREE.Vector2(7.25, 2.7),
+    new THREE.Vector2(5.25, 3.8),
+    new THREE.Vector2(2.35, 5.5),
+    new THREE.Vector2(1.05, 8.8),
+    new THREE.Vector2(1.08, 11.3)
   ];
   const flask = mesh(new THREE.LatheGeometry(points, 96), materials.glass, "broad_thick_fernbach_glass");
   group.add(flask);
-  const media = mesh(new THREE.CylinderGeometry(5.75, 6.1, 0.72, 96), materials.media, "green_media_fill_with_meniscus");
-  media.position.y = 2.0;
+
+  const baseRing = mesh(new THREE.TorusGeometry(5.65, 0.15, 12, 96), materials.glassEdge, "thick_rounded_glass_base");
+  baseRing.rotation.x = Math.PI / 2;
+  baseRing.position.y = 0.42;
+  group.add(baseRing);
+
+  const shoulderRing = mesh(new THREE.TorusGeometry(2.25, 0.08, 10, 72), materials.glassEdge, "neck_shoulder_glass_ring");
+  shoulderRing.rotation.x = Math.PI / 2;
+  shoulderRing.position.y = 5.7;
+  group.add(shoulderRing);
+
+  const media = mesh(new THREE.CylinderGeometry(5.95, 6.35, 0.72, 96), materials.media, "green_media_fill_with_meniscus");
+  media.position.y = 1.82;
   group.add(media);
+  const meniscus = mesh(new THREE.TorusGeometry(5.92, 0.055, 8, 96), physical(0xb9fff3, { opacity: 0.48, transmission: 0.2, roughness: 0.16, emissive: 0x0d5a50, emissiveIntensity: 0.16 }), "elliptical_media_meniscus");
+  meniscus.rotation.x = Math.PI / 2;
+  meniscus.position.y = 2.22;
+  group.add(meniscus);
   const fillLine = mesh(new THREE.TorusGeometry(5.85, 0.035, 8, 96), standard(0xffffff, { roughness: 0.24, emissive: 0x88ffff, emissiveIntensity: 0.18 }), "bright_fill_line");
   fillLine.rotation.x = Math.PI / 2;
   fillLine.position.y = 2.42;
   group.add(fillLine);
-  const cap = mesh(new THREE.CylinderGeometry(1.35, 1.35, 0.65, 32), standard(0xb8c5cc, { roughness: 0.42, metalness: 0.12 }), "silver_foil_cap");
+
+  for (let index = 0; index < 6; index += 1) {
+    const mark = mesh(new THREE.BoxGeometry(index % 2 === 0 ? 1.1 : 0.65, 0.035, 0.045), standard(0xffffff, { roughness: 0.32, emissive: 0x8ef9ff, emissiveIntensity: 0.18 }), `white_graduation_mark_${index}`);
+    mark.position.set(4.7, 2.9 + index * 0.62, 0.12);
+    mark.rotation.z = -0.18;
+    group.add(mark);
+  }
+
+  for (let index = 0; index < 3; index += 1) {
+    const highlight = mesh(new THREE.BoxGeometry(0.08, 2.6 - index * 0.4, 0.04), basic(0xffffff, 0.28 - index * 0.05), `vertical_glass_highlight_${index}`);
+    highlight.position.set(-4.2 + index * 0.6, 3.0 + index * 0.5, -4.1);
+    highlight.rotation.z = -0.32;
+    group.add(highlight);
+  }
+
+  const neck = mesh(new THREE.CylinderGeometry(1.05, 1.25, 4.0, 48), materials.glassEdge, "clear_narrow_neck_wall");
+  neck.position.y = 8.8;
+  group.add(neck);
+
+  const cap = mesh(new THREE.CylinderGeometry(1.44, 1.32, 0.78, 40), standard(0xb8c5cc, { roughness: 0.42, metalness: 0.12 }), "crimped_silver_foil_cap");
   cap.position.y = 11.45;
   group.add(cap);
+  for (let index = 0; index < 8; index += 1) {
+    const crease = mesh(new THREE.BoxGeometry(0.06, 0.5, 0.04), standard(0xe3edf2, { roughness: 0.5, metalness: 0.16 }), `foil_crimp_${index}`);
+    const angle = (index / 8) * Math.PI * 2;
+    crease.position.set(Math.cos(angle) * 1.34, 11.46, Math.sin(angle) * 1.34);
+    crease.rotation.y = -angle;
+    group.add(crease);
+  }
   return group;
 }
 
 function buildCentrifuge() {
   const group = new THREE.Group();
-  const base = mesh(new THREE.CylinderGeometry(8.8, 9.8, 2.2, 96), materials.centrifugeShell, "rounded_benchtop_centrifuge_body");
-  base.position.y = 0.9;
+
+  const base = roundedBox(17.8, 3.8, 14.8, 1.45, 10, materials.centrifugeShell, "rounded_rectangular_centrifuge_body");
+  base.position.y = 1.25;
   group.add(base);
-  const lid = mesh(new THREE.CylinderGeometry(7.8, 8.3, 0.65, 96), physical(0xd8f5ff, { opacity: 0.32, transmission: 0.42, roughness: 0.12 }), "translucent_hinged_lid");
-  lid.position.y = 2.35;
+
+  const lowerTrim = roundedBox(18.2, 0.52, 15.2, 0.8, 8, materials.centrifugeShadow, "gray_lower_shadow_base");
+  lowerTrim.position.y = -0.78;
+  group.add(lowerTrim);
+
+  const lidDeck = roundedBox(15.9, 0.82, 12.7, 1.05, 10, materials.centrifugeShell, "raised_lid_deck");
+  lidDeck.position.y = 3.42;
+  group.add(lidDeck);
+
+  const lid = mesh(new THREE.CylinderGeometry(6.55, 6.95, 0.62, 96), physical(0xd8f5ff, { opacity: 0.34, transmission: 0.42, roughness: 0.12 }), "round_translucent_hinged_lid_window");
+  lid.position.y = 3.92;
   group.add(lid);
-  const hinge = mesh(new THREE.BoxGeometry(4.5, 0.6, 0.8), materials.darkDisplay, "rear_hinge");
-  hinge.position.set(0, 2.55, -8.4);
+  const lidRim = mesh(new THREE.TorusGeometry(6.72, 0.18, 12, 120), materials.glassEdge, "thick_round_lid_rim");
+  lidRim.rotation.x = Math.PI / 2;
+  lidRim.position.y = 4.27;
+  group.add(lidRim);
+
+  const hinge = roundedBox(5.6, 0.62, 0.82, 0.22, 4, materials.centrifugeTrim, "rear_hinge_bar");
+  hinge.position.set(0, 3.7, -7.35);
   group.add(hinge);
-  const panel = mesh(new THREE.BoxGeometry(5, 0.12, 1.4), materials.darkDisplay, "front_control_panel");
-  panel.position.set(0, 1.86, 8.95);
+  const latch = roundedBox(2.4, 0.42, 0.7, 0.18, 4, materials.centrifugeTrim, "front_lid_latch");
+  latch.position.set(0, 3.45, 7.05);
+  group.add(latch);
+
+  const panel = roundedBox(6.1, 0.2, 1.55, 0.22, 4, materials.darkDisplay, "front_control_panel");
+  panel.position.set(0, 1.95, 7.72);
   group.add(panel);
-  const warning = mesh(new THREE.ConeGeometry(0.72, 0.12, 3), materials.warning, "yellow_warning_triangle");
+  const display = roundedBox(2.0, 0.08, 0.62, 0.12, 3, standard(0x0c1520, { roughness: 0.2, emissive: 0x12364b, emissiveIntensity: 0.42 }), "glowing_speed_display");
+  display.position.set(-1.65, 2.08, 7.93);
+  group.add(display);
+  for (let index = 0; index < 4; index += 1) {
+    const button = mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.08, 24), index === 0 ? materials.warning : materials.centrifugeBlue, `round_control_button_${index}`);
+    button.rotation.x = Math.PI / 2;
+    button.position.set(0.48 + index * 0.68, 2.1, 7.96);
+    group.add(button);
+  }
+  const warning = mesh(new THREE.ConeGeometry(0.62, 0.1, 3), materials.warning, "yellow_warning_triangle");
   warning.rotation.set(Math.PI / 2, 0, Math.PI / 3);
-  warning.position.set(-3.2, 1.98, 9.05);
+  warning.position.set(-4.9, 2.0, 7.9);
   group.add(warning);
   const rotor = new THREE.Group();
   rotor.name = "animated_rotor_with_tube_buckets";
-  rotor.position.y = 2.82;
-  for (let index = 0; index < 8; index += 1) {
-    const angle = (index / 8) * Math.PI * 2;
-    const arm = mesh(new THREE.BoxGeometry(1.15, 0.26, 6.2), materials.centrifugeBlue, `rotor_arm_${index}`);
+  rotor.userData.rotor = true;
+  rotor.position.y = 4.34;
+  for (let index = 0; index < 10; index += 1) {
+    const angle = (index / 10) * Math.PI * 2;
+    const arm = roundedBox(0.86, 0.28, 5.8, 0.16, 4, materials.centrifugeBlue, `rotor_arm_${index}`);
     arm.rotation.y = angle;
-    arm.position.set(Math.sin(angle) * 2.6, 0, Math.cos(angle) * 2.6);
+    arm.position.set(Math.sin(angle) * 2.9, 0, Math.cos(angle) * 2.9);
     rotor.add(arm);
-    const bucket = mesh(new THREE.CylinderGeometry(0.45, 0.52, 1.8, 18), physical(0x8be8ff, { opacity: 0.55, transmission: 0.22, roughness: 0.22 }), `angled_tube_bucket_${index}`);
+    const bucket = mesh(new THREE.CylinderGeometry(0.45, 0.55, 1.95, 20), physical(0x8be8ff, { opacity: 0.55, transmission: 0.22, roughness: 0.22 }), `angled_tube_bucket_${index}`);
     bucket.rotation.z = 0.42;
-    bucket.position.set(Math.sin(angle) * 6.0, 0.25, Math.cos(angle) * 6.0);
+    bucket.rotation.y = angle;
+    bucket.position.set(Math.sin(angle) * 5.95, 0.25, Math.cos(angle) * 5.95);
     rotor.add(bucket);
+    const cap = mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.12, 20), materials.centrifugeTrim, `tube_bucket_cap_${index}`);
+    cap.rotation.y = angle;
+    cap.position.set(Math.sin(angle) * 5.95, 1.25, Math.cos(angle) * 5.95);
+    rotor.add(cap);
   }
   rotor.add(mesh(new THREE.CylinderGeometry(1.65, 1.95, 0.72, 48), materials.centrifugeBlue, "central_rotor_hub"));
   group.add(rotor);
+
+  for (const x of [-7.3, 7.3]) {
+    for (const z of [-5.9, 5.9]) {
+      const foot = mesh(new THREE.CylinderGeometry(0.72, 0.78, 0.32, 28), materials.darkDisplay, "black_rubber_foot");
+      foot.position.set(x, -1.25, z);
+      group.add(foot);
+    }
+  }
   return group;
 }
 
 function buildTubeRack() {
   const group = new THREE.Group();
-  const top = mesh(new THREE.BoxGeometry(14.5, 0.5, 6.8), materials.rack, "perforated_top_plate");
-  top.position.y = 2.5;
+  const top = roundedBox(15.2, 0.55, 7.25, 0.35, 6, materials.rack, "beveled_perforated_top_plate");
+  top.position.y = 2.62;
   group.add(top);
-  const bottom = mesh(new THREE.BoxGeometry(14.5, 0.45, 6.8), materials.rack, "bottom_plate");
-  bottom.position.y = 0.2;
+  const bottom = roundedBox(15.2, 0.5, 7.25, 0.35, 6, materials.rackEdge, "beveled_bottom_plate");
+  bottom.position.y = 0.24;
   group.add(bottom);
   for (const x of [-6.5, 6.5]) {
     for (const z of [-2.9, 2.9]) {
-      const foot = mesh(new THREE.BoxGeometry(1, 0.7, 1), materials.rack, "rack_foot");
+      const post = roundedBox(0.58, 2.45, 0.58, 0.16, 4, materials.rackEdge, "vertical_corner_post");
+      post.position.set(x, 1.3, z);
+      group.add(post);
+      const foot = roundedBox(1.15, 0.36, 1.15, 0.2, 4, materials.darkDisplay, "rubber_rack_foot");
       foot.position.set(x, -0.35, z);
       group.add(foot);
     }
@@ -407,45 +578,79 @@ function buildTubeRack() {
     for (let col = 0; col < 6; col += 1) {
       const x = -5.4 + col * 2.15;
       const z = -2.2 + row * 2.2;
-      const hole = mesh(new THREE.CylinderGeometry(0.58, 0.58, 0.06, 24), materials.darkDisplay, `dark_tube_hole_${row}_${col}`);
-      hole.position.set(x, 2.82, z);
+      const hole = mesh(new THREE.CylinderGeometry(0.66, 0.66, 0.07, 32), materials.darkDisplay, `dark_recessed_tube_hole_${row}_${col}`);
+      hole.position.set(x, 2.95, z);
       group.add(hole);
-      const tube = mesh(new THREE.CylinderGeometry(0.48, 0.42, 3.8, 24), tubeMaterials[(row + col) % tubeMaterials.length], `colored_capped_tube_${row}_${col}`);
+      const holeRim = mesh(new THREE.TorusGeometry(0.65, 0.045, 8, 32), materials.rackEdge, `raised_hole_rim_${row}_${col}`);
+      holeRim.rotation.x = Math.PI / 2;
+      holeRim.position.set(x, 3.0, z);
+      group.add(holeRim);
+      const tube = mesh(new THREE.CylinderGeometry(0.46, 0.38, 4.1, 30), tubeMaterials[(row + col) % tubeMaterials.length], `translucent_tapered_tube_${row}_${col}`);
       tube.position.set(x, 3.45, z);
       group.add(tube);
-      const meniscus = mesh(new THREE.CylinderGeometry(0.43, 0.43, 0.035, 24), materials.media, `tube_meniscus_${row}_${col}`);
-      meniscus.position.set(x, 3.05, z);
+      const cap = mesh(new THREE.CylinderGeometry(0.5, 0.54, 0.24, 28), standard([0x3fa7d6, 0xdb496d, 0xe0b532, 0x54bc82][(row + col) % 4], { roughness: 0.36, metalness: 0.04 }), `colored_snap_cap_${row}_${col}`);
+      cap.position.set(x, 5.6, z);
+      group.add(cap);
+      const meniscus = mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.035, 24), materials.media, `tube_meniscus_${row}_${col}`);
+      meniscus.position.set(x, 3.32, z);
       group.add(meniscus);
+      const highlight = mesh(new THREE.BoxGeometry(0.045, 1.45, 0.035), basic(0xffffff, 0.3), `tube_vertical_highlight_${row}_${col}`);
+      highlight.position.set(x - 0.18, 4.1, z - 0.36);
+      group.add(highlight);
     }
+  }
+  for (let index = 0; index < 5; index += 1) {
+    const label = roundedBox(1.1, 0.035, 0.32, 0.05, 2, standard(0xeef4ef, { roughness: 0.65 }), `rack_position_label_${index}`);
+    label.position.set(-5.7 + index * 2.35, 2.98, 3.75);
+    group.add(label);
   }
   return group;
 }
 
 function buildMicroscopeSlide() {
   const group = new THREE.Group();
-  const slide = mesh(new THREE.BoxGeometry(14, 0.12, 7), materials.glass, "transparent_microscope_slide");
+  const slide = roundedBox(14, 0.12, 7, 0.22, 5, materials.glass, "transparent_microscope_slide_with_ground_edges");
   group.add(slide);
-  const coverslip = mesh(new THREE.BoxGeometry(5.6, 0.08, 4.2), physical(0xffffff, { opacity: 0.26, transmission: 0.48, roughness: 0.1 }), "raised_coverslip");
+  const frosted = roundedBox(3.1, 0.045, 5.9, 0.14, 4, physical(0xffffff, { opacity: 0.2, transmission: 0.28, roughness: 0.45 }), "frosted_label_end");
+  frosted.position.x = -4.9;
+  frosted.position.y = 0.12;
+  group.add(frosted);
+  const coverslip = roundedBox(5.6, 0.08, 4.2, 0.12, 4, physical(0xffffff, { opacity: 0.26, transmission: 0.48, roughness: 0.1 }), "raised_coverslip");
   coverslip.position.y = 0.14;
   group.add(coverslip);
   const sample = mesh(new THREE.CircleGeometry(1.3, 40), materials.cyanGlow, "glowing_sample_spot");
   sample.rotation.x = -Math.PI / 2;
   sample.position.y = 0.21;
   group.add(sample);
+  for (let index = 0; index < 3; index += 1) {
+    const streak = mesh(new THREE.BoxGeometry(0.72 + index * 0.24, 0.025, 0.04), materials.darkDisplay, `frosted_label_pencil_mark_${index}`);
+    streak.position.set(-5.55 + index * 0.55, 0.18, -1.7 + index * 0.45);
+    group.add(streak);
+  }
   return group;
 }
 
 function buildTipBox() {
   const group = new THREE.Group();
-  group.add(mesh(new THREE.BoxGeometry(6.5, 1.1, 4.6), standard(0x12364b, { roughness: 0.48, emissive: 0x082033, emissiveIntensity: 0.22 }), "blue_sterile_tip_box"));
-  const lid = mesh(new THREE.BoxGeometry(6.8, 0.18, 4.9), physical(0xdffbff, { opacity: 0.22, transmission: 0.36, roughness: 0.12 }), "transparent_tip_box_lid");
-  lid.position.y = 1.05;
+  group.add(roundedBox(6.7, 1.15, 4.75, 0.32, 6, standard(0x12364b, { roughness: 0.48, emissive: 0x082033, emissiveIntensity: 0.22 }), "blue_sterile_tip_box_base"));
+  const tray = roundedBox(6.25, 0.22, 4.28, 0.18, 5, materials.darkDisplay, "dark_tip_grid_tray");
+  tray.position.y = 0.78;
+  group.add(tray);
+  const lid = roundedBox(6.95, 0.2, 5.05, 0.26, 5, physical(0xdffbff, { opacity: 0.22, transmission: 0.36, roughness: 0.12 }), "transparent_hinged_tip_box_lid");
+  lid.position.set(0.25, 1.18, -0.1);
+  lid.rotation.z = -0.08;
   group.add(lid);
+  const hinge = roundedBox(5.8, 0.22, 0.34, 0.1, 3, materials.darkDisplay, "tip_box_back_hinge");
+  hinge.position.set(0, 1.08, -2.42);
+  group.add(hinge);
   for (let row = 0; row < 4; row += 1) {
     for (let col = 0; col < 5; col += 1) {
+      const socket = mesh(new THREE.CylinderGeometry(0.23, 0.23, 0.05, 18), standard(0x071827, { roughness: 0.55 }), `tip_socket_${row}_${col}`);
+      socket.position.set(-2.6 + col * 1.3, 1.1, -1.75 + row * 1.15);
+      group.add(socket);
       const tip = buildPipetteTip();
       tip.scale.setScalar(0.42);
-      tip.position.set(-2.6 + col * 1.3, 1.75, -1.75 + row * 1.15);
+      tip.position.set(-2.6 + col * 1.3, 1.86, -1.75 + row * 1.15);
       group.add(tip);
     }
   }
@@ -568,6 +773,10 @@ function physical(color, options = {}) {
 
 function basic(color, opacity = 1) {
   return new THREE.MeshBasicMaterial({ color, transparent: opacity < 1, opacity });
+}
+
+function roundedBox(width, height, depth, radius, segments, material, name) {
+  return mesh(new RoundedBoxGeometry(width, height, depth, segments, radius), material, name);
 }
 
 function mesh(geometry, material, name) {

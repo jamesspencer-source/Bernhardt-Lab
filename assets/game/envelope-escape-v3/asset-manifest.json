@@ -1,7 +1,7 @@
 {
-  "version": "v3-premium-assets-20260507",
+  "version": "v3-premium-assets-20260507b",
   "runtimePath": "runtime/envelope-escape-v3.js",
-  "artDirection": "Premium stylized science lab-bench miniatures with GLB assets and procedural fallbacks.",
+  "artDirection": "Premium stylized science lab-bench miniatures with bevelled instrument bodies, identifiable controls, glass depth, and procedural fallbacks.",
   "generatedBy": "scripts/build_envelope_v3_assets.mjs",
   "assets": [
     {
@@ -22,10 +22,11 @@
           "depth": 4.2
         }
       ],
-      "byteLength": 140692,
-      "sha256": "7dd2edc274753b3b8236b70e3510be85820d54d12049ffff95c7f44fcf942c94",
-      "triangles": 4824,
-      "triangleBudget": 42000
+      "byteLength": 1477240,
+      "sha256": "4702801f8d720c7a5cf5e0fc9c2a3e7d974b4492c074a97e05f778469a0abceb",
+      "triangles": 17972,
+      "triangleBudget": 42000,
+      "byteBudget": 2100000
     },
     {
       "key": "lab-prop.petri-dish-plaque-assay",
@@ -37,10 +38,11 @@
         "height": 2.8
       },
       "collision": [],
-      "byteLength": 342212,
-      "sha256": "6c3c05276d5e1e21a32b4e17551ea7e3605dfe8e268aafbe1c707905c5526303",
-      "triangles": 7648,
-      "triangleBudget": 36000
+      "byteLength": 825232,
+      "sha256": "3de5ae0e1671ec8d29795aacfe0c49c9895e71ae000d06b0158a9cb1351adbb9",
+      "triangles": 20412,
+      "triangleBudget": 36000,
+      "byteBudget": 1250000
     },
     {
       "key": "lab-prop.fernbach-flask",
@@ -59,10 +61,11 @@
           "radius": 6.4
         }
       ],
-      "byteLength": 99340,
-      "sha256": "be1b4b2574a069bd05c08186c04102dc29a77c57018d8c6c1cd9802934f6385f",
-      "triangles": 3200,
-      "triangleBudget": 42000
+      "byteLength": 282016,
+      "sha256": "31d089f51483ed3efc0449a0ccaec5cae60b0cf12a4d15475b6698663f193439",
+      "triangles": 9100,
+      "triangleBudget": 42000,
+      "byteBudget": 700000
     },
     {
       "key": "lab-prop.centrifuge-rotor",
@@ -81,10 +84,11 @@
           "radius": 4.2
         }
       ],
-      "byteLength": 121732,
-      "sha256": "9a66c6f16f8b7eb9f85ede98f9ef6b4f4a2ad804b8e7495ae4e1308800b74c73",
-      "triangles": 1662,
-      "triangleBudget": 48000
+      "byteLength": 2910444,
+      "sha256": "4461edea2b308c2ae000983b7a360935a2655dfce56cef57b522d63190a68c0f",
+      "triangles": 33170,
+      "triangleBudget": 48000,
+      "byteBudget": 3600000
     },
     {
       "key": "lab-prop.test-tube-rack",
@@ -118,10 +122,11 @@
           "depth": 8
         }
       ],
-      "byteLength": 355732,
-      "sha256": "682eed4ef86f2ee0c282fb02f8781298ae9d620113623da5a8356c48fc5feb1d",
-      "triangles": 5256,
-      "triangleBudget": 52000
+      "byteLength": 2110276,
+      "sha256": "c8682f3b793908cdd0b6e2f82d229a93875d19f15fb858bf420f77f491985b6c",
+      "triangles": 30972,
+      "triangleBudget": 52000,
+      "byteBudget": 2700000
     },
     {
       "key": "lab-prop.microscope-slide",
@@ -133,10 +138,11 @@
         "height": 0.5
       },
       "collision": [],
-      "byteLength": 7376,
-      "sha256": "b8b78ceb8e7ce23a404038e7996d77ec138842d6163b532a253cde04f6e8aaf1",
-      "triangles": 64,
-      "triangleBudget": 12000
+      "byteLength": 338448,
+      "sha256": "855d3bf0f1e750e85929e80bf0a3b82feb2e7d86a7ab2c6126ea74422dc37c0e",
+      "triangles": 3472,
+      "triangleBudget": 12000,
+      "byteBudget": 550000
     },
     {
       "key": "lab-prop.tip-box",
@@ -156,10 +162,11 @@
           "depth": 7.5
         }
       ],
-      "byteLength": 230928,
-      "sha256": "ddbe306eee128f7cc2d2767730d8a2ced39212fd3f7428381ed2fd9e3626a563",
-      "triangles": 2904,
-      "triangleBudget": 22000
+      "byteLength": 866744,
+      "sha256": "dda872ca67774f51e4b099291200321ea87e4930cb598aca2c2992746e8fd1bc",
+      "triangles": 9840,
+      "triangleBudget": 22000,
+      "byteBudget": 1300000
     },
     {
       "key": "pickup.pipette-tip",
@@ -174,7 +181,8 @@
       "byteLength": 11828,
       "sha256": "8e6afea96272f2de30aee7fb107ce24447ed5c35aa09e23dd21f02800c71913d",
       "triangles": 144,
-      "triangleBudget": 4000
+      "triangleBudget": 4000,
+      "byteBudget": 60000
     },
     {
       "key": "pickup.reagent-droplet",
@@ -189,7 +197,8 @@
       "byteLength": 28348,
       "sha256": "0d94cc9ffc1fb4ce5c08b9367ee8e1231cc7cff9876e0d8331db64f75fc8da7b",
       "triangles": 1088,
-      "triangleBudget": 4500
+      "triangleBudget": 4500,
+      "byteBudget": 80000
     },
     {
       "key": "pickup.agar-plug",
@@ -204,7 +213,8 @@
       "byteLength": 22376,
       "sha256": "1828d7b1e15fe2f42dc6c030c560e8a8f4fc81c81643a4d2ed1f25cfa6b9b295",
       "triangles": 640,
-      "triangleBudget": 4200
+      "triangleBudget": 4200,
+      "byteBudget": 80000
     },
     {
       "key": "pickup.media-bead",
@@ -219,7 +229,8 @@
       "byteLength": 4608,
       "sha256": "69df7fafcdcb245670943282f7513e857d1e4a110210016fd1711fb8bf4f0e83",
       "triangles": 32,
-      "triangleBudget": 3800
+      "triangleBudget": 3800,
+      "byteBudget": 50000
     },
     {
       "key": "hazard.phage-particle",
@@ -234,7 +245,8 @@
       "byteLength": 30484,
       "sha256": "fbbeed1b51a60c8c09de11f6a2ded9b73d4655cffbe4edb638271ae55c187387",
       "triangles": 320,
-      "triangleBudget": 7000
+      "triangleBudget": 7000,
+      "byteBudget": 90000
     },
     {
       "key": "hazard.phage-plaque",
@@ -249,7 +261,8 @@
       "byteLength": 31816,
       "sha256": "eeb65c926c1280aa2f3b78d427462c2909c410ee4a4bdc7b628d14466d0a7946",
       "triangles": 960,
-      "triangleBudget": 6000
+      "triangleBudget": 6000,
+      "byteBudget": 90000
     },
     {
       "key": "hazard.membrane-rupture",
@@ -264,7 +277,8 @@
       "byteLength": 13864,
       "sha256": "d680200bec16819a9baef4a8c81e4e7f378f35628f6944198945d0353ee2a70f",
       "triangles": 84,
-      "triangleBudget": 6500
+      "triangleBudget": 6500,
+      "byteBudget": 60000
     },
     {
       "key": "hazard.media-spill",
@@ -279,7 +293,8 @@
       "byteLength": 3928,
       "sha256": "d2d6673fae02708cdea8570b111a29299a6e76ebd6684ef10126bd0da6bc79e0",
       "triangles": 64,
-      "triangleBudget": 4000
+      "triangleBudget": 4000,
+      "byteBudget": 50000
     },
     {
       "key": "hazard.rotor-sweep",
@@ -294,7 +309,8 @@
       "byteLength": 2176,
       "sha256": "c9dbdcbd6649cac1f876abd9c81246b0f0a9c91e76fc7b67468f7f32b6016bce",
       "triangles": 12,
-      "triangleBudget": 3500
+      "triangleBudget": 3500,
+      "byteBudget": 50000
     }
   ]
 }
