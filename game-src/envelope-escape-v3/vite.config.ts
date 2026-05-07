@@ -1,10 +1,8 @@
 import { resolve } from "node:path";
-import { copyFileSync, mkdirSync } from "node:fs";
 import { defineConfig } from "vite";
 
 const repoRoot = resolve(__dirname, "../..");
 const runtimeOutDir = resolve(__dirname, "../../assets/game/envelope-escape-v3/runtime");
-const rapierWasmSource = resolve(__dirname, "../../node_modules/@dimforge/rapier3d-compat/rapier_wasm3d_bg.wasm");
 
 export default defineConfig({
   root: repoRoot,
@@ -13,6 +11,7 @@ export default defineConfig({
     emptyOutDir: true,
     outDir: runtimeOutDir,
     sourcemap: false,
+    minify: "esbuild",
     lib: {
       entry: resolve(__dirname, "src/main.ts"),
       formats: ["es"],
@@ -27,10 +26,11 @@ export default defineConfig({
   },
   plugins: [
     {
-      name: "copy-rapier-wasm",
-      writeBundle() {
-        mkdirSync(runtimeOutDir, { recursive: true });
-        copyFileSync(rapierWasmSource, resolve(runtimeOutDir, "rapier_wasm3d_bg.wasm"));
+      name: "strip-v3-generated-comments",
+      generateBundle(_options, bundle) {
+        Object.values(bundle).forEach((item) => {
+          if (item.type === "chunk") item.code = item.code.replace(/\/\*\*[\s\S]*?\*\//g, "").replace(/[ \t]+$/gm, "");
+        });
       }
     }
   ]

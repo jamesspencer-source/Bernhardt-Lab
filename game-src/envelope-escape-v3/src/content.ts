@@ -326,11 +326,11 @@ export const COMMANDS: Record<string, CommandDefinition> = {
 export const PHASES: PhaseDefinition[] = [
   {
     id: "slideTraining",
-    title: "Bench launch",
-    objective: "Reach the oversized pipette lane.",
+    title: "Slide calibration",
+    objective: "Carry assay beads back to the slide checkpoint.",
     targetZone: "pipetteZone",
     startsAt: 0,
-    target: 4,
+    target: 3,
     boss: "Microscope slide pressure pulse",
     tint: 0x0b3443,
     pressure: "Orientation"
@@ -338,10 +338,10 @@ export const PHASES: PhaseDefinition[] = [
   {
     id: "pipettePulse",
     title: "Pipette pulse",
-    objective: "Collect sterile tips and route through droplet pulses.",
+    objective: "Steal sterile tips and deposit them on the slide.",
     targetZone: "pipetteZone",
     startsAt: 30,
-    target: 8,
+    target: 5,
     boss: "Timed reagent stream",
     tint: 0x173d58,
     pressure: "Droplet pressure"
@@ -349,21 +349,32 @@ export const PHASES: PhaseDefinition[] = [
   {
     id: "petriBloom",
     title: "Plaque assay bloom",
-    objective: "Enter the petri dish and clear expanding plaques.",
+    objective: "Tag plaques on the agar and purge clustered phage.",
     targetZone: "petriDish",
     startsAt: 78,
-    target: 10,
+    target: 6,
     boss: "Expanding phage plaque",
     tint: 0x3d3420,
     pressure: "Phage bloom"
   },
   {
+    id: "fernbachCurrent",
+    title: "Fernbach current",
+    objective: "Carry reagent droplets through media currents and stabilize spills.",
+    targetZone: "fernbachFlask",
+    startsAt: 118,
+    target: 5,
+    boss: "Swirling media leak",
+    tint: 0x173f39,
+    pressure: "Media current"
+  },
+  {
     id: "centrifugeSweep",
     title: "Rotor crossing",
-    objective: "Cross the centrifuge field during safe pockets.",
+    objective: "Cross safe pockets, collect the sample, and escape spin-up.",
     targetZone: "centrifuge",
     startsAt: 130,
-    target: 9,
+    target: 4,
     boss: "Rotor sweep",
     tint: 0x27365a,
     pressure: "Mechanical shear"
@@ -371,10 +382,10 @@ export const PHASES: PhaseDefinition[] = [
   {
     id: "rackSeal",
     title: "Rack rupture route",
-    objective: "Navigate the tube rack and seal three rupture points.",
+    objective: "Navigate the rack and seal three growing rupture sites.",
     targetZone: "tubeRack",
     startsAt: 190,
-    target: 11,
+    target: 3,
     boss: "Tube-rack rupture cascade",
     tint: 0x563657,
     pressure: "Wall rupture"
@@ -382,10 +393,10 @@ export const PHASES: PhaseDefinition[] = [
   {
     id: "lysisStorm",
     title: "Final lysis storm",
-    objective: "Return to the slide and survive the lab-bench collapse.",
+    objective: "Chain deposits across the bench while surviving collapse.",
     targetZone: "microscopeSlide",
     startsAt: 260,
-    target: 18,
+    target: 8,
     boss: "Whole-bench lysis storm",
     tint: 0x6e2e3a,
     pressure: "Lytic collapse"

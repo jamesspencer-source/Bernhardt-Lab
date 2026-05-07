@@ -10,7 +10,7 @@ export type SpeciesId =
 export type RunMode = "classic" | "daily";
 export type RunStatus = "menu" | "briefing" | "running" | "command" | "upgrade" | "paused" | "ended";
 export type CommandId = "pg" | "membrane" | "phage" | "motility";
-export type StressId = "slideTraining" | "pipettePulse" | "petriBloom" | "centrifugeSweep" | "rackSeal" | "lysisStorm";
+export type StressId = "slideTraining" | "pipettePulse" | "petriBloom" | "fernbachCurrent" | "centrifugeSweep" | "rackSeal" | "lysisStorm";
 export type WorldZoneId = "microscopeSlide" | "pipetteZone" | "petriDish" | "fernbachFlask" | "centrifuge" | "tubeRack";
 export type LabPropKind = "pipette" | "petriDish" | "fernbachFlask" | "centrifuge" | "tubeRack" | "microscopeSlide" | "spill" | "tipBox";
 export type HazardKind = "phage" | "shock" | "crack" | "rupture" | "droplet" | "rotor" | "plaque" | "spill";
@@ -134,6 +134,7 @@ export interface HazardEntity {
   duration: number;
   damage: number;
   angularSpeed?: number;
+  tagged?: boolean;
 }
 
 export interface PickupEntity {
@@ -169,6 +170,11 @@ export interface GameState {
   commandCharge: number;
   assembly: number;
   assemblyTarget: number;
+  carriedPickup: PickupKind | "";
+  combo: number;
+  jobStage: number;
+  jobStep: string;
+  nextHazardLabel: string;
   phaseIndex: number;
   phaseTime: number;
   phaseProgress: number;
@@ -198,6 +204,10 @@ export interface HudSnapshot {
   board: string;
   speciesLabel: string;
   upgradeCount: number;
+  carriedLabel: string;
+  comboLabel: string;
+  nextHazardLabel: string;
+  jobStep: string;
 }
 
 export interface RunReport {

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import { CHAMBER, LAB_PROPS, PHASES, SPECIES, WORLD_ZONES } from "./content";
+import type { V3AssetRegistry } from "./render/assets";
 import type { EffectEvent, GameState, HazardEntity, LabProp, PickupEntity, WorldZone } from "./types";
 
 export interface V3Renderer {
@@ -8,13 +9,50 @@ export interface V3Renderer {
   dispose(): void;
 }
 
-export function createV3Renderer(parent: HTMLElement): V3Renderer {
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x030812);
-  scene.fog = new THREE.FogExp2(0x071322, 0.011);
+const PROP_ASSET_KEYS: Record<string, string> = {
+  "research-plus-pipette": "lab-prop.research-plus-pipette",
+  "plaque-assay-dish": "lab-prop.petri-dish-plaque-assay",
+  "fernbach-flask": "lab-prop.fernbach-flask",
+  "bench-centrifuge": "lab-prop.centrifuge-rotor",
+  "tube-rack": "lab-prop.test-tube-rack",
+  "slide-start": "lab-prop.microscope-slide",
+  "sterile-tip-box": "lab-prop.tip-box"
+};
 
-  const camera = new THREE.PerspectiveCamera(43, 16 / 9, 0.1, 260);
-  camera.position.set(-46, 42, 58);
+const PROP_ASSET_Y: Record<string, number> = {
+  "research-plus-pipette": 0.8,
+  "plaque-assay-dish": 0.18,
+  "fernbach-flask": 0.2,
+  "bench-centrifuge": 0.22,
+  "tube-rack": 0.3,
+  "slide-start": 0.16,
+  "sterile-tip-box": 0.34
+};
+
+const PICKUP_ASSET_KEYS: Record<PickupEntity["kind"], string> = {
+  pipetteTip: "pickup.pipette-tip",
+  reagentDroplet: "pickup.reagent-droplet",
+  agarPlug: "pickup.agar-plug",
+  mediaBead: "pickup.media-bead"
+};
+
+const HAZARD_ASSET_KEYS: Partial<Record<HazardEntity["kind"], string>> = {
+  phage: "hazard.phage-particle",
+  plaque: "hazard.phage-plaque",
+  rupture: "hazard.membrane-rupture",
+  crack: "hazard.membrane-rupture",
+  spill: "hazard.media-spill",
+  rotor: "hazard.rotor-sweep",
+  droplet: "pickup.reagent-droplet"
+};
+
+export function createV3Renderer(parent: HTMLElement, assets?: V3AssetRegistry): V3Renderer {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x07101c);
+  scene.fog = new THREE.FogExp2(0x102034, 0.0065);
+
+  const camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 280);
+  camera.position.set(-46, 32, 48);
   camera.lookAt(-44, 0, 22);
 
   const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: "high-performance" });
@@ -29,11 +67,11 @@ export function createV3Renderer(parent: HTMLElement): V3Renderer {
   scene.add(root);
 
   const benchMaterial = new THREE.MeshStandardMaterial({
-    color: 0x081827,
-    roughness: 0.82,
+    color: 0x132333,
+    roughness: 0.76,
     metalness: 0.02,
-    emissive: 0x071421,
-    emissiveIntensity: 0.45
+    emissive: 0x101d2a,
+    emissiveIntensity: 0.28
   });
   const bench = new THREE.Mesh(new THREE.BoxGeometry(CHAMBER.width + 12, 0.5, CHAMBER.depth + 10), benchMaterial);
   bench.receiveShadow = true;
@@ -42,7 +80,7 @@ export function createV3Renderer(parent: HTMLElement): V3Renderer {
 
   const mat = new THREE.Mesh(
     new THREE.BoxGeometry(CHAMBER.width - 6, 0.08, CHAMBER.depth - 5),
-    new THREE.MeshStandardMaterial({ color: 0x0b2435, roughness: 0.72, metalness: 0.04, emissive: 0x082636, emissiveIntensity: 0.28 })
+    new THREE.MeshStandardMaterial({ color: 0x16354a, roughness: 0.7, metalness: 0.04, emissive: 0x0e2839, emissiveIntensity: 0.2 })
   );
   mat.position.y = 0.03;
   mat.receiveShadow = true;
@@ -53,7 +91,7 @@ export function createV3Renderer(parent: HTMLElement): V3Renderer {
   root.add(zoneGroup);
 
   const propGroup = new THREE.Group();
-  LAB_PROPS.forEach((prop) => propGroup.add(createLabProp(prop)));
+  LAB_PROPS.forEach((prop) => propGroup.add(createLabProp(prop, assets)));
   root.add(propGroup);
 
   const grid = new THREE.GridHelper(CHAMBER.width, 36, 0x2e7d8a, 0x123746);
@@ -70,9 +108,9 @@ export function createV3Renderer(parent: HTMLElement): V3Renderer {
   const pickups = new Map<number, THREE.Object3D>();
   const effects = new Map<number, THREE.Object3D>();
 
-  scene.add(new THREE.HemisphereLight(0xcffcff, 0x06101d, 2.25));
-  const key = new THREE.DirectionalLight(0xd9fbff, 3.6);
-  key.position.set(-24, 42, 28);
+  scene.add(new THREE.HemisphereLight(0xffead1, 0x06101d, 1.8));
+  const key = new THREE.DirectionalLight(0xffd9ae, 3.25);
+  key.position.set(-32, 36, 30);
   key.castShadow = true;
   key.shadow.mapSize.set(1536, 1536);
   key.shadow.camera.left = -75;
@@ -80,10 +118,10 @@ export function createV3Renderer(parent: HTMLElement): V3Renderer {
   key.shadow.camera.top = 55;
   key.shadow.camera.bottom = -55;
   scene.add(key);
-  const cyanRim = new THREE.PointLight(0x76f0ff, 42, 90);
+  const cyanRim = new THREE.PointLight(0x76f0ff, 30, 92);
   cyanRim.position.set(-46, 12, -30);
   scene.add(cyanRim);
-  const roseRim = new THREE.PointLight(0xff8fae, 36, 84);
+  const roseRim = new THREE.PointLight(0xff8fae, 24, 84);
   roseRim.position.set(45, 12, 32);
   scene.add(roseRim);
 
@@ -140,14 +178,14 @@ export function createV3Renderer(parent: HTMLElement): V3Renderer {
     player.rotation.y = Math.atan2(state.player.vx, state.player.vz || 0.001);
     player.scale.setScalar(1 + (state.status === "command" ? 0.08 : 0));
     propGroup.children.forEach((child) => animateLabProp(child, state, delta));
-    syncCollection(root, hazards, state.hazards, createHazardObject, updateHazardObject);
-    syncCollection(root, pickups, state.pickups, createPickupObject, updatePickupObject);
+    syncCollection(root, hazards, state.hazards, (hazard) => createHazardObject(hazard, assets), updateHazardObject);
+    syncCollection(root, pickups, state.pickups, (pickup) => createPickupObject(pickup, assets), updatePickupObject);
     syncCollection(root, effects, state.effects, createEffectObject, updateEffectObject);
 
     cameraTarget.lerp(new THREE.Vector3(state.player.x, 0.1, state.player.z), Math.min(1, delta * 2.4));
-    desiredCamera.set(cameraTarget.x - 2, 43, cameraTarget.z + 39);
+    desiredCamera.set(cameraTarget.x - 4, 34, cameraTarget.z + 36);
     camera.position.lerp(desiredCamera, Math.min(1, delta * 2.1));
-    camera.lookAt(cameraTarget.x + 1.5, 0.2, cameraTarget.z - 2.4);
+    camera.lookAt(cameraTarget.x + 2.2, 0.12, cameraTarget.z - 3.6);
     renderer.render(scene, camera);
   }
 
@@ -192,7 +230,9 @@ function createZoneSurface(zone: WorldZone): THREE.Object3D {
   return group;
 }
 
-function createLabProp(prop: LabProp): THREE.Object3D {
+function createLabProp(prop: LabProp, assets?: V3AssetRegistry): THREE.Object3D {
+  const asset = instantiateLabProp(prop, assets);
+  if (asset) return asset;
   if (prop.kind === "pipette") return createPipette(prop);
   if (prop.kind === "petriDish") return createPetriDish(prop);
   if (prop.kind === "fernbachFlask") return createFernbachFlask(prop);
@@ -201,6 +241,19 @@ function createLabProp(prop: LabProp): THREE.Object3D {
   if (prop.kind === "tipBox") return createTipBox(prop);
   if (prop.kind === "spill") return createSpill(prop);
   return createMicroscopeSlide(prop);
+}
+
+function instantiateLabProp(prop: LabProp, assets?: V3AssetRegistry): THREE.Object3D | null {
+  const key = PROP_ASSET_KEYS[prop.id];
+  const instance = key ? assets?.instantiate(key) : null;
+  if (!instance) return null;
+  const group = new THREE.Group();
+  group.userData.kind = prop.kind;
+  group.userData.assetKey = key;
+  group.position.set(prop.x, PROP_ASSET_Y[prop.id] ?? 0.2, prop.z);
+  group.rotation.y = prop.angle ?? 0;
+  group.add(instance);
+  return group;
 }
 
 function createPipette(prop: LabProp): THREE.Object3D {
@@ -377,7 +430,14 @@ function diplococcus(material: THREE.Material): THREE.Group {
   return group;
 }
 
-function createHazardObject(hazard: HazardEntity): THREE.Object3D {
+function createHazardObject(hazard: HazardEntity, assets?: V3AssetRegistry): THREE.Object3D {
+  const assetKey = HAZARD_ASSET_KEYS[hazard.kind];
+  const asset = assetKey ? assets?.instantiate(assetKey) : null;
+  if (asset) {
+    asset.userData.assetKey = assetKey;
+    asset.userData.kind = hazard.kind;
+    return asset;
+  }
   if (hazard.kind === "phage") {
     const group = new THREE.Group();
     const material = new THREE.MeshStandardMaterial({ color: 0xffd68a, emissive: 0x6d3c0c, emissiveIntensity: 0.72, transparent: true, opacity: 0.9, roughness: 0.42 });
@@ -437,7 +497,13 @@ function updateHazardObject(object: THREE.Object3D, hazard: HazardEntity): void 
   });
 }
 
-function createPickupObject(pickup: PickupEntity): THREE.Object3D {
+function createPickupObject(pickup: PickupEntity, assets?: V3AssetRegistry): THREE.Object3D {
+  const asset = assets?.instantiate(PICKUP_ASSET_KEYS[pickup.kind]);
+  if (asset) {
+    asset.userData.assetKey = PICKUP_ASSET_KEYS[pickup.kind];
+    asset.userData.kind = pickup.kind;
+    return asset;
+  }
   const color = pickup.kind === "pipetteTip" ? 0xb8f4ff : pickup.kind === "reagentDroplet" ? 0x74e0ff : pickup.kind === "agarPlug" ? 0xf6ca7f : 0xa8ffdf;
   const material = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.36, roughness: 0.36 });
   if (pickup.kind === "pipetteTip") {
