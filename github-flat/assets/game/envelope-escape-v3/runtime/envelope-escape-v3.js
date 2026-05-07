@@ -28235,6 +28235,7 @@ class uG {
   frame = 0;
   lastTime = performance.now();
   reportRendered = !1;
+  upgradesRenderedKey = "";
   constructor(A) {
     this.dialog = HG(), this.refs = mG(this.dialog), this.renderer = lG(this.refs.gameRoot), this.resizeObserver = new ResizeObserver(() => this.renderer.resize()), this.resizeObserver.observe(this.refs.gameRoot), TG(this.refs.species), this.refs.name.value = Ge(Se), this.refs.motion.value = Ge(we) || "full", this.bind(), this.renderMenu(), A.mode && this.startRun(A.mode, A.speciesId || this.refs.species.value);
   }
@@ -28260,13 +28261,20 @@ class uG {
     }), window.addEventListener("keydown", this.onKeyDown), window.addEventListener("keyup", this.onKeyUp);
   }
   onKeyDown = (A) => {
-    !this.dialog.open || A.target instanceof HTMLInputElement || A.target instanceof HTMLSelectElement || (ce(this.input, A, !0) && A.preventDefault(), A.key === "1" && this.triggerCommand("pg"), A.key === "2" && this.triggerCommand("membrane"), A.key === "3" && this.triggerCommand("phage"), A.key === "4" && this.triggerCommand("motility"), (A.key.toLowerCase() === "p" || A.key === "Escape") && (A.preventDefault(), this.sim.togglePause(), this.renderState()));
+    if (!(!this.dialog.open || A.target instanceof HTMLInputElement || A.target instanceof HTMLSelectElement)) {
+      if (this.sim.state.status === "upgrade") {
+        const I = ["1", "2", "3"].indexOf(A.key);
+        I >= 0 && (A.preventDefault(), this.chooseUpgradeByIndex(I));
+        return;
+      }
+      ce(this.input, A, !0) && A.preventDefault(), A.key === "1" && this.triggerCommand("pg"), A.key === "2" && this.triggerCommand("membrane"), A.key === "3" && this.triggerCommand("phage"), A.key === "4" && this.triggerCommand("motility"), (A.key.toLowerCase() === "p" || A.key === "Escape") && (A.preventDefault(), this.sim.togglePause(), this.renderState());
+    }
   };
   onKeyUp = (A) => {
     ce(this.input, A, !1) && A.preventDefault();
   };
   startRun(A, I) {
-    this.reportRendered = !1, this.seenEffects.clear(), this.sim.start({ mode: A, speciesId: I, playerName: this.refs.name.value }), this.sim.beginRun(), this.dialog.classList.add("is-playing"), this.dialog.classList.remove("is-ended", "is-upgrade"), BB(this.refs.menu), BB(this.refs.report), BB(this.refs.upgrades), this.audio.play("phase"), this.refreshScores(this.sim.state.board), this.renderState();
+    this.reportRendered = !1, this.upgradesRenderedKey = "", this.seenEffects.clear(), this.sim.start({ mode: A, speciesId: I, playerName: this.refs.name.value }), this.sim.beginRun(), this.dialog.classList.add("is-playing"), this.dialog.classList.remove("is-ended", "is-upgrade"), BB(this.refs.menu), BB(this.refs.report), BB(this.refs.upgrades), this.audio.play("phase"), this.refreshScores(this.sim.state.board), this.renderState();
   }
   triggerCommand(A) {
     this.sim.triggerCommand(A) && (this.input.commandWheel = !1, this.audio.play("command"), this.renderState());
@@ -28286,12 +28294,19 @@ class uG {
     this.dialog.classList.remove("is-playing", "is-ended", "is-upgrade", "is-paused"), ai(this.refs.menu), BB(this.refs.upgrades), BB(this.refs.report), re(this.refs, this.refs.species.value), this.refs.species.addEventListener("change", () => re(this.refs, this.refs.species.value));
   }
   renderUpgrades() {
-    ai(this.refs.upgrades), this.refs.upgradesList.innerHTML = "", this.sim.state.upgradeChoices.forEach((A) => {
-      const I = xQ[A], g = document.createElement("button");
-      g.type = "button", g.className = "envelope-v3-upgrade-card", g.innerHTML = `<span>${Sg(I.command || "system")}</span><strong>${Sg(I.title)}</strong><p>${Sg(I.copy)}</p>`, g.addEventListener("click", () => {
-        this.sim.chooseUpgrade(A), BB(this.refs.upgrades), this.audio.play("upgrade"), this.renderState();
-      }), this.refs.upgradesList.append(g);
-    });
+    ai(this.refs.upgrades);
+    const A = this.sim.state.upgradeChoices.join("|");
+    A && A === this.upgradesRenderedKey && this.refs.upgradesList.children.length > 0 || (this.upgradesRenderedKey = A, this.refs.upgradesList.innerHTML = "", this.sim.state.upgradeChoices.forEach((I, g) => {
+      const B = xQ[I], Q = document.createElement("button");
+      Q.type = "button", Q.className = "envelope-v3-upgrade-card", Q.innerHTML = `<span>${g + 1} | ${Sg(B.command || "system")}</span><strong>${Sg(B.title)}</strong><p>${Sg(B.copy)}</p>`, Q.addEventListener("click", () => this.chooseUpgrade(I)), this.refs.upgradesList.append(Q);
+    }));
+  }
+  chooseUpgradeByIndex(A) {
+    const I = this.sim.state.upgradeChoices[A];
+    I && this.chooseUpgrade(I);
+  }
+  chooseUpgrade(A) {
+    this.sim.state.status !== "upgrade" || !this.sim.state.upgradeChoices.includes(A) || (this.sim.chooseUpgrade(A), this.upgradesRenderedKey = "", BB(this.refs.upgrades), this.audio.play("upgrade"), this.renderState());
   }
   renderReport(A) {
     this.reportRendered = !0, this.dialog.classList.add("is-ended"), ai(this.refs.report), this.refs.reportSummary.innerHTML = `
