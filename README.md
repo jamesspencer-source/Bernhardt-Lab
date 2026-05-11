@@ -111,6 +111,8 @@ These write canonical runtime data and then regenerate dependent outputs automat
 - `python3 scripts/refresh_youtube_video_stats.py`
 - `python3 scripts/refresh_research_in_motion.py`
 
+YouTube view stats are also refreshed by GitHub Actions once per month.
+
 For the normal end-to-end website workflow, use:
 
 ```bash
@@ -134,6 +136,27 @@ Archive scientific media is curated manually:
 - import browser-safe local videos into `assets/media/research/`
 - update `data/scientific-media.json`
 - run `python3 scripts/build_site.py`
+
+## Scheduled people updates
+
+Future-dated personnel changes live in `data/scheduled-updates.json`.
+Use this for known departures so the site can move current lab members to
+alumni automatically after their last day.
+
+Preview due updates locally:
+
+```bash
+python3 scripts/apply_scheduled_updates.py --dry-run
+```
+
+Preview a specific date:
+
+```bash
+python3 scripts/apply_scheduled_updates.py --today 2026-07-01 --dry-run
+```
+
+The daily GitHub Action applies due updates, rebuilds the site, and commits only
+when a real website diff exists. Featured alumni remains manually curated.
 
 ## Envelope Escape beta
 

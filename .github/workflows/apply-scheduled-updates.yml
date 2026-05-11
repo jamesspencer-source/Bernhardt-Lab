@@ -1,0 +1,39 @@
+name: Apply scheduled website updates
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 9 * * *"
+
+permissions:
+  contents: write
+
+jobs:
+  apply-scheduled-updates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Apply due scheduled updates
+        run: python3 scripts/apply_scheduled_updates.py
+
+      - name: Rebuild site
+        run: python3 scripts/build_site.py
+
+      - name: Commit scheduled website updates
+        run: |
+          if git diff --quiet; then
+            echo "No scheduled website updates due."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A .github accessibility alumni alumni-profiles assets data docs github-flat people research research-library scripts team *.html robots.txt sitemap.xml
+          git commit -m "site: apply scheduled website updates"
+          git push
