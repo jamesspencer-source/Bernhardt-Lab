@@ -60,7 +60,7 @@ python3 scripts/build_site.py
 
 This command now runs data validation, generated-page validation, favicon validation, and the Tom feedback compliance gate.
 
-If Envelope Escape V2 source under `game-src/envelope-escape/` or V3 source under `game-src/envelope-escape-v3/` changes, run the game checks first:
+If Envelope Escape V2 source under `game-src/envelope-escape/` changes, run the game checks first:
 
 ```bash
 npm install
@@ -102,7 +102,7 @@ This regenerates:
 - people and alumni directory pages
 - all current-member and alumni profile pages
 - generated CSS bundle
-- generated Envelope Escape V2 and V3 runtime bundles
+- generated Envelope Escape V2 runtime bundle
 - generated game runtime config
 - generated `github-flat/` mirror
 
@@ -196,24 +196,6 @@ Source and output:
 
 Do not edit `assets/game/envelope-escape/runtime/envelope-escape-v2.js` by hand. Rebuild it with `npm run game:build`.
 
-## Envelope Escape V3 beta
-
-V3 is a hidden desktop-first Three.js + Rapier beta. It loads only when the homepage URL includes:
-
-```text
-index.html?envelopeV3=1
-```
-
-V3 source and output:
-
-- `game-src/envelope-escape-v3/` is the TypeScript source.
-- `assets/game/envelope-escape-v3/runtime/` contains the generated V3 runtime bundle.
-- `docs/envelope-escape-v3.md` documents the renderer-agnostic simulation foundation.
-
-Do not edit `assets/game/envelope-escape-v3/runtime/envelope-escape-v3.js` by hand. Rebuild it with `npm run game:v3:build` or the full `npm run game:build`.
-
-V3 should remain a hidden beta until custom art, browser QA, performance, fallback, and leaderboard gates pass. V1/V2 rollback paths must remain available through `?envelopeLegacy=1` and `?envelopeV2=1`.
-
 ## Generated assets
 
 These are outputs, not canonical source:
@@ -221,7 +203,6 @@ These are outputs, not canonical source:
 - `assets/styles.css`
 - `assets/envelope-escape-config.js`
 - `assets/game/envelope-escape/runtime/envelope-escape-v2.js`
-- `assets/game/envelope-escape-v3/runtime/envelope-escape-v3.js`
 - `github-flat/`
 
 `github-flat/` now keeps nested `assets/` and `data/` as the authoritative generated mirror. Root-level non-HTML files there are cleaned during the build and should not be restored manually.
