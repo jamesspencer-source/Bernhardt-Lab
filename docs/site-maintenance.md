@@ -116,6 +116,10 @@ python3 scripts/refresh_youtube_video_stats.py
 python3 scripts/refresh_research_in_motion.py
 ```
 
+The YouTube view-count workflow runs monthly. Manual refreshes are still
+available, but routine publishing should not create high-frequency view-count
+commits.
+
 ## Common edits
 
 ### Move a current member to alumni
@@ -132,6 +136,31 @@ That single edit will propagate to:
 - alumni directory
 - current/alumni profile pages
 - generated flat mirror
+
+### Schedule a future departure
+
+Add a transition to `data/scheduled-updates.json` instead of editing
+`data/people.json` immediately. Use `America/New_York` calendar dates.
+Alumni transitions remove the lab email by default unless `keepEmail: true` is
+set.
+
+Preview without writing files:
+
+```bash
+python3 scripts/apply_scheduled_updates.py --dry-run
+```
+
+Preview a specific date:
+
+```bash
+python3 scripts/apply_scheduled_updates.py --today 2026-07-01 --dry-run
+```
+
+Manually run the automation from GitHub Actions by opening
+`Apply scheduled website updates` and choosing `Run workflow`.
+
+Featured alumni remains manually curated in `data/featured-alumni.json`; moving
+someone to alumni does not automatically feature them on the homepage.
 
 ### Update homepage copy
 

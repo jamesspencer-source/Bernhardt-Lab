@@ -6,8 +6,10 @@ import html
 import json
 import re
 import shutil
+from datetime import date
 from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
 from validate_tom_compliance import validate_tom_compliance
 
@@ -88,6 +90,17 @@ PEOPLE_PLAIN_TEXT_FIELDS = [
     "email",
     "profileSummary",
 ]
+SCHEDULED_PEOPLE_TEXT_FIELDS = {
+    "name",
+    "labRole",
+    "group",
+    "bio",
+    "labDates",
+    "currentRole",
+    "profileType",
+    "email",
+    "profileSummary",
+}
 
 MONTH_INDEX = {
     "jan": 1,
@@ -112,7 +125,10 @@ def read_text(path: Path) -> str:
 
 def write_text(path: Path, value: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(value, encoding="utf-8")
+    cleaned = "\n".join(line.rstrip() for line in value.splitlines())
+    if value.endswith("\n"):
+        cleaned += "\n"
+    path.write_text(cleaned, encoding="utf-8")
 
 
 def read_json(path: Path) -> Any:
@@ -296,6 +312,19 @@ def alumni_profile_href(person: dict[str, Any], root_prefix: str, flat: bool) ->
     return f"alumni-{slug}.html" if flat else f"{root_prefix}{ALUMNI_ROUTE}/{slug}/"
 
 
+def home_href(root_prefix: str, flat: bool) -> str:
+    if flat:
+        return "index.html"
+    return f"{root_prefix}" if root_prefix else "./"
+
+
+def home_section_href(section_id: str, root_prefix: str, flat: bool) -> str:
+    fragment = clean_text(section_id).lstrip("#")
+    if flat:
+        return f"index.html#{fragment}"
+    return f"{root_prefix}#{fragment}" if root_prefix else f"#{fragment}"
+
+
 def site_link(path: str, root_prefix: str, flat: bool) -> str:
     normalized = clean_text(path).strip("/")
     if normalized == LEGACY_TEAM_ROUTE:
@@ -303,7 +332,7 @@ def site_link(path: str, root_prefix: str, flat: bool) -> str:
     if normalized == LEGACY_RESEARCH_ROUTE:
         normalized = RESEARCH_ROUTE
     if not normalized:
-        return "index.html" if flat else f"{root_prefix}index.html"
+        return home_href(root_prefix, flat)
     if flat:
         if normalized == TEAM_ROUTE:
             return "team.html"
@@ -357,10 +386,51 @@ def validate_people_plain_text(person: dict[str, Any]) -> None:
     validate_no_html_tags(verification.get("verifiedSource"), f"Person {slug} verification.verifiedSource")
 
 
+def validate_scheduled_updates(people: list[dict[str, Any]]) -> None:
+    path = DATA_DIR / "scheduled-updates.json"
+    if not path.exists():
+        return
+
+    payload = read_json(path)
+    transitions = payload.get("peopleTransitions", [])
+    applied = payload.get("appliedPeopleTransitions", [])
+    if not isinstance(transitions, list) or not isinstance(applied, list):
+        raise RuntimeError("data/scheduled-updates.json must contain peopleTransitions and appliedPeopleTransitions lists")
+
+    applied_ids = {clean_text(item.get("id")) for item in applied if isinstance(item, dict)}
+    pending_ids: set[str] = set()
+    people_slugs = {clean_text(person.get("slug")) for person in people}
+    for entry in transitions:
+        if not isinstance(entry, dict):
+            raise RuntimeError(f"Scheduled people transition must be an object: {entry}")
+        entry_id = clean_text(entry.get("id"))
+        if not entry_id:
+            raise RuntimeError(f"Scheduled people transition is missing id: {entry}")
+        if entry_id in pending_ids:
+            raise RuntimeError(f"Duplicate scheduled people transition id: {entry_id}")
+        pending_ids.add(entry_id)
+        if entry_id in applied_ids:
+            continue
+
+        slug = clean_text(entry.get("slug"))
+        if not slug or slug not in people_slugs:
+            raise RuntimeError(f"Scheduled people transition {entry_id} has missing or unknown slug: {slug or '<missing>'}")
+        try:
+            date.fromisoformat(clean_text(entry.get("effectiveDate")))
+        except ValueError as exc:
+            raise RuntimeError(f"Scheduled people transition {entry_id} has invalid effectiveDate") from exc
+        if clean_text(entry.get("status")) != "alumni" or clean_text(entry.get("profileType")) != "alumni":
+            raise RuntimeError(f"Scheduled people transition {entry_id} uses unsupported transition target")
+        for field in SCHEDULED_PEOPLE_TEXT_FIELDS:
+            if field in entry:
+                validate_no_html_tags(entry.get(field), f"Scheduled people transition {entry_id} field {field}")
+
+
 def load_people() -> list[dict[str, Any]]:
     payload = read_json(DATA_DIR / "people.json")
     rows = payload.get("people", [])
     validate_people(rows)
+    validate_scheduled_updates(rows)
     return rows
 
 
@@ -421,7 +491,21 @@ def load_scientific_media_items() -> list[dict[str, Any]]:
 
 
 def load_site_copy() -> dict[str, Any]:
-    return read_json(DATA_DIR / "site-copy.json")
+    payload = read_json(DATA_DIR / "site-copy.json")
+    hero_slides = payload.get("heroSlides", [])
+    if not isinstance(hero_slides, list) or not hero_slides:
+        raise RuntimeError("data/site-copy.json must define a non-empty heroSlides list")
+    seen_images: set[str] = set()
+    for index, slide in enumerate(hero_slides, start=1):
+        image = clean_text((slide or {}).get("image"))
+        if not image.startswith("assets/"):
+            raise RuntimeError(f"Hero slide {index} must reference an assets/ image path: {image or '<missing>'}")
+        if image in seen_images:
+            raise RuntimeError(f"Duplicate hero slide image detected: {image}")
+        if not (ROOT / image).exists():
+            raise RuntimeError(f"Hero slide image does not exist: {image}")
+        seen_images.add(image)
+    return payload
 
 
 def load_runtime_config() -> dict[str, Any]:
@@ -543,12 +627,12 @@ def render_profile_nav(root_prefix: str, flat: bool, current_section: str) -> st
     team_current = ' aria-current="page"' if current_section == "team" else ""
     alumni_current = ' aria-current="page"' if current_section == "alumni" else ""
     return f'''          <nav class="top-links" aria-label="Profile navigation">
-            <a href="{escape(root_prefix)}index.html#about">About</a>
+            <a href="{escape(home_section_href("about", root_prefix, flat))}">About</a>
             <a href="{escape(team_href)}"{team_current}>Team</a>
-            <a href="{escape(root_prefix)}index.html#publications">Publications</a>
-            <a href="{escape(root_prefix)}index.html#gallery">Gallery</a>
+            <a href="{escape(home_section_href("publications", root_prefix, flat))}">Publications</a>
+            <a href="{escape(home_section_href("gallery", root_prefix, flat))}">Gallery</a>
             <a href="{escape(alumni_href)}"{alumni_current}>Alumni</a>
-            <a href="{escape(root_prefix)}index.html#contact">Contact</a>
+            <a href="{escape(home_section_href("contact", root_prefix, flat))}">Contact</a>
           </nav>'''
 
 
@@ -597,7 +681,7 @@ def render_current_profile(person: dict[str, Any], flat: bool) -> str:
     <div class="page">
       <header class="topbar">
         <div class="topbar-inner">
-          <a class="brand" href="{escape(root_prefix)}index.html" aria-label="Thomas Bernhardt Lab home">
+          <a class="brand" href="{escape(home_href(root_prefix, flat))}" aria-label="Thomas Bernhardt Lab home">
             <span class="brand-text">
               <strong>Thomas Bernhardt Lab</strong>
               <small>Howard Hughes Medical Institute + Harvard Medical School</small>
@@ -697,7 +781,7 @@ def render_alumni_profile(person: dict[str, Any], flat: bool) -> str:
     <div class="page">
       <header class="topbar">
         <div class="topbar-inner">
-          <a class="brand" href="{escape(root_prefix)}index.html" aria-label="Thomas Bernhardt Lab home">
+          <a class="brand" href="{escape(home_href(root_prefix, flat))}" aria-label="Thomas Bernhardt Lab home">
             <span class="brand-text">
               <strong>Thomas Bernhardt Lab</strong>
               <small>Howard Hughes Medical Institute + Harvard Medical School</small>
@@ -785,6 +869,12 @@ def replace_template_with_alumni(text: str, people: list[dict[str, Any]], root_p
 
 def normalize_canonical_route_links(text: str) -> str:
     replacements = [
+        ('href="../../index.html#', 'href="../../#'),
+        ('href="../index.html#', 'href="../#'),
+        ('href="index.html#', 'href="#'),
+        ('href="../../index.html"', 'href="../../"'),
+        ('href="../index.html"', 'href="../"'),
+        ('href="index.html"', 'href="./"'),
         ('href="people/"', f'href="{TEAM_ROUTE}/"'),
         ('href="../people/"', f'href="../{TEAM_ROUTE}/"'),
         ('href="../../people/"', f'href="../../{TEAM_ROUTE}/"'),
@@ -843,6 +933,8 @@ def root_page_to_flat(text: str) -> str:
 def nested_page_to_flat(text: str) -> str:
     replacements = [
         ('content="canonical"', 'content="flat"'),
+        ('href="../#', 'href="index.html#'),
+        ('href="../"', 'href="index.html"'),
         ('href="../index.html"', 'href="index.html"'),
         ('href="../index.html#', 'href="index.html#'),
         ('href="../people/"', 'href="team.html"'),
@@ -1192,6 +1284,9 @@ def write_sitemaps(people: list[dict[str, Any]]) -> None:
     sitemap = render_sitemap(canonical_route_paths(people))
     write_text(ROOT / "sitemap.xml", sitemap)
     write_text(FLAT_DIR / "sitemap.xml", sitemap)
+    robots = f"User-agent: *\nAllow: /\n\nSitemap: {CANONICAL_SITE_URL}/sitemap.xml\n"
+    write_text(ROOT / "robots.txt", robots)
+    write_text(FLAT_DIR / "robots.txt", robots)
 
 
 def validate_homepage_team_grid(path: Path, expected_cards: int) -> None:
@@ -1305,6 +1400,59 @@ def validate_favicon_links() -> None:
         raise RuntimeError(f"Missing favicon metadata on public pages: {', '.join(missing_pages)}")
 
 
+def local_reference_target(reference: str, page_path: Path) -> Path | None:
+    raw = clean_text(reference)
+    if (
+        not raw
+        or raw.startswith("#")
+        or raw.startswith(("http://", "https://", "mailto:", "tel:", "data:", "blob:", "javascript:"))
+    ):
+        return None
+    raw = raw.split("#", 1)[0].split("?", 1)[0]
+    if not raw:
+        return None
+    raw = unquote(raw)
+    if raw.startswith("/"):
+        return ROOT / raw.lstrip("/")
+    return (page_path.parent / raw).resolve()
+
+
+def validate_local_asset_references() -> None:
+    missing: list[str] = []
+    asset_tag_pattern = re.compile(r"<(?P<tag>link|script|img|source|video|iframe)\b(?P<attrs>[^>]*)>", re.I)
+    attr_pattern = re.compile(r'\b(?P<name>href|src|poster)=["\'](?P<value>[^"\']+)["\']', re.I)
+    rel_pattern = re.compile(r'\brel=["\']([^"\']+)["\']', re.I)
+
+    for path in iter_public_html_paths():
+        text = read_text(path)
+        for match in asset_tag_pattern.finditer(text):
+            tag = match.group("tag").lower()
+            attrs = match.group("attrs")
+            rel_match = rel_pattern.search(attrs)
+            rel_value = rel_match.group(1).lower() if rel_match else ""
+            for attr_match in attr_pattern.finditer(attrs):
+                attr = attr_match.group("name").lower()
+                value = attr_match.group("value")
+                if tag == "link" and attr == "href" and not any(
+                    token in rel_value for token in ["stylesheet", "icon", "apple-touch-icon", "preload", "modulepreload"]
+                ):
+                    continue
+                if tag != "link" and attr == "href":
+                    continue
+                target = local_reference_target(value, path)
+                if target is None:
+                    continue
+                try:
+                    target.relative_to(ROOT)
+                except ValueError:
+                    missing.append(f"{path.relative_to(ROOT)} references outside repo: {value}")
+                    continue
+                if not target.exists():
+                    missing.append(f"{path.relative_to(ROOT)} references missing local asset: {value}")
+    if missing:
+        raise RuntimeError("Missing local asset references:\n- " + "\n- ".join(sorted(set(missing))))
+
+
 def extract_canonical_href(path: Path) -> str:
     match = re.search(r'<link\s+rel="canonical"\s+href="([^"]+)"', read_text(path), re.I)
     return match.group(1) if match else ""
@@ -1378,6 +1526,9 @@ def validate_premium_url_scheme(people: list[dict[str, Any]]) -> None:
         f"{CANONICAL_SITE_URL}/{LEGACY_RESEARCH_ROUTE}/",
     ]
     legacy_link_tokens = [
+        'href="index.html',
+        'href="../index.html',
+        'href="../../index.html',
         'href="people/',
         'href="../people/',
         'href="../../people/',
@@ -1458,6 +1609,7 @@ def build_site() -> None:
     validate_team_directory_controls(ROOT / TEAM_ROUTE / "index.html", expected_cards)
     validate_team_directory_controls(FLAT_DIR / "team.html", expected_cards)
     validate_favicon_links()
+    validate_local_asset_references()
     validate_premium_url_scheme(people)
     validate_tom_compliance(ROOT)
 

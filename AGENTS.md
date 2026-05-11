@@ -77,6 +77,19 @@ python3 scripts/refresh_youtube_video_stats.py
 python3 scripts/refresh_research_in_motion.py
 ```
 
+YouTube view stats are scheduled monthly. Do not increase the cadence unless
+there is a specific reason to publish more frequent view-count churn.
+
+Schedule future people transitions:
+
+```bash
+python3 scripts/apply_scheduled_updates.py --dry-run
+```
+
+Add future departures to `data/scheduled-updates.json`; the daily GitHub Action
+applies due transitions, rebuilds, and commits only when a real diff exists.
+Featured alumni is still manually curated.
+
 Check the live leaderboard worker:
 
 ```bash
@@ -99,6 +112,7 @@ python3 scripts/check_leaderboard_worker.py --require-board-routing
 - `github-flat` is regenerated from nested `assets/` and `data/` paths. Root-level non-HTML files there are legacy baggage and should not be reintroduced.
 - Prefer `python3 scripts/publish_site.py` for the normal build/commit/push flow.
 - Do not bypass the Tom feedback compliance gate; if it fails, fix the canonical source rather than patching generated HTML.
+- Do not reintroduce `index.html` links on canonical pages; use `/team/`, `/alumni/`, `/research/`, and root-relative section links.
 
 ## Common tasks
 

@@ -23,6 +23,7 @@ ALLOWED_ROOT_FILES = {
     "package.json",
     "people.html",
     "research-library.html",
+    "robots.txt",
     "sitemap.xml",
 }
 STATIC_ALLOWED_DIRS = {

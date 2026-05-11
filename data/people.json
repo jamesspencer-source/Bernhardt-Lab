@@ -682,7 +682,7 @@
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "https://www.biology.ku.dk/english/staff/?pure=en/persons/200910",
+        "url": "https://www.bio.ku.dk/english/staff/?pure=en/persons/200910",
         "verifiedSource": "University of Copenhagen"
       },
       "profileSummary": "I investigated cell division and antibiotic resistance mechanisms in Staphylococcus aureus using conserved ClpX and ClpP pathways."
@@ -1018,7 +1018,7 @@
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "https://biophysics.skku.edu/biophysics/faculty.do?mode=view&perId=LZStrrttM%2BquExYN5F0CFg%3D%3D",
+        "url": "https://professor.skku.edu/researcher_eng/professorList.do?categoryId=U&jojikCode1=3172&mode=view&perId=LZStrBoCw7gwgqgog7ANQJwEsBSZUEkBuAONAIwQAUBzAXgqA%2B",
         "verifiedSource": "Sungkyunkwan University"
       },
       "profileSummary": "I investigated cell envelope biogenesis in Gram-negative bacteria."
@@ -1186,7 +1186,7 @@
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "https://research.franklin.uga.edu/lab/hummels-lab",
+        "url": "https://mib.uga.edu/research/lab/hummels-lab",
         "verifiedSource": "University of Georgia (Hummels Lab)"
       },
       "profileSummary": "I investigated outer membrane biosynthesis and homeostasis in Pseudomonas aeruginosa."
@@ -1761,9 +1761,7 @@
       "email": "",
       "links": [],
       "verification": {
-        "sourceLabel": "Bernhardt lab records",
-        "url": "https://www.wildmicrobes.com/team",
-        "verifiedSource": "Wild Microbes"
+        "sourceLabel": "Bernhardt lab records"
       },
       "profileSummary": "Former member of the Bernhardt Lab. Founder and CEO, Wild Microbes"
     },
