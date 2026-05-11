@@ -7,12 +7,13 @@ export type SpeciesId =
   | "kpneumoniae"
   | "abaumannii";
 
-export type PickupId = "pg" | "lipid" | "restraint";
-export type ResponseId = "patch" | "purge" | "boost";
+export type PickupId = "pg" | "lipid" | "restraint" | "repair";
+export type ResponseId = "patch" | "repair" | "purge" | "boost";
 export type HazardKind = "phage" | "shock" | "crack" | "rupture" | "storm";
 export type RunMode = "classic" | "daily";
 export type RunStatus = "menu" | "running" | "paused" | "ended";
 export type ObjectiveId = "assemble" | "breach" | "adsorption" | "rupture" | "storm";
+export type ZoneId = "slide" | "pipette" | "petri" | "flask" | "centrifuge" | "rack";
 
 export interface SpeciesDefinition {
   id: SpeciesId;
@@ -58,6 +59,16 @@ export interface PhaseDefinition {
   pressure: string;
   tint: number;
   rates: Record<"pickup" | HazardKind, number>;
+}
+
+export interface ZoneDefinition {
+  id: ZoneId;
+  label: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  safe?: boolean;
 }
 
 export interface ObjectiveDefinition {
@@ -142,10 +153,13 @@ export interface PhageEntity {
 export interface ShockEntity {
   id: string;
   kind: "shock";
+  variant: "antibiotic" | "droplet" | "rotor";
   axis: "x" | "y";
   position: number;
   velocity: number;
   thickness: number;
+  spanStart: number;
+  spanEnd: number;
   warning: number;
 }
 
@@ -166,6 +180,7 @@ export interface CrackEntity {
 export interface RuptureEntity {
   id: string;
   kind: "rupture" | "storm";
+  variant: "rupture" | "plaque" | "spill" | "storm";
   x: number;
   y: number;
   radius: number;
@@ -245,6 +260,8 @@ export interface GameState {
   pressureReliefTimer: number;
   phaseIndex: number;
   objective: ObjectiveState;
+  zoneId: ZoneId;
+  nearMissChain: number;
   lysisCause: string;
   lastEvents: GameEvent[];
   player: PlayerState;
@@ -270,6 +287,7 @@ export interface HudSnapshot {
   phaseTitle: string;
   phaseNote: string;
   pressure: string;
+  zoneLabel: string;
   objectiveTitle: string;
   objectiveBrief: string;
   objectiveProgress: number;
@@ -289,6 +307,7 @@ export interface RunReport {
   survived: string;
   phaseReached: string;
   objectiveTitle: string;
+  zoneLabel: string;
   assemblyCycles: number;
   lysisCause: string;
   placement?: { rank?: number; mode?: string; totalEntries?: number } | null;

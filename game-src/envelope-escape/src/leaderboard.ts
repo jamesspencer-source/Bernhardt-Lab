@@ -2,7 +2,7 @@ import { SPECIES } from "./content";
 import { normalizeBoard, normalizeSpeciesId } from "./simulation";
 import type { LeaderboardPayload, ScoreEntry } from "./types";
 
-const STORAGE_VERSION = "v3-phaser";
+const STORAGE_VERSION = "v2-survival";
 const BOARD_PREFIX = `bernhardt-envelope-escape-board-${STORAGE_VERSION}-`;
 const LEADERBOARD_SIZE = 25;
 const REQUEST_TIMEOUT_MS = 9000;

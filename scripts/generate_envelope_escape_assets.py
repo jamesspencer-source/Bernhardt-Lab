@@ -10,6 +10,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "assets" / "game" / "envelope-escape"
+WORLD_W = 3200
+WORLD_H = 1800
 
 SPECIES = {
     "ecoli": ("rod", (143, 244, 241), (17, 68, 86)),
@@ -115,6 +117,15 @@ def rect(canvas, x, y, w, h, color):
             canvas.blend(px, py, color)
 
 
+def rounded_rect(canvas, x, y, w, h, r, color):
+    rect(canvas, x + r, y, w - 2 * r, h, color)
+    rect(canvas, x, y + r, w, h - 2 * r, color)
+    circle(canvas, x + r, y + r, r, color)
+    circle(canvas, x + w - r, y + r, r, color)
+    circle(canvas, x + r, y + h - r, r, color)
+    circle(canvas, x + w - r, y + h - r, r, color)
+
+
 def draw_cell_frame(sheet, frame, shape, base, core, state="idle"):
     ox = frame * 64
     wobble = math.sin(frame * 0.9) * 2
@@ -203,6 +214,7 @@ def generate_pickups():
         "pg": (173, 255, 216),
         "lipid": (159, 231, 255),
         "restraint": (255, 220, 160),
+        "repair": (144, 233, 255),
     }
     for slug, base in colors.items():
         sheet = Canvas(48 * 4, 48)
@@ -219,10 +231,14 @@ def generate_pickups():
                 ellipse(sheet, cx, cy, 9, 15, rgba(base, 245), frame * 0.25)
                 line(sheet, cx + 5, cy - 3, cx + 16, cy - 12, 2, rgba(lighten(base, 0.35), 230))
                 line(sheet, cx + 5, cy + 3, cx + 17, cy + 7, 2, rgba(lighten(base, 0.35), 230))
-            else:
+            elif slug == "restraint":
                 rect(sheet, cx - 12, cy - 9, 24, 18, rgba(base, 235))
                 line(sheet, cx - 7, cy, cx + 7, cy, 2, rgba(darken(base, 0.45), 240))
                 line(sheet, cx, cy - 6, cx, cy + 6, 2, rgba(darken(base, 0.45), 240))
+            else:
+                ellipse(sheet, cx, cy + 1, 10, 15, rgba(base, 230), 0.15)
+                circle(sheet, cx - 3, cy - 9, 5, rgba(lighten(base, 0.42), 230))
+                line(sheet, cx - 7, cy + 8, cx + 8, cy - 6, 2, rgba((255, 255, 255), 160))
         sheet.save(OUT / "pickups" / f"{slug}.png")
 
 
@@ -279,7 +295,7 @@ def generate_fx_and_ui():
         circle(badges, ox + 32, 32, 12, rgba(darken(color, 0.42), 230))
     badges.save(OUT / "ui" / "run-badges.png")
 
-    for slug, color in [("patch", (184, 255, 223)), ("purge", (187, 236, 255)), ("boost", (255, 225, 163))]:
+    for slug, color in [("patch", (184, 255, 223)), ("repair", (144, 233, 255)), ("purge", (187, 236, 255)), ("boost", (255, 225, 163))]:
         sheet = Canvas(64 * 4, 64)
         for frame in range(4):
             ox = frame * 64
@@ -287,6 +303,10 @@ def generate_fx_and_ui():
             if slug == "patch":
                 rect(sheet, ox + 20, 28, 24, 8, rgba(color, 235))
                 line(sheet, ox + 24, 22, ox + 40, 42, 3, rgba(lighten(color, 0.3), 230))
+            elif slug == "repair":
+                ellipse(sheet, ox + 32, 34, 11, 17, rgba(color, 235), 0.1)
+                circle(sheet, ox + 28, 22, 5, rgba(lighten(color, 0.35), 230))
+                line(sheet, ox + 22, 42, ox + 44, 24, 3, rgba((255, 255, 255), 170))
             elif slug == "purge":
                 for i in range(6):
                     a = i * math.tau / 6 + frame * 0.22
@@ -298,20 +318,89 @@ def generate_fx_and_ui():
 
 
 def generate_background():
-    canvas = Canvas(1600, 900, (5, 16, 27, 255))
-    for y in range(900):
-        for x in range(1600):
-            glow = int(26 * math.exp(-((x - 1180) ** 2 + (y - 180) ** 2) / 260000))
-            i = (y * 1600 + x) * 4
-            canvas.data[i] = min(255, canvas.data[i] + glow // 4)
-            canvas.data[i + 1] = min(255, canvas.data[i + 1] + glow)
-            canvas.data[i + 2] = min(255, canvas.data[i + 2] + glow + 8)
-    for y in [150, 460, 750]:
-        for offset in range(-18, 19):
-            alpha = max(0, 34 - abs(offset) * 2)
-            line(canvas, -20, y + offset, 1620, y + math.sin(offset) * 8, 2, rgba((139, 238, 232), alpha))
-    for x in range(80, 1600, 120):
-        line(canvas, x, 80, x + math.sin(x) * 35, 820, 1, rgba((106, 203, 218), 28))
+    canvas = Canvas(WORLD_W, WORLD_H, (6, 17, 28, 255))
+    for y in range(WORLD_H):
+        for x in range(WORLD_W):
+            glow = int(34 * math.exp(-((x - 2460) ** 2 + (y - 280) ** 2) / 820000))
+            warm = int(18 * math.exp(-((x - 760) ** 2 + (y - 1360) ** 2) / 980000))
+            i = (y * WORLD_W + x) * 4
+            canvas.data[i] = min(255, canvas.data[i] + glow // 5 + warm)
+            canvas.data[i + 1] = min(255, canvas.data[i + 1] + glow + warm // 2)
+            canvas.data[i + 2] = min(255, canvas.data[i + 2] + glow + 10)
+
+    # Benchtop grain and playable zone seams.
+    for y in range(0, WORLD_H, 58):
+        line(canvas, 0, y, WORLD_W, y + math.sin(y * 0.03) * 18, 1, rgba((73, 132, 143), 18))
+    for x in range(80, WORLD_W, 160):
+        line(canvas, x, 40, x + math.sin(x) * 42, WORLD_H - 60, 1, rgba((106, 203, 218), 18))
+
+    # Microscope slide safe zone.
+    rounded_rect(canvas, 170, 1035, 710, 560, 46, rgba((46, 78, 94), 190))
+    rounded_rect(canvas, 230, 1110, 590, 410, 36, rgba((154, 233, 238), 54))
+    line(canvas, 255, 1180, 795, 1180, 3, rgba((214, 255, 255), 86))
+    line(canvas, 255, 1460, 795, 1460, 3, rgba((214, 255, 255), 76))
+    circle(canvas, 520, 1325, 118, rgba((125, 238, 224), 38))
+    circle(canvas, 520, 1325, 62, rgba((125, 238, 224), 44))
+
+    # Research Plus-style pipette zone.
+    line(canvas, 230, 360, 1200, 260, 38, rgba((238, 244, 242), 232))
+    line(canvas, 245, 348, 1188, 250, 12, rgba((255, 255, 255), 180))
+    rounded_rect(canvas, 280, 270, 210, 118, 30, rgba((238, 244, 242), 238))
+    rounded_rect(canvas, 305, 302, 80, 36, 10, rgba((30, 62, 78), 220))
+    rect(canvas, 397, 294, 58, 55, rgba((80, 177, 220), 230))
+    line(canvas, 200, 360, 86, 372, 22, rgba((86, 173, 218), 235))
+    line(canvas, 1202, 258, 1460, 230, 12, rgba((174, 232, 245), 150))
+    line(canvas, 1420, 232, 1570, 214, 6, rgba((214, 250, 255), 118))
+    for x in [550, 725, 900, 1075]:
+        ellipse(canvas, x, 535, 30, 48, rgba((112, 220, 245), 80), 0.05)
+        line(canvas, x - 18, 590, x + 18, 590, 5, rgba((188, 247, 255), 95))
+
+    # Petri dish with agar, plaques, and antibiotic disks.
+    circle(canvas, 1755, 470, 325, rgba((201, 231, 225), 64))
+    circle(canvas, 1755, 470, 284, rgba((222, 171, 94), 112))
+    circle(canvas, 1755, 470, 323, rgba((240, 255, 255), 26))
+    for i, (dx, dy, r) in enumerate([(-120, -45, 48), (84, -92, 38), (72, 84, 62), (-16, 12, 30), (160, 46, 26)]):
+        circle(canvas, 1755 + dx, 470 + dy, r, rgba((121, 65, 92), 82 + i * 12))
+        circle(canvas, 1755 + dx, 470 + dy, max(8, r // 3), rgba((255, 214, 161), 100))
+    for i in range(16):
+        a = i * math.tau / 16
+        line(canvas, 1755 + math.cos(a) * 286, 470 + math.sin(a) * 286, 1755 + math.cos(a) * 305, 470 + math.sin(a) * 305, 2, rgba((242, 255, 255), 82))
+
+    # Fernbach flask.
+    ellipse(canvas, 2600, 560, 290, 250, rgba((197, 239, 239), 58), 0)
+    ellipse(canvas, 2600, 625, 250, 145, rgba((58, 190, 144), 86), 0)
+    rounded_rect(canvas, 2515, 230, 170, 315, 48, rgba((200, 243, 246), 54))
+    line(canvas, 2460, 500, 2740, 500, 4, rgba((232, 255, 255), 90))
+    line(canvas, 2390, 720, 2810, 720, 6, rgba((126, 235, 206), 90))
+    for i in range(8):
+        a = -0.9 + i * 0.28
+        line(canvas, 2470 + math.cos(a) * 72, 628 + math.sin(a) * 54, 2710 + math.cos(a + 0.8) * 64, 626 + math.sin(a + 0.8) * 50, 3, rgba((142, 249, 220), 52))
+
+    # Test-tube rack and tubes.
+    rounded_rect(canvas, 1050, 1090, 790, 420, 34, rgba((42, 73, 90), 215))
+    rounded_rect(canvas, 1110, 1138, 670, 310, 24, rgba((18, 39, 56), 190))
+    tube_colors = [(111, 219, 244), (249, 211, 125), (150, 236, 198), (218, 154, 205)]
+    for row in range(3):
+        for col in range(6):
+            cx = 1190 + col * 105
+            cy = 1215 + row * 82
+            color = tube_colors[(row + col) % len(tube_colors)]
+            rounded_rect(canvas, cx - 28, cy - 42, 56, 92, 18, rgba((222, 246, 250), 66))
+            rounded_rect(canvas, cx - 25, cy - 30, 50, 78, 14, rgba(color, 118))
+            rect(canvas, cx - 26, cy - 42, 52, 14, rgba(lighten(color, 0.25), 206))
+            line(canvas, cx - 20, cy + 16, cx + 20, cy + 16, 3, rgba((255, 255, 255), 92))
+
+    # Centrifuge with rotor sweep arena.
+    rounded_rect(canvas, 2060, 1030, 820, 525, 64, rgba((32, 47, 64), 235))
+    rounded_rect(canvas, 2128, 1085, 270, 110, 24, rgba((9, 22, 36), 220))
+    rect(canvas, 2184, 1123, 120, 28, rgba((87, 218, 226), 160))
+    circle(canvas, 2490, 1288, 220, rgba((72, 86, 99), 220))
+    circle(canvas, 2490, 1288, 104, rgba((19, 29, 42), 230))
+    for i in range(6):
+        a = i * math.tau / 6
+        line(canvas, 2490, 1288, 2490 + math.cos(a) * 195, 1288 + math.sin(a) * 195, 23, rgba((164, 181, 194), 135))
+        ellipse(canvas, 2490 + math.cos(a) * 164, 1288 + math.sin(a) * 164, 34, 18, rgba((110, 217, 244), 120), a)
+    circle(canvas, 2490, 1288, 38, rgba((226, 241, 245), 170))
     canvas.save(OUT / "fx" / "chamber-background.png")
 
 

@@ -45,6 +45,7 @@ export function createEnvelopeAnimations(scene: Phaser.Scene): void {
   createAnimation(scene, "pickup-pg-spin", PICKUPS.pg.sheet, [0, 1, 2, 3], 9, -1);
   createAnimation(scene, "pickup-lipid-spin", PICKUPS.lipid.sheet, [0, 1, 2, 3], 9, -1);
   createAnimation(scene, "pickup-restraint-spin", PICKUPS.restraint.sheet, [0, 1, 2, 3], 9, -1);
+  createAnimation(scene, "pickup-repair-spin", PICKUPS.repair.sheet, [0, 1, 2, 3], 9, -1);
   createAnimation(scene, "hazard-shock-pulse", "hazard-shock", [0, 1, 2, 3], 10, -1);
   createAnimation(scene, "hazard-crack-live", "hazard-crack", [0, 1, 2, 3], 10, -1);
   createAnimation(scene, "hazard-rupture-live", "hazard-rupture", [0, 1, 2, 3], 9, -1);

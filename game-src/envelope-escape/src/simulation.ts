@@ -1,4 +1,4 @@
-import { OBJECTIVES, PHASES, PICKUPS, RESPONSES, SPECIES, WORLD } from "./content";
+import { OBJECTIVES, PHASES, PICKUPS, RESPONSES, SPECIES, WORLD, ZONES } from "./content";
 import { buildDailyChallenge, createSeededRandom, hashString, pick, randomRange } from "./rng";
 import type {
   CrackEntity,
@@ -15,15 +15,19 @@ import type {
   PickupEntity,
   PickupId,
   ResponseId,
+  RuptureEntity,
   RunReport,
   ScoreEntry,
   ShockEntity,
-  SpeciesId
+  SpeciesId,
+  ZoneDefinition,
+  ZoneId
 } from "./types";
 
 const BOARD_PATTERN = /^(classic|daily-\d{4}-\d{2}-\d{2})$/;
 const BASE_MODIFIERS: ModeModifiers = { pickup: 1, phage: 1, shock: 1, crack: 1, rupture: 1, storm: 1, response: 1, score: 1, repairNeeded: 4 };
 const PICKUP_IDS = Object.keys(PICKUPS) as PickupId[];
+const ACTIVE_ZONES = ZONES.filter((zone) => !zone.safe);
 let nextEntityId = 1;
 
 export function normalizeSpeciesId(value: unknown): SpeciesId {
@@ -36,7 +40,7 @@ export function normalizeBoard(value: unknown): string {
 }
 
 export function createInputState(): InputState {
-  return { up: false, down: false, left: false, right: false, dash: false, pointerActive: false, pointerX: WORLD.width / 2, pointerY: WORLD.height / 2 };
+  return { up: false, down: false, left: false, right: false, dash: false, pointerActive: false, pointerX: WORLD.width * 0.22, pointerY: WORLD.height * 0.72 };
 }
 
 export function createGameState(): GameState {
@@ -66,6 +70,8 @@ export function createGameState(): GameState {
     pressureReliefTimer: 0,
     phaseIndex: 0,
     objective: createObjective("assemble"),
+    zoneId: "slide",
+    nearMissChain: 0,
     lysisCause: "",
     lastEvents: [],
     player: createPlayer(),
@@ -84,8 +90,8 @@ export function startRun(state: GameState, options: { mode?: string; speciesId?:
   state.speciesId = mode === "daily" ? state.dailyChallenge.speciesId : state.selectedSpeciesId;
   state.playerName = cleanName(options.playerName) || "Anonymous";
   state.runSeed = mode === "daily"
-    ? hashString(`envelope-v3-${state.board}-${state.speciesId}`)
-    : hashString(`envelope-v3-classic-${state.speciesId}-${Date.now()}-${Math.floor(Math.random() * 1e9)}`);
+    ? hashString(`envelope-v2-${state.board}-${state.speciesId}`)
+    : hashString(`envelope-v2-classic-${state.speciesId}-${Date.now()}-${Math.floor(Math.random() * 1e9)}`);
   state.rng = createSeededRandom(state.runSeed);
   state.status = "running";
   state.elapsed = 0;
@@ -102,17 +108,22 @@ export function startRun(state: GameState, options: { mode?: string; speciesId?:
   state.pressureReliefTimer = 0;
   state.phaseIndex = 0;
   state.objective = createObjective(PHASES[0].objectiveId);
+  state.zoneId = "slide";
+  state.nearMissChain = 0;
   state.lysisCause = "";
   state.player = createPlayer();
   state.entities = createEntityStore();
   state.spawnTimers = createSpawnTimers();
   state.lastEvents = [
     { type: "run-start", title: state.boardLabel, label: SPECIES[state.speciesId].shortLabel },
-    { type: "phase", title: PHASES[0].title, copy: PHASES[0].note },
-    { type: "objective", title: state.objective.title, copy: state.objective.brief }
+    { type: "phase", title: PHASES[0].title, copy: PHASES[0].note }
   ];
-  for (let index = 0; index < 5; index += 1) spawnPickup(state);
+  for (let index = 0; index < 12; index += 1) spawnPickup(state);
   return state;
+}
+
+export function setPlayerName(state: GameState, value: unknown): void {
+  state.playerName = cleanName(value) || "Anonymous";
 }
 
 export function setPaused(state: GameState, paused: boolean): void {
@@ -130,6 +141,7 @@ export function updateSimulation(state: GameState, input: InputState, dt: number
   updatePhase(state);
   updateTimers(state, step);
   updatePlayer(state, input, step);
+  updateZoneState(state, step);
   updateSpawns(state, step);
   updatePickups(state, step);
   updatePhages(state, step);
@@ -150,10 +162,16 @@ export function triggerResponse(state: GameState, choiceId: string): boolean {
   if (choice === "patch") {
     state.integrity = clamp(state.integrity + 34 + species.repairBonus, 0, 100);
     state.invulnerableTimer = Math.max(state.invulnerableTimer, 1.35);
-    cleared = clearHazardsAroundPlayer(state, 230, { phages: true, shocks: true, cracks: true, ruptures: true, storms: false });
-    state.score += 170 + cleared * 28;
+    cleared = clearHazardsAroundPlayer(state, 280, { phages: false, shocks: true, cracks: true, ruptures: true, storms: false });
+    state.score += 180 + cleared * 34;
+  } else if (choice === "repair") {
+    state.integrity = clamp(state.integrity + 26 + species.repairBonus, 0, 100);
+    state.pressureReliefTimer = 4.2;
+    state.invulnerableTimer = Math.max(state.invulnerableTimer, 0.95);
+    cleared = clearHazardsAroundPlayer(state, 360, { phages: false, shocks: true, cracks: false, ruptures: true, storms: true });
+    state.score += 165 + cleared * 42;
   } else if (choice === "purge") {
-    cleared = clearHazardsAroundPlayer(state, 500, { phages: true, shocks: false, cracks: false, ruptures: false, storms: false });
+    cleared = clearHazardsAroundPlayer(state, 540, { phages: true, shocks: false, cracks: false, ruptures: true, storms: false });
     state.pressureReliefTimer = 6.2;
     state.integrity = clamp(state.integrity + 12 + species.repairBonus, 0, 100);
     state.score += 145 + cleared * 58;
@@ -189,6 +207,7 @@ export function getHudSnapshot(state: GameState): HudSnapshot {
     phaseTitle: phase.title,
     phaseNote: phase.note,
     pressure: phase.pressure,
+    zoneLabel: zoneForId(state.zoneId).label,
     objectiveTitle: state.objective.title,
     objectiveBrief: state.objective.brief,
     objectiveProgress: Math.min(state.objective.progress, state.objective.target),
@@ -211,6 +230,7 @@ export function getRunReport(state: GameState, placement: RunReport["placement"]
     survived: formatDuration(state.elapsed),
     phaseReached: phase.title,
     objectiveTitle: state.objective.title,
+    zoneLabel: zoneForId(state.zoneId).label,
     assemblyCycles: state.assemblyCycles,
     lysisCause: state.lysisCause || "cumulative envelope stress",
     placement
@@ -228,7 +248,8 @@ export function serializeScoreEntry(state: GameState): ScoreEntry {
 }
 
 function createPlayer() {
-  return { x: WORLD.width * 0.5, y: WORLD.height * 0.56, vx: 0, vy: 0, angle: -Math.PI / 2, radius: 25 };
+  const slide = zoneForId("slide");
+  return { x: slide.x + slide.width * 0.42, y: slide.y + slide.height * 0.52, vx: 0, vy: 0, angle: -Math.PI / 2, radius: 25 };
 }
 
 function createEntityStore(): EntityStore {
@@ -262,7 +283,6 @@ function updatePhase(state: GameState): void {
     const phase = PHASES[nextIndex];
     state.objective = createObjective(phase.objectiveId);
     state.lastEvents.push({ type: "phase", title: phase.title, copy: phase.note });
-    state.lastEvents.push({ type: "objective", title: state.objective.title, copy: state.objective.brief });
   }
 }
 
@@ -308,21 +328,36 @@ function updatePlayer(state: GameState, input: InputState, dt: number): void {
   if (Math.hypot(state.player.vx, state.player.vy) > 8) state.player.angle = Math.atan2(state.player.vy, state.player.vx);
 }
 
+function updateZoneState(state: GameState, dt: number): void {
+  const previousZone = state.zoneId;
+  state.zoneId = zoneAtPoint(state.player.x, state.player.y).id;
+  if (state.zoneId !== previousZone) {
+    state.lastEvents.push({ type: "phase", title: zoneForId(state.zoneId).label, copy: PHASES[state.phaseIndex]?.pressure || "" });
+  }
+  if (state.zoneId === "flask" && state.status === "running") {
+    const current = Math.sin(state.elapsed * 1.4) * 58;
+    state.player.x = clamp(state.player.x + current * dt, WORLD.safeMargin, WORLD.width - WORLD.safeMargin);
+  }
+  if (state.zoneId === "slide") {
+    state.responseCharge = clamp(state.responseCharge + dt * 1.8 * getSpecies(state).responseGain, 0, 100);
+  }
+}
+
 function updateSpawns(state: GameState, dt: number): void {
   const phase = PHASES[state.phaseIndex] || PHASES[0];
   const modifiers = getModeModifiers(state);
   const difficulty = clamp(state.elapsed / 300, 0, 1);
   const relief = state.pressureReliefTimer > 0 ? 0.68 : 1;
   tickSpawn(state, "pickup", dt, phase.rates.pickup * modifiers.pickup, () => {
-    if (state.entities.pickups.length < 8) spawnPickup(state);
-    return randomRange(state.rng, 1.25, 2.1);
+    if (state.entities.pickups.length < 14) spawnPickup(state);
+    return randomRange(state.rng, 1.05, 1.85);
   });
   tickSpawn(state, "phage", dt, phase.rates.phage * modifiers.phage * relief * (0.76 + difficulty * 0.78), () => {
     spawnPhageArc(state, 1);
     return randomRange(state.rng, 1.0, 1.65);
   });
   tickSpawn(state, "shock", dt, phase.rates.shock * modifiers.shock * (0.72 + difficulty * 0.62), () => {
-    spawnShockLane(state);
+    spawnShockLane(state, pickShockVariant(state));
     return randomRange(state.rng, 4.0, 6.4);
   });
   tickSpawn(state, "crack", dt, phase.rates.crack * modifiers.crack * (0.66 + difficulty * 0.72), () => {
@@ -338,7 +373,7 @@ function updateSpawns(state: GameState, dt: number): void {
     return randomRange(state.rng, 7.4, 10.8);
   });
   tickSpawn(state, "pattern", dt, 1 + difficulty * 0.85, () => {
-    spawnObjectivePattern(state);
+    spawnBenchPattern(state);
     return randomRange(state.rng, 5.2, 7.6);
   });
 }
@@ -348,29 +383,48 @@ function tickSpawn(state: GameState, key: keyof GameState["spawnTimers"], dt: nu
   if (state.spawnTimers[key] <= 0) state.spawnTimers[key] = spawn();
 }
 
-function spawnObjectivePattern(state: GameState): void {
-  if (state.objective.id === "adsorption") spawnPhageArc(state, 4);
-  else if (state.objective.id === "breach") spawnCrackPattern(state, 3);
-  else if (state.objective.id === "rupture") {
-    for (let index = 0; index < 3; index += 1) spawnRupture(state, "rupture");
-  } else if (state.objective.id === "storm") {
+function spawnBenchPattern(state: GameState): void {
+  const phase = PHASES[state.phaseIndex]?.id || "calibration";
+  if (phase === "droplet") {
+    spawnShockLane(state, "droplet", zoneForId("pipette"));
+    spawnShockLane(state, "droplet", zoneForId("pipette"));
+  } else if (phase === "phage") {
+    spawnPhageArc(state, 4, zoneForId("petri"));
+    spawnRupture(state, "rupture", "plaque", zoneForId("petri"));
+  } else if (phase === "antibiotic") {
+    spawnShockLane(state, "antibiotic", pick(state.rng, [zoneForId("petri"), zoneForId("slide"), undefined]));
+    spawnCrackPattern(state, 2, zoneForId("rack"));
+  } else if (phase === "rotor") {
+    spawnShockLane(state, "rotor", zoneForId("centrifuge"));
+    spawnRupture(state, "rupture", "spill", zoneForId("flask"));
+    spawnCrackPattern(state, 2, zoneForId("rack"));
+  } else if (phase === "lysis") {
     spawnPhageArc(state, 3);
-    spawnRupture(state, "storm");
+    spawnShockLane(state, pickShockVariant(state));
+    spawnRupture(state, "storm", "storm");
   } else {
-    for (let index = 0; index < 2; index += 1) spawnPickup(state);
-    spawnShockLane(state);
+    for (let index = 0; index < 3; index += 1) spawnPickup(state);
+    spawnShockLane(state, "droplet", zoneForId("pipette"));
   }
 }
 
 function spawnPickup(state: GameState): void {
   const type = pick(state.rng, PICKUP_IDS);
-  const entity: PickupEntity = { id: makeId("pickup"), type, x: randomRange(state.rng, 92, WORLD.width - 92), y: randomRange(state.rng, 92, WORLD.height - 92), radius: 24, age: 0 };
+  const zone = pick(state.rng, [zoneForId("slide"), ...ACTIVE_ZONES, zoneForId(state.zoneId)]);
+  const entity: PickupEntity = {
+    id: makeId("pickup"),
+    type,
+    x: randomRange(state.rng, zone.x + 60, zone.x + zone.width - 60),
+    y: randomRange(state.rng, zone.y + 60, zone.y + zone.height - 60),
+    radius: type === "repair" ? 27 : 24,
+    age: 0
+  };
   state.entities.pickups.push(entity);
 }
 
-function spawnPhageArc(state: GameState, count: number): void {
+function spawnPhageArc(state: GameState, count: number, zone?: ZoneDefinition): void {
   const edge = Math.floor(state.rng() * 4);
-  const base = edgePosition(state, edge, 88);
+  const base = zone ? edgePositionForZone(state, zone, edge, 72) : edgePosition(state, edge, 88);
   for (let index = 0; index < count; index += 1) {
     const spread = (index - (count - 1) / 2) * 58;
     const entity: PhageEntity = {
@@ -391,21 +445,35 @@ function spawnPhageArc(state: GameState, count: number): void {
   }
 }
 
-function spawnShockLane(state: GameState): void {
+function spawnShockLane(state: GameState, variant: ShockEntity["variant"] = "antibiotic", zone?: ZoneDefinition): void {
   const axis = state.rng() > 0.5 ? "x" : "y";
   const fromStart = state.rng() > 0.5;
-  const thickness = randomRange(state.rng, 84, 122);
-  const limit = axis === "x" ? WORLD.width : WORLD.height;
-  const entity: ShockEntity = { id: makeId("shock"), kind: "shock", axis, position: fromStart ? -thickness : limit + thickness, velocity: (fromStart ? 1 : -1) * randomRange(state.rng, 196, 284), thickness, warning: 1.08 };
+  const thickness = variant === "rotor" ? randomRange(state.rng, 62, 86) : randomRange(state.rng, 84, 122);
+  const limit = axis === "x" ? (zone ? zone.x + zone.width : WORLD.width) : (zone ? zone.y + zone.height : WORLD.height);
+  const start = axis === "x" ? (zone?.x || 0) : (zone?.y || 0);
+  const spanStart = axis === "x" ? (zone?.y || 0) : (zone?.x || 0);
+  const spanEnd = axis === "x" ? (zone ? zone.y + zone.height : WORLD.height) : (zone ? zone.x + zone.width : WORLD.width);
+  const entity: ShockEntity = {
+    id: makeId("shock"),
+    kind: "shock",
+    variant,
+    axis,
+    position: fromStart ? start - thickness : limit + thickness,
+    velocity: (fromStart ? 1 : -1) * randomRange(state.rng, variant === "rotor" ? 260 : 196, variant === "rotor" ? 380 : 284),
+    thickness,
+    spanStart,
+    spanEnd,
+    warning: variant === "rotor" ? 1.18 : 1.08
+  };
   state.entities.shocks.push(entity);
 }
 
-function spawnCrackPattern(state: GameState, count: number): void {
+function spawnCrackPattern(state: GameState, count: number, zone?: ZoneDefinition): void {
   const baseAngle = pick(state.rng, [Math.PI / 4, -Math.PI / 4, (3 * Math.PI) / 4, (-3 * Math.PI) / 4]);
   for (let index = 0; index < count; index += 1) {
     const angle = baseAngle + randomRange(state.rng, -0.24, 0.24);
     const length = randomRange(state.rng, 320, 500);
-    const center = edgePosition(state, Math.floor(state.rng() * 4), 130);
+    const center = zone ? randomPointInZone(state, zone, 70) : edgePosition(state, Math.floor(state.rng() * 4), 130);
     const half = length / 2;
     const dx = Math.cos(angle);
     const dy = Math.sin(angle);
@@ -425,14 +493,17 @@ function spawnCrackPattern(state: GameState, count: number): void {
   }
 }
 
-function spawnRupture(state: GameState, kind: "rupture" | "storm"): void {
+function spawnRupture(state: GameState, kind: "rupture" | "storm", variant: RuptureEntity["variant"] = kind === "storm" ? "storm" : "rupture", zone?: ZoneDefinition): void {
+  const targetZone = zone || pick(state.rng, ACTIVE_ZONES);
+  const point = randomPointInZone(state, targetZone, 90);
   state.entities[kind === "storm" ? "storms" : "ruptures"].push({
     id: makeId(kind),
     kind,
-    x: randomRange(state.rng, 145, WORLD.width - 145),
-    y: randomRange(state.rng, 125, WORLD.height - 125),
-    radius: kind === "storm" ? 34 : randomRange(state.rng, 62, 102),
-    maxRadius: kind === "storm" ? randomRange(state.rng, 150, 240) : randomRange(state.rng, 88, 132),
+    variant,
+    x: point.x,
+    y: point.y,
+    radius: kind === "storm" ? 34 : variant === "plaque" ? randomRange(state.rng, 72, 110) : randomRange(state.rng, 62, 102),
+    maxRadius: kind === "storm" ? randomRange(state.rng, 150, 240) : variant === "plaque" ? randomRange(state.rng, 130, 185) : randomRange(state.rng, 88, 132),
     warning: kind === "storm" ? 0.9 : 1.18,
     life: kind === "storm" ? 3.4 : 4.4,
     hit: false
@@ -501,8 +572,9 @@ function updatePhages(state: GameState, dt: number): void {
     phage.y += phage.vy * dt;
     if (!phage.nearMiss && distance < state.player.radius + phage.radius + 48 && state.invulnerableTimer <= 0) {
       phage.nearMiss = true;
+      state.nearMissChain = Math.min(12, state.nearMissChain + 1);
       state.responseCharge = clamp(state.responseCharge + 4.4 * getSpecies(state).responseGain, 0, 100);
-      state.score += 44;
+      state.score += 44 + state.nearMissChain * 8;
       advanceObjective(state, "storm", 1);
       state.lastEvents.push({ type: "near-miss", x: phage.x, y: phage.y, label: "Near miss" });
     }
@@ -524,9 +596,11 @@ function updateShocks(state: GameState, dt: number): void {
     }
     shock.position += shock.velocity * dt;
     const distance = shock.axis === "x" ? Math.abs(state.player.x - shock.position) : Math.abs(state.player.y - shock.position);
-    if (distance < shock.thickness * 0.5 + state.player.radius * 0.72) {
+    const along = shock.axis === "x" ? state.player.y : state.player.x;
+    const inSpan = along >= shock.spanStart - state.player.radius && along <= shock.spanEnd + state.player.radius;
+    if (inSpan && distance < shock.thickness * 0.5 + state.player.radius * 0.72) {
       state.entities.shocks.splice(index, 1);
-      applyDamage(state, 17, "beta-lactam shock front", state.player.x, state.player.y);
+      applyDamage(state, shock.variant === "droplet" ? 12 : shock.variant === "rotor" ? 20 : 17, shockCause(shock), state.player.x, state.player.y);
       continue;
     }
     const limit = shock.axis === "x" ? WORLD.width : WORLD.height;
@@ -577,7 +651,7 @@ function updateCircularHazards(state: GameState, dt: number, key: "ruptures" | "
     const distance = distanceToPlayer(state, hazard);
     if (!hazard.hit && distance < hazard.radius + state.player.radius * 0.42) {
       hazard.hit = true;
-      applyDamage(state, damage, cause, state.player.x, state.player.y);
+      applyDamage(state, hazard.variant === "plaque" ? 15 : hazard.variant === "spill" ? 13 : damage, ruptureCause(hazard, cause), state.player.x, state.player.y);
     }
     if (!hazard.hit && distance > hazard.radius + state.player.radius + 18 && hazard.life < 1.1) advanceObjective(state, objective, 1);
     if (hazard.life <= 0) hazards.splice(index, 1);
@@ -590,6 +664,7 @@ function applyDamage(state: GameState, amount: number, cause: string, x: number,
   let adjusted = amount * species.damageTaken;
   if ((cause.includes("rupture") || cause.includes("crack")) && species.ruptureDamageTaken) adjusted *= species.ruptureDamageTaken;
   state.integrity = clamp(state.integrity - adjusted, 0, 100);
+  state.nearMissChain = 0;
   state.invulnerableTimer = 0.56;
   state.lysisCause = cause;
   state.lastEvents.push({ type: "damage", damage: adjusted, cause, x, y });
@@ -608,7 +683,6 @@ function advanceObjective(state: GameState, id: ObjectiveId, amount: number): vo
     state.score += state.objective.reward * getModeModifiers(state).score;
     state.integrity = clamp(state.integrity + 8, 0, 100);
     state.responseCharge = clamp(state.responseCharge + 18, 0, 100);
-    state.lastEvents.push({ type: "objective-complete", title: state.objective.title, copy: `+${state.objective.reward} objective bonus`, x: state.player.x, y: state.player.y });
   }
 }
 
@@ -656,6 +730,48 @@ function edgePosition(state: GameState, edge: number, offset: number): { x: numb
   if (edge === 1) return { x: WORLD.width + offset, y: randomRange(state.rng, 80, WORLD.height - 80) };
   if (edge === 2) return { x: randomRange(state.rng, 80, WORLD.width - 80), y: -offset };
   return { x: randomRange(state.rng, 80, WORLD.width - 80), y: WORLD.height + offset };
+}
+
+function edgePositionForZone(state: GameState, zone: ZoneDefinition, edge: number, offset: number): { x: number; y: number } {
+  if (edge === 0) return { x: zone.x - offset, y: randomRange(state.rng, zone.y + 40, zone.y + zone.height - 40) };
+  if (edge === 1) return { x: zone.x + zone.width + offset, y: randomRange(state.rng, zone.y + 40, zone.y + zone.height - 40) };
+  if (edge === 2) return { x: randomRange(state.rng, zone.x + 40, zone.x + zone.width - 40), y: zone.y - offset };
+  return { x: randomRange(state.rng, zone.x + 40, zone.x + zone.width - 40), y: zone.y + zone.height + offset };
+}
+
+function randomPointInZone(state: GameState, zone: ZoneDefinition, margin = 60): { x: number; y: number } {
+  return {
+    x: randomRange(state.rng, zone.x + margin, zone.x + zone.width - margin),
+    y: randomRange(state.rng, zone.y + margin, zone.y + zone.height - margin)
+  };
+}
+
+function zoneAtPoint(x: number, y: number): ZoneDefinition {
+  return ZONES.find((zone) => x >= zone.x && x <= zone.x + zone.width && y >= zone.y && y <= zone.y + zone.height) || zoneForId("slide");
+}
+
+function zoneForId(id: ZoneId): ZoneDefinition {
+  return ZONES.find((zone) => zone.id === id) || ZONES[0];
+}
+
+function pickShockVariant(state: GameState): ShockEntity["variant"] {
+  const phase = PHASES[state.phaseIndex]?.id || "";
+  if (phase === "droplet") return "droplet";
+  if (phase === "rotor" && state.rng() > 0.35) return "rotor";
+  if (phase === "lysis") return pick(state.rng, ["antibiotic", "droplet", "rotor"]);
+  return state.rng() > 0.72 ? "droplet" : "antibiotic";
+}
+
+function shockCause(shock: ShockEntity): string {
+  if (shock.variant === "droplet") return "pipette droplet pulse";
+  if (shock.variant === "rotor") return "centrifuge rotor sweep";
+  return "beta-lactam shock front";
+}
+
+function ruptureCause(hazard: RuptureEntity, fallback: string): string {
+  if (hazard.variant === "plaque") return "expanding phage plaque";
+  if (hazard.variant === "spill") return "media spill rupture";
+  return fallback;
 }
 
 function cleanName(value: unknown): string {

@@ -12,6 +12,8 @@ declare global {
 let shell: ReturnType<typeof createShell> | null = null;
 let controller: EnvelopeGameController | null = null;
 const LAB_TIMEZONE = "America/New_York";
+const NAME_STORAGE_KEY = "bernhardt-envelope-escape-name-v2";
+const MOTION_STORAGE_KEY = "bernhardt-envelope-escape-motion-v2";
 
 interface ShellRefs {
   close: HTMLButtonElement;
@@ -89,22 +91,21 @@ function createShell() {
           </div>
           <div class="envelope-v2-hud-meters">
             <label><span>Assembly</span><b data-hud="assembly-label">0 / 4</b><i><em data-hud="assembly-bar"></em></i></label>
-            <label><span>Response</span><b data-hud="response-label">0%</b><i><em data-hud="response-bar"></em></i></label>
-            <label><span>Objective</span><b data-hud="objective-label">0 / 5</b><i><em data-hud="objective-bar"></em></i></label>
+            <label><span>Command</span><b data-hud="response-label">0%</b><i><em data-hud="response-bar"></em></i></label>
           </div>
           <div class="envelope-v2-pressure">
-            <span>Dominant Pressure</span>
+            <span>Stress Stage</span>
             <strong data-hud="phase">Homeostatic Load</strong>
-            <p data-hud="phase-note">Collect modules and learn the chamber rhythm.</p>
+            <p data-hud="phase-note">Microscope slide safe zone</p>
           </div>
         </section>
         <section class="envelope-v2-menu" data-panel="menu">
-          <p class="envelope-v2-kicker">Top-down arcade survival</p>
+          <p class="envelope-v2-kicker">Lab-bench arcade survival</p>
           <h3>Keep the envelope intact.</h3>
-          <p>Move, dash, collect envelope modules, dodge telegraphed hazards, and trigger the right response before lysis.</p>
+          <p>Navigate the oversized lab bench, collect cell-wall precursor materials, dodge readable hazards, and fire stress responses before lysis.</p>
           <div class="envelope-v2-tutorial">
             <strong>10-second briefing</strong>
-            <span>WASD/arrows move. Shift dashes. 1/2/3 trigger Patch Wall, Purge Phages, or Boost Motility when response is full.</span>
+            <span>WASD/arrows move. Pointer/touch steers. Shift dashes. 1/2/3/4 trigger Patch, Repair, Purge, or Boost when command is full.</span>
           </div>
           <div class="envelope-v2-fields">
             <label>Model bacterium <select data-control="species"></select></label>
@@ -133,8 +134,9 @@ function createShell() {
         </div>
         <div class="envelope-v2-responses" aria-label="Stress response choices">
           <button data-response="patch" type="button">1 Patch Wall</button>
-          <button data-response="purge" type="button">2 Purge Phages</button>
-          <button data-response="boost" type="button">3 Boost Motility</button>
+          <button data-response="repair" type="button">2 Membrane Repair</button>
+          <button data-response="purge" type="button">3 Purge Phages</button>
+          <button data-response="boost" type="button">4 Boost Motility</button>
         </div>
       </footer>
       <aside class="envelope-v2-score-drawer" data-panel="scores">
@@ -170,8 +172,8 @@ function createShell() {
     option.textContent = SPECIES[id].label;
     refs.species.append(option);
   });
-  refs.name.value = readStorageText("bernhardt-envelope-escape-name-v3");
-  refs.motion.value = readStorageText("bernhardt-envelope-escape-motion-v3") || "full";
+  refs.name.value = readStorageText(NAME_STORAGE_KEY) || readStorageText("bernhardt-envelope-escape-name-v3");
+  refs.motion.value = readStorageText(MOTION_STORAGE_KEY) || readStorageText("bernhardt-envelope-escape-motion-v3") || "full";
   refs.audioButton.textContent = audio.enabled ? "Sound On" : "Sound Off";
   refs.audioButton.setAttribute("aria-pressed", String(audio.enabled));
 
@@ -194,10 +196,10 @@ function createShell() {
         if (shell?.dialog === dialog) shell = null;
         dialog.remove();
       });
-      refs.name.addEventListener("input", () => writeStorageText("bernhardt-envelope-escape-name-v3", refs.name.value));
+      refs.name.addEventListener("input", () => writeStorageText(NAME_STORAGE_KEY, refs.name.value));
       refs.species.addEventListener("change", () => ui.updateTrait(refs.species.value));
       refs.motion.addEventListener("change", () => {
-        writeStorageText("bernhardt-envelope-escape-motion-v3", refs.motion.value);
+        writeStorageText(MOTION_STORAGE_KEY, refs.motion.value);
         dialog.classList.toggle("is-calm-motion", refs.motion.value !== "full");
       });
       refs.audioButton.addEventListener("click", () => {
@@ -214,6 +216,25 @@ function createShell() {
       });
       dialog.querySelectorAll<HTMLButtonElement>("[data-response]").forEach((button) => {
         button.addEventListener("click", () => nextController.triggerResponse(button.dataset.response || "patch"));
+      });
+      refs.report.addEventListener("submit", (event) => {
+        const form = event.target instanceof HTMLFormElement ? event.target : null;
+        if (!form?.matches('[data-action="submit-score"]')) return;
+        event.preventDefault();
+        const input = form.querySelector<HTMLInputElement>('[data-control="submit-name"]');
+        const button = form.querySelector<HTMLButtonElement>('button[type="submit"]');
+        const name = input?.value || "Anonymous";
+        refs.name.value = name;
+        writeStorageText(NAME_STORAGE_KEY, name);
+        if (button) button.disabled = true;
+        ui.showSubmitStatus("Submitting score...", "pending");
+        void nextController.submitScore(name).then((payload) => {
+          const mode = payload.mode === "global" ? "shared leaderboard" : payload.mode === "fallback" ? "local fallback board" : "local board";
+          ui.showSubmitStatus(`Saved to the ${mode}.`, "success");
+        }).catch(() => {
+          if (button) button.disabled = false;
+          ui.showSubmitStatus("Score submission failed. Try again or keep the local result.", "error");
+        });
       });
     }
   };
@@ -249,8 +270,9 @@ function createUi(dialog: HTMLDialogElement, refs: ShellRefs) {
       phaseTitle: "Homeostatic Load",
       phaseNote: "Collect modules and learn the chamber rhythm.",
       pressure: "Balanced stress",
-      objectiveTitle: "Assemble Wall",
-      objectiveBrief: "Collect enough PG and Lipid II modules to complete a wall cycle.",
+      zoneLabel: "Microscope slide safe zone",
+      objectiveTitle: "Survive",
+      objectiveBrief: "Collect precursors and avoid stress.",
       objectiveProgress: 0,
       objectiveTarget: 5,
       objectiveTargetLabel: "modules",
@@ -278,6 +300,7 @@ function createUi(dialog: HTMLDialogElement, refs: ShellRefs) {
     refs.menu.hidden = true;
     refs.report.hidden = false;
     dialog.classList.add("is-ended");
+    const submitName = escapeHtml(refs.name.value || "Anonymous");
     refs.report.innerHTML = `
       <p class="envelope-v2-kicker">Run report</p>
       <h3>Cell lysis</h3>
@@ -285,12 +308,24 @@ function createUi(dialog: HTMLDialogElement, refs: ShellRefs) {
       <dl>
         <div><dt>Species</dt><dd>${escapeHtml(report.speciesLabel)}</dd></div>
         <div><dt>Phase</dt><dd>${escapeHtml(report.phaseReached)}</dd></div>
-        <div><dt>Objective</dt><dd>${escapeHtml(report.objectiveTitle)}</dd></div>
+        <div><dt>Zone</dt><dd>${escapeHtml(report.zoneLabel)}</dd></div>
         <div><dt>Cause</dt><dd>${escapeHtml(report.lysisCause)}</dd></div>
         <div><dt>Assembly cycles</dt><dd>${report.assemblyCycles}</dd></div>
         ${report.placement?.rank ? `<div><dt>Board rank</dt><dd>#${report.placement.rank} (${escapeHtml(report.placement.mode || "local")})</dd></div>` : ""}
       </dl>
+      <form class="envelope-v2-submit" data-action="submit-score">
+        <label>Leaderboard name <input data-control="submit-name" maxlength="24" autocomplete="nickname" value="${submitName}" /></label>
+        <button class="envelope-v2-primary" type="submit" ${report.placement?.rank ? "disabled" : ""}>${report.placement?.rank ? "Score Saved" : "Submit Score"}</button>
+        <p data-hud="submit-status">${report.placement?.rank ? "Saved to the leaderboard." : "Review your name, or leave Anonymous, before saving this run."}</p>
+      </form>
     `;
+  }
+
+  function showSubmitStatus(message: string, state: "pending" | "success" | "error" = "pending"): void {
+    const status = refs.report.querySelector<HTMLElement>('[data-hud="submit-status"]');
+    if (!status) return;
+    status.textContent = message;
+    status.dataset.state = state;
   }
 
   function updateHud(snapshot: HudSnapshot): void {
@@ -301,10 +336,8 @@ function createUi(dialog: HTMLDialogElement, refs: ShellRefs) {
     hud("assembly-bar").style.width = `${percent((snapshot.repairProgress || 0) / (snapshot.repairNeeded || 4))}%`;
     hud("response-label").textContent = `${snapshot.responseCharge || 0}%`;
     hud("response-bar").style.width = `${percent((snapshot.responseCharge || 0) / 100)}%`;
-    hud("objective-label").textContent = `${snapshot.objectiveProgress || 0} / ${snapshot.objectiveTarget || 1}`;
-    hud("objective-bar").style.width = `${percent((snapshot.objectiveProgress || 0) / (snapshot.objectiveTarget || 1))}%`;
     hud("phase").textContent = snapshot.phaseTitle || "Homeostatic Load";
-    hud("phase-note").textContent = `${snapshot.objectiveTitle}: ${snapshot.objectiveBrief}`;
+    hud("phase-note").textContent = snapshot.zoneLabel || snapshot.pressure || "";
     responseButtons.forEach((button) => {
       button.disabled = !snapshot.responseReady;
       button.classList.toggle("is-ready", Boolean(snapshot.responseReady));
@@ -344,7 +377,7 @@ function createUi(dialog: HTMLDialogElement, refs: ShellRefs) {
     hud("trait-copy").textContent = species.traitCopy;
   }
 
-  return { showMenu, showPlaying, showPaused, showGameOver, updateHud, renderScores, showToast, updateTrait };
+  return { showMenu, showPlaying, showPaused, showGameOver, showSubmitStatus, updateHud, renderScores, showToast, updateTrait };
 }
 
 function requireElement<T extends Element>(root: ParentNode, selector: string): T {

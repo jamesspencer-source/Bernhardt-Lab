@@ -2,11 +2,12 @@ export type SoundName = "pickup" | "damage" | "dash" | "response" | "phase" | "l
 
 export function createAudioController() {
   let context: AudioContext | null = null;
-  let enabled = readBoolean("bernhardt-envelope-audio-v3", false);
+  const storageKey = "bernhardt-envelope-audio-v2";
+  let enabled = readBoolean(storageKey, readBoolean("bernhardt-envelope-audio-v3", false));
 
   function setEnabled(next: boolean): void {
     enabled = next;
-    writeBoolean("bernhardt-envelope-audio-v3", enabled);
+    writeBoolean(storageKey, enabled);
     if (enabled) void ensureContext();
   }
 

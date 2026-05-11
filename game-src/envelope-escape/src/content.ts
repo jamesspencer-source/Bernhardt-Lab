@@ -5,15 +5,27 @@ import type {
   PickupDefinition,
   ResponseDefinition,
   SpeciesDefinition,
-  SpeciesId
+  SpeciesId,
+  ZoneDefinition
 } from "./types";
 
 export const WORLD = {
-  width: 1600,
-  height: 900,
-  safeMargin: 64,
+  width: 3200,
+  height: 1800,
+  viewWidth: 1600,
+  viewHeight: 900,
+  safeMargin: 96,
   maxLeaderboardScore: 2000000000
 } as const;
+
+export const ZONES: ZoneDefinition[] = [
+  { id: "slide", label: "Microscope slide safe zone", x: 170, y: 1035, width: 710, height: 560, safe: true },
+  { id: "pipette", label: "Pipette droplet lanes", x: 190, y: 170, width: 1110, height: 430 },
+  { id: "petri", label: "Petri plaque field", x: 1375, y: 150, width: 760, height: 665 },
+  { id: "flask", label: "Fernbach media currents", x: 2250, y: 185, width: 710, height: 700 },
+  { id: "centrifuge", label: "Centrifuge rotor hazard", x: 2050, y: 1010, width: 840, height: 560 },
+  { id: "rack", label: "Test-tube rack chokepoint", x: 1020, y: 1035, width: 850, height: 540 }
+];
 
 export const SPECIES_ORDER: SpeciesId[] = [
   "ecoli",
@@ -135,14 +147,16 @@ export const SPECIES: Record<SpeciesId, SpeciesDefinition> = {
 };
 
 export const PICKUPS: Record<string, PickupDefinition> = {
-  pg: { id: "pg", label: "PG synthase", sheet: "pickup-pg", repair: 1, response: 18, score: 70 },
-  lipid: { id: "lipid", label: "Lipid II", sheet: "pickup-lipid", repair: 2, response: 15, score: 85 },
-  restraint: { id: "restraint", label: "Hydrolase restraint", sheet: "pickup-restraint", repair: 1, response: 22, score: 90 }
+  pg: { id: "pg", label: "PG building block", sheet: "pickup-pg", repair: 1, response: 16, score: 70 },
+  lipid: { id: "lipid", label: "Lipid II precursor", sheet: "pickup-lipid", repair: 2, response: 14, score: 85 },
+  restraint: { id: "restraint", label: "Hydrolase restraint", sheet: "pickup-restraint", repair: 1, response: 21, score: 90 },
+  repair: { id: "repair", label: "Membrane patch droplet", sheet: "pickup-repair", repair: 2, response: 18, score: 95 }
 };
 
 export const RESPONSES: Record<string, ResponseDefinition> = {
-  patch: { id: "patch", label: "Patch Wall", shortLabel: "Patch", icon: "response-patch", copy: "Restore integrity and create a protective pulse.", color: "#b8ffdf" },
-  purge: { id: "purge", label: "Purge Phages", shortLabel: "Purge", icon: "response-purge", copy: "Clear nearby phages and lower swarm pressure.", color: "#bbecff" },
+  patch: { id: "patch", label: "Patch Wall", shortLabel: "Patch", icon: "response-patch", copy: "Restore integrity and blunt rupture damage.", color: "#b8ffdf" },
+  repair: { id: "repair", label: "Membrane Repair", shortLabel: "Repair", icon: "response-repair", copy: "Stabilize spill zones and shock fronts.", color: "#90e9ff" },
+  purge: { id: "purge", label: "Purge Phages", shortLabel: "Purge", icon: "response-purge", copy: "Clear nearby phages and plaque pressure.", color: "#bbecff" },
   boost: { id: "boost", label: "Boost Motility", shortLabel: "Boost", icon: "response-boost", copy: "Gain a burst of movement and brief invulnerability.", color: "#ffe1a3" }
 };
 
@@ -155,11 +169,12 @@ export const OBJECTIVES: Record<string, ObjectiveDefinition> = {
 };
 
 export const PHASES: PhaseDefinition[] = [
-  { id: "homeostasis", start: 0, title: "Homeostatic Load", objectiveId: "assemble", note: "Learn the chamber rhythm and build the wall.", pressure: "Balanced stress", tint: 0x0b3443, rates: { pickup: 1.18, phage: 0.54, shock: 0.36, crack: 0.22, rupture: 0.08, storm: 0 } },
-  { id: "antibiotic", start: 42, title: "Beta-Lactam Surge", objectiveId: "breach", note: "Lane-cutting shock fronts and cracks constrain movement.", pressure: "Antibiotic pulses", tint: 0x173d58, rates: { pickup: 1.04, phage: 0.7, shock: 0.92, crack: 0.72, rupture: 0.18, storm: 0 } },
-  { id: "phage", start: 98, title: "Phage Adsorption", objectiveId: "adsorption", note: "Swarms curve in. Purge or bait them into misses.", pressure: "Phage swarm", tint: 0x254967, rates: { pickup: 0.98, phage: 1.22, shock: 0.9, crack: 0.72, rupture: 0.28, storm: 0.03 } },
-  { id: "rupture", start: 168, title: "Envelope Rupture", objectiveId: "rupture", note: "Rupture zones overlap with cracks. Route early.", pressure: "Mixed envelope failure", tint: 0x563657, rates: { pickup: 0.92, phage: 1.32, shock: 1.1, crack: 1.1, rupture: 0.84, storm: 0.16 } },
-  { id: "lysis", start: 245, title: "Lysis Storm", objectiveId: "storm", note: "The chamber is collapsing. Chain dodges and responses.", pressure: "Lytic collapse", tint: 0x6b2e3a, rates: { pickup: 0.86, phage: 1.5, shock: 1.22, crack: 1.32, rupture: 1.08, storm: 0.54 } }
+  { id: "calibration", start: 0, title: "Bench Calibration", objectiveId: "assemble", note: "Collect precursors, learn safe routes, and keep moving.", pressure: "Low stress", tint: 0x0b3443, rates: { pickup: 1.2, phage: 0.42, shock: 0.28, crack: 0.16, rupture: 0.06, storm: 0 } },
+  { id: "droplet", start: 38, title: "Droplet Pressure", objectiveId: "assemble", note: "Pipette streams begin cutting lanes across the bench.", pressure: "Droplet lanes", tint: 0x123a4a, rates: { pickup: 1.08, phage: 0.56, shock: 0.82, crack: 0.28, rupture: 0.12, storm: 0 } },
+  { id: "phage", start: 88, title: "Phage Bloom", objectiveId: "adsorption", note: "Plaques expand near the dish and phages begin curving in.", pressure: "Phage bloom", tint: 0x254967, rates: { pickup: 1, phage: 1.2, shock: 0.82, crack: 0.46, rupture: 0.3, storm: 0.02 } },
+  { id: "antibiotic", start: 146, title: "Antibiotic Shock", objectiveId: "breach", note: "Shock fronts and rupture sites overlap across routes.", pressure: "Antibiotic fronts", tint: 0x173d58, rates: { pickup: 0.98, phage: 1.16, shock: 1.16, crack: 0.82, rupture: 0.48, storm: 0.08 } },
+  { id: "rotor", start: 214, title: "Rotor Chaos", objectiveId: "rupture", note: "Centrifuge sweeps punish straight-line escapes.", pressure: "Rotor sweep", tint: 0x563657, rates: { pickup: 0.92, phage: 1.28, shock: 1.26, crack: 1.08, rupture: 0.84, storm: 0.18 } },
+  { id: "lysis", start: 292, title: "Final Lysis Storm", objectiveId: "storm", note: "All stress patterns combine. Chain near misses and responses.", pressure: "Lytic collapse", tint: 0x6b2e3a, rates: { pickup: 0.88, phage: 1.52, shock: 1.36, crack: 1.32, rupture: 1.06, storm: 0.56 } }
 ];
 
 export const DAILY_PROFILES: DailyProfile[] = [

@@ -10,6 +10,7 @@ import {
   getRunReport,
   serializeScoreEntry,
   setPaused,
+  setPlayerName,
   startRun,
   triggerResponse,
   updateSimulation
@@ -37,6 +38,7 @@ export interface EnvelopeGameController {
   restart(): void;
   togglePause(): void;
   triggerResponse(choiceId: string): boolean;
+  submitScore(playerName: string): Promise<LeaderboardPayload>;
   refreshScores(board?: string): Promise<LeaderboardPayload>;
   destroy(): void;
 }
@@ -81,28 +83,28 @@ export function createEnvelopeGame({
     }
 
     create(): void {
-      this.add.image(WORLD.width / 2, WORLD.height / 2, "env-background").setDisplaySize(WORLD.width, WORLD.height);
+      this.add.image(WORLD.viewWidth / 2, WORLD.viewHeight / 2, "env-background").setDisplaySize(WORLD.width, WORLD.height);
       const haze = this.add.graphics();
       haze.fillStyle(0x8ef4ff, 0.08);
-      haze.fillCircle(WORLD.width * 0.65, WORLD.height * 0.48, 260);
+      haze.fillCircle(WORLD.viewWidth * 0.65, WORLD.viewHeight * 0.48, 260);
       haze.lineStyle(2, 0xa8f7ef, 0.12);
       for (let index = 0; index < 9; index += 1) {
-        haze.strokeEllipse(WORLD.width * 0.65, WORLD.height * 0.48, 280 + index * 34, 160 + index * 26);
+        haze.strokeEllipse(WORLD.viewWidth * 0.65, WORLD.viewHeight * 0.48, 280 + index * 34, 160 + index * 26);
       }
-      const sprite = this.add.sprite(WORLD.width * 0.67, WORLD.height * 0.5, SPECIES.ecoli.sheet).setScale(3.3).setDepth(3);
+      const sprite = this.add.sprite(WORLD.viewWidth * 0.67, WORLD.viewHeight * 0.5, SPECIES.ecoli.sheet).setScale(3.3).setDepth(3);
       sprite.play(`${SPECIES.ecoli.sheet}-idle`);
       this.tweens.add({ targets: sprite, angle: 360, duration: 18000, repeat: -1 });
-      this.add.text(WORLD.width * 0.07, WORLD.height * 0.2, "Envelope Escape", {
+      this.add.text(WORLD.viewWidth * 0.07, WORLD.viewHeight * 0.2, "Envelope Escape", {
         fontFamily: "Fraunces, Georgia, serif",
         fontSize: "78px",
         color: "#f2fbff"
       });
-      this.add.text(WORLD.width * 0.07, WORLD.height * 0.31, "Stress Test Chamber", {
+      this.add.text(WORLD.viewWidth * 0.07, WORLD.viewHeight * 0.31, "Lab-Bench Survival", {
         fontFamily: "Manrope, sans-serif",
         fontSize: "26px",
         color: "#aeeaf0"
       });
-      this.add.text(WORLD.width * 0.07, WORLD.height * 0.39, "A hidden top-down arcade assay for bacterial envelope survival.", {
+      this.add.text(WORLD.viewWidth * 0.07, WORLD.viewHeight * 0.39, "A hidden top-down arcade assay across a stylized lab bench.", {
         fontFamily: "Manrope, sans-serif",
         fontSize: "24px",
         color: "#d7f6fa",
@@ -154,8 +156,10 @@ export function createEnvelopeGame({
         right2: "RIGHT",
         dash: "SHIFT",
         patch: "ONE",
-        purge: "TWO",
-        boost: "THREE",
+        repair: "TWO",
+        purge: "THREE",
+        boost: "FOUR",
+        boostAlt: "SPACE",
         pause: "P",
         escape: "ESC"
       }) as Record<string, Phaser.Input.Keyboard.Key>;
@@ -171,6 +175,8 @@ export function createEnvelopeGame({
       ui.showPlaying(state);
       void refreshScores(state.board);
       audio.play("phase");
+      this.cameras.main.startFollow(this.player, true, 0.08, 0.08);
+      this.cameras.main.setDeadzone(260, 160);
     }
 
     update(_: number, deltaMs: number): void {
@@ -195,8 +201,9 @@ export function createEnvelopeGame({
       inputState.right = Boolean(this.keys.right?.isDown || this.keys.right2?.isDown);
       inputState.dash = Boolean(this.keys.dash && Phaser.Input.Keyboard.JustDown(this.keys.dash));
       if (this.keys.patch && Phaser.Input.Keyboard.JustDown(this.keys.patch)) controller.triggerResponse("patch");
+      if (this.keys.repair && Phaser.Input.Keyboard.JustDown(this.keys.repair)) controller.triggerResponse("repair");
       if (this.keys.purge && Phaser.Input.Keyboard.JustDown(this.keys.purge)) controller.triggerResponse("purge");
-      if (this.keys.boost && Phaser.Input.Keyboard.JustDown(this.keys.boost)) controller.triggerResponse("boost");
+      if ((this.keys.boost && Phaser.Input.Keyboard.JustDown(this.keys.boost)) || (this.keys.boostAlt && Phaser.Input.Keyboard.JustDown(this.keys.boostAlt))) controller.triggerResponse("boost");
       if ((this.keys.pause && Phaser.Input.Keyboard.JustDown(this.keys.pause)) || (this.keys.escape && Phaser.Input.Keyboard.JustDown(this.keys.escape))) controller.togglePause();
       const pointer = this.input.activePointer;
       if (pointer.isDown) {
@@ -211,18 +218,18 @@ export function createEnvelopeGame({
       this.fieldGraphics.clear();
       this.fieldGraphics.fillStyle(phase.tint, 0.16);
       this.fieldGraphics.fillRect(0, 0, WORLD.width, WORLD.height);
-      this.fieldGraphics.lineStyle(2, 0xaaf6ef, 0.075);
-      for (let y = 118; y < WORLD.height; y += 82) {
+      this.fieldGraphics.lineStyle(2, 0xaaf6ef, 0.045);
+      for (let y = 118; y < WORLD.height; y += 118) {
         this.fieldGraphics.beginPath();
-        for (let x = -40; x <= WORLD.width + 40; x += 80) {
+        for (let x = -40; x <= WORLD.width + 40; x += 96) {
           const offset = Math.sin(x * 0.014 + state.elapsed * 0.72 + y * 0.01) * 14;
           if (x <= -40) this.fieldGraphics.moveTo(x, y + offset);
           else this.fieldGraphics.lineTo(x, y + offset);
         }
         this.fieldGraphics.strokePath();
       }
-      this.fieldGraphics.lineStyle(1, 0x74d7e8, 0.06);
-      for (let x = 80; x < WORLD.width; x += 120) {
+      this.fieldGraphics.lineStyle(1, 0x74d7e8, 0.04);
+      for (let x = 80; x < WORLD.width; x += 160) {
         this.fieldGraphics.lineBetween(x, 90, x + Math.sin(state.elapsed + x) * 32, WORLD.height - 90);
       }
     }
@@ -235,9 +242,10 @@ export function createEnvelopeGame({
       });
       state.entities.shocks.forEach((shock) => {
         if (shock.warning <= 0) return;
-        this.warningGraphics.fillStyle(0x8fefff, 0.08 + shock.warning * 0.08);
-        if (shock.axis === "x") this.warningGraphics.fillRect(shock.position - shock.thickness / 2, 0, shock.thickness, WORLD.height);
-        else this.warningGraphics.fillRect(0, shock.position - shock.thickness / 2, WORLD.width, shock.thickness);
+        const color = shock.variant === "rotor" ? 0xffd47c : shock.variant === "droplet" ? 0x8fefff : 0xfff1a8;
+        this.warningGraphics.fillStyle(color, 0.09 + shock.warning * 0.08);
+        if (shock.axis === "x") this.warningGraphics.fillRect(shock.position - shock.thickness / 2, shock.spanStart, shock.thickness, shock.spanEnd - shock.spanStart);
+        else this.warningGraphics.fillRect(shock.spanStart, shock.position - shock.thickness / 2, shock.spanEnd - shock.spanStart, shock.thickness);
       });
       state.entities.cracks.forEach((crack) => {
         if (crack.warning <= 0) return;
@@ -277,12 +285,13 @@ export function createEnvelopeGame({
       });
       syncSpriteList(this, this.maps.shocks, state.entities.shocks, () => this.add.sprite(0, 0, "hazard-shock").setDepth(10).play("hazard-shock-pulse"), (sprite, entity) => {
         sprite.setAlpha(entity.warning > 0 ? 0.28 : 0.76);
+        sprite.setTint(entity.variant === "rotor" ? 0xffd47c : entity.variant === "droplet" ? 0x8fefff : 0xfff1a8);
         if (entity.axis === "x") {
-          sprite.setPosition(entity.position, WORLD.height / 2);
-          sprite.setDisplaySize(entity.thickness, WORLD.height);
+          sprite.setPosition(entity.position, (entity.spanStart + entity.spanEnd) / 2);
+          sprite.setDisplaySize(entity.thickness, entity.spanEnd - entity.spanStart);
         } else {
-          sprite.setPosition(WORLD.width / 2, entity.position);
-          sprite.setDisplaySize(WORLD.width, entity.thickness);
+          sprite.setPosition((entity.spanStart + entity.spanEnd) / 2, entity.position);
+          sprite.setDisplaySize(entity.spanEnd - entity.spanStart, entity.thickness);
         }
       });
       syncSpriteList(this, this.maps.cracks, state.entities.cracks, () => this.add.sprite(0, 0, "hazard-crack").setDepth(12).play("hazard-crack-live"), (sprite, entity) => {
@@ -296,6 +305,7 @@ export function createEnvelopeGame({
       });
       syncSpriteList(this, this.maps.ruptures, state.entities.ruptures, (entity) => this.add.sprite(entity.x, entity.y, "hazard-rupture").setDepth(11).play("hazard-rupture-live"), (sprite, entity) => {
         sprite.setPosition(entity.x, entity.y).setDisplaySize(entity.radius * 2, entity.radius * 2).setAlpha(entity.warning > 0 ? 0.28 : 0.68);
+        sprite.setTint(entity.variant === "plaque" ? 0xb8c06f : entity.variant === "spill" ? 0x82e7d7 : 0xffc694);
       });
       syncSpriteList(this, this.maps.storms, state.entities.storms, (entity) => this.add.sprite(entity.x, entity.y, "hazard-storm").setDepth(9).play("hazard-storm-live"), (sprite, entity) => {
         sprite.setPosition(entity.x, entity.y).setDisplaySize(entity.radius * 2, entity.radius * 2).setAlpha(entity.warning > 0 ? 0.22 : 0.52);
@@ -351,11 +361,7 @@ export function createEnvelopeGame({
       this.player.play(`${SPECIES[state.speciesId].sheet}-lysis`, true);
       void audio.play("lysis");
       ui.showGameOver(getRunReport(state));
-      const payload = await leaderboard.submit(serializeScoreEntry(state));
-      const report = getRunReport(state, { rank: payload.rank, mode: payload.mode, totalEntries: payload.totalEntries });
-      ui.showGameOver(report);
-      ui.renderScores(payload);
-      this.scene.start("GameOverScene", { report });
+      this.scene.start("GameOverScene", { report: getRunReport(state) });
     }
   }
 
@@ -365,18 +371,18 @@ export function createEnvelopeGame({
     }
 
     create(data: { report?: RunReport }): void {
-      this.add.image(WORLD.width / 2, WORLD.height / 2, "env-background").setDisplaySize(WORLD.width, WORLD.height);
-      this.add.rectangle(WORLD.width / 2, WORLD.height / 2, WORLD.width, WORLD.height, 0x050d18, 0.54);
-      this.add.text(WORLD.width * 0.08, WORLD.height * 0.22, "Cell lysis", { fontFamily: "Fraunces, Georgia, serif", fontSize: "76px", color: "#f2fbff" });
-      this.add.text(WORLD.width * 0.08, WORLD.height * 0.34, `${data.report?.score.toLocaleString() || 0} points - ${data.report?.phaseReached || "Run complete"}`, { fontFamily: "Manrope, sans-serif", fontSize: "28px", color: "#b8eff5" });
+      this.add.image(WORLD.viewWidth / 2, WORLD.viewHeight / 2, "env-background").setDisplaySize(WORLD.width, WORLD.height);
+      this.add.rectangle(WORLD.viewWidth / 2, WORLD.viewHeight / 2, WORLD.viewWidth, WORLD.viewHeight, 0x050d18, 0.54);
+      this.add.text(WORLD.viewWidth * 0.08, WORLD.viewHeight * 0.22, "Cell lysis", { fontFamily: "Fraunces, Georgia, serif", fontSize: "76px", color: "#f2fbff" });
+      this.add.text(WORLD.viewWidth * 0.08, WORLD.viewHeight * 0.34, `${data.report?.score.toLocaleString() || 0} points - ${data.report?.phaseReached || "Run complete"}`, { fontFamily: "Manrope, sans-serif", fontSize: "28px", color: "#b8eff5" });
     }
   }
 
   const game = new Phaser.Game({
     type: Phaser.AUTO,
     parent,
-    width: WORLD.width,
-    height: WORLD.height,
+    width: WORLD.viewWidth,
+    height: WORLD.viewHeight,
     backgroundColor: "#06101b",
     scene: [BootScene, MenuScene, PlayScene, GameOverScene],
     scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
@@ -418,6 +424,13 @@ export function createEnvelopeGame({
         ui.updateHud(getHudSnapshot(state));
       }
       return ok;
+    },
+    async submitScore(playerName: string): Promise<LeaderboardPayload> {
+      setPlayerName(state, playerName);
+      const payload = await leaderboard.submit(serializeScoreEntry(state));
+      ui.showGameOver(getRunReport(state, { rank: payload.rank, mode: payload.mode, totalEntries: payload.totalEntries }));
+      ui.renderScores(payload);
+      return payload;
     },
     refreshScores,
     destroy(): void {

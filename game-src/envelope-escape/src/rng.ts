@@ -36,7 +36,7 @@ export function getLabDateKey(date = new Date()): string {
 }
 
 export function buildDailyChallenge(dateKey = getLabDateKey()): DailyChallenge {
-  const rng = createSeededRandom(hashString(`envelope-v3-daily-${dateKey}`));
+  const rng = createSeededRandom(hashString(`envelope-v2-survival-daily-${dateKey}`));
   const profile = pick(rng, DAILY_PROFILES);
   const speciesId = pick(rng, SPECIES_ORDER);
   return {
