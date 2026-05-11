@@ -239,8 +239,9 @@
   position: absolute;
   top: 0;
   right: 0;
-  flex-direction: column;
-  width: min(16rem, 32vw);
+  width: min(18rem, 34vw);
+  display: grid;
+  grid-template-columns: 1fr;
 }
 
 .envelope-v2-hud-meters label {
@@ -269,9 +270,9 @@
   position: absolute;
   top: 0;
   left: 50%;
-  width: min(24rem, calc(100% - 36rem));
+  width: min(18rem, calc(100% - 34rem));
   transform: translateX(-50%);
-  padding: 0.66rem 0.82rem;
+  padding: 0.56rem 0.72rem;
   border-radius: 16px;
   text-align: center;
 }
@@ -279,7 +280,7 @@
 .envelope-v2-pressure p {
   margin: 0.18rem 0 0;
   color: rgba(221, 242, 250, 0.8);
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   line-height: 1.32;
 }
 
@@ -392,6 +393,54 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.56rem;
   margin: 0.9rem 0 0;
+}
+
+.envelope-v2-submit {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.68rem;
+  align-items: end;
+  margin-top: 0.95rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid rgba(169, 235, 241, 0.14);
+}
+
+.envelope-v2-submit label {
+  display: grid;
+  gap: 0.34rem;
+  color: rgba(169, 235, 241, 0.82);
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.envelope-v2-submit input {
+  width: 100%;
+  min-height: 2.65rem;
+  border: 1px solid rgba(169, 235, 241, 0.2);
+  border-radius: 14px;
+  padding: 0.58rem 0.72rem;
+  color: #eefbff;
+  background: rgba(4, 14, 26, 0.82);
+  font: inherit;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.envelope-v2-submit p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: rgba(225, 243, 250, 0.78);
+  font-size: 0.82rem;
+}
+
+.envelope-v2-submit p[data-state="success"] {
+  color: #b8ffdf;
+}
+
+.envelope-v2-submit p[data-state="error"] {
+  color: #ffb4c2;
 }
 
 .envelope-v2-report div {
@@ -556,7 +605,7 @@
     top: auto;
     right: auto;
     left: 0;
-    bottom: -7rem;
+    bottom: -4.7rem;
     width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -577,7 +626,8 @@
   }
 
   .envelope-v2-fields,
-  .envelope-v2-report dl {
+  .envelope-v2-report dl,
+  .envelope-v2-submit {
     grid-template-columns: 1fr;
   }
 
