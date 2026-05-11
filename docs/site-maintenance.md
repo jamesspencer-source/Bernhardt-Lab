@@ -208,18 +208,17 @@ If it fails, check:
 - D1 binding / schema drift
 - whether the live worker has been redeployed after repo-side leaderboard API changes
 
-## Envelope Escape V2 beta
+## Envelope Escape game
 
-V1 remains the public footer game until V2 clears art, browser, and leaderboard gates. V2 loads only when the homepage URL includes:
+V1 is the public footer game and the gameplay baseline. The prior V2 Phaser preview is disabled and should not be re-enabled from cached bootstrap files, homepage script tags, or query-string routing.
 
-```text
-index.html?envelopeV2=1
-```
+Future replacements must stay experimental until they pass real browser screenshot/playtest QA and are visibly better than V1. Do not make a preview the default based on static checks alone.
 
 Source and output:
 
+- `assets/envelope-escape.js` and `assets/envelope-escape.css` are the active production game.
 - `game-src/envelope-escape/` is the Phaser + TypeScript source.
-- `assets/game/envelope-escape/` contains game art and the generated runtime bundle.
+- `assets/game/envelope-escape/` contains disabled V2 reference art and the generated runtime bundle.
 - `docs/envelope-escape-game-upgrade.md` tracks the production migration.
 - `docs/envelope-escape-art-direction.md` tracks the asset brief and QA checklist.
 

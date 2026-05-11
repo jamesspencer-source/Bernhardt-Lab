@@ -1,6 +1,6 @@
 # Envelope Escape V2 Production Track
 
-This document tracks the production Phaser + TypeScript rebuild for Envelope Escape. The current V1 DOM/canvas game remains the public default until V2 passes browser QA and the live Cloudflare leaderboard check. V2 starts only when the homepage URL includes `?envelopeV2=1` and the footer game trigger is clicked.
+This document tracks the disabled Phaser + TypeScript V2 rebuild for Envelope Escape. The current V1 DOM/canvas game is the public default and the gameplay baseline. V2 source and generated assets remain in the repo for reference, but the homepage no longer routes `?envelopeV2=1` to V2.
 
 ## Current State
 
@@ -8,9 +8,9 @@ This document tracks the production Phaser + TypeScript rebuild for Envelope Esc
 - V2 source modules live under `game-src/envelope-escape/src/`.
 - V2 static output is built to `assets/game/envelope-escape/runtime/`.
 - The compatibility namespace `window.BernhardtEnvelopePhaser` remains in `assets/envelope-escape-phaser.js` for local console testing.
-- The hidden beta bootstrap lives at `assets/js/envelope-game/bootstrap.js`.
+- The disabled V2 bootstrap placeholder lives at `assets/js/envelope-game/bootstrap.js`.
 - V2 is bundled by Vite and includes Phaser from the local npm dependency.
-- Public production visitors still receive V1 unless `?envelopeV2=1` is present.
+- Public production visitors receive V1, including when `?envelopeV2=1` is present.
 
 ## Runtime Shape
 
@@ -38,7 +38,7 @@ Response choices:
 
 ## Feature Flag Contract
 
-Open the hidden beta with:
+V2 is currently disabled. The former beta URL must not intercept the footer trigger:
 
 ```text
 index.html?envelopeV2=1
@@ -118,12 +118,13 @@ When assets are regenerated, document the source tool, export dimensions, compre
 
 ## Suggested Migration Workflow
 
+The current V2 preview is disabled. Treat V1 as the active game and gameplay baseline.
+
 1. Keep V1 active as the public footer game.
-2. Test V2 through `?envelopeV2=1`.
-3. Replace generated first-pass sprites with artist-approved sprite sheets.
-4. Run V1 and V2 side by side behind mutually exclusive flags.
-5. Switch the public footer trigger to V2 only after art approval, QA, and live leaderboard verification.
-6. Keep `?envelopeLegacy=1` as rollback after launch.
+2. Keep V2 source and generated assets only as reference material unless a new plan explicitly revives them.
+3. Do not wire `?envelopeV2=1` or any replacement preview to the footer trigger without real browser screenshot/playtest QA.
+4. Any future replacement must be visibly better than V1 before becoming public.
+5. Keep `?envelopeLegacy=1` as a V1-safe path if a replacement is ever launched.
 
 ## Testing Workflow
 
@@ -138,7 +139,7 @@ python3 scripts/build_site.py
 Manual browser smoke test on a development page:
 
 ```js
-Open `index.html?envelopeV2=1`, click the footer trigger, then verify classic run, daily run, pause, restart, response choices, game over report, and scores drawer.
+Open `index.html?envelopeV2=1`, click the footer trigger, then verify that V1 still handles classic run, daily run, pause, restart, stress response, game over report, and scores drawer.
 ```
 
 Regression checks before any activation:
@@ -146,5 +147,5 @@ Regression checks before any activation:
 - Confirm the existing V1 Envelope Escape still loads and starts normally.
 - Confirm leaderboard reads and writes still use `window.ENVELOPE_LEADERBOARD_URL`.
 - Confirm normal `index.html` still opens V1.
-- Confirm `index.html?envelopeV2=1` opens V2.
+- Confirm `index.html?envelopeV2=1` does not intercept V1 unless a future approved preview intentionally restores it.
 - Confirm `index.html?envelopeLegacy=1` leaves V1 behavior intact.

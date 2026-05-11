@@ -158,13 +158,11 @@ python3 scripts/apply_scheduled_updates.py --today 2026-07-01 --dry-run
 The daily GitHub Action applies due updates, rebuilds the site, and commits only
 when a real website diff exists. Featured alumni remains manually curated.
 
-## Envelope Escape beta
+## Envelope Escape game
 
-V1 remains the public footer game. V2 is a hidden Phaser + TypeScript beta that loads only with:
+V1 is the public footer game and the gameplay baseline. The prior Phaser + TypeScript V2 preview is disabled because it did not meet the desired look or feel; keep its source/assets only as reference material unless a future plan explicitly revives it.
 
-```text
-index.html?envelopeV2=1
-```
+Do not make any replacement game public until it has real browser screenshot/playtest QA and is clearly better than V1.
 
 The legacy path remains:
 
@@ -174,12 +172,14 @@ index.html?envelopeLegacy=1
 
 Source and build outputs:
 
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/envelope-escape.js`
+- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/envelope-escape.css`
 - `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/game-src/envelope-escape/`
 - `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/game/envelope-escape/`
 - `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/docs/envelope-escape-game-upgrade.md`
 - `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/docs/envelope-escape-art-direction.md`
 
-Run `npm run game:check` and `npm run game:build` before publishing game changes. `python3 scripts/publish_site.py` also runs the game build before the Python site build.
+Run `npm run game:check` and `npm run game:build` before publishing TypeScript game changes. `python3 scripts/publish_site.py` also runs the game build before the Python site build.
 
 ## Global Envelope Escape leaderboard
 

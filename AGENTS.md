@@ -144,9 +144,10 @@ Update archive scientific media:
 - The Envelope Escape frontend runtime URL comes from `data/runtime-config.json`.
 - The generated frontend config file is `assets/envelope-escape-config.js`.
 - V1 production game code lives in `assets/envelope-escape.js`.
-- V2 beta source lives in `game-src/envelope-escape/`.
+- V1 is the active gameplay baseline.
+- V2 beta source lives in `game-src/envelope-escape/` but is disabled and should be treated as reference material.
 - V2 beta static output lives in `assets/game/envelope-escape/runtime/`.
-- V2 beta loads only with `?envelopeV2=1`.
+- Do not restore `?envelopeV2=1` routing or make any replacement game public without real browser screenshot/playtest QA.
 - `?envelopeLegacy=1` keeps the legacy path.
 - The Cloudflare Worker + D1 backend lives in `leaderboard-worker/`.
 - Repo-side changes do not redeploy the worker automatically.

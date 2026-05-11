@@ -1,30 +1,7 @@
-const params = new URLSearchParams(window.location.search);
-const wantsV2 = params.has("envelopeV2") && !params.has("envelopeLegacy");
-
-if (wantsV2) {
-  const trigger = document.getElementById("envelope-trigger");
-  if (trigger) {
-    let v2Failed = false;
-    trigger.setAttribute("title", "...");
-    trigger.setAttribute("aria-label", "Open Envelope Escape V2 survival preview");
-    const sr = trigger.querySelector(".sr-only");
-    if (sr) sr.textContent = "Open Envelope Escape V2 survival preview";
-    trigger.addEventListener(
-      "click",
-      async (event) => {
-        if (v2Failed) return;
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        try {
-          const game = await import("../../game/envelope-escape/runtime/envelope-escape-v2.js?v=20260511a");
-          await game.openEnvelopeEscapeV2();
-        } catch (error) {
-          console.error("Envelope Escape V2 failed to start; falling back to V1.", error);
-          v2Failed = true;
-          window.alert("Envelope Escape V2 failed to load. Click the footer game trigger again to open the current game.");
-        }
-      },
-      true
-    );
-  }
-}
+// Envelope Escape V2 is intentionally disabled.
+//
+// The public footer Easter egg uses the V1 canvas game in
+// assets/envelope-escape.js. Keep this file as a harmless placeholder so any
+// stale cached homepage that still references the old V2 bootstrap cannot
+// intercept the footer trigger or load the disliked V2 preview.
+console.info("Envelope Escape V2 preview is disabled; V1 remains the active game.");
