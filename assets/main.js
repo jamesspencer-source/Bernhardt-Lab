@@ -1,5 +1,5 @@
 import { initSiteCore } from "./js/site-core.js";
-import { initTeamDirectory } from "./js/team-directory.js";
+import { initTeamDirectory } from "./js/team-directory.js?v=20260511a";
 import { initRecentPublications } from "./js/publications.js?v=20260410a";
 import { initGallery } from "./js/gallery.js";
 import { initFeaturedAlumni } from "./js/featured-alumni.js?v=20260407d";
