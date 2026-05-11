@@ -30,6 +30,13 @@ CSS_SOURCE_ORDER = [
     "home.css",
     "directory.css",
 ]
+TEAM_GROUP_SORT_ORDER = {
+    "Faculty": 0,
+    "Research Staff": 1,
+    "Postdoctoral Fellows": 2,
+    "Graduate Students": 3,
+    "Undergraduate Researchers": 4,
+}
 PRESERVED_FLAT_ROOT_FILES = {".nojekyll", "CNAME", "robots.txt", "sitemap.xml", "favicon.ico"}
 TRANSIENT_NAMES = {".DS_Store", "Thumbs.db", ".pycache", "__pycache__", ".venv"}
 PUBLIC_HTML_EXCLUDED_DIRS = {
@@ -434,16 +441,19 @@ def alumni_people(people: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def render_people_cards(people: list[dict[str, Any]], root_prefix: str, flat: bool, view: str) -> str:
     cards = []
     for index, person in enumerate(people):
+        name = clean_text(person.get("name"))
+        group = clean_text(person.get("group"))
         role_label = clean_text(person.get("labRole"))
         if view == "landing":
             role_label = landing_tile_role(person)
+        position_rank = TEAM_GROUP_SORT_ORDER.get(group, len(TEAM_GROUP_SORT_ORDER))
         search_blob = clean_text(
             " ".join(
                 [
-                    clean_text(person.get("name")),
+                    name,
                     clean_text(person.get("labRole")),
                     clean_text(person.get("bio")),
-                    clean_text(person.get("group")),
+                    group,
                 ]
             )
         )
@@ -454,13 +464,13 @@ def render_people_cards(people: list[dict[str, Any]], root_prefix: str, flat: bo
             bio_class = "person-bio person-bio--directory" if view == "directory" else "person-bio person-bio--compact"
             bio_html = f'<p class="{bio_class}">{format_species_text(bio)}</p>'
         cards.append(
-            f'''          <article class="person-card person-card--{view}" style="--index:{index};" data-name="{escape(person.get("name"))}" data-role="{escape(person.get("labRole"))}" data-group="{escape(person.get("group"))}" data-bio="{escape(person.get("bio"))}" data-search="{escape(search_blob)}">
+            f'''          <article class="person-card person-card--{view}" style="--index:{index};" data-name="{escape(name)}" data-role="{escape(person.get("labRole"))}" data-group="{escape(group)}" data-bio="{escape(person.get("bio"))}" data-sort-position="{escape(str(position_rank))}" data-sort-last-name="{escape(last_name_key(name))}" data-sort-name="{escape(name.lower())}" data-sort-original="{escape(str(index))}" data-search="{escape(search_blob)}">
             <div class="person-photo-wrap">
-              <img class="person-photo" src="{escape(resolve_asset_path(clean_text(person.get("image")), root_prefix))}" alt="{escape(person.get("name"))}" style="--focus-x:{escape(f"{float(person.get('focus', {}).get('x', 0.5)) * 100:.1f}%")};--focus-y:{escape(f"{float(person.get('focus', {}).get('y', 0.46)) * 100:.1f}%")};" loading="lazy" />
+              <img class="person-photo" src="{escape(resolve_asset_path(clean_text(person.get("image")), root_prefix))}" alt="{escape(name)}" style="--focus-x:{escape(f"{float(person.get('focus', {}).get('x', 0.5)) * 100:.1f}%")};--focus-y:{escape(f"{float(person.get('focus', {}).get('y', 0.46)) * 100:.1f}%")};" loading="lazy" />
             </div>
             <div class="person-body">
               <p class="person-role">{escape(role_label)}</p>
-              <h3>{escape(person.get("name"))}</h3>
+              <h3>{escape(name)}</h3>
               {bio_html}
               <div class="person-links">
                 <a class="person-link" href="{escape(profile_href)}">{'View full profile' if view == 'directory' else 'View profile'}</a>
@@ -1188,6 +1198,8 @@ def validate_homepage_team_grid(path: Path, expected_cards: int) -> None:
     text = read_text(path)
     if text.count('id="people-grid"') != 1:
         raise RuntimeError(f"{path}: expected exactly one people-grid container")
+    if 'id="people-sort"' in text:
+        raise RuntimeError(f"{path}: homepage team preview must not include the full-directory sort control")
     start_marker = "<!-- generated-home-people-grid:start -->"
     end_marker = "<!-- generated-home-people-grid:end -->"
     if text.count(start_marker) != 1 or text.count(end_marker) != 1:
@@ -1201,6 +1213,38 @@ def validate_homepage_team_grid(path: Path, expected_cards: int) -> None:
     outside = text[:start_index] + text[end_index + len(end_marker):]
     if "person-card--landing" in outside:
         raise RuntimeError(f"{path}: found landing cards outside generated homepage block")
+
+
+def validate_team_directory_controls(path: Path, expected_cards: int) -> None:
+    text = read_text(path)
+    required_tokens = [
+        'id="people-search"',
+        'id="people-sort"',
+        'value="position"',
+        'value="name"',
+        'value="display"',
+        'id="role-filters"',
+        'id="people-count"',
+        'id="people-grid"',
+    ]
+    missing = [token for token in required_tokens if token not in text]
+    if missing:
+        raise RuntimeError(f"{path}: missing team directory controls: {', '.join(missing)}")
+    card_count = text.count("person-card--directory")
+    if card_count != expected_cards:
+        raise RuntimeError(f"{path}: expected {expected_cards} directory cards, found {card_count}")
+    for token in [
+        "data-search=",
+        "data-sort-position=",
+        "data-sort-last-name=",
+        "data-sort-name=",
+        "data-sort-original=",
+    ]:
+        if text.count(token) != expected_cards:
+            raise RuntimeError(f"{path}: expected {expected_cards} instances of {token}, found {text.count(token)}")
+    for token in ['data-sort-position=""', 'data-sort-original=""']:
+        if token in text:
+            raise RuntimeError(f"{path}: contains empty generated sort metadata {token}")
 
 
 def iter_public_html_paths() -> list[Path]:
@@ -1411,6 +1455,8 @@ def build_site() -> None:
     expected_cards = len(current_people(people))
     validate_homepage_team_grid(ROOT / "index.html", expected_cards)
     validate_homepage_team_grid(FLAT_DIR / "index.html", expected_cards)
+    validate_team_directory_controls(ROOT / TEAM_ROUTE / "index.html", expected_cards)
+    validate_team_directory_controls(FLAT_DIR / "team.html", expected_cards)
     validate_favicon_links()
     validate_premium_url_scheme(people)
     validate_tom_compliance(ROOT)

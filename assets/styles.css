@@ -60,6 +60,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -1201,7 +1205,8 @@ body.is-scrolled .site-header {
   margin-bottom: 0.9rem;
 }
 
-.search-wrap {
+.search-wrap,
+.sort-wrap {
   display: grid;
   gap: 0.42rem;
   font-size: 0.84rem;
@@ -1209,7 +1214,8 @@ body.is-scrolled .site-header {
   font-weight: 700;
 }
 
-.search-wrap input {
+.search-wrap input,
+.sort-wrap select {
   appearance: none;
   -webkit-appearance: none;
   border: 1px solid var(--card-border);
@@ -1226,7 +1232,8 @@ body.is-scrolled .site-header {
   color: rgba(166, 172, 187, 0.82);
 }
 
-.search-wrap input:focus-visible {
+.search-wrap input:focus-visible,
+.sort-wrap select:focus-visible {
   outline: 2px solid rgba(14, 117, 125, 0.35);
   border-color: var(--teal);
 }
