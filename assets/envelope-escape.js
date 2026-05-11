@@ -2094,18 +2094,25 @@
     state.phages.forEach((phage) => {
       const depth = getDepthScale(phage.y);
       if (phage.warning > 0) {
-        const alpha = clamp(phage.warning / phage.maxWarning, 0, 1);
+        const progress = clamp(1 - phage.warning / phage.maxWarning, 0, 1);
+        const alpha = 0.36 + progress * 0.38;
         ctx.save();
-        ctx.strokeStyle = `rgba(210, 248, 255, ${0.26 + alpha * 0.34})`;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([8, 8]);
+        ctx.globalCompositeOperation = "screen";
+        ctx.strokeStyle = `rgba(184, 240, 255, ${alpha})`;
+        ctx.lineWidth = 2.4;
+        ctx.setLineDash([7, 7]);
         ctx.beginPath();
-        ctx.arc(phage.x, phage.y, 38 * depth + (1 - alpha) * 18, 0, TAU);
+        ctx.arc(phage.x, phage.y, 40 * depth + progress * 18, 0, TAU);
         ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle = `rgba(210, 248, 255, ${0.08 + alpha * 0.12})`;
+        ctx.strokeStyle = `rgba(255, 224, 164, ${0.28 + progress * 0.32})`;
+        ctx.lineWidth = 1.4;
         ctx.beginPath();
-        ctx.arc(phage.x, phage.y, 16 * depth, 0, TAU);
+        ctx.arc(phage.x, phage.y, 21 * depth + Math.sin(state.camera.idle * 10) * 2, 0, TAU);
+        ctx.stroke();
+        ctx.fillStyle = `rgba(210, 248, 255, ${0.1 + progress * 0.16})`;
+        ctx.beginPath();
+        ctx.arc(phage.x, phage.y, 13 * depth, 0, TAU);
         ctx.fill();
         ctx.restore();
         return;
@@ -2159,14 +2166,19 @@
     state.waves.forEach((wave) => {
       ctx.save();
       const coreAlpha = wave.hue === "#77dfff" ? 0.26 : 0.22;
-      const warningAlpha = wave.warning > 0 ? clamp(1 - wave.warning / wave.maxWarning, 0, 1) : 1;
+      const warningProgress = wave.warning > 0 ? clamp(1 - wave.warning / wave.maxWarning, 0, 1) : 1;
+      const warningAlpha = wave.warning > 0 ? 0.24 + warningProgress * 0.54 : 1;
       ctx.fillStyle =
         wave.hue === "#77dfff"
           ? `rgba(119, 223, 255, ${coreAlpha * warningAlpha})`
           : `rgba(145, 243, 255, ${coreAlpha * warningAlpha})`;
       ctx.strokeStyle = wave.hue;
-      ctx.lineWidth = wave.warning > 0 ? 1.5 : 2.5;
-      if (wave.warning > 0) ctx.setLineDash([12, 10]);
+      ctx.lineWidth = wave.warning > 0 ? 2.4 : 2.8;
+      if (wave.warning > 0) {
+        ctx.shadowColor = wave.hue;
+        ctx.shadowBlur = prefersReducedMotion ? 0 : 12;
+        ctx.setLineDash([14, 9]);
+      }
       if (wave.axis === "x") {
         ctx.fillRect(wave.position - wave.thickness * 0.5, 0, wave.thickness, world.height);
         ctx.fillStyle = "rgba(255, 255, 255, 0.08)";
@@ -2185,6 +2197,21 @@
         ctx.stroke();
       }
       ctx.setLineDash([]);
+      if (wave.warning > 0) {
+        ctx.fillStyle = "rgba(255, 225, 164, 0.82)";
+        ctx.font = "900 13px Manrope, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        if (wave.axis === "x") {
+          ctx.fillText("BETA-LACTAM FRONT", clamp(wave.position, 90, world.width - 90), 34);
+        } else {
+          ctx.save();
+          ctx.translate(34, clamp(wave.position, 112, world.height - 112));
+          ctx.rotate(-Math.PI / 2);
+          ctx.fillText("BETA-LACTAM FRONT", 0, 0);
+          ctx.restore();
+        }
+      }
       if (wave.warning <= 0) {
         ctx.globalCompositeOperation = "screen";
         ctx.fillStyle = "rgba(207, 255, 255, 0.08)";
@@ -2201,12 +2228,12 @@
       ctx.save();
       const warning = rupture.warning > 0;
       const warningProgress = warning ? clamp(1 - rupture.warning / rupture.maxWarning, 0, 1) : 1;
-      ctx.strokeStyle = warning ? `rgba(255, 212, 150, ${0.28 + warningProgress * 0.36})` : "rgba(255, 196, 145, 0.95)";
+      ctx.strokeStyle = warning ? `rgba(255, 212, 150, ${0.42 + warningProgress * 0.38})` : "rgba(255, 196, 145, 0.95)";
       ctx.shadowColor = "rgba(255, 174, 109, 0.55)";
-      ctx.shadowBlur = warning ? 8 * depth : 18 * depth;
+      ctx.shadowBlur = warning ? 14 * depth : 18 * depth;
       ctx.lineWidth = rupture.width * depth;
       ctx.lineCap = "round";
-      ctx.setLineDash(warning ? [6, 12] : [12, 10]);
+      ctx.setLineDash(warning ? [8, 10] : [12, 10]);
       ctx.beginPath();
       ctx.moveTo(rupture.x1, rupture.y1);
       ctx.lineTo(rupture.x2, rupture.y2);
@@ -2218,6 +2245,14 @@
       ctx.moveTo(rupture.x1, rupture.y1);
       ctx.lineTo(rupture.x2, rupture.y2);
       ctx.stroke();
+      if (warning) {
+        const labelX = (rupture.x1 + rupture.x2) * 0.5;
+        const labelY = (rupture.y1 + rupture.y2) * 0.5 - 18;
+        ctx.fillStyle = `rgba(255, 229, 186, ${0.54 + warningProgress * 0.3})`;
+        ctx.font = "900 12px Manrope, sans-serif";
+        ctx.textAlign = "center";
+        ctx.fillText("BREACH", labelX, labelY);
+      }
       if (!warning) {
         ctx.strokeStyle = "rgba(255, 123, 88, 0.42)";
         ctx.lineWidth = 1.2;

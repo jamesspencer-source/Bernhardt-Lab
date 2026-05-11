@@ -407,6 +407,24 @@
   box-shadow:
     0 0 0 0.22rem rgba(255, 213, 140, 0.16),
     0 12px 28px rgba(255, 190, 96, 0.22);
+  animation: envelope-response-ready 1.55s ease-in-out infinite;
+}
+
+@keyframes envelope-response-ready {
+  0%,
+  100% {
+    transform: translateY(0);
+    box-shadow:
+      0 0 0 0.18rem rgba(255, 213, 140, 0.14),
+      0 12px 28px rgba(255, 190, 96, 0.22);
+  }
+
+  50% {
+    transform: translateY(-1px);
+    box-shadow:
+      0 0 0 0.34rem rgba(255, 213, 140, 0.22),
+      0 16px 34px rgba(255, 190, 96, 0.28);
+  }
 }
 
 .envelope-overlay {
@@ -1005,8 +1023,10 @@
   .envelope-close,
   .envelope-action,
   .envelope-secondary,
+  .envelope-response-button.is-ready,
   .envelope-overlay,
   .envelope-meter > span {
     transition: none;
+    animation: none;
   }
 }
