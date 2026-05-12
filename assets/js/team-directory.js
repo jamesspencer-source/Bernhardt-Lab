@@ -22,12 +22,15 @@ export function initTeamDirectory() {
   const peopleSort = document.getElementById("people-sort");
   const teamFallback = document.getElementById("team-fallback");
   if (teamFallback) teamFallback.setAttribute("hidden", "");
+  if (peopleSort) peopleSort.value = "seniority";
 
   const state = {
     activeGroup: "All",
     query: "",
-    sort: peopleSort?.value || "display",
+    sort: "seniority",
   };
+
+  const sortByOriginal = (a, b) => Number(a.dataset.sortOriginal || 0) - Number(b.dataset.sortOriginal || 0);
 
   const sortCards = (visible) =>
     [...visible].sort((a, b) => {
@@ -36,7 +39,7 @@ export function initTeamDirectory() {
           cleanText(b.dataset.sortName || b.dataset.name),
         );
         if (byName !== 0) return byName;
-        return Number(a.dataset.sortOriginal || 0) - Number(b.dataset.sortOriginal || 0);
+        return sortByOriginal(a, b);
       }
 
       if (state.sort === "position") {
@@ -47,7 +50,9 @@ export function initTeamDirectory() {
         return cleanText(a.dataset.name).localeCompare(cleanText(b.dataset.name));
       }
 
-      return Number(a.dataset.sortOriginal || 0) - Number(b.dataset.sortOriginal || 0);
+      const bySeniority = Number(a.dataset.sortSeniority || 999999) - Number(b.dataset.sortSeniority || 999999);
+      if (bySeniority !== 0) return bySeniority;
+      return sortByOriginal(a, b);
     });
 
   const renderDirectory = () => {

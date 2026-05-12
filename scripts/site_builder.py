@@ -264,6 +264,19 @@ def parse_lab_end_sort_key(lab_dates: str) -> int:
     return years[-1] * 100 + 12 if years else -1
 
 
+def parse_lab_start_sort_key(person: dict[str, Any]) -> int:
+    name = clean_text(person.get("name")).lower()
+    text = clean_text(person.get("labDates")).lower()
+    if not text:
+        return 0 if name == "thomas bernhardt" else 999999
+    month_match = re.search(r"\b(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\s+((?:19|20)\d{2})\b", text)
+    if month_match:
+        month_token, year = month_match.groups()
+        return int(year) * 100 + MONTH_INDEX[month_token]
+    year_match = re.search(r"\b((?:19|20)\d{2})\b", text)
+    return int(year_match.group(1)) * 100 + 1 if year_match else 999999
+
+
 def last_name_key(name: str) -> str:
     suffixes = {"jr", "jr.", "sr", "sr.", "ii", "iii", "iv", "v"}
     parts = [part for part in clean_text(name).lower().split() if part]
@@ -513,7 +526,9 @@ def load_runtime_config() -> dict[str, Any]:
 
 
 def current_people(people: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [person for person in people if clean_text(person.get("status")) == "current"]
+    rows = [(index, person) for index, person in enumerate(people) if clean_text(person.get("status")) == "current"]
+    rows.sort(key=lambda item: (parse_lab_start_sort_key(item[1]), item[0]))
+    return [person for _, person in rows]
 
 
 def alumni_people(people: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -524,13 +539,15 @@ def alumni_people(people: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 def render_people_cards(people: list[dict[str, Any]], root_prefix: str, flat: bool, view: str) -> str:
     cards = []
-    for index, person in enumerate(people):
+    indexed_people = list(enumerate(people))
+    for output_index, (display_index, person) in enumerate(indexed_people):
         name = clean_text(person.get("name"))
         group = clean_text(person.get("group"))
         role_label = clean_text(person.get("labRole"))
         if view == "landing":
             role_label = landing_tile_role(person)
         position_rank = TEAM_GROUP_SORT_ORDER.get(group, len(TEAM_GROUP_SORT_ORDER))
+        seniority_rank = parse_lab_start_sort_key(person)
         search_blob = clean_text(
             " ".join(
                 [
@@ -548,7 +565,7 @@ def render_people_cards(people: list[dict[str, Any]], root_prefix: str, flat: bo
             bio_class = "person-bio person-bio--directory" if view == "directory" else "person-bio person-bio--compact"
             bio_html = f'<p class="{bio_class}">{format_species_text(bio)}</p>'
         cards.append(
-            f'''          <article class="person-card person-card--{view}" style="--index:{index};" data-name="{escape(name)}" data-role="{escape(person.get("labRole"))}" data-group="{escape(group)}" data-bio="{escape(person.get("bio"))}" data-sort-position="{escape(str(position_rank))}" data-sort-last-name="{escape(last_name_key(name))}" data-sort-name="{escape(name.lower())}" data-sort-original="{escape(str(index))}" data-search="{escape(search_blob)}">
+            f'''          <article class="person-card person-card--{view}" style="--index:{output_index};" data-name="{escape(name)}" data-role="{escape(person.get("labRole"))}" data-group="{escape(group)}" data-bio="{escape(person.get("bio"))}" data-sort-seniority="{escape(str(seniority_rank))}" data-sort-position="{escape(str(position_rank))}" data-sort-last-name="{escape(last_name_key(name))}" data-sort-name="{escape(name.lower())}" data-sort-original="{escape(str(display_index))}" data-search="{escape(search_blob)}">
             <div class="person-photo-wrap">
               <img class="person-photo" src="{escape(resolve_asset_path(clean_text(person.get("image")), root_prefix))}" alt="{escape(name)}" style="--focus-x:{escape(f"{float(person.get('focus', {}).get('x', 0.5)) * 100:.1f}%")};--focus-y:{escape(f"{float(person.get('focus', {}).get('y', 0.46)) * 100:.1f}%")};" loading="lazy" />
             </div>
@@ -1315,9 +1332,9 @@ def validate_team_directory_controls(path: Path, expected_cards: int) -> None:
     required_tokens = [
         'id="people-search"',
         'id="people-sort"',
+        'value="seniority"',
         'value="position"',
         'value="name"',
-        'value="display"',
         'id="role-filters"',
         'id="people-count"',
         'id="people-grid"',
@@ -1330,6 +1347,7 @@ def validate_team_directory_controls(path: Path, expected_cards: int) -> None:
         raise RuntimeError(f"{path}: expected {expected_cards} directory cards, found {card_count}")
     for token in [
         "data-search=",
+        "data-sort-seniority=",
         "data-sort-position=",
         "data-sort-last-name=",
         "data-sort-name=",
@@ -1337,7 +1355,7 @@ def validate_team_directory_controls(path: Path, expected_cards: int) -> None:
     ]:
         if text.count(token) != expected_cards:
             raise RuntimeError(f"{path}: expected {expected_cards} instances of {token}, found {text.count(token)}")
-    for token in ['data-sort-position=""', 'data-sort-original=""']:
+    for token in ['data-sort-seniority=""', 'data-sort-position=""', 'data-sort-original=""']:
         if token in text:
             raise RuntimeError(f"{path}: contains empty generated sort metadata {token}")
 
