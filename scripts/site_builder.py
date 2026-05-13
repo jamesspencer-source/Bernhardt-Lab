@@ -1329,12 +1329,10 @@ def validate_homepage_team_grid(path: Path, expected_cards: int) -> None:
 
 def validate_team_directory_controls(path: Path, expected_cards: int) -> None:
     text = read_text(path)
+    if 'id="people-sort"' in text or 'class="sort-wrap"' in text:
+        raise RuntimeError(f"{path}: team directory sort dropdown should not be rendered")
     required_tokens = [
         'id="people-search"',
-        'id="people-sort"',
-        'value="seniority"',
-        'value="position"',
-        'value="name"',
         'id="role-filters"',
         'id="people-count"',
         'id="people-grid"',
