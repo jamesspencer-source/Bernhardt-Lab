@@ -19,41 +19,13 @@ export function initTeamDirectory() {
 
   const roleFilters = document.getElementById("role-filters");
   const searchInput = document.getElementById("people-search");
-  const peopleSort = document.getElementById("people-sort");
   const teamFallback = document.getElementById("team-fallback");
   if (teamFallback) teamFallback.setAttribute("hidden", "");
-  if (peopleSort) peopleSort.value = "seniority";
 
   const state = {
     activeGroup: "All",
     query: "",
-    sort: "seniority",
   };
-
-  const sortByOriginal = (a, b) => Number(a.dataset.sortOriginal || 0) - Number(b.dataset.sortOriginal || 0);
-
-  const sortCards = (visible) =>
-    [...visible].sort((a, b) => {
-      if (state.sort === "name") {
-        const byName = cleanText(a.dataset.sortName || a.dataset.name).localeCompare(
-          cleanText(b.dataset.sortName || b.dataset.name),
-        );
-        if (byName !== 0) return byName;
-        return sortByOriginal(a, b);
-      }
-
-      if (state.sort === "position") {
-        const byPosition = Number(a.dataset.sortPosition || 999) - Number(b.dataset.sortPosition || 999);
-        if (byPosition !== 0) return byPosition;
-        const byLastName = cleanText(a.dataset.sortLastName).localeCompare(cleanText(b.dataset.sortLastName));
-        if (byLastName !== 0) return byLastName;
-        return cleanText(a.dataset.name).localeCompare(cleanText(b.dataset.name));
-      }
-
-      const bySeniority = Number(a.dataset.sortSeniority || 999999) - Number(b.dataset.sortSeniority || 999999);
-      if (bySeniority !== 0) return bySeniority;
-      return sortByOriginal(a, b);
-    });
 
   const renderDirectory = () => {
     const query = cleanText(state.query).toLowerCase();
@@ -63,13 +35,12 @@ export function initTeamDirectory() {
       if (!query) return true;
       return cleanText(card.dataset.search).toLowerCase().includes(query);
     });
-    const sorted = sortCards(visible);
-    const visibleSet = new Set(sorted);
+    const visibleSet = new Set(visible);
 
     peopleGrid.querySelector(".people-empty")?.remove();
     cards.forEach((card) => card.remove());
 
-    sorted.forEach((card, index) => {
+    visible.forEach((card, index) => {
       card.hidden = false;
       card.style.setProperty("--index", index);
       peopleGrid.append(card);
@@ -81,10 +52,10 @@ export function initTeamDirectory() {
       peopleGrid.append(card);
     });
 
-    const label = sorted.length === 1 ? "member" : "members";
-    peopleCount.textContent = `Showing ${sorted.length} current lab ${label}`;
+    const label = visible.length === 1 ? "member" : "members";
+    peopleCount.textContent = `Showing ${visible.length} current lab ${label}`;
 
-    if (!sorted.length) {
+    if (!visible.length) {
       const empty = document.createElement("div");
       empty.className = "people-empty";
       empty.textContent = "No current lab members matched that search. Try a shorter phrase or choose a different group.";
@@ -125,11 +96,6 @@ export function initTeamDirectory() {
       renderDirectory();
     });
   }
-
-  peopleSort?.addEventListener("change", (event) => {
-    state.sort = event.target.value;
-    renderDirectory();
-  });
 
   renderFilters();
   renderDirectory();
