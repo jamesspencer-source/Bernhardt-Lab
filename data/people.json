@@ -547,6 +547,33 @@
       "profileSummary": "I am interested in uncovering the downstream regulatory mechanisms of the envelope stress response and how this relates to lipid transport. My larger goal is to uncover novel functions of the envelope stress signal to characterize how E. coli and other species maintain membrane integrity."
     },
     {
+      "slug": "franziska-maria-lichtenauer",
+      "status": "current",
+      "name": "Franziska Maria Lichtenauer",
+      "labRole": "BBS Graduate Student",
+      "group": "Graduate Students",
+      "bio": "I am interested in cell envelope biogenesis, specifically peptidoglycan synthesis, in Corynebacterium glutamicum.",
+      "image": "assets/images/team/franziska-maria-lichtenauer.jpg",
+      "focus": {
+        "x": 0.56,
+        "y": 0.49
+      },
+      "labDates": "May 2026 \u2013 Present",
+      "currentRole": "",
+      "profileType": "current",
+      "email": "franziskamaria_lichtenauer@g.harvard.edu",
+      "education": [
+        "B.A., Molecular and Cellular Biology, Harvard College, Cambridge, Massachusetts"
+      ],
+      "links": [],
+      "verification": {
+        "sourceLabel": "",
+        "url": "",
+        "verifiedSource": ""
+      },
+      "profileSummary": "I am interested in cell envelope biogenesis, specifically peptidoglycan synthesis, in Corynebacterium glutamicum."
+    },
+    {
       "slug": "alison-forchoh",
       "status": "alumni",
       "name": "Alison Forchoh",
