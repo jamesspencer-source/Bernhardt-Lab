@@ -7,7 +7,7 @@ Start here if you are a fresh Codex thread or any engineer opening this repo wit
 This repository contains the static Bernhardt Lab website, published via GitHub Pages.
 
 - Canonical working directory:
-  `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab`
+  `/Users/james/Documents/GitHub/Bernhardt-Lab`
 - Current public site URL:
   `https://bernhardtlab.com/`
 
@@ -34,6 +34,8 @@ Important canonical files:
 Generated outputs you should usually not edit directly:
 
 - `assets/styles.css`
+- `assets/profile.css`
+- `assets/alumni.css`
 - `assets/envelope-escape-config.js`
 - `assets/game/envelope-escape/runtime/envelope-escape-v2.js`
 - `github-flat/**`
@@ -110,6 +112,7 @@ python3 scripts/check_leaderboard_worker.py --require-board-routing
 - Stage narrowly and avoid bundling unrelated local churn.
 - `.DS_Store` should generally be discarded, not committed.
 - `github-flat` is regenerated from nested `assets/` and `data/` paths. Root-level non-HTML files there are legacy baggage and should not be reintroduced.
+- `archive/` is retained historical material and is excluded from public-route validation. Do not link to it from live pages.
 - Prefer `python3 scripts/publish_site.py` for the normal build/commit/push flow.
 - Do not bypass the Tom feedback compliance gate; if it fails, fix the canonical source rather than patching generated HTML.
 - Do not reintroduce `index.html` links on canonical pages; use `/team/`, `/alumni/`, `/research/`, and root-relative section links.

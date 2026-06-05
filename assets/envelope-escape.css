@@ -54,9 +54,9 @@
 .footer-secret-trigger:hover {
   opacity: 0.72;
   transform: translateY(-1px);
-  border-color: rgba(143, 210, 215, 0.24);
+  border-color: rgba(var(--accent-sky-rgb), 0.24);
   color: rgba(243, 251, 255, 0.72);
-  background: rgba(59, 143, 149, 0.08);
+  background: rgba(var(--accent-secondary-rgb), 0.08);
 }
 
 .footer-secret-trigger:focus-visible {
@@ -127,7 +127,7 @@
 .envelope-header h2 {
   margin: 0.15rem 0 0;
   color: #f3fbff;
-  font-family: "Fraunces", serif;
+  font-family: var(--font-serif, "Fraunces", Georgia, serif);
   font-size: clamp(1.25rem, 2.5vw, 1.85rem);
 }
 
@@ -164,7 +164,7 @@
 .envelope-close:focus-visible,
 .envelope-action:focus-visible,
 .envelope-secondary:focus-visible {
-  outline: 3px solid rgba(143, 210, 215, 0.7);
+  outline: 3px solid rgba(var(--accent-sky-rgb), 0.7);
   outline-offset: 2px;
 }
 
@@ -486,7 +486,7 @@
   max-width: 12ch;
   font-size: clamp(1.42rem, 2.6vw, 2rem);
   line-height: 0.98;
-  font-family: "Fraunces", serif;
+  font-family: var(--font-serif, "Fraunces", Georgia, serif);
   color: #f3fbff;
 }
 
@@ -539,7 +539,7 @@
 
 .envelope-model-picker select:focus-visible,
 .envelope-player-name input:focus-visible {
-  outline: 3px solid rgba(143, 210, 215, 0.72);
+  outline: 3px solid rgba(var(--accent-sky-rgb), 0.72);
   outline-offset: 2px;
 }
 

@@ -46,6 +46,17 @@ export async function initRecentPublications() {
   const whyLookup = buildWhyLookup(curated);
   const publications = curated;
 
+  if (!publications.length) {
+    recentPublicationsRoot.innerHTML = `
+      <p class="publication-footnote reveal">
+        Selected publications are temporarily unavailable. View the
+        <a href="https://pubmed.ncbi.nlm.nih.gov/?sort=date&term=Bernhardt%20TG%5BAuthor%5D" target="_blank" rel="noreferrer">complete PubMed bibliography</a>.
+      </p>
+    `;
+    observeRevealTargets(recentPublicationsRoot);
+    return;
+  }
+
   recentPublicationsRoot.innerHTML = `
     <ol class="publication-archive-list reveal">
       ${publications

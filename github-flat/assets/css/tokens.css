@@ -1,0 +1,63 @@
+/* Source slice for tokens.css. */
+
+:root {
+  --font-sans: "Manrope", sans-serif;
+  --font-serif: "Fraunces", serif;
+  --bg-page: #101217;
+  --bg-section: #161a21;
+  --bg-elevated: #1d222b;
+  --surface-glass: rgba(27, 32, 42, 0.76);
+  --surface-control: rgba(28, 32, 41, 0.78);
+  --surface-control-strong: rgba(33, 37, 47, 0.9);
+  --surface-control-hover: rgba(42, 47, 59, 0.96);
+  --surface-control-soft: rgba(18, 22, 30, 0.68);
+  --surface-skip: #132641;
+  --line-soft: rgba(220, 224, 235, 0.18);
+  --card-border: rgba(220, 224, 235, 0.18);
+  --card-border-strong: rgba(220, 224, 235, 0.24);
+  --card-border-hover: rgba(232, 236, 244, 0.34);
+  --card-surface-neutral: linear-gradient(145deg, rgba(34, 38, 47, 0.96), rgba(25, 29, 37, 0.92));
+  --card-surface-cool:
+    radial-gradient(circle at 14% 16%, rgba(var(--accent-secondary-bright-rgb), 0.08), transparent 34%),
+    linear-gradient(145deg, rgba(35, 40, 49, 0.97), rgba(26, 30, 38, 0.93));
+  --card-surface-warm:
+    radial-gradient(circle at 88% 16%, rgba(var(--accent-primary-rgb), 0.1), transparent 34%),
+    linear-gradient(145deg, rgba(35, 39, 48, 0.97), rgba(26, 29, 37, 0.94));
+  --card-surface-slate:
+    radial-gradient(circle at 18% 18%, rgba(var(--accent-secondary-bright-rgb), 0.07), transparent 32%),
+    linear-gradient(145deg, rgba(35, 40, 49, 0.96), rgba(27, 31, 39, 0.93));
+  --text-high: #f3f4f8;
+  --text-mid: #d2d5de;
+  --text-low: #a6acbb;
+  --accent-primary: #b12a3d;
+  --accent-primary-deep: #8b1e30;
+  --accent-secondary: #3b8f95;
+  --accent-secondary-bright: #72c4cb;
+  --accent-sky: #8fd2d7;
+  --accent-primary-rgb: 177, 42, 61;
+  --accent-primary-deep-rgb: 139, 30, 48;
+  --accent-primary-muted-rgb: 141, 30, 48;
+  --accent-secondary-rgb: 59, 143, 149;
+  --accent-secondary-bright-rgb: 114, 196, 203;
+  --accent-sky-rgb: 143, 210, 215;
+  --focus-ring: rgba(var(--accent-secondary-bright-rgb), 0.72);
+  --radius-card: 16px;
+  --radius-lg: 22px;
+  --radius-md: var(--radius-card);
+  --shadow-1: 0 14px 28px rgba(7, 8, 12, 0.34);
+  --shadow-2: 0 24px 46px rgba(6, 7, 11, 0.44);
+  --shadow-3: 0 36px 64px rgba(5, 6, 10, 0.55);
+  --shadow-soft: var(--shadow-1);
+  --shadow-strong: var(--shadow-2);
+  --midnight: #0f2038;
+  --midnight-soft: #1f385d;
+  --paper: var(--bg-page);
+  --cloud: var(--bg-section);
+  --line: var(--line-soft);
+  --text: var(--text-high);
+  --muted: var(--text-mid);
+  --scroll-progress: 0%;
+  --hero-shift: 0px;
+  --header-height: 4.6rem;
+  --landing-affiliations-height: 6.2rem;
+}

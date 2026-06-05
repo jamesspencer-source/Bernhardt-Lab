@@ -14,7 +14,8 @@ For visual and interface work, also use:
 - `assets/data/` is runtime/generated data for the live site.
 - `assets/js/` contains feature-level browser modules.
 - `assets/css/` contains the source CSS slices.
-- `assets/styles.css` is generated from `assets/css/`.
+- `assets/styles.css`, `assets/profile.css`, and `assets/alumni.css` are generated from `assets/css/`.
+- `archive/` contains retained legacy import material excluded from the public site build.
 - `game-src/envelope-escape/` contains the Phaser + TypeScript source for the hidden Envelope Escape V2 beta.
 - `assets/game/envelope-escape/runtime/` contains the generated V2 browser bundle.
 - `github-flat/` is generated output only. Do not hand-edit it.
@@ -37,29 +38,31 @@ Legacy paths such as `/people/`, `/research-library/`, root-level profile slugs,
 
 Edit these first:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/people.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/gallery.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/featured-alumni.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/curated-publications.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/scientific-media.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/site-copy.json`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/runtime-config.json`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/people.json`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/gallery.json`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/featured-alumni.json`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/curated-publications.json`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/scientific-media.json`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/site-copy.json`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/runtime-config.json`
 
 Generated or entrypoint files you should usually not hand-edit directly:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/styles.css`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/envelope-escape-config.js`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/game/envelope-escape/runtime/envelope-escape-v2.js`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/github-flat/**`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/styles.css`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/profile.css`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/alumni.css`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape-config.js`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/game/envelope-escape/runtime/envelope-escape-v2.js`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/github-flat/**`
 
 Frontend entrypoints:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/main.js`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/alumni.js`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/main.js`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/alumni.js`
 
 Those entrypoints now import smaller feature modules from:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/js/`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/js/`
 
 ## Build the site
 
@@ -98,7 +101,7 @@ This will:
 - regenerate homepage team/alumni slices
 - regenerate `team/index.html` and `alumni/index.html`
 - regenerate current-member and alumni profile pages
-- rebuild `assets/styles.css`
+- rebuild generated CSS bundles
 - rebuild the Envelope Escape V2 runtime when publishing
 - regenerate `assets/envelope-escape-config.js`
 - refresh the generated `github-flat/` mirror
@@ -172,12 +175,12 @@ index.html?envelopeLegacy=1
 
 Source and build outputs:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/envelope-escape.js`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/envelope-escape.css`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/game-src/envelope-escape/`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/game/envelope-escape/`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/docs/envelope-escape-game-upgrade.md`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/docs/envelope-escape-art-direction.md`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape.js`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape.css`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/game-src/envelope-escape/`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/game/envelope-escape/`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/docs/envelope-escape-game-upgrade.md`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/docs/envelope-escape-art-direction.md`
 
 Run `npm run game:check` and `npm run game:build` before publishing TypeScript game changes. `python3 scripts/publish_site.py` also runs the game build before the Python site build.
 
@@ -185,7 +188,7 @@ Run `npm run game:check` and `npm run game:build` before publishing TypeScript g
 
 The public leaderboard endpoint now comes from:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/runtime-config.json`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/runtime-config.json`
 
 `assets/envelope-escape-config.js` and the flat mirror are generated from that source during the build.
 
@@ -231,18 +234,18 @@ Do not hand-edit:
 
 ## Key pages and assets
 
-- Homepage: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/index.html`
-- Team directory: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/team/index.html`
-- Alumni directory: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/alumni/index.html`
-- Shared layout styling source: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/css/`
-- Profile styling: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/profile.css`
-- Production game code: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/assets/envelope-escape.js`
-- V2 game source: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/game-src/envelope-escape/`
-- Leaderboard worker: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/leaderboard-worker/`
+- Homepage: `/Users/james/Documents/GitHub/Bernhardt-Lab/index.html`
+- Team directory: `/Users/james/Documents/GitHub/Bernhardt-Lab/team/index.html`
+- Alumni directory: `/Users/james/Documents/GitHub/Bernhardt-Lab/alumni/index.html`
+- Shared layout styling source: `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/css/`
+- Profile styling: `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/profile.css`
+- Production game code: `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape.js`
+- V2 game source: `/Users/james/Documents/GitHub/Bernhardt-Lab/game-src/envelope-escape/`
+- Leaderboard worker: `/Users/james/Documents/GitHub/Bernhardt-Lab/leaderboard-worker/`
 
 ## Maintenance notes
 
 For a plain-language maintenance workflow, see:
 
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/docs/site-maintenance.md`
-- `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/docs/editorial-style-guide.md`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/docs/site-maintenance.md`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/docs/editorial-style-guide.md`

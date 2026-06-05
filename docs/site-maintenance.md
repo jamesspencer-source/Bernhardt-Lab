@@ -44,13 +44,13 @@ Legacy routes are redirect-only compatibility outputs. Keep `/people/`, `/people
 
 ## Canonical sources
 
-- People and alumni: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/people.json`
-- Gallery: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/gallery.json`
-- Featured alumni: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/featured-alumni.json`
-- Curated publications fallback: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/curated-publications.json`
-- Scientific media archive highlights: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/scientific-media.json`
-- Shared homepage/site copy: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/site-copy.json`
-- Runtime config such as the public leaderboard URL: `/Users/james/Documents/HMS Lab Ops/01 Bernhardt Lab/13 Lab Website/Bernhardt-Lab/data/runtime-config.json`
+- People and alumni: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/people.json`
+- Gallery: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/gallery.json`
+- Featured alumni: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/featured-alumni.json`
+- Curated publications fallback: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/curated-publications.json`
+- Scientific media archive highlights: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/scientific-media.json`
+- Shared homepage/site copy: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/site-copy.json`
+- Runtime config such as the public leaderboard URL: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/runtime-config.json`
 
 ## Rebuild command
 
@@ -101,7 +101,7 @@ This regenerates:
 - homepage people/alumni slices
 - people and alumni directory pages
 - all current-member and alumni profile pages
-- generated CSS bundle
+- generated CSS bundles
 - generated Envelope Escape V2 runtime bundle
 - generated game runtime config
 - generated `github-flat/` mirror
@@ -229,11 +229,15 @@ Do not edit `assets/game/envelope-escape/runtime/envelope-escape-v2.js` by hand.
 These are outputs, not canonical source:
 
 - `assets/styles.css`
+- `assets/profile.css`
+- `assets/alumni.css`
 - `assets/envelope-escape-config.js`
 - `assets/game/envelope-escape/runtime/envelope-escape-v2.js`
 - `github-flat/`
 
 `github-flat/` now keeps nested `assets/` and `data/` as the authoritative generated mirror. Root-level non-HTML files there are cleaned during the build and should not be restored manually.
+
+`archive/` stores retained legacy import material and is excluded from public HTML validation and flat-route generation. Do not link archived files from public pages.
 
 Feature JS source now lives in:
 
