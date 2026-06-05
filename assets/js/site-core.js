@@ -105,7 +105,7 @@ function setupSectionNavigationHighlight() {
   const setActiveLink = (id) => {
     sectionLinks.forEach((link) => link.removeAttribute("aria-current"));
     const activeLink = linkById.get(id);
-    if (activeLink) activeLink.setAttribute("aria-current", "location");
+    if (activeLink) activeLink.setAttribute("aria-current", "true");
   };
 
   const updateActiveLink = () => {

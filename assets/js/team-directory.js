@@ -27,6 +27,22 @@ export function initTeamDirectory() {
     query: "",
   };
 
+  const counts = cards.reduce((acc, card) => {
+    const group = cleanText(card.dataset.group);
+    acc[group] = (acc[group] || 0) + 1;
+    return acc;
+  }, {});
+  const groups = GROUP_PRIORITY.filter((group) => group === "All" || counts[group]);
+
+  const updateFilterState = () => {
+    if (!roleFilters) return;
+    roleFilters.querySelectorAll("button").forEach((button) => {
+      const isActive = button.dataset.group === state.activeGroup;
+      button.classList.toggle("active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+  };
+
   const renderDirectory = () => {
     const query = cleanText(state.query).toLowerCase();
     const visible = cards.filter((card) => {
@@ -67,12 +83,6 @@ export function initTeamDirectory() {
 
   const renderFilters = () => {
     if (!roleFilters) return;
-    const counts = cards.reduce((acc, card) => {
-      const group = cleanText(card.dataset.group);
-      acc[group] = (acc[group] || 0) + 1;
-      return acc;
-    }, {});
-    const groups = GROUP_PRIORITY.filter((group) => group === "All" || counts[group]);
     roleFilters.innerHTML = groups
       .map((group) => {
         const count = group === "All" ? cards.length : counts[group];
@@ -84,7 +94,7 @@ export function initTeamDirectory() {
     roleFilters.querySelectorAll("button").forEach((button) => {
       button.addEventListener("click", () => {
         state.activeGroup = button.dataset.group || "All";
-        renderFilters();
+        updateFilterState();
         renderDirectory();
       });
     });

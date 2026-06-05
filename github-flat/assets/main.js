@@ -1,8 +1,8 @@
 import { initSiteCore } from "./js/site-core.js";
-import { initTeamDirectory } from "./js/team-directory.js?v=20260513a";
-import { initRecentPublications } from "./js/publications.js?v=20260410a";
+import { initTeamDirectory } from "./js/team-directory.js";
+import { initRecentPublications } from "./js/publications.js";
 import { initGallery } from "./js/gallery.js";
-import { initFeaturedAlumni } from "./js/featured-alumni.js?v=20260407d";
+import { initFeaturedAlumni } from "./js/featured-alumni.js";
 
 async function initializePage() {
   await initSiteCore();
@@ -12,4 +12,6 @@ async function initializePage() {
   await initFeaturedAlumni();
 }
 
-initializePage();
+initializePage().catch((error) => {
+  console.error("Bernhardt Lab page initialization failed", error);
+});

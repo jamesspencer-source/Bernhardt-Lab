@@ -16,6 +16,11 @@
       "currentRole": "",
       "profileType": "current",
       "email": "thomas_bernhardt@hms.harvard.edu",
+      "education": [
+        "BS in Chemistry, Millersville University, PA",
+        "PhD in Biochemistry, Texas A&M University, TX",
+        "Post doctoral training with Dr. Piet de Boer, Case Western Reserve University, OH"
+      ],
       "links": [
         {
           "label": "PubMed",
@@ -45,6 +50,9 @@
       "currentRole": "",
       "profileType": "current",
       "email": "James_Spencer@hms.harvard.edu",
+      "education": [
+        "BS, Science & Biochemistry, University of Massachusetts Amherst, MA"
+      ],
       "links": [
         {
           "label": "LinkedIn",
@@ -74,6 +82,9 @@
       "currentRole": "",
       "profileType": "current",
       "email": "ksuarez@g.harvard.edu",
+      "education": [
+        "BS, Human Biology, University of California San Diego, La Jolla, CA"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -98,6 +109,10 @@
       "currentRole": "",
       "profileType": "current",
       "email": "Elizabeth_Hart@hms.harvard.edu",
+      "education": [
+        "BA, Biology and Anthropology, Williams College, Williamstown, MA",
+        "Ph.D., Molecular Biology, Princeton University, Princeton, NJ"
+      ],
       "links": [
         {
           "label": "PubMed",
@@ -127,6 +142,9 @@
       "currentRole": "",
       "profileType": "current",
       "email": "johnathankepple@g.harvard.edu",
+      "education": [
+        "B.S., Microbiology & Immunology, University of Texas at San Antonio, San Antonio, TX"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -151,6 +169,11 @@
       "currentRole": "",
       "profileType": "current",
       "email": "Wanassa_Beroual@hms.harvard.edu",
+      "education": [
+        "B.S., Cellular Biology, Aix-Marseille University, France",
+        "M.S. Microbiology, Aix-Marseille University, France",
+        "Ph.D., Microbiology, Aix-Marseille University, France"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -175,6 +198,11 @@
       "currentRole": "",
       "profileType": "current",
       "email": "Anastacia_Parks@hms.harvard.edu",
+      "education": [
+        "B.S. Microbiology, University of South Florida",
+        "M.S. Microbiology, University of South Florida",
+        "Ph.D. Microbiology, University of Georgia"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -199,6 +227,9 @@
       "currentRole": "",
       "profileType": "current",
       "email": "wilayshaevans@g.harvard.edu",
+      "education": [
+        "B.S., Biochemistry, State University of New York, Oneonta, New York"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -223,6 +254,11 @@
       "currentRole": "",
       "profileType": "current",
       "email": "nilanjan_som@hms.harvard.edu",
+      "education": [
+        "B.Sc., Physiology, City College, Calcutta University, India",
+        "M.Sc., Molecular Biology and Biotechnology, Tezpur University, India",
+        "Ph.D., Life Sciences, CSIR-Centre for Cellular and Molecular Biology (affiliated to Jawaharlal Nehru University), India"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -247,6 +283,9 @@
       "currentRole": "",
       "profileType": "current",
       "email": "tien_nguyen@g.harvard.edu",
+      "education": [
+        "B.S., Biology and Biotechnology, Worcester Polytechnic Institute. Worcester, Massachusetts"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -271,6 +310,9 @@
       "currentRole": "",
       "profileType": "current",
       "email": "dburgin@g.harvard.edu",
+      "education": [
+        "B.S., Microbiology and Cell Science, University of Florida, Gainesville, FL"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -295,6 +337,10 @@
       "currentRole": "",
       "profileType": "current",
       "email": "shailab_shrestha@hms.harvard.edu",
+      "education": [
+        "B.A. in Biology, Bard College, NY",
+        "Ph.D. in Molecular Microbiology, Tufts University, MA"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -319,6 +365,12 @@
       "currentRole": "",
       "profileType": "current",
       "email": "vincent_debakker@hms.harvard.edu",
+      "education": [
+        "B.S., Biology, Leiden University, Netherlands",
+        "M.S. Biology, Leiden University, Netherlands",
+        "M.S. Statistical Science, Leiden University, Netherlands",
+        "Ph.D., Life Sciences, University of Lausanne, Switzerland"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -343,6 +395,11 @@
       "currentRole": "",
       "profileType": "current",
       "email": "nazgul_sakenova@hms.harvard.edu",
+      "education": [
+        "B.S. Biological Sciences, Nazarbayev University, Astana, Kazakhstan",
+        "M.S. Genomics and Bioinformatics, Paris-Saclay University, Paris, France",
+        "Ph.D. Systems Biology and Microbiology, European Molecular Biology Laboratory, Heidelberg, Germany"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -367,6 +424,9 @@
       "currentRole": "",
       "profileType": "current",
       "email": "josuerodriguez@college.harvard.edu",
+      "education": [
+        "A.B., Chemistry, Harvard College, MA"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -391,6 +451,11 @@
       "currentRole": "",
       "profileType": "current",
       "email": "eleanor_rand@fas.harvard.edu",
+      "education": [
+        "B.A. Biology, University of Pennsylvania",
+        "M.S. Biotechnology, University of Pennsylvania",
+        "Ph.D Systems Biology, Harvard University"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -415,6 +480,9 @@
       "currentRole": "",
       "profileType": "current",
       "email": "ophelia_lee@fas.harvard.edu",
+      "education": [
+        "B.A. Molecular and Cell Biology, UC Berkeley"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -439,6 +507,10 @@
       "currentRole": "",
       "profileType": "current",
       "email": "james_warner@hms.harvard.edu",
+      "education": [
+        "B.A., Biology, University of Chicago, IL",
+        "Ph.D., Genetics and Genomics, Harvard University, MA"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -463,6 +535,9 @@
       "currentRole": "",
       "profileType": "current",
       "email": "taran_bauer@g.harvard.edu",
+      "education": [
+        "B.S. Biological sciences, Cornell University, Ithaca, NY"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "",
@@ -1231,6 +1306,10 @@
       "currentRole": "Postdoctoral researcher, Massachusetts General Hospital",
       "profileType": "alumni",
       "email": "",
+      "education": [
+        "BS, Nanosciences, University of Basel, Switzerland",
+        "MS, Nanosciences with Major in Molecular Biology, University of Basel, Switzerland"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
@@ -1399,6 +1478,9 @@
       "currentRole": "HST MD student, Harvard Medical School",
       "profileType": "alumni",
       "email": "",
+      "education": [
+        "Bsc, Biological Sciences, University of Calgary, Canada"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
@@ -1663,6 +1745,10 @@
       "currentRole": "Planning to pursue a career in patent law",
       "profileType": "alumni",
       "email": "",
+      "education": [
+        "B.S., Biochemistry, Virginia Polytechnic Institute and State University (2020), Blacksburg, Virginia",
+        "M.S., Biochemistry, Virginia Polytechnic Institute and State University (2021), Blacksburg, Virginia"
+      ],
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",

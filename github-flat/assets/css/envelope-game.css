@@ -115,7 +115,7 @@
 .envelope-v2-menu h3,
 .envelope-v2-report h3 {
   margin: 0.12rem 0 0;
-  font-family: "Fraunces", Georgia, serif;
+  font-family: var(--font-serif, "Fraunces", Georgia, serif);
   color: #f4fbff;
 }
 

@@ -1,4 +1,5 @@
 import { cleanText, prefersReducedMotion, requestJson, rootDataUrl, siteAssetUrl } from "./shared.js";
+import { observeRevealTargets } from "./site-core.js";
 
 export async function initGallery() {
   const galleryRoot = document.getElementById("gallery-grid");
@@ -6,7 +7,15 @@ export async function initGallery() {
 
   const payload = await requestJson(rootDataUrl("gallery.json"));
   const galleryItems = Array.isArray(payload?.items) ? payload.items : [];
-  if (!galleryItems.length) return;
+  if (!galleryItems.length) {
+    galleryRoot.innerHTML = `
+      <p class="publication-footnote reveal">
+        Lab gallery images are temporarily unavailable.
+      </p>
+    `;
+    observeRevealTargets(galleryRoot);
+    return;
+  }
 
   const lightbox = document.getElementById("lightbox");
   const lightboxImage = document.getElementById("lightbox-image");

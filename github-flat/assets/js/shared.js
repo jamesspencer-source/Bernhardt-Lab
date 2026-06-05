@@ -47,29 +47,11 @@ export function siteAssetUrl(path = "") {
   return new URL(`../../${normalized}`, MODULE_URL).toString();
 }
 
-const SPECIES_INLINE_PATTERNS = [
-  /\bEscherichia\s+coli\b/gi,
-  /\bPseudomonas\s+aeruginosa\b/gi,
-  /\bStaphylococcus\s+aureus\b/gi,
-  /\bStreptococcus\s+pneumoniae\b/gi,
-  /\bCorynebacterium\s+glutamicum\b/gi,
-  /\bKlebsiella\s+pneumoniae\b/gi,
-  /\bAcinetobacter\s+baumannii\b/gi,
-  /\bE\.\s*coli\b/gi,
-  /\bP\.\s*aeruginosa\b/gi,
-  /\bS\.\s*aureus\b/gi,
-  /\bS\.\s*pneumoniae\b/gi,
-  /\bC\.\s*glutamicum\b/gi,
-  /\bK\.\s*pneumoniae\b/gi,
-  /\bA\.\s*baumannii\b/gi,
-];
+const SPECIES_INLINE_PATTERN =
+  /\b(?:Escherichia\s+coli|Pseudomonas\s+aeruginosa|Staphylococcus\s+aureus|Streptococcus\s+pneumoniae|Corynebacterium\s+glutamicum|Klebsiella\s+pneumoniae|Acinetobacter\s+baumannii|E\.\s*coli|P\.\s*aeruginosa|S\.\s*aureus|S\.\s*pneumoniae|C\.\s*glutamicum|K\.\s*pneumoniae|A\.\s*baumannii)\b/gi;
 
 export function formatSpeciesAwareText(value = "") {
-  const escaped = escapeHtml(value);
-  return SPECIES_INLINE_PATTERNS.reduce(
-    (result, pattern) => result.replace(pattern, (match) => `<em class="species-name">${match}</em>`),
-    escaped
-  );
+  return escapeHtml(value).replace(SPECIES_INLINE_PATTERN, (match) => `<em class="species-name">${match}</em>`);
 }
 
 export async function requestJson(url, timeoutMs = 6000) {
