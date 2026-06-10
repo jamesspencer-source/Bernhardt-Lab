@@ -6,7 +6,7 @@
       "name": "Thomas Bernhardt",
       "labRole": "Professor in the Department of Microbiology at Harvard Medical School and Investigator of the Howard Hughes Medical Institute.",
       "group": "Faculty",
-      "bio": "The Bernhardt lab studies molecular mechanisms of bacterial growth and cell wall assembly to inform antibiotic discovery.",
+      "bio": "",
       "image": "assets/images/team/thomas-bernhardt-hhmi-2025.png",
       "focus": {
         "x": 0.43537414965986393,
@@ -32,7 +32,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "The Bernhardt lab studies molecular mechanisms of bacterial growth and cell wall assembly to inform antibiotic discovery."
+      "profileSummary": ""
     },
     {
       "slug": "james-spencer",
@@ -40,7 +40,7 @@
       "name": "James Spencer",
       "labRole": "Laboratory Manager, Thomas Bernhardt Lab",
       "group": "Research Staff",
-      "bio": "Research operations lead for the Bernhardt and Abraham HHMI labs at HMS, overseeing finance, hiring, procurement, compliance, and lab infrastructure, and supporting HMS Community Phages.",
+      "bio": "",
       "image": "assets/images/imported/sqs-70fc315a-1553173916977-5mwvesoj-james-spencer.jpg",
       "focus": {
         "x": 0.519332627118644,
@@ -64,7 +64,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "Research operations lead for the Bernhardt and Abraham HHMI labs at HMS, overseeing finance, hiring, procurement, compliance, and lab infrastructure, and supporting HMS Community Phages."
+      "profileSummary": ""
     },
     {
       "slug": "kathy-suarez",
@@ -72,7 +72,7 @@
       "name": "Kathy Suarez",
       "labRole": "BBS Graduate Student | NIH F31 Fellow",
       "group": "Graduate Students",
-      "bio": "I am interested in examining the function of cell wall synthesis in E. coli.",
+      "bio": "",
       "image": "assets/images/imported/sqs-15e89e9a-1598381898156-68ii3hut-kathy.jpg",
       "focus": {
         "x": 0.564329954954955,
@@ -91,7 +91,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in examining the function of cell wall synthesis in E. coli."
+      "profileSummary": ""
     },
     {
       "slug": "betsy-hart",
@@ -99,7 +99,7 @@
       "name": "Betsy Hart",
       "labRole": "Postdoctoral Fellow | NIH K99/R00 Fellow | Former HHWF Fellow",
       "group": "Postdoctoral Fellows",
-      "bio": "I am interested in cell envelope biogenesis in Corynebacterium glutamicum.",
+      "bio": "",
       "image": "assets/images/imported/sqs-f19664ad-1598383045751-abc6tub5-betsy.jpg",
       "focus": {
         "x": 0.5192849099099099,
@@ -124,7 +124,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in cell envelope biogenesis in Corynebacterium glutamicum."
+      "profileSummary": ""
     },
     {
       "slug": "johnathan-kepple",
@@ -132,7 +132,7 @@
       "name": "Johnathan Kepple",
       "labRole": "BPH Graduate Student | NIH F31 Fellow",
       "group": "Graduate Students",
-      "bio": "The general aim of my research is to understand the regulation of cell wall synthesis in the Gram-negative bacterium Pseudomonas aeruginosa.",
+      "bio": "",
       "image": "assets/images/imported/sqs-18ddfbcf-1630526847138-e1t99qxt-img-0508.jpg",
       "focus": {
         "x": 0.5515463917525774,
@@ -151,7 +151,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "The general aim of my research is to understand the regulation of cell wall synthesis in the Gram-negative bacterium Pseudomonas aeruginosa."
+      "profileSummary": ""
     },
     {
       "slug": "wanassa-beroual",
@@ -159,7 +159,7 @@
       "name": "Wanassa Beroual",
       "labRole": "Postdoctoral Fellow",
       "group": "Postdoctoral Fellows",
-      "bio": "I am interested in cell wall biogenesis in Corynebacterium glutamicum.",
+      "bio": "",
       "image": "assets/images/imported/sqs-450561e3-1675970682144-0pyvm1yr-55e89d77-d21c-419f-9d17-4da257564722.jpg",
       "focus": {
         "x": 0.4559487951807229,
@@ -180,7 +180,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in cell wall biogenesis in Corynebacterium glutamicum."
+      "profileSummary": ""
     },
     {
       "slug": "anastacia-parks",
@@ -188,7 +188,7 @@
       "name": "Anastacia Parks",
       "labRole": "Postdoctoral Fellow | NIH F32 Fellow",
       "group": "Postdoctoral Fellows",
-      "bio": "I am interested in understanding the role mannosylation plays in the membrane of Corynebacterium glutamicum.",
+      "bio": "",
       "image": "assets/images/imported/sqs-da9350c8-1649110154642-g16r9vno-screen-shot-2022-04-04-at-6-00-55-pm.png",
       "focus": {
         "x": 0.536697247706422,
@@ -209,7 +209,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in understanding the role mannosylation plays in the membrane of Corynebacterium glutamicum."
+      "profileSummary": ""
     },
     {
       "slug": "wilaysha-evans",
@@ -217,7 +217,7 @@
       "name": "Wilaysha Evans",
       "labRole": "ChemBio Graduate Student",
       "group": "Graduate Students",
-      "bio": "I am most interested in understanding the mechanisms that underpin bacterial cell shape and division. More specifically, in the Bernhardt lab, I study some of the mechanisms by which cell wall integrity in Corynebacterium glutamicum is maintained.",
+      "bio": "",
       "image": "assets/images/imported/sqs-ed7db1f4-1663796653002-8c0dey29-screen-shot-2022-09-21-at-12-49-48-pm.png",
       "focus": {
         "x": 0.5271899606299213,
@@ -236,7 +236,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am most interested in understanding the mechanisms that underpin bacterial cell shape and division. More specifically, in the Bernhardt lab, I study some of the mechanisms by which cell wall integrity in Corynebacterium glutamicum is maintained."
+      "profileSummary": ""
     },
     {
       "slug": "nilanjan-som",
@@ -244,7 +244,7 @@
       "name": "Nilanjan Som",
       "labRole": "Postdoctoral Fellow",
       "group": "Postdoctoral Fellows",
-      "bio": "I am interested in understanding the regulatory mechanisms that drive Gram-negative bacterial cell envelope expansion.",
+      "bio": "",
       "image": "assets/images/imported/sqs-63c0b913-1694117450898-rg5k9ae1-screenshot-2023-09-07-at-3-46-10-pm.png",
       "focus": {
         "x": 0.7153409090909091,
@@ -265,7 +265,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in understanding the regulatory mechanisms that drive Gram-negative bacterial cell envelope expansion."
+      "profileSummary": ""
     },
     {
       "slug": "tien-nguyen",
@@ -273,7 +273,7 @@
       "name": "Tien Nguyen",
       "labRole": "MCO Graduate Student",
       "group": "Graduate Students",
-      "bio": "I am interested in studying the regulation of peptidoglycan hydrolysis during cell division in Escherichia coli, with a focus on mechanisms that control hydrolases and their activators for proper PG cleavage.",
+      "bio": "",
       "image": "assets/images/imported/sqs-1fdcc511-1694187388124-t15gtlgx-img-6820.jpg",
       "focus": {
         "x": 0.5511363636363636,
@@ -292,7 +292,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in studying the regulation of peptidoglycan hydrolysis during cell division in Escherichia coli, with a focus on mechanisms that control hydrolases and their activators for proper PG cleavage."
+      "profileSummary": ""
     },
     {
       "slug": "dylan-burgin",
@@ -300,7 +300,7 @@
       "name": "Dylan Burgin",
       "labRole": "BBS Graduate Student",
       "group": "Graduate Students",
-      "bio": "I am interested in studying the mechanisms that contribute to outer membrane integrity in Gram-negative bacteria.",
+      "bio": "",
       "image": "assets/images/imported/sqs-4b8f41ca-1718042442897-oa8ermsf-screenshot-2024-06-10-at-2-00-29-pm.png",
       "focus": {
         "x": 0.5238636363636363,
@@ -319,7 +319,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in studying the mechanisms that contribute to outer membrane integrity in Gram-negative bacteria."
+      "profileSummary": ""
     },
     {
       "slug": "shailab-shrestha",
@@ -327,7 +327,7 @@
       "name": "Shailab Shrestha",
       "labRole": "Postdoctoral Fellow | Life Sciences Research Foundation Fellow",
       "group": "Postdoctoral Fellows",
-      "bio": "I am interested in the biogenesis and maintenance of the Gram-negative cell envelope.",
+      "bio": "",
       "image": "assets/images/imported/sqs-854465e1-1718134932686-sj49crik-screenshot-2024-06-11-at-3-42-00-pm.png",
       "focus": {
         "x": 0.49630681818181815,
@@ -347,7 +347,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in the biogenesis and maintenance of the Gram-negative cell envelope."
+      "profileSummary": ""
     },
     {
       "slug": "vincent-de-bakker",
@@ -355,7 +355,7 @@
       "name": "Vincent de Bakker",
       "labRole": "Postdoctoral Research Fellow | Funded by the Swiss National Science Foundation",
       "group": "Postdoctoral Fellows",
-      "bio": "I work at the intersection of quantitative and fundamental microbiology. In that context, I'm currently implementing CRISPR interference techniques to study cell envelope biogenesis in Corynebacterium glutamicum.",
+      "bio": "",
       "image": "assets/images/imported/sqs-fbcdc249-1739559732012-m2uo3cuh-20250214-lab2.jpeg",
       "focus": {
         "x": 0.5038265306122449,
@@ -377,7 +377,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I work at the intersection of quantitative and fundamental microbiology. In that context, I'm currently implementing CRISPR interference techniques to study cell envelope biogenesis in Corynebacterium glutamicum."
+      "profileSummary": ""
     },
     {
       "slug": "nazgul-sakenova",
@@ -385,7 +385,7 @@
       "name": "Nazgul Sakenova",
       "labRole": "Postdoctoral Fellow | HHWF Fellow",
       "group": "Postdoctoral Fellows",
-      "bio": "I am interested in special protein localization and factors that determine it in Escherichia coli.",
+      "bio": "",
       "image": "assets/images/imported/sqs-660e354a-1739559794418-p4jop8a7-img-3956.jpeg",
       "focus": {
         "x": 0.49362244897959184,
@@ -406,7 +406,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in special protein localization and factors that determine it in Escherichia coli."
+      "profileSummary": ""
     },
     {
       "slug": "abel-rodriguez",
@@ -414,7 +414,7 @@
       "name": "Abel Rodriguez",
       "labRole": "Undergraduate Researcher",
       "group": "Undergraduate Researchers",
-      "bio": "I am interested in determining novel players in mycolic acid transport.",
+      "bio": "",
       "image": "assets/images/imported/sqs-b5904c3a-1745615239614-0zk8czu2-img-2743.jpeg",
       "focus": {
         "x": 0.6420454545454546,
@@ -433,7 +433,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in determining novel players in mycolic acid transport."
+      "profileSummary": ""
     },
     {
       "slug": "eleanor-rand",
@@ -441,7 +441,7 @@
       "name": "Eleanor Rand",
       "labRole": "Postdoctoral Research Fellow | Community Phages Internship Lead Instructor",
       "group": "Postdoctoral Fellows",
-      "bio": "I am interested in using phages to learn more about their bacterial hosts. I also lead the Community Phages program (phages.hms.harvard.edu)!",
+      "bio": "",
       "image": "assets/images/imported/sqs-674e8ba7-1753710971082-ghtm0q8g-ellieheadshot.jpg",
       "focus": {
         "x": 0.54421768707483,
@@ -462,7 +462,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in using phages to learn more about their bacterial hosts. I also lead the Community Phages program (phages.hms.harvard.edu)!"
+      "profileSummary": ""
     },
     {
       "slug": "ophelia-lee",
@@ -470,7 +470,7 @@
       "name": "Ophelia Lee",
       "labRole": "BBS Graduate Student",
       "group": "Graduate Students",
-      "bio": "I am interested in mycolic acid transport and regulation in Corynebacterium glutamicum.",
+      "bio": "",
       "image": "assets/images/imported/sqs-09ceb0cb-1753711015525-a3bb6ym2-img-2325.jpg",
       "focus": {
         "x": 0.5965909090909091,
@@ -489,7 +489,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in mycolic acid transport and regulation in Corynebacterium glutamicum."
+      "profileSummary": ""
     },
     {
       "slug": "james-warner",
@@ -497,7 +497,7 @@
       "name": "James Warner",
       "labRole": "Postdoctoral Research Fellow | Life Sciences Research Foundation Fellow",
       "group": "Postdoctoral Fellows",
-      "bio": "I want to understand how the pathogen Staphylococcus aureus coordinates the synthesis of its cell envelope to escape antibiotic killing.",
+      "bio": "",
       "image": "assets/images/imported/sqs-85bf8dbf-1753711049360-lpzz20hw-warner-2025.jpg",
       "focus": {
         "x": 0.5,
@@ -517,7 +517,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I want to understand how the pathogen Staphylococcus aureus coordinates the synthesis of its cell envelope to escape antibiotic killing."
+      "profileSummary": ""
     },
     {
       "slug": "taran-bauer",
@@ -525,7 +525,7 @@
       "name": "Taran Bauer",
       "labRole": "BBS Graduate Student",
       "group": "Graduate Students",
-      "bio": "I am interested in uncovering the downstream regulatory mechanisms of the envelope stress response and how this relates to lipid transport. My larger goal is to uncover novel functions of the envelope stress signal to characterize how E. coli and other species maintain membrane integrity.",
+      "bio": "",
       "image": "assets/images/imported/sqs-b2906372-1757698060384-2j07fruf-screenshot-2025-09-12-at-1-25-27-e2-80-afp.png",
       "focus": {
         "x": 0.5050418116465336,
@@ -544,7 +544,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in uncovering the downstream regulatory mechanisms of the envelope stress response and how this relates to lipid transport. My larger goal is to uncover novel functions of the envelope stress signal to characterize how E. coli and other species maintain membrane integrity."
+      "profileSummary": ""
     },
     {
       "slug": "franziska-maria-lichtenauer",
@@ -552,7 +552,7 @@
       "name": "Franziska Maria Lichtenauer",
       "labRole": "ChemBio Graduate Student",
       "group": "Graduate Students",
-      "bio": "I am interested in cell envelope biogenesis, specifically peptidoglycan synthesis, in Corynebacterium glutamicum.",
+      "bio": "",
       "image": "assets/images/team/franziska-maria-lichtenauer.jpg",
       "focus": {
         "x": 0.56,
@@ -571,7 +571,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": "I am interested in cell envelope biogenesis, specifically peptidoglycan synthesis, in Corynebacterium glutamicum."
+      "profileSummary": ""
     },
     {
       "slug": "alison-forchoh",
