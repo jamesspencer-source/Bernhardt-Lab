@@ -495,6 +495,10 @@ def validate_people_plain_text(person: dict[str, Any]) -> None:
     slug = clean_text(person.get("slug")) or "<missing slug>"
     for field in PEOPLE_PLAIN_TEXT_FIELDS:
         validate_no_html_tags(person.get(field), f"Person {slug} field {field}")
+    if clean_text(person.get("status")) == "current":
+        for field in ("bio", "profileSummary"):
+            if clean_text(person.get(field)):
+                raise RuntimeError(f"Current person {slug} field {field} must stay blank for public privacy")
 
     education = person.get("education")
     if education is not None:
@@ -669,26 +673,19 @@ def render_people_cards(people: list[dict[str, Any]], root_prefix: str, flat: bo
                 [
                     name,
                     clean_text(person.get("labRole")),
-                    clean_text(person.get("bio")),
                     group,
                 ]
             )
         )
         profile_href = current_profile_href(person, root_prefix, flat)
-        bio_html = ""
-        bio = clean_text(person.get("bio"))
-        if bio:
-            bio_class = "person-bio person-bio--directory" if view == "directory" else "person-bio person-bio--compact"
-            bio_html = f'<p class="{bio_class}">{format_species_text(bio)}</p>'
         cards.append(
-            f'''          <article class="person-card person-card--{view}" style="--index:{output_index};" data-name="{escape(name)}" data-role="{escape(person.get("labRole"))}" data-group="{escape(group)}" data-bio="{escape(person.get("bio"))}" data-sort-seniority="{escape(str(seniority_rank))}" data-sort-position="{escape(str(position_rank))}" data-sort-last-name="{escape(last_name_key(name))}" data-sort-name="{escape(name.lower())}" data-sort-original="{escape(str(display_index))}" data-search="{escape(search_blob)}">
+            f'''          <article class="person-card person-card--{view}" style="--index:{output_index};" data-name="{escape(name)}" data-role="{escape(person.get("labRole"))}" data-group="{escape(group)}" data-sort-seniority="{escape(str(seniority_rank))}" data-sort-position="{escape(str(position_rank))}" data-sort-last-name="{escape(last_name_key(name))}" data-sort-name="{escape(name.lower())}" data-sort-original="{escape(str(display_index))}" data-search="{escape(search_blob)}">
             <div class="person-photo-wrap">
               <img class="person-photo" src="{escape(resolve_asset_path(clean_text(person.get("image")), root_prefix))}" alt="{escape(name)}" style="--focus-x:{escape(f"{float(person.get('focus', {}).get('x', 0.5)) * 100:.1f}%")};--focus-y:{escape(f"{float(person.get('focus', {}).get('y', 0.46)) * 100:.1f}%")};" loading="lazy" />
             </div>
             <div class="person-body">
               <h3>{escape(name)}</h3>
               <p class="person-role">{escape(role_label)}</p>
-              {bio_html}
               <div class="person-links">
                 <a class="person-link" href="{escape(profile_href)}">{'View full profile' if view == 'directory' else 'View profile'}</a>
               </div>
@@ -786,6 +783,31 @@ def render_education_panel(person: dict[str, Any]) -> str:
             </article>'''
 
 
+def render_current_profile_details_panel(person: dict[str, Any]) -> str:
+    role = clean_text(person.get("labRole"))
+    lab_dates = clean_text(person.get("labDates"))
+    details = []
+    if role:
+        details.append(("Role", role))
+    if lab_dates:
+        details.append(("Lab dates", lab_dates))
+    if not details:
+        return ""
+    rows = "\n".join(
+        f'''                <div>
+                  <dt>{escape(label)}</dt>
+                  <dd>{escape(value)}</dd>
+                </div>'''
+        for label, value in details
+    )
+    return f'''\n            <article class="profile-panel profile-panel--details">
+              <h2>Lab Profile</h2>
+              <dl class="profile-details">
+{rows}
+              </dl>
+            </article>'''
+
+
 def render_current_profile(person: dict[str, Any], flat: bool) -> str:
     root_prefix = "" if flat else "../../"
     role = clean_text(person.get("labRole"))
@@ -794,6 +816,7 @@ def render_current_profile(person: dict[str, Any], flat: bool) -> str:
     email = clean_text(person.get("email"))
     links = person.get("links") or []
     education_panel = render_education_panel(person)
+    details_panel = render_current_profile_details_panel(person)
     action_links = []
     action_links.append(
         f'<a class="button button-primary" href="{escape(site_link(TEAM_ROUTE, root_prefix, flat))}">Back to team directory</a>'
@@ -862,11 +885,8 @@ def render_current_profile(person: dict[str, Any], flat: bool) -> str:
             </figure>
           </article>
 
-          <div class="profile-grid">
-            <article class="profile-panel">
-              <h2>Research Interest</h2>
-              <p>{format_species_text(clean_text(person.get("profileSummary") or person.get("bio")))}</p>
-            </article>{education_panel}
+          <div class="profile-grid profile-grid--current">
+            {education_panel}{details_panel}
           </div>
         </section>
       </main>
