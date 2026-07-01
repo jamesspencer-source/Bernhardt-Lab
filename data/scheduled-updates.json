@@ -1,5 +1,6 @@
 {
-  "peopleTransitions": [
+  "peopleTransitions": [],
+  "appliedPeopleTransitions": [
     {
       "id": "2026-07-01-wilaysha-evans-to-alumni",
       "effectiveDate": "2026-07-01",
@@ -10,8 +11,8 @@
       "labDates": "Sep 2022 - Jun 2026",
       "currentRole": "Upper School Science Teacher, Trinity School, New York City",
       "profileSummary": "Former Bernhardt Lab graduate student now joining Trinity School in New York City as an Upper School Science Teacher.",
-      "removeEmail": true
+      "removeEmail": true,
+      "appliedAt": "2026-07-01T07:51:16-04:00"
     }
-  ],
-  "appliedPeopleTransitions": []
+  ]
 }

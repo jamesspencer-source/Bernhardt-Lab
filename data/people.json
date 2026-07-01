@@ -213,20 +213,20 @@
     },
     {
       "slug": "wilaysha-evans",
-      "status": "current",
+      "status": "alumni",
       "name": "Wilaysha Evans",
       "labRole": "ChemBio Graduate Student",
-      "group": "Graduate Students",
+      "group": "",
       "bio": "",
       "image": "assets/images/imported/sqs-ed7db1f4-1663796653002-8c0dey29-screen-shot-2022-09-21-at-12-49-48-pm.png",
       "focus": {
         "x": 0.5271899606299213,
         "y": 0.5374149659863946
       },
-      "labDates": "Sep 2022 \u2013 Present",
-      "currentRole": "",
-      "profileType": "current",
-      "email": "wilayshaevans@g.harvard.edu",
+      "labDates": "Sep 2022 - Jun 2026",
+      "currentRole": "Upper School Science Teacher, Trinity School, New York City",
+      "profileType": "alumni",
+      "email": "",
       "education": [
         "B.S., Biochemistry, State University of New York, Oneonta, New York"
       ],
@@ -236,7 +236,7 @@
         "url": "",
         "verifiedSource": ""
       },
-      "profileSummary": ""
+      "profileSummary": "Former Bernhardt Lab graduate student now joining Trinity School in New York City as an Upper School Science Teacher."
     },
     {
       "slug": "nilanjan-som",
