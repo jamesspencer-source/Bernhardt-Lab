@@ -1,9 +1,20 @@
 {
-  "generatedAt": "2026-06-29T14:29:11+00:00",
+  "generatedAt": "2026-07-06T14:02:59+00:00",
   "source": "pubmed-esummary-last-author-filter",
   "query": "Bernhardt TG[Author]",
   "count": 5,
   "items": [
+    {
+      "pmid": "42399561",
+      "doi": "10.1038/s41564-026-02403-6",
+      "title": "The penicillin-binding protein PBP1b fortifies the Escherichia coli division site against osmotic rupture",
+      "journal": "Nature microbiology",
+      "year": "2026",
+      "pubDate": "2026 Jul 3",
+      "authorsShort": "Navarro PP, Vettiger A, Hajdu R, et al.",
+      "articleUrl": "https://doi.org/10.1038/s41564-026-02403-6",
+      "sourceLabel": "PubMed (Bernhardt TG last author)"
+    },
     {
       "pmid": "42008678",
       "doi": "10.1073/pnas.2606687123",
@@ -46,17 +57,6 @@
       "pubDate": "2024 Jun",
       "authorsShort": "Hart EM, Lyerly E, Bernhardt TG",
       "articleUrl": "https://doi.org/10.1371/journal.pgen.1011127",
-      "sourceLabel": "PubMed (Bernhardt TG last author)"
-    },
-    {
-      "pmid": "38718542",
-      "doi": "10.1016/j.mib.2024.102479",
-      "title": "Co-ordinated assembly of the multilayered cell envelope of Gram-negative bacteria",
-      "journal": "Current opinion in microbiology",
-      "year": "2024",
-      "pubDate": "2024 Jun",
-      "authorsShort": "Fivenson EM, Dubois L, Bernhardt TG",
-      "articleUrl": "https://doi.org/10.1016/j.mib.2024.102479",
       "sourceLabel": "PubMed (Bernhardt TG last author)"
     }
   ]
