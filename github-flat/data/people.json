@@ -644,6 +644,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://www.deduveinstitute.be/research-group/jean-francois-collet",
+        "linkType": "directory",
         "verifiedSource": "Institut de Duve, UCLouvain"
       },
       "profileSummary": "I studied regulation of cell wall biogenesis in Escherichia coli as a visiting graduate trainee."
@@ -692,6 +693,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://www.umassmed.edu/mckitterick-lab/people/",
+        "linkType": "directory",
         "verifiedSource": "UMass Chan Medical School"
       },
       "profileSummary": "Former member of the Bernhardt Lab. Principal Investigator, McKitterick Lab - UMass Chan Medical School"
@@ -716,6 +718,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://bordensteinlab.com/people/",
+        "linkType": "directory",
         "verifiedSource": "Bordenstein Lab, Penn State University"
       },
       "profileSummary": "Former member of the Bernhardt Lab. Lab director, Seth Bordenstein Lab, Penn State University"
@@ -788,6 +791,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://www.imperial.ac.uk/infectious-disease/research/molecular-microbiology/",
+        "linkType": "directory",
         "verifiedSource": "Imperial College London"
       },
       "profileSummary": "During her sabbatical year in the Rudner and Bernhardt labs, Angelika investigated bacterial membrane biogenesis and lipid transport pathways to close key gaps in envelope biology."
@@ -860,6 +864,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://www.suffolk.edu/cas/degrees-programs/biology/faculty-staff",
+        "linkType": "directory",
         "verifiedSource": "Suffolk University Biology"
       },
       "profileSummary": "Former member of the Bernhardt Lab. Associate Professor, Suffolk University"
@@ -908,6 +913,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://biology.indiana.edu/about/faculty/index.html",
+        "linkType": "directory",
         "verifiedSource": "Indiana University Biology"
       },
       "profileSummary": "Former member of the Bernhardt Lab. Professor, Indiana University Bloomington"
@@ -980,6 +986,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://basil.sites.northeastern.edu/our-team/",
+        "linkType": "directory",
         "verifiedSource": "Northeastern BASIL lab team page"
       },
       "profileSummary": "Former member of the Bernhardt Lab. Undergraduate student, Northeastern University"
@@ -1028,6 +1035,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://www.jccfund.org/fellows/current/",
+        "linkType": "directory",
         "verifiedSource": "Jane Coffin Childs Fund"
       },
       "profileSummary": "I studied mechanisms of cell wall synthesis and shape maintenance in Escherichia coli."
@@ -1124,6 +1132,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://www.watertownfoundation.org/staff",
+        "linkType": "directory",
         "verifiedSource": "Watertown Community Foundation"
       },
       "profileSummary": "Former member of the Bernhardt Lab. Director of Operations, Watertown Community Foundation"
@@ -1196,6 +1205,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://www.neb.com/en-us/tools-and-resources/video-library/automating-and-miniaturizing-neb-workflows-for-high-throughput-dna-assembly-and-protein-expression",
+        "linkType": "evidence",
         "verifiedSource": "New England Biolabs"
       },
       "profileSummary": "My work focused on how bacteria grow and divide, using quantitative fluorescence microscopy, next-generation sequencing, and chemical-genetic screening to identify vulnerabilities in essential envelope processes."
@@ -1268,6 +1278,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://ir.tscan.com/news-releases/news-release-details/tscan-therapeutics-announces-upcoming-poster-presentations-37th",
+        "linkType": "news",
         "verifiedSource": "TScan Therapeutics"
       },
       "profileSummary": "I studied regulatory mechanisms governing growth and division in Corynebacterium glutamicum."
@@ -1416,6 +1427,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://pubmed.ncbi.nlm.nih.gov/40543847/",
+        "linkType": "publication",
         "verifiedSource": "PubMed affiliation"
       },
       "profileSummary": "I investigated molecular machines that build and remodel the bacterial cell wall, including penicillin-binding proteins and their lipoprotein activators."
@@ -1440,6 +1452,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://pubmed.ncbi.nlm.nih.gov/39372038/",
+        "linkType": "publication",
         "verifiedSource": "PubMed affiliation"
       },
       "profileSummary": "Former member of the Bernhardt Lab. Postdoctoral fellow, Peter MacCallum Cancer Centre"
@@ -1464,6 +1477,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://publichealth.jhu.edu/departments/molecular-microbiology-and-immunology/people",
+        "linkType": "directory",
         "verifiedSource": "Johns Hopkins Bloomberg School of Public Health"
       },
       "profileSummary": "I explored secondary regulatory pathways in Gram-negative envelope development and helped establish recombineering methods in Pseudomonas aeruginosa."
@@ -1563,6 +1577,7 @@
       "verification": {
         "sourceLabel": "Alumni update request",
         "url": "https://theorg.com/org/autolus/teams/regulatory-affairs",
+        "linkType": "directory",
         "verifiedSource": "Autolus Regulatory Affairs team listing"
       },
       "profileSummary": "Former member of the Bernhardt Lab. Executive Director, Regulatory Affairs CMC, Autolus"
@@ -1635,6 +1650,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://www.fixenlab.com/people",
+        "linkType": "directory",
         "verifiedSource": "Fixen Lab, University of Minnesota"
       },
       "profileSummary": "My interests span microbiology, genetics, and evolution; in the lab I helped develop genetic tools in Streptococcus pneumoniae with the Bernhardt and Rudner groups."
@@ -1659,6 +1675,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://lsrf.org/alumni-fellows/",
+        "linkType": "directory",
         "verifiedSource": "Life Sciences Research Foundation"
       },
       "profileSummary": "I investigated rod-complex function during cell wall synthesis in Escherichia coli to understand how bacterial shape and envelope integrity are maintained."
@@ -1855,6 +1872,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://www.wadsworth.org/research/laboratories/bartlett/people",
+        "linkType": "directory",
         "verifiedSource": "Wadsworth Center (Bartlett Lab)"
       },
       "profileSummary": "I used genetic screens to define core cell wall biogenesis functions in Staphylococcus aureus, including pathways underlying resistance in MRSA."
@@ -1949,6 +1967,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://www.barczaklab.org/meet-the-lab",
+        "linkType": "directory",
         "verifiedSource": "Barczak Lab, Harvard/Brigham"
       },
       "profileSummary": "I was interested in the machinery behind cell wall biosynthesis in Gram-negative bacteria."
@@ -1973,6 +1992,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://pubmed.ncbi.nlm.nih.gov/40167371/",
+        "linkType": "publication",
         "verifiedSource": "PubMed affiliation"
       },
       "profileSummary": "Former member of the Bernhardt Lab. Scientist, Venatorx Pharmaceuticals, Malvern, PA"
@@ -2021,6 +2041,7 @@
       "verification": {
         "sourceLabel": "Bernhardt lab records",
         "url": "https://pubmed.ncbi.nlm.nih.gov/38531897/",
+        "linkType": "publication",
         "verifiedSource": "PubMed affiliation"
       },
       "profileSummary": "I studied metabolic regulation that supports bacterial proliferation and cell growth."
