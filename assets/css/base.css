@@ -694,6 +694,7 @@ body.is-scrolled .site-header {
   display: grid;
   gap: 0.84rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
 }
 
 .about-grid > section {
