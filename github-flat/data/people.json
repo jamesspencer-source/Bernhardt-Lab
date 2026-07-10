@@ -574,6 +574,33 @@
       "profileSummary": ""
     },
     {
+      "slug": "julia-silberman",
+      "status": "current",
+      "name": "Julia Silberman",
+      "labRole": "Graduate Student",
+      "group": "Graduate Students",
+      "bio": "",
+      "image": "assets/images/hms-gordon-hall.jpg",
+      "focus": {
+        "x": 0.5,
+        "y": 0.5
+      },
+      "labDates": "Jul 2026 \u2013 Present",
+      "currentRole": "",
+      "profileType": "current",
+      "email": "",
+      "education": [
+        "B.S. Biochemistry, Tufts University, Medford, MA"
+      ],
+      "links": [],
+      "verification": {
+        "sourceLabel": "",
+        "url": "",
+        "verifiedSource": ""
+      },
+      "profileSummary": ""
+    },
+    {
       "slug": "alison-forchoh",
       "status": "alumni",
       "name": "Alison Forchoh",
@@ -928,8 +955,8 @@
       "links": [],
       "verification": {
         "sourceLabel": "Bernhardt lab records",
-        "url": "https://www.fulcrumtx.com/amo-team/dae-gon-ha-ph-d/",
-        "verifiedSource": "Fulcrum Therapeutics"
+        "url": "",
+        "verifiedSource": ""
       },
       "profileSummary": "Former member of the Bernhardt Lab. Director, Biotechnology Equity Research, Stifel Financial Corp"
     },
