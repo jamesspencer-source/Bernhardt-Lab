@@ -90,9 +90,9 @@
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(20rem, 24rem);
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto auto;
   column-gap: 0.82rem;
-  min-height: min(92svh, 980px);
+  min-height: 0;
   max-height: 92svh;
   border: 1px solid rgba(154, 226, 235, 0.18);
   border-radius: 24px;
@@ -464,6 +464,51 @@
   backdrop-filter: blur(14px);
 }
 
+@media (min-width: 761px) {
+  .envelope-overlay-inner {
+    width: min(46rem, calc(100% - 0.2rem));
+    max-height: none;
+    overflow: visible;
+    grid-template-columns: minmax(0, 1.08fr) minmax(17rem, 0.92fr);
+    grid-template-areas:
+      "kicker fields"
+      "title fields"
+      "copy fields"
+      "briefing meta"
+      "actions actions";
+    column-gap: 0.88rem;
+  }
+
+  .envelope-overlay-kicker {
+    grid-area: kicker;
+  }
+
+  .envelope-overlay h3 {
+    grid-area: title;
+  }
+
+  #envelope-overlay-copy {
+    grid-area: copy;
+  }
+
+  .envelope-overlay-fields {
+    grid-area: fields;
+    grid-template-columns: 1fr;
+  }
+
+  .envelope-overlay-briefing {
+    grid-area: briefing;
+  }
+
+  .envelope-overlay-meta {
+    grid-area: meta;
+  }
+
+  .envelope-start-actions {
+    grid-area: actions;
+  }
+}
+
 .envelope-overlay-kicker {
   display: inline-flex;
   align-items: center;
@@ -634,10 +679,15 @@
 }
 
 .envelope-start-actions {
+  position: sticky;
+  bottom: -0.2rem;
+  z-index: 2;
   margin-top: 0.08rem;
+  padding: 0.5rem 0 0.12rem;
   display: flex;
   flex-wrap: wrap;
   gap: 0.56rem;
+  background: linear-gradient(180deg, rgba(8, 20, 34, 0), rgba(8, 20, 34, 0.98) 36%);
 }
 
 .envelope-drawer {
@@ -653,7 +703,7 @@
   border: 1px solid rgba(170, 235, 241, 0.14);
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(8, 20, 33, 0.82), rgba(7, 17, 29, 0.72));
-  overflow: auto;
+  overflow: hidden;
 }
 
 .envelope-drawer-head {
@@ -842,6 +892,12 @@
     margin-right: 0.9rem;
   }
 
+  .envelope-stage-wrap:has(.envelope-overlay:not(.is-hidden)) {
+    height: min(64svh, 36rem);
+    max-height: none;
+    aspect-ratio: auto;
+  }
+
   .envelope-console-bar {
     align-items: flex-start;
     flex-wrap: wrap;
@@ -888,12 +944,53 @@
 @media (max-width: 620px) {
   .envelope-stage-wrap {
     overflow: visible;
+    margin-bottom: 0;
+  }
+
+  .envelope-stage-wrap:has(.envelope-overlay.is-hidden) {
     margin-bottom: 10.8rem;
   }
 
   .envelope-overlay-fields {
     grid-template-columns: 1fr;
     gap: 0.62rem;
+  }
+
+  .envelope-stage-wrap:has(.envelope-overlay:not(.is-hidden)) .envelope-hud,
+  .envelope-stage-wrap:has(.envelope-overlay:not(.is-hidden)) .envelope-stage-banner,
+  .envelope-stage-wrap:has(.envelope-overlay:not(.is-hidden)) .envelope-stage-controls,
+  .envelope-stage-wrap:has(.envelope-overlay:not(.is-hidden)) .envelope-response-button {
+    visibility: hidden;
+  }
+
+  .envelope-overlay-inner {
+    gap: 0.48rem;
+    padding: 0.72rem;
+  }
+
+  .envelope-overlay h3 {
+    font-size: 1.52rem;
+    line-height: 1;
+  }
+
+  #envelope-overlay-copy {
+    font-size: 0.9rem;
+    line-height: 1.34;
+  }
+
+  .envelope-model-picker p,
+  .envelope-overlay-points,
+  .envelope-overlay-meta {
+    display: none;
+  }
+
+  .envelope-overlay-briefing {
+    padding: 0.5rem 0.6rem;
+  }
+
+  .envelope-overlay-status {
+    font-size: 0.82rem;
+    line-height: 1.32;
   }
 
   .envelope-stage-banner {
@@ -974,7 +1071,7 @@
 }
 
 @media (max-width: 520px) {
-  .envelope-stage-wrap {
+  .envelope-stage-wrap:has(.envelope-overlay.is-hidden) {
     margin-bottom: 13.2rem;
   }
 
