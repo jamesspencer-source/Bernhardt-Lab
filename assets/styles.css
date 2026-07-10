@@ -807,6 +807,7 @@ body.is-scrolled .site-header {
   display: grid;
   gap: 0.84rem;
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
 }
 
 .about-grid > section {
@@ -1531,7 +1532,23 @@ body.is-scrolled .site-header {
   background: rgba(9, 13, 19, 0.78);
 }
 
+.gallery-stage::before {
+  content: "";
+  position: absolute;
+  inset: -1.2rem;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(9, 13, 19, 0.38), rgba(9, 13, 19, 0.38)),
+    var(--gallery-backdrop, none);
+  background-position: center;
+  background-size: cover;
+  filter: blur(18px) saturate(0.82);
+  opacity: 0.48;
+}
+
 .gallery-stage img {
+  position: relative;
+  z-index: 1;
   width: 100%;
   height: clamp(260px, 40vw, 460px);
   object-fit: contain;
@@ -1544,6 +1561,7 @@ body.is-scrolled .site-header {
   left: 0;
   right: 0;
   bottom: 0;
+  z-index: 2;
   padding: 0.95rem;
   background: linear-gradient(180deg, transparent, rgba(8, 18, 33, 0.82));
 }

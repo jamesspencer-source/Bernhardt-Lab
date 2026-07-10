@@ -86,6 +86,7 @@ export async function initGallery() {
     activeImage.dataset.title = cleanText(item.title);
     activeImage.dataset.displayFilter = item.displayFilter || "none";
     activeImage.setAttribute("aria-label", `Open ${cleanText(item.title)} in full view`);
+    activeImage.closest(".gallery-stage")?.style.setProperty("--gallery-backdrop", `url("${resolvedImage}")`);
 
     dots.querySelectorAll(".gallery-dot").forEach((dot, index) => {
       dot.classList.toggle("active", index === galleryIndex);
