@@ -25,6 +25,7 @@
   const dailyNote = document.getElementById("envelope-daily-note");
   const scoreEl = document.getElementById("envelope-score");
   const timeEl = document.getElementById("envelope-time");
+  const dashEl = document.getElementById("envelope-dash");
   const integrityEl = document.getElementById("envelope-integrity");
   const integrityBarEl = document.getElementById("envelope-integrity-bar");
   const repairEl = document.getElementById("envelope-repair");
@@ -85,9 +86,14 @@
     rupturePadding: 14
   };
   const TELEGRAPH = {
-    phage: 0.56,
-    wave: 0.72,
-    rupture: 0.82
+    phage: 0.72,
+    wave: 0.9,
+    rupture: 1
+  };
+  const DASH = {
+    duration: 0.17,
+    cooldown: 1.05,
+    speedMul: 2.35
   };
   const prefersReducedMotion =
     typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -346,6 +352,9 @@
       lastDamageKind: "",
       responseChoice: "patch",
       responseChoiceTimer: 0,
+      dashTimer: 0,
+      dashCooldown: 0,
+      dashDirection: { x: 0, y: -1 },
       integrity: 100,
       repairProgress: 0,
       repairNeeded: 4,
@@ -1118,6 +1127,7 @@
     const toneMap = {
       pickup: [660, 0.05, 0.07],
       repair: [420, 0.08, 0.16],
+      dash: [720, 0.04, 0.08],
       damage: [150, 0.11, 0.18],
       response: [260, 0.09, 0.42],
       phase: [520, 0.06, 0.2],
@@ -1208,6 +1218,9 @@
     state.lastDamageKind = "";
     state.responseChoice = "patch";
     state.responseChoiceTimer = 0;
+    state.dashTimer = 0;
+    state.dashCooldown = 0;
+    state.dashDirection = { x: 0, y: -1 };
     state.integrity = 100;
     state.responseCharge = 0;
     state.responseAnnounced = false;
@@ -1547,6 +1560,41 @@
     return target.matches("input, textarea, select");
   }
 
+  function getDashVector() {
+    let moveX = 0;
+    let moveY = 0;
+    if (state.pointer.active) {
+      moveX = state.pointer.x - state.player.x;
+      moveY = state.pointer.y - state.player.y;
+    } else {
+      if (state.input.left) moveX -= 1;
+      if (state.input.right) moveX += 1;
+      if (state.input.up) moveY -= 1;
+      if (state.input.down) moveY += 1;
+    }
+    const length = Math.hypot(moveX, moveY);
+    if (length > 0.001) {
+      return { x: moveX / length, y: moveY / length };
+    }
+    return {
+      x: Math.cos(state.player.angle || -Math.PI / 2),
+      y: Math.sin(state.player.angle || -Math.PI / 2)
+    };
+  }
+
+  function triggerDash() {
+    if (!state.running || state.paused || state.dying || state.dashCooldown > 0) return;
+    const direction = getDashVector();
+    state.dashDirection = direction;
+    state.dashTimer = DASH.duration;
+    state.dashCooldown = DASH.cooldown;
+    state.safeWindow = Math.max(state.safeWindow, 0.22);
+    addCameraImpulse(0.34);
+    addFloater(state.player.x, state.player.y - 34, "Dash", "#d8fbff");
+    addImpactSparks(state.player.x, state.player.y, "rgba(216, 251, 255, 0.9)", prefersReducedMotion ? 4 : 9);
+    playAssayTone("dash");
+  }
+
   function updatePlayer(dt) {
     const species = getSpecies();
     let moveX = 0;
@@ -1575,9 +1623,18 @@
       }
     }
 
-    const baseSpeed = 294 * species.speedMul * getPlayfieldPaceScale() * (state.boostWindow > 0 ? 1.22 : 1);
-    state.player.vx = moveX * baseSpeed;
-    state.player.vy = moveY * baseSpeed;
+    const moveLength = Math.hypot(moveX, moveY);
+    if (moveLength > 0.001) {
+      state.dashDirection = { x: moveX / moveLength, y: moveY / moveLength };
+    }
+    const dashActive = state.dashTimer > 0;
+    const activeMoveX = dashActive ? state.dashDirection.x : moveX;
+    const activeMoveY = dashActive ? state.dashDirection.y : moveY;
+    const boostMultiplier = state.boostWindow > 0 ? 1.22 : 1;
+    const dashMultiplier = dashActive ? DASH.speedMul : 1;
+    const baseSpeed = 294 * species.speedMul * getPlayfieldPaceScale() * boostMultiplier * dashMultiplier;
+    state.player.vx = activeMoveX * baseSpeed;
+    state.player.vy = activeMoveY * baseSpeed;
     state.player.x = clamp(state.player.x + state.player.vx * dt, 36, world.width - 36);
     state.player.y = clamp(state.player.y + state.player.vy * dt, 36, world.height - 36);
     if (Math.abs(state.player.vx) + Math.abs(state.player.vy) > 12) {
@@ -1733,6 +1790,8 @@
   function updateEffects(dt) {
     state.safeWindow = Math.max(0, state.safeWindow - dt);
     state.boostWindow = Math.max(0, state.boostWindow - dt);
+    state.dashTimer = Math.max(0, state.dashTimer - dt);
+    state.dashCooldown = Math.max(0, state.dashCooldown - dt);
     state.hitFlash = Math.max(0, state.hitFlash - dt);
     state.responseReadyFlash = Math.max(0, state.responseReadyFlash - dt);
     state.responseChoiceTimer = Math.max(0, state.responseChoiceTimer - dt);
@@ -1852,6 +1911,7 @@
     const best = getCurrentBest(state.currentBoard);
     if (scoreEl) scoreEl.textContent = String(Math.round(state.score));
     if (timeEl) timeEl.textContent = formatDuration(state.elapsed);
+    if (dashEl) dashEl.textContent = state.dashCooldown > 0 ? `${Math.ceil(state.dashCooldown * 10) / 10}s` : "Ready";
     if (integrityEl) integrityEl.textContent = `${Math.round(state.integrity)}%`;
     if (integrityBarEl) integrityBarEl.style.width = `${clamp(state.integrity, 0, 100)}%`;
     if (repairEl) repairEl.textContent = `${state.repairProgress} / ${state.repairNeeded}`;
@@ -2114,6 +2174,11 @@
         ctx.beginPath();
         ctx.arc(phage.x, phage.y, 13 * depth, 0, TAU);
         ctx.fill();
+        ctx.fillStyle = `rgba(255, 226, 160, ${0.56 + progress * 0.26})`;
+        ctx.font = "900 12px Manrope, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText("PHAGE", clamp(phage.x, 48, world.width - 48), clamp(phage.y, 30, world.height - 30));
         ctx.restore();
         return;
       }
@@ -2510,10 +2575,23 @@
     ctx.translate(x, y);
     ctx.rotate(angle);
     ctx.scale(depth, depth);
-    if (state.safeWindow > 0 || state.boostWindow > 0) {
-      ctx.fillStyle = state.boostWindow > 0 ? "rgba(255, 226, 147, 0.18)" : `rgba(179, 245, 255, ${0.12 + state.safeWindow * 0.16})`;
+    if (state.safeWindow > 0 || state.boostWindow > 0 || state.dashTimer > 0) {
+      ctx.fillStyle =
+        state.dashTimer > 0
+          ? "rgba(216, 251, 255, 0.2)"
+          : state.boostWindow > 0
+            ? "rgba(255, 226, 147, 0.18)"
+            : `rgba(179, 245, 255, ${0.12 + state.safeWindow * 0.16})`;
       ctx.beginPath();
-      ctx.ellipse(0, 4, state.boostWindow > 0 ? 42 : 34, state.boostWindow > 0 ? 28 : 24, 0, 0, TAU);
+      ctx.ellipse(
+        0,
+        4,
+        state.dashTimer > 0 ? 48 : state.boostWindow > 0 ? 42 : 34,
+        state.dashTimer > 0 ? 20 : state.boostWindow > 0 ? 28 : 24,
+        0,
+        0,
+        TAU
+      );
       ctx.fill();
     }
 
@@ -2983,6 +3061,11 @@
     if (isPressed && key === " ") {
       event.preventDefault();
       triggerStressResponse();
+    }
+
+    if (isPressed && key === "shift") {
+      event.preventDefault();
+      triggerDash();
     }
 
     if (isPressed && (key === "p" || key === "escape")) {
