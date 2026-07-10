@@ -697,9 +697,10 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: min(calc(var(--envelope-stage-height) + 4.7rem), 64svh);
   margin: 0 1.12rem 1.08rem 0;
   padding: 0.78rem 0.92rem 0.92rem;
-  max-height: none;
+  max-height: 64svh;
   border: 1px solid rgba(170, 235, 241, 0.14);
   border-radius: 18px;
   background: linear-gradient(180deg, rgba(8, 20, 33, 0.82), rgba(7, 17, 29, 0.72));
@@ -841,6 +842,7 @@
 
   .envelope-drawer {
     grid-row: auto;
+    height: auto;
     margin: 0.7rem 1.12rem 1.08rem;
     max-height: none;
   }
