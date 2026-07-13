@@ -80,6 +80,8 @@ python3 scripts/validate_tom_compliance.py
 
 That validator blocks regressions against Tom's requested content rules: the curated six-paper homepage publication set, removed alumni, required featured alumni, corrected gallery caption, omitted placeholder verification/role text, and pasted raw formatting artifacts.
 
+The build also rejects broken local page links or fragments, public images without `alt` attributes, and referenced public images larger than 1 MB.
+
 If Envelope Escape V2 source changes, build the game first:
 
 ```bash
