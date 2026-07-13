@@ -863,6 +863,10 @@ body.is-scrolled .site-header {
 }
 
 .gallery-dot.active {
+  background: transparent;
+}
+
+.gallery-dot.active::before {
   background: rgba(18, 21, 28, 0.9);
 }
 

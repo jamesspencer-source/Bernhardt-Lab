@@ -26,7 +26,7 @@ LEGACY_ALUMNI_PROFILE_ROUTE = "alumni-profiles"
 RESEARCH_ROUTE = "research"
 LEGACY_RESEARCH_ROUTE = "research-library"
 FAVICON_VERSION = "20260504b"
-STYLE_VERSION = "20260710a"
+STYLE_VERSION = "20260713a"
 PROFILE_STYLE_VERSION = "20260710a"
 ALUMNI_STYLE_VERSION = "20260710a"
 MAIN_JS_VERSION = "20260522a"
@@ -1756,7 +1756,7 @@ def local_reference_target(reference: str, page_path: Path) -> Path | None:
     if (
         not raw
         or raw.startswith("#")
-        or raw.startswith(("http://", "https://", "mailto:", "tel:", "data:", "blob:", "javascript:"))
+        or raw.startswith(("//", "http://", "https://", "mailto:", "tel:", "data:", "blob:", "javascript:"))
     ):
         return None
     raw = raw.split("#", 1)[0].split("?", 1)[0]
@@ -1802,6 +1802,94 @@ def validate_local_asset_references() -> None:
                     missing.append(f"{path.relative_to(ROOT)} references missing local asset: {value}")
     if missing:
         raise RuntimeError("Missing local asset references:\n- " + "\n- ".join(sorted(set(missing))))
+
+
+def validate_local_page_links() -> None:
+    errors: list[str] = []
+    link_pattern = re.compile(r'<a\b[^>]*\bhref=["\']([^"\']+)["\']', re.I)
+
+    for page_path in iter_public_html_paths():
+        for match in link_pattern.finditer(read_text(page_path)):
+            reference = match.group(1)
+            target = local_reference_target(reference, page_path)
+            if target is None:
+                continue
+            try:
+                target.relative_to(ROOT)
+            except ValueError:
+                errors.append(f"{page_path.relative_to(ROOT)} links outside repo: {reference}")
+                continue
+
+            target_page = target / "index.html" if target.is_dir() else target
+            if not target_page.exists():
+                errors.append(f"{page_path.relative_to(ROOT)} links to missing page: {reference}")
+                continue
+
+            fragment = unquote(urlparse(reference).fragment)
+            if not fragment or target_page.suffix.lower() != ".html":
+                continue
+            target_text = read_text(target_page)
+            fragment_pattern = re.compile(
+                rf'\b(?:id|name)=["\']{re.escape(fragment)}["\']',
+                re.I,
+            )
+            if not fragment_pattern.search(target_text):
+                errors.append(
+                    f"{page_path.relative_to(ROOT)} links to missing fragment #{fragment} in "
+                    f"{target_page.relative_to(ROOT)}"
+                )
+
+    if errors:
+        raise RuntimeError("Local page link validation failed:\n- " + "\n- ".join(sorted(set(errors))))
+
+
+def iter_json_strings(value: Any):
+    if isinstance(value, dict):
+        for item in value.values():
+            yield from iter_json_strings(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from iter_json_strings(item)
+    elif isinstance(value, str):
+        yield value
+
+
+def validate_public_images() -> None:
+    max_image_bytes = 1_000_000
+    image_suffixes = {".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"}
+    oversized: set[str] = set()
+    missing_alt: set[str] = set()
+    image_pattern = re.compile(r"<img\b(?P<attrs>[^>]*)>", re.I)
+    src_pattern = re.compile(r'\bsrc=["\'](?P<value>[^"\']+)["\']', re.I)
+
+    for page_path in iter_public_html_paths():
+        for match in image_pattern.finditer(read_text(page_path)):
+            attrs = match.group("attrs")
+            if not re.search(r'\balt=["\'][^"\']*["\']', attrs, re.I):
+                missing_alt.add(str(page_path.relative_to(ROOT)))
+            src_match = src_pattern.search(attrs)
+            if not src_match:
+                continue
+            target = local_reference_target(src_match.group("value"), page_path)
+            if target and target.exists() and target.suffix.lower() in image_suffixes:
+                if target.stat().st_size > max_image_bytes:
+                    oversized.add(str(target.relative_to(ROOT)))
+
+    for json_path in sorted(DATA_DIR.glob("*.json")):
+        for value in iter_json_strings(json.loads(read_text(json_path))):
+            if not value.startswith("assets/"):
+                continue
+            target = ROOT / value
+            if target.suffix.lower() in image_suffixes and target.exists() and target.stat().st_size > max_image_bytes:
+                oversized.add(str(target.relative_to(ROOT)))
+
+    if missing_alt:
+        raise RuntimeError("Public pages contain images without alt attributes:\n- " + "\n- ".join(sorted(missing_alt)))
+    if oversized:
+        raise RuntimeError(
+            f"Publicly referenced images must not exceed {max_image_bytes} bytes:\n- "
+            + "\n- ".join(sorted(oversized))
+        )
 
 
 def extract_canonical_href(path: Path) -> str:
@@ -1962,6 +2050,8 @@ def build_site() -> None:
     validate_favicon_links()
     validate_site_quality_metadata()
     validate_local_asset_references()
+    validate_local_page_links()
+    validate_public_images()
     validate_premium_url_scheme(people)
     validate_tom_compliance(ROOT)
 

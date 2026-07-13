@@ -58,7 +58,7 @@ Legacy routes are redirect-only compatibility outputs. Keep `/people/`, `/people
 python3 scripts/build_site.py
 ```
 
-This command now runs data validation, generated-page validation, favicon validation, and the Tom feedback compliance gate.
+This command now runs data validation, generated-page validation, favicon validation, local page-link and fragment checks, image-alt checks, a 1 MB limit for referenced public images, and the Tom feedback compliance gate.
 
 If Envelope Escape V2 source under `game-src/envelope-escape/` changes, run the game checks first:
 
