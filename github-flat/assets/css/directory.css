@@ -511,11 +511,12 @@ body.is-scrolled .site-header {
 }
 
 .person-role {
-  width: fit-content;
-  padding: 0.28rem 0.58rem;
+  width: 100%;
+  padding: 0.58rem 0.68rem;
   border: 1px solid rgba(220, 224, 235, 0.16);
-  border-radius: 999px;
-  background: rgba(21, 25, 34, 0.7);
+  border-left: 3px solid rgba(var(--accent-secondary-rgb), 0.68);
+  border-radius: 8px;
+  background: rgba(21, 25, 34, 0.48);
 }
 
 .person-link {

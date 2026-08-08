@@ -1402,6 +1402,7 @@ body.is-scrolled .site-header {
   padding: 0.95rem;
   display: grid;
   gap: 0.42rem;
+  min-width: 0;
 }
 
 .person-body h3 {
@@ -1410,11 +1411,18 @@ body.is-scrolled .site-header {
 
 .person-role {
   order: -1;
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   font-size: 0.76rem;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: 0;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
   color: var(--accent-secondary);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .person-bio {
@@ -3842,11 +3850,12 @@ body.is-scrolled .site-header {
 }
 
 .person-role {
-  width: fit-content;
-  padding: 0.28rem 0.58rem;
+  width: 100%;
+  padding: 0.58rem 0.68rem;
   border: 1px solid rgba(220, 224, 235, 0.16);
-  border-radius: 999px;
-  background: rgba(21, 25, 34, 0.7);
+  border-left: 3px solid rgba(var(--accent-secondary-rgb), 0.68);
+  border-radius: 8px;
+  background: rgba(21, 25, 34, 0.48);
 }
 
 .person-link {

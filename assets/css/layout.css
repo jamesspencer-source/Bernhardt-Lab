@@ -218,6 +218,7 @@
   padding: 0.95rem;
   display: grid;
   gap: 0.42rem;
+  min-width: 0;
 }
 
 .person-body h3 {
@@ -226,11 +227,18 @@
 
 .person-role {
   order: -1;
+  display: block;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   font-size: 0.76rem;
-  text-transform: uppercase;
-  letter-spacing: 0.09em;
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: 0;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
   color: var(--accent-secondary);
-  font-weight: 800;
+  font-weight: 700;
 }
 
 .person-bio {
