@@ -26,10 +26,10 @@ LEGACY_ALUMNI_PROFILE_ROUTE = "alumni-profiles"
 RESEARCH_ROUTE = "research"
 LEGACY_RESEARCH_ROUTE = "research-library"
 FAVICON_VERSION = "20260504b"
-STYLE_VERSION = "20260807a"
+STYLE_VERSION = "20260809d"
 PROFILE_STYLE_VERSION = "20260710a"
-ALUMNI_STYLE_VERSION = "20260710a"
-MAIN_JS_VERSION = "20260522a"
+ALUMNI_STYLE_VERSION = "20260809a"
+MAIN_JS_VERSION = "20260809a"
 ENVELOPE_CSS_VERSION = "20260710b"
 ENVELOPE_CONFIG_VERSION = "20260318a"
 ENVELOPE_JS_VERSION = "20260710a"
@@ -43,6 +43,7 @@ CSS_SOURCE_ORDER = [
     "layout.css",
     "home.css",
     "directory.css",
+    "header.css",
 ]
 PROFILE_CSS_SOURCE_ORDER = [
     "fonts.css",
@@ -53,6 +54,7 @@ ALUMNI_CSS_SOURCE_ORDER = [
     "fonts.css",
     "tokens.css",
     "alumni.css",
+    "header.css",
 ]
 TEAM_GROUP_SORT_ORDER = {
     "Faculty": 0,
@@ -66,7 +68,6 @@ TRANSIENT_NAMES = {".DS_Store", "Thumbs.db", ".pycache", "__pycache__", ".venv"}
 PUBLIC_HTML_EXCLUDED_DIRS = {
     ".git",
     ".github",
-    "archive",
     "assets",
     "data",
     "docs",
@@ -605,8 +606,45 @@ def load_people() -> list[dict[str, Any]]:
     return rows
 
 
+def validate_image_variants(item: dict[str, Any], label: str) -> None:
+    variants = item.get("imageVariants")
+    if variants is None:
+        return
+    if not isinstance(variants, list) or not variants:
+        raise RuntimeError(f"{label} imageVariants must be a non-empty list")
+
+    seen_widths: set[int] = set()
+    seen_sources: set[str] = set()
+    for index, variant in enumerate(variants, start=1):
+        if not isinstance(variant, dict):
+            raise RuntimeError(f"{label} image variant {index} must be an object")
+        src = clean_text(variant.get("src"))
+        width = variant.get("width")
+        if not src.startswith("assets/"):
+            raise RuntimeError(f"{label} image variant {index} must reference an assets/ path")
+        if Path(src).suffix.lower() not in {".avif", ".webp"}:
+            raise RuntimeError(f"{label} image variant {index} must use AVIF or WebP: {src}")
+        if not (ROOT / src).is_file():
+            raise RuntimeError(f"{label} image variant does not exist: {src}")
+        if isinstance(width, bool) or not isinstance(width, int) or width <= 0:
+            raise RuntimeError(f"{label} image variant {index} has invalid width: {width}")
+        if width in seen_widths:
+            raise RuntimeError(f"{label} repeats image variant width {width}")
+        if src in seen_sources:
+            raise RuntimeError(f"{label} repeats image variant source {src}")
+        seen_widths.add(width)
+        seen_sources.add(src)
+
+
 def load_gallery_items() -> list[dict[str, Any]]:
-    return read_json(DATA_DIR / "gallery.json").get("items", [])
+    items = read_json(DATA_DIR / "gallery.json").get("items", [])
+    if not isinstance(items, list):
+        raise RuntimeError("data/gallery.json must define an items list")
+    for index, item in enumerate(items, start=1):
+        if not isinstance(item, dict):
+            raise RuntimeError(f"Gallery item {index} must be an object")
+        validate_image_variants(item, f"Gallery item {index}")
+    return items
 
 
 def load_featured_alumni_items() -> list[dict[str, Any]]:
@@ -675,6 +713,7 @@ def load_site_copy() -> dict[str, Any]:
             raise RuntimeError(f"Duplicate hero slide image detected: {image}")
         if not (ROOT / image).exists():
             raise RuntimeError(f"Hero slide image does not exist: {image}")
+        validate_image_variants(slide, f"Hero slide {index}")
         seen_images.add(image)
     return payload
 
@@ -1125,6 +1164,7 @@ def render_redirect_page(target_href: str, canonical: str, root_prefix: str, tit
     <meta charset="UTF-8" />
     <meta http-equiv="refresh" content="0; url={escape(target)}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex,follow" />
     <title>{escape(full_title)}</title>
     <link rel="canonical" href="{escape(canonical)}" />
     <script>window.location.replace({json.dumps(target)});</script>
@@ -1520,7 +1560,6 @@ def sync_flat_redirects() -> None:
         LEGACY_RESEARCH_ROUTE,
         RESEARCH_ROUTE,
         "assets",
-        "archive",
         "data",
         "github-flat",
         ".git",
@@ -1716,6 +1755,18 @@ def validate_site_quality_metadata() -> None:
     if re.search(r"^import\s+.*\?v=", main_js, re.M):
         raise RuntimeError("assets/main.js must not use cache-busting query strings on module imports")
 
+    homepage = read_text(ROOT / "index.html")
+    if re.search(r'<link\b[^>]*href="[^"]*envelope-escape\.css', homepage, re.I):
+        raise RuntimeError("Envelope Escape CSS must load on demand rather than in the initial homepage head")
+    if re.search(r'<script\b[^>]*src="[^"]*envelope-escape(?:-config)?\.js', homepage, re.I):
+        raise RuntimeError("Envelope Escape runtime scripts must load on demand rather than with the homepage")
+    required_game_loader_attributes = ["data-game-style", "data-game-config", "data-game-script"]
+    missing_loader_attributes = [token for token in required_game_loader_attributes if token not in homepage]
+    if missing_loader_attributes:
+        raise RuntimeError(
+            "Homepage game trigger is missing lazy-loader attributes: " + ", ".join(missing_loader_attributes)
+        )
+
     versioned_assets = {
         "styles.css": STYLE_VERSION,
         "profile.css": PROFILE_STYLE_VERSION,
@@ -1733,7 +1784,10 @@ def validate_site_quality_metadata() -> None:
     version_errors = []
     for path in public_paths:
         text = read_text(path)
-        for match in re.finditer(r'\b(?:href|src)="([^"]+)"', text):
+        for match in re.finditer(
+            r'\b(?:href|src|data-game-style|data-game-config|data-game-script)="([^"]+)"',
+            text,
+        ):
             reference = match.group(1)
             local_ref = reference.split("#", 1)[0]
             asset_path, _, query = local_ref.partition("?")
@@ -1770,8 +1824,11 @@ def local_reference_target(reference: str, page_path: Path) -> Path | None:
 
 def validate_local_asset_references() -> None:
     missing: list[str] = []
-    asset_tag_pattern = re.compile(r"<(?P<tag>link|script|img|source|video|iframe)\b(?P<attrs>[^>]*)>", re.I)
-    attr_pattern = re.compile(r'\b(?P<name>href|src|poster)=["\'](?P<value>[^"\']+)["\']', re.I)
+    asset_tag_pattern = re.compile(r"<(?P<tag>link|script|img|source|video|iframe|button)\b(?P<attrs>[^>]*)>", re.I)
+    attr_pattern = re.compile(
+        r'\b(?P<name>href|src|poster|data-game-style|data-game-config|data-game-script)=["\'](?P<value>[^"\']+)["\']',
+        re.I,
+    )
     rel_pattern = re.compile(r'\brel=["\']([^"\']+)["\']', re.I)
 
     for path in iter_public_html_paths():
@@ -1892,6 +1949,44 @@ def validate_public_images() -> None:
         )
 
 
+def validate_public_tree_hygiene() -> None:
+    forbidden_roots = [ROOT / "archive", ROOT / "tmp"]
+    present_roots = [str(path.relative_to(ROOT)) for path in forbidden_roots if path.exists()]
+    if present_roots:
+        raise RuntimeError(
+            "Private or transient directories must stay outside the public repository:\n- "
+            + "\n- ".join(present_roots)
+        )
+
+    public_asset_roots = [ASSETS_DIR, FLAT_DIR / "assets"]
+    raw_images = sorted(
+        str(path.relative_to(ROOT))
+        for asset_root in public_asset_roots
+        if asset_root.exists()
+        for path in asset_root.rglob("*")
+        if path.is_file() and path.suffix.lower() in {".tif", ".tiff"}
+    )
+    if raw_images:
+        raise RuntimeError(
+            "Raw TIFF files are not allowed in the publicly served asset tree:\n- "
+            + "\n- ".join(raw_images)
+        )
+
+    removed_v2_paths = [
+        ROOT / "game-src" / "envelope-escape",
+        ASSETS_DIR / "game" / "envelope-escape",
+        ASSETS_DIR / "envelope-escape-phaser.js",
+        ASSETS_DIR / "js" / "envelope-game" / "bootstrap.js",
+        ROOT / "scripts" / "generate_envelope_escape_assets.py",
+    ]
+    present_v2_paths = [str(path.relative_to(ROOT)) for path in removed_v2_paths if path.exists()]
+    if present_v2_paths:
+        raise RuntimeError(
+            "Removed Envelope Escape V2 material must not be restored to the public site:\n- "
+            + "\n- ".join(present_v2_paths)
+        )
+
+
 def extract_canonical_href(path: Path) -> str:
     match = re.search(r'<link\s+rel="canonical"\s+href="([^"]+)"', read_text(path), re.I)
     return match.group(1) if match else ""
@@ -1911,6 +2006,9 @@ def assert_redirect_target(path: Path, expected_target: str, expected_canonical:
         errors.append(f"Missing legacy redirect page: {path.relative_to(ROOT)}")
         return
     text = read_text(path)
+    head = text.split("</head>", 1)[0]
+    if '<meta name="robots" content="noindex,follow"' not in head:
+        errors.append(f"{path.relative_to(ROOT)} redirect must declare noindex,follow")
     refresh = re.search(r'<meta http-equiv="refresh" content="0; url=([^"]+)"', text)
     if not refresh or refresh.group(1) != expected_target:
         errors.append(
@@ -2029,6 +2127,7 @@ def validate_premium_url_scheme(people: list[dict[str, Any]]) -> None:
 
 
 def build_site() -> None:
+    validate_public_tree_hygiene()
     load_gallery_items()
     load_featured_alumni_items()
     load_curated_publications()

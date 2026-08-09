@@ -2,22 +2,42 @@
   "heroSlides": [
     {
       "image": "assets/images/research/cglutamicum-wt-tem-9335.jpg",
+      "imageVariants": [
+        { "src": "assets/images/research/cglutamicum-wt-tem-9335-960.webp", "width": 960 },
+        { "src": "assets/images/research/cglutamicum-wt-tem-9335-1920.webp", "width": 1920 }
+      ],
       "position": "center 42%"
     },
     {
       "image": "assets/images/research/phage-kdj3005-hero.jpg",
+      "imageVariants": [
+        { "src": "assets/images/research/phage-kdj3005-hero-960.webp", "width": 960 },
+        { "src": "assets/images/research/phage-kdj3005-hero-1920.webp", "width": 1920 }
+      ],
       "position": "center 36%"
     },
     {
       "image": "assets/images/research/phage-course-061324-015-hero.jpg",
+      "imageVariants": [
+        { "src": "assets/images/research/phage-course-061324-015-hero-960.webp", "width": 960 },
+        { "src": "assets/images/research/phage-course-061324-015-hero-1920.webp", "width": 1920 }
+      ],
       "position": "center center"
     },
     {
       "image": "assets/images/research/pseudomonas-tem.jpg",
+      "imageVariants": [
+        { "src": "assets/images/research/pseudomonas-tem-960.webp", "width": 960 },
+        { "src": "assets/images/research/pseudomonas-tem-1920.webp", "width": 1920 }
+      ],
       "position": "center center"
     },
     {
       "image": "assets/images/research/coryfdaa.png",
+      "imageVariants": [
+        { "src": "assets/images/research/coryfdaa-960.webp", "width": 960 },
+        { "src": "assets/images/research/coryfdaa-1920.webp", "width": 1920 }
+      ],
       "position": "center center"
     },
     {
@@ -26,6 +46,10 @@
     },
     {
       "image": "assets/images/research/corynebacterium-phage.jpg",
+      "imageVariants": [
+        { "src": "assets/images/research/corynebacterium-phage-960.webp", "width": 960 },
+        { "src": "assets/images/research/corynebacterium-phage-1504.webp", "width": 1504 }
+      ],
       "position": "center center"
     }
   ],

@@ -1,4 +1,4 @@
-import { assetDataUrl, cleanText, prefersReducedMotion, requestJson, siteAssetUrl, rootDataUrl } from "./shared.js";
+import { assetDataUrl, cleanText, prefersReducedMotion, requestJson, responsiveSiteAsset, rootDataUrl } from "./shared.js";
 
 const YOUTUBE_VIEW_REFRESH_MS = 10 * 60 * 1000;
 
@@ -211,6 +211,7 @@ function setupCollaboratorCarousel() {
     clone.classList.add("is-clone");
     clone.setAttribute("aria-hidden", "true");
     clone.setAttribute("tabindex", "-1");
+    clone.inert = true;
     scroller.appendChild(clone);
     return clone;
   });
@@ -321,7 +322,7 @@ async function setupHeroSlideshow() {
     const total = heroSlides.length;
     const normalized = ((slideIndex % total) + total) % total;
     const slide = heroSlides[normalized];
-    layer.style.backgroundImage = `url("${siteAssetUrl(slide.image)}")`;
+    layer.style.backgroundImage = `url("${responsiveSiteAsset(slide)}")`;
     layer.style.backgroundPosition = slide.position || "center center";
   };
 
@@ -366,8 +367,18 @@ async function setupHeroSlideshow() {
 
   applySlide(layers[0], activeIndex);
   layers[0].classList.add("is-active");
-  applySlide(layers[1], activeIndex + 1);
   layers[1].classList.remove("is-active");
+
+  const preloadNextSlide = () => {
+    const nextSlide = heroSlides[(activeIndex + 1) % heroSlides.length];
+    const image = new Image();
+    image.src = responsiveSiteAsset(nextSlide);
+  };
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(preloadNextSlide, { timeout: 3000 });
+  } else {
+    window.setTimeout(preloadNextSlide, 1800);
+  }
 
   prevButton?.addEventListener("click", () => {
     setSlide(activeIndex - 1);

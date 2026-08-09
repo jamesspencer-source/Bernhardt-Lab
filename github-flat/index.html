@@ -30,8 +30,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brands/favicon-32.png?v=20260504b" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/brands/apple-touch-icon.png?v=20260504b" />
     <link rel="shortcut icon" href="favicon.ico?v=20260504b" />
-    <link rel="stylesheet" href="assets/styles.css?v=20260807a" />
-    <link rel="stylesheet" href="assets/envelope-escape.css?v=20260710b" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260809d" />
     <link rel="canonical" href="https://bernhardtlab.com/" />
   </head>
   <body>
@@ -774,6 +773,9 @@
             class="footer-secret-trigger footer-secret-trigger--game"
             type="button"
             aria-label="Open Envelope Escape game"
+            data-game-style="assets/envelope-escape.css?v=20260710b"
+            data-game-config="assets/envelope-escape-config.js?v=20260318a"
+            data-game-script="assets/envelope-escape.js?v=20260710a"
           >
             <span aria-hidden="true">...</span>
             <span class="sr-only">Open Envelope Escape game</span>
@@ -955,13 +957,11 @@
       <form method="dialog">
         <button class="lightbox-close" type="submit" aria-label="Close image">Close</button>
       </form>
-      <img id="lightbox-image" src="" alt="" />
+      <img id="lightbox-image" alt="" />
       <p id="lightbox-caption"></p>
     </dialog>
 
     <script src="assets/site-freshness.js" data-freshness-path="assets/data/site-freshness.json"></script>
-    <script type="module" src="assets/main.js?v=20260522a"></script>
-    <script src="assets/envelope-escape-config.js?v=20260318a"></script>
-    <script src="assets/envelope-escape.js?v=20260710a"></script>
+    <script type="module" src="assets/main.js?v=20260809a"></script>
   </body>
 </html>

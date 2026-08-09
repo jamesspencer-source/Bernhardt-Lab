@@ -1,9 +1,23 @@
-import { cleanText, prefersReducedMotion, requestJson, rootDataUrl, siteAssetUrl } from "./shared.js";
+import { cleanText, prefersReducedMotion, requestJson, responsiveSiteAsset, rootDataUrl } from "./shared.js";
 import { observeRevealTargets } from "./site-core.js";
 
 export async function initGallery() {
   const galleryRoot = document.getElementById("gallery-grid");
   if (!galleryRoot) return;
+
+  if ("IntersectionObserver" in window) {
+    await new Promise((resolve) => {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (!entries.some((entry) => entry.isIntersecting)) return;
+          observer.disconnect();
+          resolve();
+        },
+        { rootMargin: "700px 0px" }
+      );
+      observer.observe(galleryRoot);
+    });
+  }
 
   const payload = await requestJson(rootDataUrl("gallery.json"));
   const galleryItems = Array.isArray(payload?.items) ? payload.items : [];
@@ -77,7 +91,7 @@ export async function initGallery() {
     const total = galleryItems.length;
     galleryIndex = (nextIndex + total) % total;
     const item = galleryItems[galleryIndex];
-    const resolvedImage = siteAssetUrl(item.image);
+    const resolvedImage = responsiveSiteAsset(item, Math.min(galleryRoot.clientWidth || window.innerWidth, 1200));
     activeImage.src = resolvedImage;
     activeImage.alt = cleanText(item.title);
     activeImage.style.filter = item.displayFilter || "none";

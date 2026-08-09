@@ -15,10 +15,9 @@ For visual and interface work, also use:
 - `assets/js/` contains feature-level browser modules.
 - `assets/css/` contains the source CSS slices.
 - `assets/styles.css`, `assets/profile.css`, and `assets/alumni.css` are generated from `assets/css/`.
-- `archive/` contains retained legacy import material excluded from the public site build.
-- `game-src/envelope-escape/` contains the Phaser + TypeScript source for the hidden Envelope Escape V2 beta.
-- `assets/game/envelope-escape/runtime/` contains the generated V2 browser bundle.
 - `github-flat/` is generated output only. Do not hand-edit it.
+
+Private website archives must stay outside this public repository. The local private archive is stored under the HMS lab website folder and is explicitly labeled `PRIVATE Website Archive`.
 
 ## Canonical URL scheme
 
@@ -52,7 +51,6 @@ Generated or entrypoint files you should usually not hand-edit directly:
 - `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/profile.css`
 - `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/alumni.css`
 - `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape-config.js`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/game/envelope-escape/runtime/envelope-escape-v2.js`
 - `/Users/james/Documents/GitHub/Bernhardt-Lab/github-flat/**`
 
 Frontend entrypoints:
@@ -82,15 +80,6 @@ That validator blocks regressions against Tom's requested content rules: the cur
 
 The build also rejects broken local page links or fragments, public images without `alt` attributes, and referenced public images larger than 1 MB.
 
-If Envelope Escape V2 source changes, build the game first:
-
-```bash
-npm install
-npm run game:check
-npm run game:build
-python3 scripts/build_site.py
-```
-
 Publish website updates to `main`:
 
 ```bash
@@ -104,7 +93,6 @@ This will:
 - regenerate `team/index.html` and `alumni/index.html`
 - regenerate current-member and alumni profile pages
 - rebuild generated CSS bundles
-- rebuild the Envelope Escape V2 runtime when publishing
 - regenerate `assets/envelope-escape-config.js`
 - refresh the generated `github-flat/` mirror
 
@@ -129,7 +117,6 @@ This command will:
 - confirm you are on `main`
 - fetch and verify `origin/main` is not ahead
 - remove transient local noise such as `.DS_Store` and Python cache folders
-- run `npm run game:build` when the game build exists
 - run `python3 scripts/build_site.py`
 - stage only approved website paths
 - commit only if a real website diff remains
@@ -165,7 +152,7 @@ when a real website diff exists. Featured alumni remains manually curated.
 
 ## Envelope Escape game
 
-V1 is the public footer game and the gameplay baseline. The prior Phaser + TypeScript V2 preview is disabled because it did not meet the desired look or feel; keep its source/assets only as reference material unless a future plan explicitly revives it.
+V1 is the public footer game and the gameplay baseline. The prior Phaser + TypeScript V2 preview and its build dependencies were removed from the public repository in August 2026.
 
 Do not make any replacement game public until it has real browser screenshot/playtest QA and is clearly better than V1.
 
@@ -175,16 +162,13 @@ The legacy path remains:
 index.html?envelopeLegacy=1
 ```
 
-Source and build outputs:
+Active source and generated config:
 
 - `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape.js`
 - `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape.css`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/game-src/envelope-escape/`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/game/envelope-escape/`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/docs/envelope-escape-game-upgrade.md`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/docs/envelope-escape-art-direction.md`
+- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape-config.js`
 
-Run `npm run game:check` and `npm run game:build` before publishing TypeScript game changes. `python3 scripts/publish_site.py` also runs the game build before the Python site build.
+Develop any replacement game in an isolated branch until it passes desktop and mobile browser playtesting and is clearly ready to replace V1.
 
 ## Global Envelope Escape leaderboard
 
@@ -242,7 +226,6 @@ Do not hand-edit:
 - Shared layout styling source: `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/css/`
 - Profile styling: `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/profile.css`
 - Production game code: `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape.js`
-- V2 game source: `/Users/james/Documents/GitHub/Bernhardt-Lab/game-src/envelope-escape/`
 - Leaderboard worker: `/Users/james/Documents/GitHub/Bernhardt-Lab/leaderboard-worker/`
 
 ## Maintenance notes

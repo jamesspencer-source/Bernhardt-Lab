@@ -47,6 +47,30 @@ export function siteAssetUrl(path = "") {
   return new URL(`../../${normalized}`, MODULE_URL).toString();
 }
 
+const supportsWebp = (() => {
+  try {
+    const canvas = document.createElement("canvas");
+    return canvas.toDataURL("image/webp").startsWith("data:image/webp");
+  } catch {
+    return false;
+  }
+})();
+
+export function responsiveSiteAsset(item, cssWidth = window.innerWidth) {
+  const fallback = siteAssetUrl(item?.image || "");
+  const variants = Array.isArray(item?.imageVariants) ? item.imageVariants : [];
+  if (!supportsWebp || !variants.length) return fallback;
+
+  const targetWidth = Math.max(1, cssWidth) * Math.min(window.devicePixelRatio || 1, 2);
+  const candidates = variants
+    .map((variant) => ({ src: cleanText(variant?.src), width: Number(variant?.width) || 0 }))
+    .filter((variant) => variant.src && variant.width > 0)
+    .sort((a, b) => a.width - b.width);
+  if (!candidates.length) return fallback;
+
+  return siteAssetUrl(candidates.find((variant) => variant.width >= targetWidth)?.src || candidates.at(-1).src);
+}
+
 const SPECIES_INLINE_PATTERN =
   /\b(?:Escherichia\s+coli|Pseudomonas\s+aeruginosa|Staphylococcus\s+aureus|Streptococcus\s+pneumoniae|Corynebacterium\s+glutamicum|Klebsiella\s+pneumoniae|Acinetobacter\s+baumannii|E\.\s*coli|P\.\s*aeruginosa|S\.\s*aureus|S\.\s*pneumoniae|C\.\s*glutamicum|K\.\s*pneumoniae|A\.\s*baumannii)\b/gi;
 

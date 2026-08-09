@@ -11,8 +11,6 @@ from pathlib import Path, PurePosixPath
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ARCHIVE_ROOT = ROOT / "archive"
-ARCHIVE_SOURCE_DIRS = {"tmp"}
 DEFAULT_MESSAGE = "site: publish website updates"
 ALLOWED_ROOT_FILES = {
     ".gitignore",
@@ -21,8 +19,6 @@ ALLOWED_ROOT_FILES = {
     "alumni.html",
     "favicon.ico",
     "index.html",
-    "package-lock.json",
-    "package.json",
     "people.html",
     "research-library.html",
     "robots.txt",
@@ -33,11 +29,9 @@ STATIC_ALLOWED_DIRS = {
     "accessibility",
     "alumni",
     "alumni-profiles",
-    "archive",
     "assets",
     "data",
     "docs",
-    "game-src",
     "github-flat",
     "leaderboard-worker",
     "people",
@@ -123,27 +117,10 @@ def is_transient_path(path_text: str) -> bool:
     return False
 
 
-def is_archive_path(path: Path) -> bool:
-    try:
-        path.relative_to(ARCHIVE_ROOT)
-    except ValueError:
-        return False
-    return True
-
-
-def is_deleted_archive_source_path(path_text: str) -> bool:
-    path = PurePosixPath(path_text)
-    if not path.parts or path.parts[0] not in ARCHIVE_SOURCE_DIRS:
-        return False
-    return not (ROOT / Path(*path.parts)).exists()
-
-
 def is_allowed_path(path_text: str, allowed_dirs: set[str]) -> bool:
     path = PurePosixPath(path_text)
     if not path.parts:
         return False
-    if is_deleted_archive_source_path(path_text):
-        return True
     if len(path.parts) == 1:
         return path.parts[0] in ALLOWED_ROOT_FILES
     return path.parts[0] in allowed_dirs
@@ -188,20 +165,14 @@ def unexpected_changes(allowed_dirs: set[str]) -> list[str]:
 def cleanup_transient_worktree_artifacts() -> None:
     for pattern in (".DS_Store", "Thumbs.db", "._*"):
         for path in ROOT.rglob(pattern):
-            if is_archive_path(path):
-                continue
             if path.is_file():
                 path.unlink()
     for dirname in (".pycache", "__pycache__", ".pytest_cache"):
         for path in ROOT.rglob(dirname):
-            if is_archive_path(path):
-                continue
             if path.is_dir():
                 shutil.rmtree(path)
     for path in sorted(ROOT.rglob("*"), key=lambda entry: len(entry.parts), reverse=True):
         if not path.exists():
-            continue
-        if is_archive_path(path):
             continue
         sibling_names = {sibling.name for sibling in path.parent.iterdir()}
         if is_numbered_duplicate(path.name, sibling_names):
@@ -231,26 +202,11 @@ def ensure_remote_is_safe() -> None:
 def stage_allowed_paths(allowed_dirs: set[str]) -> None:
     pathspecs = sorted(ALLOWED_ROOT_FILES) + [f"{name}/" for name in sorted(allowed_dirs)]
     run_command(["git", "add", "-A", "--", *pathspecs])
-    deleted_archive_source_paths = sorted(
-        {path_text for _, path_text in parse_status_entries() if is_deleted_archive_source_path(path_text)}
-    )
-    for index in range(0, len(deleted_archive_source_paths), 100):
-        run_command(["git", "add", "-u", "--", *deleted_archive_source_paths[index : index + 100]])
 
 
 def build_site() -> None:
     print_step("Running site build")
     run_command([sys.executable, "scripts/build_site.py"])
-
-
-def build_game() -> None:
-    if not (ROOT / "package.json").exists() or not (ROOT / "game-src" / "envelope-escape").exists():
-        return
-    npm = shutil.which("npm")
-    if not npm:
-        raise RuntimeError("npm is required to build the Envelope Escape V2 runtime before publishing.")
-    print_step("Running Envelope Escape game build")
-    run_command([npm, "run", "game:build"])
 
 
 def main() -> int:
@@ -276,7 +232,6 @@ def main() -> int:
             + "\n".join(f"  - {path}" for path in outside_scope)
         )
 
-    build_game()
     build_site()
     cleanup_transient_worktree_artifacts()
 

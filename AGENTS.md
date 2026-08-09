@@ -37,7 +37,6 @@ Generated outputs you should usually not edit directly:
 - `assets/profile.css`
 - `assets/alumni.css`
 - `assets/envelope-escape-config.js`
-- `assets/game/envelope-escape/runtime/envelope-escape-v2.js`
 - `github-flat/**`
 
 ## Primary commands
@@ -55,15 +54,6 @@ python3 scripts/validate_tom_compliance.py
 ```
 
 `build_site.py` and `publish_site.py` both enforce this gate. It prevents future updates from reintroducing Tom-removed alumni, incorrect homepage publication links, removed gallery items, placeholder alumni text, or escaped raw formatting markup.
-
-Build the hidden Envelope Escape V2 game after TypeScript source changes:
-
-```bash
-npm install
-npm run game:check
-npm run game:build
-python3 scripts/build_site.py
-```
 
 Publish website updates:
 
@@ -112,7 +102,7 @@ python3 scripts/check_leaderboard_worker.py --require-board-routing
 - Stage narrowly and avoid bundling unrelated local churn.
 - `.DS_Store` should generally be discarded, not committed.
 - `github-flat` is regenerated from nested `assets/` and `data/` paths. Root-level non-HTML files there are legacy baggage and should not be reintroduced.
-- `archive/` is retained historical material and is excluded from public-route validation. Do not link to it from live pages.
+- Never place private archives, import scratch files, raw TIFFs, or superseded personnel metadata inside this public repository.
 - Prefer `python3 scripts/publish_site.py` for the normal build/commit/push flow.
 - Do not bypass the Tom feedback compliance gate; if it fails, fix the canonical source rather than patching generated HTML.
 - Do not reintroduce `index.html` links on canonical pages; use `/team/`, `/alumni/`, `/research/`, and root-relative section links.
@@ -148,9 +138,8 @@ Update archive scientific media:
 - The generated frontend config file is `assets/envelope-escape-config.js`.
 - V1 production game code lives in `assets/envelope-escape.js`.
 - V1 is the active gameplay baseline.
-- V2 beta source lives in `game-src/envelope-escape/` but is disabled and should be treated as reference material.
-- V2 beta static output lives in `assets/game/envelope-escape/runtime/`.
-- Do not restore `?envelopeV2=1` routing or make any replacement game public without real browser screenshot/playtest QA.
+- The removed Phaser V2 source and static output must not be restored.
+- Do not make any replacement game public without real browser screenshot/playtest QA.
 - `?envelopeLegacy=1` keeps the legacy path.
 - The Cloudflare Worker + D1 backend lives in `leaderboard-worker/`.
 - Repo-side changes do not redeploy the worker automatically.
@@ -171,6 +160,4 @@ Update archive scientific media:
 - `README.md` is the main repo overview.
 - `docs/site-maintenance.md` is the deeper operator workflow.
 - `docs/editorial-style-guide.md` is the visual source of truth for editorial style, card cohesion, and pre-publish UI QA.
-- `docs/envelope-escape-game-upgrade.md` tracks the Phaser + TypeScript game rebuild.
-- `docs/envelope-escape-art-direction.md` tracks the Envelope Escape asset brief and QA checklist.
 - `leaderboard-worker/README.md` explains the global leaderboard backend and deployment.

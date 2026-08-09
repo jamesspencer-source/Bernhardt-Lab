@@ -60,15 +60,6 @@ python3 scripts/build_site.py
 
 This command now runs data validation, generated-page validation, favicon validation, local page-link and fragment checks, image-alt checks, a 1 MB limit for referenced public images, and the Tom feedback compliance gate.
 
-If Envelope Escape V2 source under `game-src/envelope-escape/` changes, run the game checks first:
-
-```bash
-npm install
-npm run game:check
-npm run game:build
-python3 scripts/build_site.py
-```
-
 ## Publish command
 
 ```bash
@@ -80,7 +71,6 @@ Use this for the normal website workflow. It will:
 - verify you are on `main`
 - fetch `origin/main` and stop if the remote is ahead or diverged
 - remove transient local artifacts such as `.DS_Store` and Python cache folders
-- run `npm run game:build` when the game build exists
 - run `python3 scripts/build_site.py`
 - stage only approved website paths
 - commit only if a real website diff remains
@@ -102,7 +92,6 @@ This regenerates:
 - people and alumni directory pages
 - all current-member and alumni profile pages
 - generated CSS bundles
-- generated Envelope Escape V2 runtime bundle
 - generated game runtime config
 - generated `github-flat/` mirror
 
@@ -210,19 +199,15 @@ If it fails, check:
 
 ## Envelope Escape game
 
-V1 is the public footer game and the gameplay baseline. The prior V2 Phaser preview is disabled and should not be re-enabled from cached bootstrap files, homepage script tags, or query-string routing.
+V1 is the public footer game and the gameplay baseline. The prior V2 Phaser preview, source, generated bundle, and npm build dependencies were removed in August 2026.
 
 Future replacements must stay experimental until they pass real browser screenshot/playtest QA and are visibly better than V1. Do not make a preview the default based on static checks alone.
 
 Source and output:
 
 - `assets/envelope-escape.js` and `assets/envelope-escape.css` are the active production game.
-- `game-src/envelope-escape/` is the Phaser + TypeScript source.
-- `assets/game/envelope-escape/` contains disabled V2 reference art and the generated runtime bundle.
-- `docs/envelope-escape-game-upgrade.md` tracks the production migration.
-- `docs/envelope-escape-art-direction.md` tracks the asset brief and QA checklist.
-
-Do not edit `assets/game/envelope-escape/runtime/envelope-escape-v2.js` by hand. Rebuild it with `npm run game:build`.
+- `assets/envelope-escape-config.js` is generated from `data/runtime-config.json`.
+- Replacement-game work should remain isolated until it passes real browser playtesting.
 
 ## Generated assets
 
@@ -232,12 +217,11 @@ These are outputs, not canonical source:
 - `assets/profile.css`
 - `assets/alumni.css`
 - `assets/envelope-escape-config.js`
-- `assets/game/envelope-escape/runtime/envelope-escape-v2.js`
 - `github-flat/`
 
 `github-flat/` now keeps nested `assets/` and `data/` as the authoritative generated mirror. Root-level non-HTML files there are cleaned during the build and should not be restored manually.
 
-`archive/` stores retained legacy import material and is excluded from public HTML validation and flat-route generation. Do not link archived files from public pages.
+Private archives must stay outside the public repository. The build fails if an `archive/` or `tmp/` directory, or a raw TIFF, appears in the public tree.
 
 Feature JS source now lives in:
 

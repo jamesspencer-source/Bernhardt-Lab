@@ -2,7 +2,11 @@
   "items": [
     {
       "title": "Tom Bernhardt mentoring during HMS Community Phages",
-      "image": "assets/images/gallery/community-phages-tom-2023-049.jpg"
+      "image": "assets/images/gallery/community-phages-tom-2023-049.jpg",
+      "imageVariants": [
+        { "src": "assets/images/gallery/community-phages-tom-2023-049-960.webp", "width": 960 },
+        { "src": "assets/images/gallery/community-phages-tom-2023-049-1920.webp", "width": 1920 }
+      ]
     },
     {
       "title": "Tom's tenure gift from the lab",
@@ -15,15 +19,27 @@
     {
       "title": "Apple orchard group photo, fall 2025",
       "image": "assets/images/gallery/apple-orchard-group-2025-corrected.jpg",
+      "imageVariants": [
+        { "src": "assets/images/gallery/apple-orchard-group-2025-corrected-960.webp", "width": 960 },
+        { "src": "assets/images/gallery/apple-orchard-group-2025-corrected-1920.webp", "width": 1920 }
+      ],
       "displayFilter": "brightness(1.22) contrast(1.13) saturate(1.14)"
     },
     {
       "title": "Apple orchard wagon ride, fall 2025",
-      "image": "assets/images/gallery/apple-orchard-wagon-2025.jpg"
+      "image": "assets/images/gallery/apple-orchard-wagon-2025.jpg",
+      "imageVariants": [
+        { "src": "assets/images/gallery/apple-orchard-wagon-2025-960.webp", "width": 960 },
+        { "src": "assets/images/gallery/apple-orchard-wagon-2025-1920.webp", "width": 1920 }
+      ]
     },
     {
       "title": "Bernhardt lab beer hour, spring 2024",
-      "image": "assets/images/imported/sqs-55c77e59-1718043136035-ktwid89g-img-3814.jpg"
+      "image": "assets/images/imported/sqs-55c77e59-1718043136035-ktwid89g-img-3814.jpg",
+      "imageVariants": [
+        { "src": "assets/images/imported/sqs-55c77e59-1718043136035-ktwid89g-img-3814-960.webp", "width": 960 },
+        { "src": "assets/images/imported/sqs-55c77e59-1718043136035-ktwid89g-img-3814-1920.webp", "width": 1920 }
+      ]
     }
   ]
 }
