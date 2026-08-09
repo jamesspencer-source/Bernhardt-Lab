@@ -10,3 +10,9 @@ __pycache__/
 .pytest_cache/
 .playwright-cli/
 output/
+
+# Private/local website material must never enter this public repository.
+archive/
+tmp/
+*.tif
+*.tiff
