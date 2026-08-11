@@ -48,7 +48,7 @@ body {
   margin: 0;
   color: var(--game-text);
   background:
-    linear-gradient(180deg, #07131f 0, var(--game-bg) 26rem),
+    linear-gradient(180deg, #07131f 0, var(--game-bg) 20rem),
     var(--game-bg);
   font-family: var(--font-sans);
   line-height: 1.5;
@@ -335,7 +335,19 @@ kbd {
 }
 
 .hud-combo {
-  width: 8.4rem;
+  width: 9rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.hud-combo.is-rushing {
+  border-color: rgba(112, 239, 194, 0.85);
+  background: rgba(8, 55, 45, 0.94);
+  box-shadow: 0 0 24px rgba(112, 239, 194, 0.3), inset 0 1px 0 rgba(231, 255, 246, 0.14);
+  animation: rush-pulse 620ms ease-in-out infinite;
+}
+
+.hud-combo.is-rushing strong {
+  color: #dffff1;
 }
 
 .hud-stat span,
@@ -461,13 +473,13 @@ kbd {
   top: 5.9rem;
   left: 0.8rem;
   display: flex;
-  gap: 0.7rem;
-  padding: 0.38rem 0.5rem;
-  border: 1px solid rgba(161, 222, 229, 0.18);
+  gap: 0.85rem;
+  padding: 0.45rem 0.62rem;
+  border: 1px solid rgba(161, 222, 229, 0.26);
   border-radius: 5px;
-  color: rgba(225, 243, 246, 0.78);
-  background: rgba(4, 15, 25, 0.78);
-  font-size: 0.6rem;
+  color: rgba(239, 251, 252, 0.92);
+  background: rgba(4, 15, 25, 0.9);
+  font-size: 0.64rem;
   font-weight: 800;
   text-transform: uppercase;
   pointer-events: none;
@@ -481,7 +493,7 @@ kbd {
 
 .legend-swatch {
   display: block;
-  width: 0.62rem;
+  width: 0.72rem;
   aspect-ratio: 1;
   border: 2px solid currentColor;
   border-radius: 50%;
@@ -489,6 +501,7 @@ kbd {
 
 .legend-good {
   color: var(--game-mint);
+  border-radius: 3px;
 }
 
 .legend-danger {
@@ -572,9 +585,9 @@ kbd {
   place-items: center;
   padding: clamp(1rem, 3vw, 3rem);
   background:
-    linear-gradient(90deg, rgba(2, 9, 16, 0.96), rgba(3, 13, 22, 0.82) 62%, rgba(3, 13, 22, 0.5)),
-    rgba(2, 9, 16, 0.54);
-  backdrop-filter: blur(4px);
+    linear-gradient(90deg, rgba(2, 9, 16, 0.94), rgba(3, 13, 22, 0.76) 64%, rgba(3, 13, 22, 0.3)),
+    rgba(2, 9, 16, 0.42);
+  backdrop-filter: blur(2px);
 }
 
 .game-screen[hidden],
@@ -613,10 +626,11 @@ kbd {
 }
 
 .screen-copy {
-  max-width: 54rem;
+  max-width: 44rem;
   margin: 0.8rem 0 0;
-  color: #c3d9df;
-  font-size: clamp(0.88rem, 1.5vw, 1.08rem);
+  color: #d6e8eb;
+  font-size: clamp(0.9rem, 1.5vw, 1.08rem);
+  font-weight: 650;
 }
 
 .objective-row {
@@ -635,7 +649,7 @@ kbd {
   padding: 0.65rem;
   border: 1px solid rgba(151, 220, 229, 0.18);
   border-radius: 6px;
-  background: rgba(6, 21, 34, 0.74);
+  background: rgba(6, 21, 34, 0.88);
 }
 
 .objective > span {
@@ -669,6 +683,7 @@ kbd {
 
 .objective-good > span {
   color: var(--game-mint);
+  border-radius: 5px;
 }
 
 .objective-danger > span {
@@ -927,6 +942,16 @@ kbd {
   }
 }
 
+@keyframes rush-pulse {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
 @media (max-width: 1080px) {
   .game-stage {
     min-height: 0;
@@ -1011,8 +1036,14 @@ kbd {
     min-width: 5rem;
   }
 
-  .hud-combo {
+  .hud-left .hud-stat:nth-child(2) {
     display: none;
+  }
+
+  .hud-combo {
+    display: block;
+    width: 6.8rem;
+    min-width: 6.8rem;
   }
 
   .hud-health {
@@ -1038,6 +1069,8 @@ kbd {
     bottom: 4.5rem;
     left: 50%;
     transform: translateX(-50%);
+    gap: 0.5rem;
+    font-size: 0.56rem;
     white-space: nowrap;
   }
 
@@ -1123,8 +1156,7 @@ kbd {
 
 @media (max-width: 460px) {
   .preview-brand small,
-  .game-zone-kicker,
-  .game-legend {
+  .game-zone-kicker {
     display: none;
   }
 
@@ -1132,12 +1164,35 @@ kbd {
     display: none;
   }
 
+  .hud-stat {
+    min-width: 3.8rem;
+    padding-inline: 0.36rem;
+  }
+
+  .hud-score {
+    min-width: 4.3rem;
+  }
+
   .hud-health {
-    width: 6.4rem;
+    width: 5.6rem;
+    padding-inline: 0.36rem;
+  }
+
+  .hud-combo {
+    width: 5.2rem;
+    min-width: 5.2rem;
+  }
+
+  .game-legend {
+    width: calc(100% - 1rem);
+    justify-content: center;
+    gap: 0.4rem;
+    overflow: hidden;
+    font-size: 0.5rem;
   }
 
   .hud-icon-button {
-    width: 2.25rem;
+    width: 2.1rem;
   }
 
   .touch-controls button {

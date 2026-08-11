@@ -53,8 +53,8 @@
     <main class="game-page">
       <section class="game-titlebar" aria-labelledby="game-title">
         <div>
-          <p class="game-eyebrow">Envelope Escape</p>
-          <h1 id="game-title">Build the Wall</h1>
+          <p class="game-eyebrow">Lab Arcade</p>
+          <h1 id="game-title">Envelope Escape</h1>
         </div>
         <div class="game-controls-key" aria-label="Keyboard controls">
           <span><kbd>A</kbd><kbd>D</kbd> Move</span>
@@ -77,21 +77,21 @@
               <strong id="game-time">0:00.0</strong>
             </div>
             <div class="hud-stat hud-combo">
-              <span>Momentum</span>
-              <strong id="game-multiplier">x1</strong>
-              <i aria-hidden="true"><b id="game-momentum-bar"></b></i>
+              <span>Wall Rush</span>
+              <strong id="game-multiplier">0 / 5</strong>
+              <i aria-hidden="true"><b id="game-rush-bar"></b></i>
             </div>
           </div>
 
           <div class="hud-center" aria-live="polite">
             <span id="game-zone-kicker">Level 1 · Escherichia coli</span>
-            <strong id="game-zone-name">Assembly Line</strong>
+            <strong id="game-zone-name">Warm-Up</strong>
           </div>
 
           <div class="hud-right">
             <div id="game-health-shell" class="hud-health">
               <div>
-                <span>Wall integrity</span>
+                <span>Health</span>
                 <strong id="game-health-text">100%</strong>
               </div>
               <i aria-hidden="true"><b id="game-health-bar"></b></i>
@@ -110,44 +110,43 @@
         <div class="game-progress" aria-label="Level progress">
           <span id="game-progress-label">Start</span>
           <i aria-hidden="true"><b id="game-progress-bar"></b></i>
-          <span>Division gate</span>
+          <span>Gold exit</span>
         </div>
 
         <div class="game-legend" aria-label="Game object legend">
-          <span><i class="legend-swatch legend-good"></i>Collect</span>
-          <span><i class="legend-swatch legend-danger"></i>Avoid</span>
-          <span><i class="legend-swatch legend-route"></i>Checkpoint</span>
+          <span><i class="legend-swatch legend-good"></i>Green = get it</span>
+          <span><i class="legend-swatch legend-danger"></i>Red = avoid</span>
+          <span><i class="legend-swatch legend-route"></i>Gold = go</span>
         </div>
 
         <div id="game-callout" class="game-callout" hidden aria-live="polite">
-          <span id="game-callout-kicker">New object</span>
-          <strong id="game-callout-title">Lipid II</strong>
-          <p id="game-callout-copy">Collect this cell-wall precursor.</p>
+          <span id="game-callout-kicker">Green = get it</span>
+          <strong id="game-callout-title">Wall block</strong>
+          <p id="game-callout-copy">Grab five to trigger Wall Rush.</p>
         </div>
 
         <div id="game-toast" class="game-toast" hidden aria-live="polite">Checkpoint secured</div>
 
         <div id="game-start-screen" class="game-screen game-start-screen">
           <div class="game-screen-inner">
-            <p class="screen-kicker">Level 1 · Gram-negative envelope</p>
-            <h2>Keep <em>Escherichia coli</em> intact.</h2>
+            <p class="screen-kicker"><em>Escherichia coli</em> | Level 1</p>
+            <h2>Build. Dodge. Escape.</h2>
             <p class="screen-copy">
-              Carry Lipid II to the division gate while beta-lactams and autolysins attack the wall.
-              A fast, clean route builds momentum and multiplies every pickup.
+              Grab five green wall blocks to trigger Wall Rush. Avoid red hazards. Reach the gold exit.
             </p>
 
             <div class="objective-row" aria-label="Level objectives">
               <div class="objective objective-good">
-                <span aria-hidden="true">+</span>
-                <p><strong>Lipid II</strong>Build peptidoglycan</p>
+                <span aria-hidden="true">5</span>
+                <p><strong>Get green</strong>Charge Wall Rush</p>
               </div>
               <div class="objective objective-danger">
                 <span aria-hidden="true">!</span>
-                <p><strong>Beta-lactams</strong>Avoid envelope damage</p>
+                <p><strong>Avoid red</strong>Protect your health</p>
               </div>
               <div class="objective objective-route">
-                <span aria-hidden="true">&#9670;</span>
-                <p><strong>Gold beacons</strong>Secure checkpoints</p>
+                <span aria-hidden="true">&#8594;</span>
+                <p><strong>Reach gold</strong>Find the exit</p>
               </div>
             </div>
 
@@ -164,7 +163,7 @@
                   required
                 />
                 <button class="primary-button" type="submit">
-                  Begin assay <span aria-hidden="true">&#8594;</span>
+                  Start run <span aria-hidden="true">&#8594;</span>
                 </button>
               </div>
               <p id="game-name-feedback" class="form-feedback" hidden></p>
@@ -182,16 +181,16 @@
 
         <div id="game-result-screen" class="game-screen game-result-screen" hidden>
           <div class="game-screen-inner game-screen-inner--result">
-            <p id="game-result-kicker" class="screen-kicker">Envelope secured</p>
-            <h2 id="game-result-title">Division gate reached.</h2>
+            <p id="game-result-kicker" class="screen-kicker">Escaped</p>
+            <h2 id="game-result-title">Gold exit reached.</h2>
             <div class="result-score">
               <span>Final score</span>
               <strong id="game-final-score">0</strong>
             </div>
             <dl class="result-breakdown">
               <div><dt>Run time</dt><dd id="game-result-time">0:00.0</dd></div>
-              <div><dt>Wall integrity</dt><dd id="game-result-health">100%</dd></div>
-              <div><dt>Lipid II</dt><dd id="game-result-pickups">0 / 0</dd></div>
+              <div><dt>Health</dt><dd id="game-result-health">100%</dd></div>
+              <div><dt>Wall blocks</dt><dd id="game-result-pickups">0 / 0</dd></div>
               <div><dt>Speed bonus</dt><dd id="game-result-bonus">0</dd></div>
             </dl>
             <div class="result-actions">

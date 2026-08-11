@@ -15,6 +15,8 @@
   const GROUND_Y = 790;
   const GROUND_HEIGHT = 64;
   const MAX_HEALTH = 100;
+  const WALL_RUSH_TARGET = 5;
+  const WALL_RUSH_DURATION = 4500;
   const BOARD_KEY = "bernhardt-envelope-platformer-preview-board-v1";
   const PLAYER_KEY = "bernhardt-envelope-platformer-preview-player";
   const REDUCED_MOTION = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
@@ -27,8 +29,9 @@
     nameFeedback: document.getElementById("game-name-feedback"),
     score: document.getElementById("game-score"),
     time: document.getElementById("game-time"),
-    multiplier: document.getElementById("game-multiplier"),
-    momentumBar: document.getElementById("game-momentum-bar"),
+    rushShell: document.querySelector(".hud-combo"),
+    rushLabel: document.getElementById("game-multiplier"),
+    rushBar: document.getElementById("game-rush-bar"),
     healthShell: document.getElementById("game-health-shell"),
     healthText: document.getElementById("game-health-text"),
     healthBar: document.getElementById("game-health-bar"),
@@ -207,8 +210,9 @@
   function updateHud(state) {
     if (ui.score) ui.score.textContent = formatScore(state.score);
     if (ui.time) ui.time.textContent = formatTime(state.elapsedMs);
-    if (ui.multiplier) ui.multiplier.textContent = `x${state.multiplier}`;
-    if (ui.momentumBar) ui.momentumBar.style.width = `${state.momentum}%`;
+    if (ui.rushLabel) ui.rushLabel.textContent = state.rushActive ? "RUSH! x4" : `${state.wallCharge} / ${WALL_RUSH_TARGET}`;
+    if (ui.rushBar) ui.rushBar.style.width = `${state.rushProgress}%`;
+    if (ui.rushShell) ui.rushShell.classList.toggle("is-rushing", state.rushActive);
     if (ui.healthText) ui.healthText.textContent = `${Math.ceil(state.health)}%`;
     if (ui.healthBar) {
       ui.healthBar.style.width = `${state.health}%`;
@@ -286,10 +290,27 @@
       this.tone(410, 220, 0.14, "square", 0.014, 0.03);
     }
 
-    pickup(multiplier = 1) {
-      const base = 500 + multiplier * 40;
+    pickup(charge = 1) {
+      const base = 480 + charge * 48;
       this.tone(base, base * 1.22, 0.1, "sine", 0.032);
       this.tone(base * 1.25, base * 1.5, 0.1, "triangle", 0.02, 0.06);
+    }
+
+    wallRush() {
+      [330, 440, 660, 880].forEach((frequency, index) => {
+        this.tone(frequency, frequency * 1.3, 0.24, index % 2 ? "square" : "triangle", 0.032, index * 0.055);
+      });
+    }
+
+    bounce() {
+      this.tone(180, 620, 0.2, "square", 0.026);
+      this.tone(360, 920, 0.18, "sine", 0.018, 0.04);
+    }
+
+    smash() {
+      this.noise(0.08, 0.035);
+      this.tone(260, 110, 0.14, "square", 0.026);
+      this.tone(520, 760, 0.12, "triangle", 0.018, 0.03);
     }
 
     repair() {
@@ -344,7 +365,10 @@
       this.runPaused = false;
       this.score = 0;
       this.health = MAX_HEALTH;
-      this.momentum = 0;
+      this.wallCharge = 0;
+      this.rushEndsAt = 0;
+      this.rushWasActive = false;
+      this.lastRushTrailAt = 0;
       this.multiplier = 1;
       this.elapsedMs = 0;
       this.pickupsCollected = 0;
@@ -367,12 +391,41 @@
       this.autoStart = Boolean(data.autoStart);
     }
 
+    resetRunState() {
+      this.runStarted = false;
+      this.runFinished = false;
+      this.runPaused = false;
+      this.score = 0;
+      this.health = MAX_HEALTH;
+      this.wallCharge = 0;
+      this.rushEndsAt = 0;
+      this.rushWasActive = false;
+      this.lastRushTrailAt = 0;
+      this.multiplier = 1;
+      this.elapsedMs = 0;
+      this.pickupsCollected = 0;
+      this.totalPickups = 0;
+      this.currentZoneIndex = 0;
+      this.checkpoint = { ...level.spawn };
+      this.lastGroundedAt = 0;
+      this.jumpBufferedUntil = 0;
+      this.dashAvailableAt = 0;
+      this.dashEndsAt = 0;
+      this.invulnerableUntil = 0;
+      this.lastHudUpdate = 0;
+      this.lastPulseAt = 0;
+      this.lastPhageAt = 0;
+      this.facing = 1;
+      this.seenCallouts = new Set();
+    }
+
     preload() {
       this.load.image("envelope-bg", "../assets/game-next/images/ecoli-envelope-background.webp");
     }
 
     create() {
       activeScene = this;
+      this.resetRunState();
       this.buildTextures();
       this.createBackground();
       this.createCourse();
@@ -407,6 +460,7 @@
       this.makePlayerTexture();
       this.makePlatformTexture();
       this.makePickupTexture();
+      this.makeBouncePadTexture();
       this.makeRepairTexture();
       this.makeAntibioticTexture();
       this.makeAutolysinTexture();
@@ -445,53 +499,47 @@
 
     makePlatformTexture() {
       const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0x0a3043, 1);
+      graphics.fillStyle(0x0b3447, 1);
       graphics.fillRoundedRect(0, 0, 128, 36, 10);
-      graphics.lineStyle(3, level.palette.membraneLight, 0.9);
+      graphics.fillStyle(level.palette.membrane, 0.35);
+      graphics.fillRoundedRect(5, 8, 118, 23, 7);
+      graphics.fillStyle(level.palette.membraneLight, 0.95);
+      graphics.fillRoundedRect(4, 3, 120, 6, 3);
+      graphics.lineStyle(2, level.palette.membraneLight, 0.82);
       graphics.strokeRoundedRect(1.5, 1.5, 125, 33, 9);
-      graphics.fillStyle(level.palette.membrane, 0.82);
-      for (let x = 9; x < 128; x += 15) {
-        graphics.fillCircle(x, 9, 5);
-        graphics.fillCircle(x, 27, 5);
-        graphics.fillRect(x - 1.5, 12, 3, 12);
-      }
       graphics.generateTexture("membrane-platform", 128, 36);
       graphics.destroy();
     }
 
     makePickupTexture() {
       const graphics = this.make.graphics({ add: false });
-      graphics.lineStyle(4, 0xd8fff2, 1);
-      graphics.fillStyle(level.palette.precursor, 0.95);
-      graphics.fillPoints(
-        [
-          new Phaser.Geom.Point(28, 5),
-          new Phaser.Geom.Point(48, 17),
-          new Phaser.Geom.Point(48, 40),
-          new Phaser.Geom.Point(28, 52),
-          new Phaser.Geom.Point(8, 40),
-          new Phaser.Geom.Point(8, 17)
-        ],
-        true
-      );
-      graphics.strokePoints(
-        [
-          new Phaser.Geom.Point(28, 5),
-          new Phaser.Geom.Point(48, 17),
-          new Phaser.Geom.Point(48, 40),
-          new Phaser.Geom.Point(28, 52),
-          new Phaser.Geom.Point(8, 40),
-          new Phaser.Geom.Point(8, 17)
-        ],
-        true
-      );
-      graphics.lineStyle(3, 0x176d64, 0.85);
-      graphics.lineBetween(28, 52, 28, 65);
-      graphics.lineBetween(28, 60, 18, 70);
-      graphics.lineBetween(28, 60, 38, 70);
-      graphics.fillStyle(0xffffff, 0.8);
-      graphics.fillCircle(22, 22, 4);
-      graphics.generateTexture("lipid-ii", 56, 74);
+      graphics.fillStyle(0x0b3f38, 0.72);
+      graphics.fillRoundedRect(7, 8, 50, 50, 10);
+      graphics.fillStyle(level.palette.precursor, 1);
+      graphics.fillRoundedRect(3, 3, 50, 50, 9);
+      graphics.lineStyle(4, 0xe1fff4, 1);
+      graphics.strokeRoundedRect(3, 3, 50, 50, 9);
+      graphics.lineStyle(3, 0x176d64, 0.88);
+      graphics.lineBetween(28, 6, 28, 50);
+      graphics.lineBetween(6, 28, 50, 28);
+      graphics.fillStyle(0xffffff, 0.72);
+      graphics.fillRoundedRect(10, 9, 12, 6, 3);
+      graphics.generateTexture("wall-block", 62, 64);
+      graphics.destroy();
+    }
+
+    makeBouncePadTexture() {
+      const graphics = this.make.graphics({ add: false });
+      graphics.fillStyle(0x0a4052, 1);
+      graphics.fillRoundedRect(2, 17, 92, 20, 8);
+      graphics.fillStyle(level.palette.membrane, 1);
+      graphics.fillRoundedRect(5, 7, 86, 20, 8);
+      graphics.lineStyle(3, 0xd9fbff, 0.95);
+      graphics.strokeRoundedRect(5, 7, 86, 20, 8);
+      graphics.fillStyle(0xffffff, 0.95);
+      graphics.fillTriangle(28, 20, 38, 9, 48, 20);
+      graphics.fillTriangle(48, 20, 58, 9, 68, 20);
+      graphics.generateTexture("bounce-pad", 96, 40);
       graphics.destroy();
     }
 
@@ -644,7 +692,7 @@
       this.background.setTileScale(0.96);
 
       this.backgroundShade = this.add
-        .rectangle(0, 0, this.scale.width, this.scale.height, 0x020a12, 0.27)
+        .rectangle(0, 0, this.scale.width, this.scale.height, 0x020a12, 0.16)
         .setOrigin(0)
         .setScrollFactor(0)
         .setDepth(-90);
@@ -673,6 +721,7 @@
       this.movingPlatforms = this.physics.add.group({ allowGravity: false, immovable: true });
       this.collectibles = this.physics.add.staticGroup();
       this.repairPickups = this.physics.add.staticGroup();
+      this.bouncePads = this.physics.add.staticGroup();
       this.antibiotics = this.physics.add.staticGroup();
       this.autolysins = this.physics.add.group({ allowGravity: false, immovable: true });
       this.checkpoints = this.physics.add.staticGroup();
@@ -686,6 +735,15 @@
       level.platforms.forEach(([x, y, width]) => this.addPlatform(x, y, width, 38, false));
       level.movingPlatforms.forEach((definition) => this.addMovingPlatform(definition));
       this.createPickups();
+
+      (level.bouncePads || []).forEach((definition) => {
+        const pad = this.bouncePads.create(definition.x, definition.y, "bounce-pad");
+        pad.setData({ strength: definition.strength, readyAt: 0 });
+        pad.refreshBody();
+        this.add
+          .ellipse(definition.x, definition.y + 5, 116, 22, level.palette.membrane, 0.16)
+          .setDepth(3);
+      });
 
       level.antibiotics.forEach(([x, y], index) => {
         const hazard = this.antibiotics.create(x, y, "ampicillin");
@@ -752,23 +810,49 @@
 
     createPickups() {
       const blockedRanges = level.checkpoints.map((x) => [x - 95, x + 95]);
-      for (let x = 520; x < level.goalX - 260; x += 245) {
-        if (blockedRanges.some(([start, end]) => x > start && x < end)) continue;
-        const wave = Math.sin(x / 360) * 48;
-        const pickup = this.collectibles.create(x, 640 + wave, "lipid-ii");
-        pickup.setScale(0.76);
+      const addBlock = (x, y, value = 100, scale = 0.72) => {
+        if (blockedRanges.some(([start, end]) => x > start && x < end)) return;
+        const pickup = this.collectibles.create(x, y, "wall-block");
+        pickup.setScale(scale);
         pickup.refreshBody();
-        pickup.setData("value", 100);
+        pickup.setData("value", value);
         this.totalPickups += 1;
-      }
+        this.tweens.add({
+          targets: pickup,
+          y: y - 8,
+          duration: 720 + (Math.floor(x) % 5) * 60,
+          yoyo: true,
+          repeat: -1,
+          ease: "Sine.inOut"
+        });
+      };
+
+      [480, 700, 920, 1140, 1360].forEach((x) => addBlock(x, 690));
+
+      [
+        { start: 2030, count: 5, step: 145, y: 682, arc: 88 },
+        { start: 3950, count: 6, step: 190, y: 670, arc: 130 },
+        { start: 5540, count: 6, step: 230, y: 680, arc: 92 },
+        { start: 7340, count: 6, step: 240, y: 675, arc: 150 },
+        { start: 9080, count: 6, step: 255, y: 682, arc: 115 },
+        { start: 10920, count: 6, step: 250, y: 680, arc: 145 },
+        { start: 12920, count: 6, step: 245, y: 680, arc: 105 },
+        { start: 14800, count: 6, step: 225, y: 680, arc: 145 },
+        { start: 16420, count: 6, step: 220, y: 680, arc: 125 },
+        { start: 18020, count: 5, step: 185, y: 675, arc: 105 }
+      ].forEach((formation) => {
+        for (let index = 0; index < formation.count; index += 1) {
+          const ratio = formation.count === 1 ? 0 : index / (formation.count - 1);
+          addBlock(
+            formation.start + formation.step * index,
+            formation.y - Math.sin(ratio * Math.PI) * formation.arc
+          );
+        }
+      });
 
       level.platforms.forEach(([x, y], index) => {
-        if (index % 2 !== 0) return;
-        const pickup = this.collectibles.create(x, y - 75, "lipid-ii");
-        pickup.setScale(0.7);
-        pickup.refreshBody();
-        pickup.setData("value", 125);
-        this.totalPickups += 1;
+        if (index % 3 !== 1) return;
+        addBlock(x, y - 72, 150, 0.68);
       });
 
       [2860, 5720, 8620, 11880, 15120, 18180].forEach((x) => {
@@ -780,7 +864,14 @@
 
     createCourseLabels() {
       level.labels.forEach((label) => {
-        const color = label.tone === "danger" ? "#ff8d9a" : label.tone === "route" ? "#ffe297" : "#9ff8d8";
+        const color =
+          label.tone === "danger"
+            ? "#ff8d9a"
+            : label.tone === "route"
+              ? "#ffe297"
+              : label.tone === "helper"
+                ? "#8deeff"
+                : "#9ff8d8";
         const line = this.add.rectangle(label.x, label.y + 47, 180, 3, Phaser.Display.Color.HexStringToColor(color).color, 0.72);
         line.setOrigin(0, 0.5).setDepth(2);
         this.add
@@ -837,6 +928,7 @@
       this.physics.add.collider(this.player, this.movingPlatforms);
       this.physics.add.overlap(this.player, this.collectibles, this.collectPickup, undefined, this);
       this.physics.add.overlap(this.player, this.repairPickups, this.collectRepair, undefined, this);
+      this.physics.add.overlap(this.player, this.bouncePads, this.hitBouncePad, undefined, this);
       this.physics.add.overlap(this.player, this.antibiotics, this.hitStaticHazard, undefined, this);
       this.physics.add.overlap(this.player, this.autolysins, this.hitDynamicHazard, undefined, this);
       this.physics.add.overlap(this.player, this.fallingHazards, this.hitDynamicHazard, undefined, this);
@@ -849,10 +941,10 @@
 
     createAmbientLife() {
       this.motes = [];
-      for (let index = 0; index < 70; index += 1) {
+      for (let index = 0; index < 32; index += 1) {
         const mote = this.add
           .image(Math.random() * level.worldWidth, 150 + Math.random() * 570, "mote")
-          .setAlpha(0.16 + Math.random() * 0.28)
+          .setAlpha(0.1 + Math.random() * 0.18)
           .setScale(0.45 + Math.random() * 0.8)
           .setDepth(-5);
         mote.setData({ speed: 5 + Math.random() * 16, phase: Math.random() * Math.PI * 2 });
@@ -861,7 +953,7 @@
     }
 
     resetHud() {
-      updateHud({ score: 0, elapsedMs: 0, multiplier: 1, momentum: 0, health: MAX_HEALTH, progress: 0 });
+      updateHud({ score: 0, elapsedMs: 0, wallCharge: 0, rushActive: false, rushProgress: 0, health: MAX_HEALTH, progress: 0 });
       if (ui.zoneKicker) ui.zoneKicker.textContent = `Level ${level.number} | ${level.species}`;
       if (ui.zoneName) ui.zoneName.textContent = level.zones[0].name;
       if (ui.progressLabel) ui.progressLabel.textContent = "Start";
@@ -877,7 +969,7 @@
       audio.startMusic();
       this.player.setVelocity(0, 0);
       setLiveStatus("Envelope Escape run started.");
-      announce("Lipid II", "Collect the mint cell-wall precursor. Staying fast raises your score multiplier.", "good", "Collect", 4200);
+      announce("Green wall block", "Grab five to trigger Wall Rush. During Rush, red hazards break on contact.", "good", "Green = get it", 4300);
     }
 
     pauseRun() {
@@ -908,9 +1000,9 @@
       if (!this.runStarted || this.runFinished || this.runPaused) return;
 
       this.elapsedMs += delta;
+      this.updateWallRush(time);
       this.updateMovement(time, delta);
       this.updateMovingObjects(delta);
-      this.updateMomentum(delta);
       this.updateZone(time);
       this.updateEscalation(time);
       this.updatePlayerVisuals(time);
@@ -922,8 +1014,9 @@
         updateHud({
           score: this.score,
           elapsedMs: this.elapsedMs,
-          multiplier: this.multiplier,
-          momentum: this.momentum,
+          wallCharge: this.wallCharge,
+          rushActive: this.isWallRushActive(time),
+          rushProgress: this.getRushProgress(time),
           health: this.health,
           progress: clamp((this.player.x / level.goalX) * 100, 0, 100)
         });
@@ -949,6 +1042,8 @@
 
     updateMovement(time, delta) {
       const grounded = this.player.body.blocked.down || this.player.body.touching.down;
+      const rushing = this.isWallRushActive(time);
+      const runAcceleration = rushing ? 3000 : 2200;
       if (grounded) this.lastGroundedAt = time;
 
       const left = this.cursors.left.isDown || this.keys.left.isDown || touchInput.left;
@@ -979,10 +1074,10 @@
           this.player.setAccelerationX(0);
         } else if (left) {
           this.facing = -1;
-          this.player.setAccelerationX(-2200);
+          this.player.setAccelerationX(-runAcceleration);
         } else {
           this.facing = 1;
-          this.player.setAccelerationX(2200);
+          this.player.setAccelerationX(runAcceleration);
         }
       }
 
@@ -1009,7 +1104,7 @@
       }
 
       if (this.player.x < 80) this.player.x = 80;
-      const maxSpeed = grounded ? 410 : 435;
+      const maxSpeed = rushing ? (grounded ? 570 : 600) : grounded ? 410 : 435;
       if (time >= this.dashEndsAt && Math.abs(this.player.body.velocity.x) > maxSpeed) {
         this.player.setVelocityX(Math.sign(this.player.body.velocity.x) * maxSpeed);
       }
@@ -1053,15 +1148,63 @@
       });
     }
 
-    updateMomentum(delta) {
-      const speed = Math.abs(this.player.body.velocity.x);
-      const movingForward = this.player.body.velocity.x * this.facing > 0;
-      if (speed > 280 && movingForward) {
-        this.momentum = clamp(this.momentum + delta * 0.027, 0, 100);
-      } else {
-        this.momentum = clamp(this.momentum - delta * 0.034, 0, 100);
+    isWallRushActive(time = this.time.now) {
+      return this.rushEndsAt > time;
+    }
+
+    getRushProgress(time = this.time.now) {
+      if (this.isWallRushActive(time)) {
+        return clamp(((this.rushEndsAt - time) / WALL_RUSH_DURATION) * 100, 0, 100);
       }
-      this.multiplier = clamp(1 + Math.floor(this.momentum / 25), 1, 4);
+      return clamp((this.wallCharge / WALL_RUSH_TARGET) * 100, 0, 100);
+    }
+
+    startWallRush() {
+      const now = this.time.now;
+      this.wallCharge = WALL_RUSH_TARGET;
+      this.rushEndsAt = now + WALL_RUSH_DURATION;
+      this.rushWasActive = true;
+      this.multiplier = 4;
+      this.invulnerableUntil = Math.max(this.invulnerableUntil, this.rushEndsAt);
+      this.score += 500;
+      audio.wallRush();
+      this.burst(this.player.x, this.player.y, level.palette.precursor, 30, 2);
+      this.floatText(this.player.x, this.player.y - 52, "WALL RUSH! x4", "#dfffee");
+      showToast("WALL RUSH | Faster, invulnerable, x4 score", 2500);
+      setLiveStatus("Wall Rush active. Red hazards can now be smashed.");
+      if (!REDUCED_MOTION) this.cameras.main.flash(170, 83, 255, 187, false);
+      updateHud({
+        score: this.score,
+        elapsedMs: this.elapsedMs,
+        wallCharge: this.wallCharge,
+        rushActive: true,
+        rushProgress: 100,
+        health: this.health,
+        progress: clamp((this.player.x / level.goalX) * 100, 0, 100)
+      });
+    }
+
+    updateWallRush(time) {
+      const rushing = this.isWallRushActive(time);
+      this.multiplier = rushing ? 4 : 1;
+
+      if (rushing) {
+        this.player.setTint(0xbaffdf);
+        if (!REDUCED_MOTION && time - this.lastRushTrailAt > 75) {
+          this.lastRushTrailAt = time;
+          this.createAfterimage();
+        }
+        return;
+      }
+
+      if (this.rushWasActive) {
+        this.rushWasActive = false;
+        this.rushEndsAt = 0;
+        this.wallCharge = 0;
+        this.player.clearTint();
+        showToast("Wall Rush ended | Grab 5 green blocks", 1900);
+        setLiveStatus("Wall Rush ended. Collect five green wall blocks to recharge.");
+      }
     }
 
     updateZone(time) {
@@ -1077,11 +1220,11 @@
       this.showZoneBanner(zone.name, zone.mechanic);
       if (nextZone === 2 && !this.seenCallouts.has("pulse")) {
         this.seenCallouts.add("pulse");
-        announce("Beta-lactam pulse", "A red target appears before each antibiotic strike. Move off the marked area.", "danger", "Incoming hazard", 4400);
+        announce("Incoming strike", "Red target on the ground = move before the capsule lands.", "danger", "Red = avoid", 4000);
       }
       if (nextZone === 4 && !this.seenCallouts.has("phage")) {
         this.seenCallouts.add("phage");
-        announce("Phage breach", "The crimson phage particles sweep from the right. Keep a route open and move through them.", "danger", "New encounter", 4400);
+        announce("Phage chase", "Red phages fly in from ahead. Jump over or duck under them.", "danger", "Red = avoid", 4000);
       }
       if (time > 0) audio.tone(260, 390, 0.18, "triangle", 0.018);
     }
@@ -1120,6 +1263,14 @@
       this.playerShadow.setAlpha(0.38 - airDistance * 0.25);
 
       this.dashMeter.clear();
+      if (this.isWallRushActive(time)) {
+        const pulse = 0.72 + Math.sin(time * 0.014) * 0.18;
+        this.dashMeter.lineStyle(8, level.palette.precursor, pulse);
+        this.dashMeter.strokeCircle(this.player.x, this.player.y, 52);
+        this.dashMeter.lineStyle(3, 0xffffff, 0.72);
+        this.dashMeter.strokeCircle(this.player.x, this.player.y, 60 + Math.sin(time * 0.02) * 4);
+        return;
+      }
       const ready = clamp(1 - (this.dashAvailableAt - time) / 1050, 0, 1);
       this.dashMeter.lineStyle(4, ready >= 1 ? level.palette.precursor : 0x5d7a84, 0.9);
       this.dashMeter.beginPath();
@@ -1138,15 +1289,26 @@
 
     collectPickup(_player, pickup) {
       if (!pickup.active) return;
-      const points = (pickup.getData("value") || 100) * this.multiplier;
+      const rushing = this.isWallRushActive();
+      const points = (pickup.getData("value") || 100) * (rushing ? 4 : 1);
       pickup.disableBody(true, true);
       this.pickupsCollected += 1;
       this.score += points;
       this.health = clamp(this.health + 0.8, 0, MAX_HEALTH);
-      this.momentum = clamp(this.momentum + 5, 0, 100);
-      audio.pickup(this.multiplier);
+      if (rushing) {
+        this.rushEndsAt += 180;
+      } else {
+        this.wallCharge = clamp(this.wallCharge + 1, 0, WALL_RUSH_TARGET);
+      }
+      audio.pickup(rushing ? WALL_RUSH_TARGET : this.wallCharge);
       this.burst(pickup.x, pickup.y, level.palette.precursor, 9, 1);
-      this.floatText(pickup.x, pickup.y - 28, `+${points}  x${this.multiplier}`, "#b9ffe6");
+      this.floatText(
+        pickup.x,
+        pickup.y - 28,
+        rushing ? `+${points}  RUSH` : `+${points}  ${this.wallCharge}/${WALL_RUSH_TARGET}`,
+        "#b9ffe6"
+      );
+      if (!rushing && this.wallCharge >= WALL_RUSH_TARGET) this.startWallRush();
     }
 
     collectRepair(_player, repair) {
@@ -1156,14 +1318,37 @@
       this.score += 350 * this.multiplier;
       audio.repair();
       this.burst(repair.x, repair.y, level.palette.membrane, 14, 1.2);
-      this.floatText(repair.x, repair.y - 32, "+18 WALL", "#9ceeff");
+      this.floatText(repair.x, repair.y - 32, "+18 HEALTH", "#9ceeff");
       if (!this.seenCallouts.has("repair")) {
         this.seenCallouts.add("repair");
-        announce("PBP repair", "The cyan repair module restores wall integrity. Save it for a damaged run.", "good", "Repair pickup");
+        announce("Repair kit", "Cyan kits restore 18 health. Green blocks charge Wall Rush.", "good", "Cyan = help");
+      }
+    }
+
+    hitBouncePad(_player, pad) {
+      const now = this.time.now;
+      if (now < (pad.getData("readyAt") || 0)) return;
+      pad.setData("readyAt", now + 320);
+      this.player.setY(this.player.y - 20);
+      this.player.setVelocityY(-(pad.getData("strength") || 980));
+      this.player.setVelocityX(this.facing * Math.max(520, Math.abs(this.player.body.velocity.x)));
+      this.lastGroundedAt = -1000;
+      this.invulnerableUntil = Math.max(this.invulnerableUntil, now + 420);
+      audio.bounce();
+      this.burst(pad.x, pad.y - 8, level.palette.membrane, 16, 1.4);
+      this.floatText(pad.x, pad.y - 35, "BOUNCE!", "#b9f7ff");
+      this.squashPlayer(0.82, 1.18, 110);
+      if (!this.seenCallouts.has("bounce")) {
+        this.seenCallouts.add("bounce");
+        announce("Bounce pad", "Cyan pads launch you toward faster routes and more green blocks.", "good", "Cyan = boost", 3900);
       }
     }
 
     hitStaticHazard(_player, hazard) {
+      if (this.isWallRushActive()) {
+        this.smashHazard(hazard);
+        return;
+      }
       if (hazard.getData("cooldown") || this.time.now < this.invulnerableUntil) return;
       hazard.setData("cooldown", true);
       hazard.body.enable = false;
@@ -1177,18 +1362,36 @@
       });
       if (!this.seenCallouts.has("ampicillin")) {
         this.seenCallouts.add("ampicillin");
-        announce("Ampicillin", "Crimson antibiotic capsules damage wall integrity. Jump over or route around them.", "danger", "Avoid");
+        announce("Red hazard", "Red hurts your health. Jump over it, or smash through during Wall Rush.", "danger", "Red = avoid");
       }
     }
 
     hitDynamicHazard(_player, hazard) {
+      if (this.isWallRushActive()) {
+        this.smashHazard(hazard);
+        return;
+      }
       const amount = hazard.getData("damage") || 22;
       this.applyDamage(amount, hazard.x);
       if (hazard.getData("transient")) hazard.destroy();
       if (hazard.texture?.key === "autolysin" && !this.seenCallouts.has("autolysin")) {
         this.seenCallouts.add("autolysin");
-        announce("Autolysin", "The rotating red enzyme cuts peptidoglycan. Time your jump past its sweep.", "danger", "Avoid");
+        announce("Spinning hazard", "This red hazard patrols the path. Time your jump.", "danger", "Red = avoid");
       }
+    }
+
+    smashHazard(hazard) {
+      if (!hazard?.active) return;
+      const x = hazard.x;
+      const y = hazard.y;
+      const points = hazard.texture?.key === "phage" ? 650 : 400;
+      this.score += points * 4;
+      if (typeof hazard.disableBody === "function") hazard.disableBody(true, true);
+      else hazard.destroy();
+      audio.smash();
+      this.burst(x, y, level.palette.danger, 12, 1.4);
+      this.burst(x, y, level.palette.precursor, 10, 1.15);
+      this.floatText(x, y - 32, `SMASH +${points * 4}`, "#fff1a8");
     }
 
     applyDamage(amount, sourceX) {
@@ -1196,13 +1399,12 @@
       if (now < this.invulnerableUntil || this.runFinished) return;
       this.invulnerableUntil = now + 1050;
       this.health = clamp(this.health - amount, 0, MAX_HEALTH);
-      this.momentum = 0;
       this.score = Math.max(0, this.score - 180);
       this.player.setVelocityX(sourceX <= this.player.x ? 430 : -430);
       this.player.setVelocityY(-430);
       audio.hurt();
       this.burst(this.player.x, this.player.y, level.palette.danger, 16, 1.45);
-      this.floatText(this.player.x, this.player.y - 45, `-${amount} WALL`, "#ff9daa");
+      this.floatText(this.player.x, this.player.y - 45, `-${amount} HEALTH`, "#ff9daa");
       if (!REDUCED_MOTION) {
         this.cameras.main.shake(150, 0.009);
         this.cameras.main.flash(120, 255, 52, 76, false);
@@ -1222,8 +1424,9 @@
       updateHud({
         score: this.score,
         elapsedMs: this.elapsedMs,
-        multiplier: 1,
-        momentum: 0,
+        wallCharge: this.wallCharge,
+        rushActive: false,
+        rushProgress: this.getRushProgress(now),
         health: this.health,
         progress: clamp((this.player.x / level.goalX) * 100, 0, 100)
       });
@@ -1235,16 +1438,17 @@
       checkpoint.setData("activated", true);
       checkpoint.setTint(0xffffff);
       this.checkpoint = { x: checkpoint.x + 95, y: 600 };
-      this.score += 750 * this.multiplier;
+      const points = 750 * this.multiplier;
+      this.score += points;
       this.health = clamp(this.health + 12, 0, MAX_HEALTH);
       audio.checkpoint();
       this.burst(checkpoint.x, checkpoint.y, level.palette.route, 22, 1.55);
-      this.floatText(checkpoint.x, checkpoint.y - 80, "CHECKPOINT +750", "#ffe59a");
-      showToast(`Checkpoint ${checkpoint.getData("index") + 1} secured | Wall +12`);
+      this.floatText(checkpoint.x, checkpoint.y - 80, `CHECKPOINT +${points}`, "#ffe59a");
+      showToast(`Checkpoint ${checkpoint.getData("index") + 1} secured | Health +12`);
       setLiveStatus(`Checkpoint ${checkpoint.getData("index") + 1} secured.`);
       if (!this.seenCallouts.has("checkpoint")) {
         this.seenCallouts.add("checkpoint");
-        announce("Gold checkpoint", "Touch each beacon to bank a safe respawn point and restore wall integrity.", "route", "Route marker");
+        announce("Gold checkpoint", "Gold saves your position and restores 12 health.", "route", "Gold = safe");
       }
     }
 
@@ -1254,12 +1458,13 @@
     }
 
     fallFromCourse() {
+      const healthBeforeFall = this.health;
       this.applyDamage(18, this.player.x - this.facing * 20);
       if (this.health <= 0 || this.runFinished) return;
       this.player.setPosition(this.checkpoint.x, this.checkpoint.y);
       this.player.setVelocity(0, 0);
       this.cameras.main.centerOn(this.player.x + 250, this.player.y);
-      showToast("Returned to checkpoint | Wall -18");
+      showToast(healthBeforeFall === this.health ? "Returned to checkpoint" : "Returned to checkpoint | Health -18");
     }
 
     telegraphAntibioticPulse() {
@@ -1333,14 +1538,15 @@
       updateHud({
         score: this.score,
         elapsedMs: this.elapsedMs,
-        multiplier: this.multiplier,
-        momentum: this.momentum,
+        wallCharge: this.wallCharge,
+        rushActive: this.isWallRushActive(),
+        rushProgress: this.getRushProgress(),
         health: this.health,
         progress: success ? 100 : clamp((this.player.x / level.goalX) * 100, 0, 100)
       });
 
-      if (ui.resultKicker) ui.resultKicker.textContent = success ? "Envelope secured" : "Envelope lysed";
-      if (ui.resultTitle) ui.resultTitle.textContent = success ? "Division gate reached." : "The wall lost integrity.";
+      if (ui.resultKicker) ui.resultKicker.textContent = success ? "Escaped" : "Run ended";
+      if (ui.resultTitle) ui.resultTitle.textContent = success ? "Gold exit reached." : "Your health reached zero.";
       if (ui.finalScore) ui.finalScore.textContent = formatScore(this.score);
       if (ui.resultTime) ui.resultTime.textContent = formatTime(this.elapsedMs);
       if (ui.resultHealth) ui.resultHealth.textContent = `${Math.ceil(this.health)}%`;

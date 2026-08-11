@@ -18,33 +18,33 @@ window.ENVELOPE_NEXT_LEVELS = Object.freeze([
     zones: [
       {
         start: 0,
-        name: "Assembly Line",
-        mechanic: "Collect Lipid II and settle into the movement rhythm."
+        name: "Warm-Up",
+        mechanic: "Grab five green blocks, then smash through red."
       },
       {
         start: 3000,
-        name: "Periplasm Traverse",
-        mechanic: "Climb membrane lifts without losing momentum."
+        name: "Bounce Lab",
+        mechanic: "Cyan pads launch you to faster routes."
       },
       {
         start: 6200,
-        name: "Beta-lactam Pulse",
-        mechanic: "Red antibiotic pulses telegraph before they strike."
+        name: "Antibiotic Alley",
+        mechanic: "Red targets warn where the next strike will land."
       },
       {
         start: 9400,
-        name: "Repair Relay",
-        mechanic: "Choose a fast upper route or a safer lower route."
+        name: "High Road",
+        mechanic: "Bounce high for blocks or stay low for safety."
       },
       {
         start: 12700,
-        name: "Phage Breach",
-        mechanic: "Keep moving while phage particles sweep the corridor."
+        name: "Phage Chase",
+        mechanic: "Red phages sweep in from ahead. Keep moving."
       },
       {
         start: 15900,
-        name: "Division Sprint",
-        mechanic: "Chain jumps and carry the strongest wall to the gate."
+        name: "Final Rush",
+        mechanic: "Charge one last Wall Rush and reach the gold exit."
       }
     ],
     ground: [
@@ -109,14 +109,23 @@ window.ENVELOPE_NEXT_LEVELS = Object.freeze([
       { x: 13640, y: 580, width: 220, axis: "y", distance: 180, speed: 96 },
       { x: 17040, y: 590, width: 220, axis: "x", distance: 170, speed: 105 }
     ],
+    bouncePads: [
+      { x: 3590, y: 728, strength: 940 },
+      { x: 5180, y: 728, strength: 1000 },
+      { x: 6950, y: 728, strength: 1020 },
+      { x: 8660, y: 728, strength: 1020 },
+      { x: 10420, y: 728, strength: 1030 },
+      { x: 12280, y: 728, strength: 1040 },
+      { x: 14350, y: 728, strength: 1050 },
+      { x: 15850, y: 728, strength: 1060 },
+      { x: 17390, y: 728, strength: 1080 }
+    ],
     checkpoints: [3200, 6400, 9600, 12800, 16000],
     antibiotics: [
       [1740, 690],
       [2490, 690],
-      [3560, 690],
       [5740, 550],
       [6660, 690],
-      [6980, 690],
       [7520, 550],
       [8440, 690],
       [9300, 690],
@@ -139,12 +148,13 @@ window.ENVELOPE_NEXT_LEVELS = Object.freeze([
       { x: 17920, y: 610, distance: 240, speed: 155 }
     ],
     labels: [
-      { x: 720, y: 490, title: "LIPID II", subtitle: "COLLECT", tone: "good" },
-      { x: 1660, y: 570, title: "AMPICILLIN", subtitle: "AVOID", tone: "danger" },
-      { x: 3050, y: 285, title: "CHECKPOINT", subtitle: "TOUCH THE GOLD BEACON", tone: "route" },
-      { x: 6210, y: 270, title: "BETA-LACTAM PULSE", subtitle: "WATCH FOR THE RED TARGET", tone: "danger" },
-      { x: 12720, y: 270, title: "PHAGE BREACH", subtitle: "KEEP MOVING", tone: "danger" },
-      { x: 17780, y: 270, title: "DIVISION GATE", subtitle: "FINAL SPRINT", tone: "route" }
+      { x: 420, y: 510, title: "GREEN BLOCKS", subtitle: "GET 5 = WALL RUSH", tone: "good" },
+      { x: 1570, y: 570, title: "RED = AVOID", subtitle: "RUSH THROUGH TO SMASH", tone: "danger" },
+      { x: 3050, y: 285, title: "GOLD = SAFE", subtitle: "TOUCH TO SAVE", tone: "route" },
+      { x: 3240, y: 540, title: "BOUNCE PAD", subtitle: "CYAN LAUNCHES UP", tone: "helper" },
+      { x: 6210, y: 270, title: "RED TARGET", subtitle: "MOVE BEFORE IT LANDS", tone: "danger" },
+      { x: 12720, y: 270, title: "PHAGE CHASE", subtitle: "JUMP OR DUCK", tone: "danger" },
+      { x: 17780, y: 270, title: "GOLD EXIT", subtitle: "FINAL SPRINT", tone: "route" }
     ]
   }
 ]);
