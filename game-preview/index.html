@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Envelope Escape Preview | Bernhardt Lab</title>
+    <meta
+      name="description"
+      content="Private playtest preview of the next Envelope Escape game for the Bernhardt Lab website."
+    />
+    <meta property="og:title" content="Envelope Escape Preview | Thomas Bernhardt Lab" />
+    <meta property="og:description" content="Playtest preview of the next Envelope Escape game." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://bernhardtlab.com/game-preview/" />
+    <meta property="og:image" content="https://bernhardtlab.com/assets/images/brands/bernhardt-lab-social-card.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Envelope Escape Preview | Thomas Bernhardt Lab" />
+    <meta name="twitter:description" content="Playtest preview of the next Envelope Escape game." />
+    <meta name="twitter:image" content="https://bernhardtlab.com/assets/images/brands/bernhardt-lab-social-card.png" />
+    <link rel="icon" type="image/svg+xml" href="../assets/images/brands/favicon.svg?v=20260504b" />
+    <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/brands/favicon-32.png?v=20260504b" />
+    <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/brands/apple-touch-icon.png?v=20260504b" />
+    <link rel="shortcut icon" href="../favicon.ico?v=20260504b" />
+    <link rel="canonical" href="https://bernhardtlab.com/game-preview/" />
+    <link rel="stylesheet" href="../assets/game-next/envelope-platformer.css" />
+    <script>
+      document.documentElement.classList.remove("no-js");
+      document.documentElement.classList.add("js");
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#game-stage">Skip to game</a>
+
+    <header class="preview-header">
+      <a class="preview-brand" href="../" aria-label="Return to the Bernhardt Lab homepage">
+        <span class="preview-brand-mark" aria-hidden="true">BL</span>
+        <span>
+          <strong>Bernhardt Lab</strong>
+          <small>Lab Arcade Playtest</small>
+        </span>
+      </a>
+      <div class="preview-header-actions">
+        <span class="preview-build-tag">Preview build</span>
+        <a class="icon-link" href="../" aria-label="Close preview and return to the website" title="Return to website">
+          <span aria-hidden="true">&#10005;</span>
+        </a>
+      </div>
+    </header>
+
+    <main class="game-page">
+      <section class="game-titlebar" aria-labelledby="game-title">
+        <div>
+          <p class="game-eyebrow">Envelope Escape</p>
+          <h1 id="game-title">Build the Wall</h1>
+        </div>
+        <div class="game-controls-key" aria-label="Keyboard controls">
+          <span><kbd>A</kbd><kbd>D</kbd> Move</span>
+          <span><kbd>W</kbd> or <kbd>Space</kbd> Jump</span>
+          <span><kbd>Shift</kbd> Dash</span>
+        </div>
+      </section>
+
+      <section id="game-stage" class="game-stage" aria-label="Envelope Escape game">
+        <div id="envelope-next-game" class="game-canvas-root" aria-label="Side-scrolling platform game canvas"></div>
+
+        <div class="game-hud" aria-label="Current run status">
+          <div class="hud-left">
+            <div class="hud-stat hud-score">
+              <span>Score</span>
+              <strong id="game-score">0</strong>
+            </div>
+            <div class="hud-stat">
+              <span>Time</span>
+              <strong id="game-time">0:00.0</strong>
+            </div>
+            <div class="hud-stat hud-combo">
+              <span>Momentum</span>
+              <strong id="game-multiplier">x1</strong>
+              <i aria-hidden="true"><b id="game-momentum-bar"></b></i>
+            </div>
+          </div>
+
+          <div class="hud-center" aria-live="polite">
+            <span id="game-zone-kicker">Level 1 · Escherichia coli</span>
+            <strong id="game-zone-name">Assembly Line</strong>
+          </div>
+
+          <div class="hud-right">
+            <div id="game-health-shell" class="hud-health">
+              <div>
+                <span>Wall integrity</span>
+                <strong id="game-health-text">100%</strong>
+              </div>
+              <i aria-hidden="true"><b id="game-health-bar"></b></i>
+            </div>
+            <button id="game-sound" class="hud-icon-button" type="button" aria-pressed="true" title="Mute sound">
+              <span aria-hidden="true">&#9835;</span>
+              <span class="sr-only">Mute sound</span>
+            </button>
+            <button id="game-pause" class="hud-icon-button" type="button" aria-pressed="false" title="Pause game">
+              <span aria-hidden="true">&#8214;</span>
+              <span class="sr-only">Pause game</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="game-progress" aria-label="Level progress">
+          <span id="game-progress-label">Start</span>
+          <i aria-hidden="true"><b id="game-progress-bar"></b></i>
+          <span>Division gate</span>
+        </div>
+
+        <div class="game-legend" aria-label="Game object legend">
+          <span><i class="legend-swatch legend-good"></i>Collect</span>
+          <span><i class="legend-swatch legend-danger"></i>Avoid</span>
+          <span><i class="legend-swatch legend-route"></i>Checkpoint</span>
+        </div>
+
+        <div id="game-callout" class="game-callout" hidden aria-live="polite">
+          <span id="game-callout-kicker">New object</span>
+          <strong id="game-callout-title">Lipid II</strong>
+          <p id="game-callout-copy">Collect this cell-wall precursor.</p>
+        </div>
+
+        <div id="game-toast" class="game-toast" hidden aria-live="polite">Checkpoint secured</div>
+
+        <div id="game-start-screen" class="game-screen game-start-screen">
+          <div class="game-screen-inner">
+            <p class="screen-kicker">Level 1 · Gram-negative envelope</p>
+            <h2>Keep <em>Escherichia coli</em> intact.</h2>
+            <p class="screen-copy">
+              Carry Lipid II to the division gate while beta-lactams and autolysins attack the wall.
+              A fast, clean route builds momentum and multiplies every pickup.
+            </p>
+
+            <div class="objective-row" aria-label="Level objectives">
+              <div class="objective objective-good">
+                <span aria-hidden="true">+</span>
+                <p><strong>Lipid II</strong>Build peptidoglycan</p>
+              </div>
+              <div class="objective objective-danger">
+                <span aria-hidden="true">!</span>
+                <p><strong>Beta-lactams</strong>Avoid envelope damage</p>
+              </div>
+              <div class="objective objective-route">
+                <span aria-hidden="true">&#9670;</span>
+                <p><strong>Gold beacons</strong>Secure checkpoints</p>
+              </div>
+            </div>
+
+            <form id="game-start-form" class="start-form">
+              <label for="game-player-name">Leaderboard name</label>
+              <div class="start-form-row">
+                <input
+                  id="game-player-name"
+                  name="player-name"
+                  type="text"
+                  maxlength="24"
+                  autocomplete="nickname"
+                  placeholder="Enter your name"
+                  required
+                />
+                <button class="primary-button" type="submit">
+                  Begin assay <span aria-hidden="true">&#8594;</span>
+                </button>
+              </div>
+              <p id="game-name-feedback" class="form-feedback" hidden></p>
+            </form>
+          </div>
+        </div>
+
+        <div id="game-pause-screen" class="game-screen game-pause-screen" hidden>
+          <div class="game-screen-inner game-screen-inner--compact">
+            <p class="screen-kicker">Assay paused</p>
+            <h2>Ready when you are.</h2>
+            <button id="game-resume" class="primary-button" type="button">Resume run</button>
+          </div>
+        </div>
+
+        <div id="game-result-screen" class="game-screen game-result-screen" hidden>
+          <div class="game-screen-inner game-screen-inner--result">
+            <p id="game-result-kicker" class="screen-kicker">Envelope secured</p>
+            <h2 id="game-result-title">Division gate reached.</h2>
+            <div class="result-score">
+              <span>Final score</span>
+              <strong id="game-final-score">0</strong>
+            </div>
+            <dl class="result-breakdown">
+              <div><dt>Run time</dt><dd id="game-result-time">0:00.0</dd></div>
+              <div><dt>Wall integrity</dt><dd id="game-result-health">100%</dd></div>
+              <div><dt>Lipid II</dt><dd id="game-result-pickups">0 / 0</dd></div>
+              <div><dt>Speed bonus</dt><dd id="game-result-bonus">0</dd></div>
+            </dl>
+            <div class="result-actions">
+              <button id="game-restart" class="primary-button" type="button">Run again</button>
+              <a class="secondary-button" href="../">Return to lab website</a>
+            </div>
+          </div>
+        </div>
+
+        <div id="game-touch-controls" class="touch-controls" aria-label="Touch controls">
+          <div>
+            <button data-touch="left" type="button" aria-label="Move left">&#8592;</button>
+            <button data-touch="right" type="button" aria-label="Move right">&#8594;</button>
+          </div>
+          <div>
+            <button data-touch="dash" type="button" aria-label="Dash">&#187;</button>
+            <button data-touch="jump" type="button" aria-label="Jump">&#8593;</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="score-strip" aria-labelledby="score-strip-title">
+        <div>
+          <p class="game-eyebrow">Local playtest board</p>
+          <h2 id="score-strip-title">Fastest envelope builders</h2>
+        </div>
+        <ol id="game-local-board" class="score-list">
+          <li class="score-empty">Complete a run to set the first score on this device.</li>
+        </ol>
+      </section>
+    </main>
+
+    <p id="game-live-status" class="sr-only" aria-live="assertive"></p>
+
+    <script src="../assets/vendor/phaser-3.90.0.min.js"></script>
+    <script src="../assets/game-next/level-data.js"></script>
+    <script src="../assets/game-next/envelope-platformer.js"></script>
+  </body>
+</html>
