@@ -57,8 +57,8 @@
           <h1 id="game-title">Envelope Escape</h1>
         </div>
         <div class="game-controls-key" aria-label="Keyboard controls">
-          <span><kbd>A</kbd><kbd>D</kbd> Move</span>
-          <span><kbd>W</kbd> or <kbd>Space</kbd> Jump</span>
+          <span><kbd>&larr;</kbd><kbd>&rarr;</kbd> or <kbd>A</kbd><kbd>D</kbd> Move</span>
+          <span><kbd>&uarr;</kbd> or <kbd>W</kbd><kbd>Space</kbd> Jump</span>
           <span><kbd>Shift</kbd> Dash</span>
         </div>
       </section>
@@ -78,7 +78,7 @@
             </div>
             <div class="hud-stat hud-combo">
               <span>Wall Rush</span>
-              <strong id="game-multiplier">0 / 5</strong>
+              <strong id="game-rush-value">0 / 5</strong>
               <i aria-hidden="true"><b id="game-rush-bar"></b></i>
             </div>
           </div>
@@ -90,9 +90,10 @@
 
           <div class="hud-right">
             <div id="game-health-shell" class="hud-health">
+              <span class="hud-health-icon" aria-hidden="true">+</span>
               <div>
                 <span>Health</span>
-                <strong id="game-health-text">100%</strong>
+                <strong id="game-health-text">100 / 100</strong>
               </div>
               <i aria-hidden="true"><b id="game-health-bar"></b></i>
             </div>
@@ -114,9 +115,15 @@
         </div>
 
         <div class="game-legend" aria-label="Game object legend">
-          <span><i class="legend-swatch legend-good"></i>Green = get it</span>
-          <span><i class="legend-swatch legend-danger"></i>Red = avoid</span>
-          <span><i class="legend-swatch legend-route"></i>Gold = go</span>
+          <span><i class="legend-swatch legend-good"></i><b>+100</b> Green</span>
+          <span><i class="legend-swatch legend-danger"></i><b>-20 HP</b> Red</span>
+          <span><i class="legend-swatch legend-route"></i><b>+750</b> Gold</span>
+        </div>
+
+        <div id="game-coach" class="game-coach" hidden aria-live="polite">
+          <span id="game-coach-kicker">First move</span>
+          <strong id="game-coach-title">Move right</strong>
+          <small id="game-coach-copy">Use the arrow keys or A and D.</small>
         </div>
 
         <div id="game-callout" class="game-callout" hidden aria-live="polite">
@@ -132,26 +139,32 @@
             <p class="screen-kicker"><em>Escherichia coli</em> | Level 1</p>
             <h2>Build. Dodge. Escape.</h2>
             <p class="screen-copy">
-              Grab five green wall blocks to trigger Wall Rush. Avoid red hazards. Reach the gold exit.
+              You are the cyan cell. Move right, collect green blocks, avoid red hazards, and reach the gold exit.
             </p>
 
             <div class="objective-row" aria-label="Level objectives">
               <div class="objective objective-good">
-                <span aria-hidden="true">5</span>
-                <p><strong>Get green</strong>Charge Wall Rush</p>
+                <span aria-hidden="true">+</span>
+                <p><strong>Green: +100</strong>Collect 5 for Wall Rush</p>
               </div>
               <div class="objective objective-danger">
                 <span aria-hidden="true">!</span>
-                <p><strong>Avoid red</strong>Protect your health</p>
+                <p><strong>Red: -20 HP</strong>Jump over it</p>
               </div>
               <div class="objective objective-route">
                 <span aria-hidden="true">&#8594;</span>
-                <p><strong>Reach gold</strong>Find the exit</p>
+                <p><strong>Gold: +750</strong>Save progress and fully heal</p>
               </div>
             </div>
 
+            <div class="quick-controls" aria-label="How to play">
+              <span><b>Move</b><kbd>&larr;</kbd><kbd>&rarr;</kbd> or <kbd>A</kbd><kbd>D</kbd></span>
+              <span><b>Jump</b><kbd>&uarr;</kbd> or <kbd>W</kbd><kbd>Space</kbd></span>
+              <span><b>Rush</b>Smash red for +1,000</span>
+            </div>
+
             <form id="game-start-form" class="start-form">
-              <label for="game-player-name">Leaderboard name</label>
+              <label for="game-player-name">Player name</label>
               <div class="start-form-row">
                 <input
                   id="game-player-name"

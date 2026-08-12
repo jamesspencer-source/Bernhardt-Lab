@@ -147,14 +147,6 @@ window.ENVELOPE_NEXT_LEVELS = Object.freeze([
       { x: 14680, y: 610, distance: 250, speed: 145 },
       { x: 17920, y: 610, distance: 240, speed: 155 }
     ],
-    labels: [
-      { x: 420, y: 510, title: "GREEN BLOCKS", subtitle: "GET 5 = WALL RUSH", tone: "good" },
-      { x: 1570, y: 570, title: "RED = AVOID", subtitle: "RUSH THROUGH TO SMASH", tone: "danger" },
-      { x: 3050, y: 285, title: "GOLD = SAFE", subtitle: "TOUCH TO SAVE", tone: "route" },
-      { x: 3240, y: 540, title: "BOUNCE PAD", subtitle: "CYAN LAUNCHES UP", tone: "helper" },
-      { x: 6210, y: 270, title: "RED TARGET", subtitle: "MOVE BEFORE IT LANDS", tone: "danger" },
-      { x: 12720, y: 270, title: "PHAGE CHASE", subtitle: "JUMP OR DUCK", tone: "danger" },
-      { x: 17780, y: 270, title: "GOLD EXIT", subtitle: "FINAL SPRINT", tone: "route" }
-    ]
+    labels: []
   }
 ]);

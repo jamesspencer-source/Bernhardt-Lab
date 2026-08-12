@@ -30,7 +30,7 @@
     score: document.getElementById("game-score"),
     time: document.getElementById("game-time"),
     rushShell: document.querySelector(".hud-combo"),
-    rushLabel: document.getElementById("game-multiplier"),
+    rushLabel: document.getElementById("game-rush-value"),
     rushBar: document.getElementById("game-rush-bar"),
     healthShell: document.getElementById("game-health-shell"),
     healthText: document.getElementById("game-health-text"),
@@ -43,6 +43,10 @@
     calloutKicker: document.getElementById("game-callout-kicker"),
     calloutTitle: document.getElementById("game-callout-title"),
     calloutCopy: document.getElementById("game-callout-copy"),
+    coach: document.getElementById("game-coach"),
+    coachKicker: document.getElementById("game-coach-kicker"),
+    coachTitle: document.getElementById("game-coach-title"),
+    coachCopy: document.getElementById("game-coach-copy"),
     toast: document.getElementById("game-toast"),
     sound: document.getElementById("game-sound"),
     pause: document.getElementById("game-pause"),
@@ -76,6 +80,8 @@
   let currentPlayerName = "";
   let calloutTimer = 0;
   let toastTimer = 0;
+  let coachTimer = 0;
+  let healthPulseTimer = 0;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -203,6 +209,24 @@
     }, duration);
   }
 
+  function showCoach(kicker, title, copy, tone = "neutral", duration = 3600) {
+    if (!ui.coach) return;
+    window.clearTimeout(coachTimer);
+    ui.coach.dataset.tone = tone;
+    ui.coachKicker.textContent = kicker;
+    ui.coachTitle.textContent = title;
+    ui.coachCopy.textContent = copy;
+    ui.coach.hidden = false;
+    coachTimer = window.setTimeout(() => {
+      ui.coach.hidden = true;
+    }, duration);
+  }
+
+  function hideCoach() {
+    window.clearTimeout(coachTimer);
+    if (ui.coach) ui.coach.hidden = true;
+  }
+
   function setLiveStatus(message) {
     if (ui.liveStatus) ui.liveStatus.textContent = message;
   }
@@ -210,16 +234,24 @@
   function updateHud(state) {
     if (ui.score) ui.score.textContent = formatScore(state.score);
     if (ui.time) ui.time.textContent = formatTime(state.elapsedMs);
-    if (ui.rushLabel) ui.rushLabel.textContent = state.rushActive ? "RUSH! x4" : `${state.wallCharge} / ${WALL_RUSH_TARGET}`;
+    if (ui.rushLabel) ui.rushLabel.textContent = state.rushActive ? "RUSH!" : `${state.wallCharge} / ${WALL_RUSH_TARGET}`;
     if (ui.rushBar) ui.rushBar.style.width = `${state.rushProgress}%`;
     if (ui.rushShell) ui.rushShell.classList.toggle("is-rushing", state.rushActive);
-    if (ui.healthText) ui.healthText.textContent = `${Math.ceil(state.health)}%`;
+    if (ui.healthText) ui.healthText.textContent = `${Math.ceil(state.health)} / ${MAX_HEALTH}`;
     if (ui.healthBar) {
       ui.healthBar.style.width = `${state.health}%`;
       ui.healthBar.style.background = state.health <= 35 ? "var(--game-danger)" : "var(--game-mint)";
     }
     if (ui.healthShell) ui.healthShell.classList.toggle("is-warning", state.health <= 35);
     if (ui.progressBar) ui.progressBar.style.width = `${state.progress}%`;
+  }
+
+  function pulseHealthHud() {
+    if (!ui.healthShell) return;
+    window.clearTimeout(healthPulseTimer);
+    ui.healthShell.classList.remove("is-hit");
+    window.requestAnimationFrame(() => ui.healthShell.classList.add("is-hit"));
+    healthPulseTimer = window.setTimeout(() => ui.healthShell.classList.remove("is-hit"), 720);
   }
 
   class AudioRack {
@@ -369,7 +401,6 @@
       this.rushEndsAt = 0;
       this.rushWasActive = false;
       this.lastRushTrailAt = 0;
-      this.multiplier = 1;
       this.elapsedMs = 0;
       this.pickupsCollected = 0;
       this.totalPickups = 0;
@@ -383,6 +414,12 @@
       this.lastHudUpdate = 0;
       this.lastPulseAt = 0;
       this.lastPhageAt = 0;
+      this.runStartedAt = 0;
+      this.hasMoved = false;
+      this.hasJumped = false;
+      this.idleCoachShown = false;
+      this.jumpCoachShown = false;
+      this.wasGrounded = false;
       this.facing = 1;
       this.seenCallouts = new Set();
     }
@@ -401,7 +438,6 @@
       this.rushEndsAt = 0;
       this.rushWasActive = false;
       this.lastRushTrailAt = 0;
-      this.multiplier = 1;
       this.elapsedMs = 0;
       this.pickupsCollected = 0;
       this.totalPickups = 0;
@@ -415,6 +451,12 @@
       this.lastHudUpdate = 0;
       this.lastPulseAt = 0;
       this.lastPhageAt = 0;
+      this.runStartedAt = 0;
+      this.hasMoved = false;
+      this.hasJumped = false;
+      this.idleCoachShown = false;
+      this.jumpCoachShown = false;
+      this.wasGrounded = false;
       this.facing = 1;
       this.seenCallouts = new Set();
     }
@@ -438,9 +480,9 @@
       this.physics.world.pause();
       this.input.keyboard.enabled = false;
       this.cameras.main.setBounds(0, 0, level.worldWidth, WORLD_HEIGHT);
-      this.cameras.main.startFollow(this.player, true, 0.075, 0.1);
+      this.cameras.main.startFollow(this.player, true, 0.095, 0.13);
       this.updateCameraLead(this.scale.width);
-      this.cameras.main.setDeadzone(360, 180);
+      this.cameras.main.setDeadzone(280, 150);
       this.cameras.main.roundPixels = true;
 
       this.scale.on("resize", this.resizeBackground, this);
@@ -472,58 +514,54 @@
 
     makePlayerTexture() {
       const graphics = this.make.graphics({ add: false });
-      graphics.lineStyle(5, level.palette.membraneLight, 1);
+      graphics.fillStyle(0x062033, 0.72);
+      graphics.fillRoundedRect(9, 18, 84, 44, 22);
       graphics.fillStyle(level.palette.membrane, 1);
-      graphics.fillRoundedRect(8, 15, 82, 44, 22);
-      graphics.strokeRoundedRect(8, 15, 82, 44, 22);
-      graphics.lineStyle(2, 0x1a7e91, 0.75);
-      graphics.strokeRoundedRect(15, 21, 68, 32, 16);
-      graphics.fillStyle(0x0d4060, 0.75);
-      graphics.fillEllipse(35, 37, 30, 19);
-      graphics.fillStyle(0xeaffff, 1);
-      graphics.fillCircle(67, 29, 5);
-      graphics.fillCircle(79, 31, 5);
-      graphics.fillStyle(0x08243b, 1);
-      graphics.fillCircle(69, 30, 2.2);
-      graphics.fillCircle(81, 32, 2.2);
-      graphics.lineStyle(3, 0x9ff7ee, 0.75);
+      graphics.fillRoundedRect(6, 14, 84, 44, 22);
+      graphics.lineStyle(2, level.palette.membraneLight, 0.88);
+      graphics.strokeRoundedRect(7, 15, 82, 42, 21);
+      graphics.fillStyle(0x1b8199, 0.9);
+      graphics.fillRoundedRect(14, 21, 68, 30, 15);
+      graphics.fillStyle(0x082b43, 0.85);
+      graphics.fillEllipse(39, 36, 32, 17);
+      graphics.fillStyle(0xdffffb, 0.92);
+      graphics.fillCircle(78, 35, 3.5);
+      graphics.lineStyle(2, 0x77d9df, 0.65);
       graphics.beginPath();
-      graphics.moveTo(12, 36);
-      graphics.lineTo(4, 31);
-      graphics.lineTo(2, 21);
-      graphics.lineTo(0, 12);
+      graphics.moveTo(8, 36);
+      graphics.lineTo(1, 31);
+      graphics.lineTo(0, 22);
+      graphics.lineTo(4, 14);
       graphics.strokePath();
-      graphics.generateTexture("ecoli-player", 98, 72);
+      graphics.generateTexture("ecoli-player", 98, 76);
       graphics.destroy();
     }
 
     makePlatformTexture() {
       const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0x0b3447, 1);
-      graphics.fillRoundedRect(0, 0, 128, 36, 10);
-      graphics.fillStyle(level.palette.membrane, 0.35);
-      graphics.fillRoundedRect(5, 8, 118, 23, 7);
-      graphics.fillStyle(level.palette.membraneLight, 0.95);
-      graphics.fillRoundedRect(4, 3, 120, 6, 3);
-      graphics.lineStyle(2, level.palette.membraneLight, 0.82);
-      graphics.strokeRoundedRect(1.5, 1.5, 125, 33, 9);
+      graphics.fillStyle(0x061725, 0.82);
+      graphics.fillRoundedRect(0, 3, 128, 33, 7);
+      graphics.fillStyle(0x123b4c, 1);
+      graphics.fillRoundedRect(2, 2, 124, 29, 6);
+      graphics.fillStyle(0x1d5665, 0.8);
+      graphics.fillRoundedRect(5, 8, 118, 18, 4);
+      graphics.lineStyle(2, 0x69cbd3, 0.8);
+      graphics.lineBetween(6, 4, 122, 4);
       graphics.generateTexture("membrane-platform", 128, 36);
       graphics.destroy();
     }
 
     makePickupTexture() {
       const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0x0b3f38, 0.72);
-      graphics.fillRoundedRect(7, 8, 50, 50, 10);
+      graphics.fillStyle(0x041b19, 0.68);
+      graphics.fillRoundedRect(8, 9, 48, 48, 8);
       graphics.fillStyle(level.palette.precursor, 1);
-      graphics.fillRoundedRect(3, 3, 50, 50, 9);
-      graphics.lineStyle(4, 0xe1fff4, 1);
-      graphics.strokeRoundedRect(3, 3, 50, 50, 9);
-      graphics.lineStyle(3, 0x176d64, 0.88);
-      graphics.lineBetween(28, 6, 28, 50);
-      graphics.lineBetween(6, 28, 50, 28);
-      graphics.fillStyle(0xffffff, 0.72);
-      graphics.fillRoundedRect(10, 9, 12, 6, 3);
+      graphics.fillRoundedRect(4, 4, 48, 48, 7);
+      graphics.lineStyle(2, 0xcaffec, 0.92);
+      graphics.strokeRoundedRect(5, 5, 46, 46, 6);
+      graphics.fillStyle(0x176d64, 0.92);
+      graphics.fillRect(24, 12, 8, 32);
+      graphics.fillRect(12, 24, 32, 8);
       graphics.generateTexture("wall-block", 62, 64);
       graphics.destroy();
     }
@@ -558,13 +596,13 @@
 
     makeAntibioticTexture() {
       const graphics = this.make.graphics({ add: false });
+      graphics.fillStyle(0x3b0815, 0.72);
+      graphics.fillRoundedRect(13, 11, 42, 60, 20);
       graphics.fillStyle(level.palette.danger, 1);
-      graphics.fillRoundedRect(10, 7, 44, 62, 22);
-      graphics.lineStyle(4, 0xffd4d9, 0.95);
-      graphics.strokeRoundedRect(10, 7, 44, 62, 22);
-      graphics.lineStyle(4, 0x8f263a, 0.9);
-      graphics.lineBetween(14, 45, 50, 31);
-      graphics.lineStyle(5, 0xffffff, 0.88);
+      graphics.fillRoundedRect(9, 7, 42, 60, 20);
+      graphics.lineStyle(2, 0xffb8c1, 0.92);
+      graphics.strokeRoundedRect(10, 8, 40, 58, 19);
+      graphics.lineStyle(4, 0xffffff, 0.94);
       graphics.lineBetween(24, 24, 40, 40);
       graphics.lineBetween(40, 24, 24, 40);
       graphics.generateTexture("ampicillin", 64, 76);
@@ -689,16 +727,16 @@
         .setOrigin(0)
         .setScrollFactor(0)
         .setDepth(-100);
-      this.background.setTileScale(0.96);
+      this.background.setTileScale(1);
 
       this.backgroundShade = this.add
-        .rectangle(0, 0, this.scale.width, this.scale.height, 0x020a12, 0.16)
+        .rectangle(0, 0, this.scale.width, this.scale.height, 0x020a12, 0.1)
         .setOrigin(0)
         .setScrollFactor(0)
         .setDepth(-90);
 
       const lowerShade = this.add
-        .rectangle(0, 735, level.worldWidth, 165, 0x020a12, 0.55)
+        .rectangle(0, 735, level.worldWidth, 165, 0x020a12, 0.32)
         .setOrigin(0)
         .setDepth(-20);
       lowerShade.setBlendMode(Phaser.BlendModes.MULTIPLY);
@@ -749,7 +787,7 @@
         const hazard = this.antibiotics.create(x, y, "ampicillin");
         hazard.setScale(index % 3 === 0 ? 0.82 : 0.72);
         hazard.refreshBody();
-        hazard.setData("damage", 16);
+        hazard.setData("damage", 20);
         this.tweens.add({
           targets: hazard,
           angle: index % 2 ? 6 : -6,
@@ -769,7 +807,7 @@
           distance: definition.distance,
           speed: definition.speed,
           direction: index % 2 ? -1 : 1,
-          damage: 24
+          damage: 20
         });
       });
 
@@ -852,7 +890,7 @@
 
       level.platforms.forEach(([x, y], index) => {
         if (index % 3 !== 1) return;
-        addBlock(x, y - 72, 150, 0.68);
+        addBlock(x, y - 72, 100, 0.68);
       });
 
       [2860, 5720, 8620, 11880, 15120, 18180].forEach((x) => {
@@ -903,9 +941,9 @@
       this.player.setCollideWorldBounds(false);
       this.player.body.setSize(78, 46);
       this.player.body.setOffset(10, 16);
-      this.player.body.setMaxVelocity(760, 1050);
-      this.player.body.setDragX(1700);
-      this.player.body.setGravityY(1180);
+      this.player.body.setMaxVelocity(800, 980);
+      this.player.body.setDragX(0);
+      this.player.body.setGravityY(500);
 
       this.playerShadow = this.add.ellipse(level.spawn.x, 750, 86, 18, 0x02070c, 0.4).setDepth(4);
       this.dashMeter = this.add.graphics().setDepth(11);
@@ -941,10 +979,10 @@
 
     createAmbientLife() {
       this.motes = [];
-      for (let index = 0; index < 32; index += 1) {
+      for (let index = 0; index < 14; index += 1) {
         const mote = this.add
           .image(Math.random() * level.worldWidth, 150 + Math.random() * 570, "mote")
-          .setAlpha(0.1 + Math.random() * 0.18)
+          .setAlpha(0.06 + Math.random() * 0.12)
           .setScale(0.45 + Math.random() * 0.8)
           .setDepth(-5);
         mote.setData({ speed: 5 + Math.random() * 16, phase: Math.random() * Math.PI * 2 });
@@ -968,8 +1006,9 @@
       audio.unlock();
       audio.startMusic();
       this.player.setVelocity(0, 0);
+      this.runStartedAt = this.time.now;
       setLiveStatus("Envelope Escape run started.");
-      announce("Green wall block", "Grab five to trigger Wall Rush. During Rush, red hazards break on contact.", "good", "Green = get it", 4300);
+      showCoach("You are cyan", "Move right", "Use the arrow keys or A and D.", "neutral", 2300);
     }
 
     pauseRun() {
@@ -1002,6 +1041,7 @@
       this.elapsedMs += delta;
       this.updateWallRush(time);
       this.updateMovement(time, delta);
+      this.updateTutorials(time);
       this.updateMovingObjects(delta);
       this.updateZone(time);
       this.updateEscalation(time);
@@ -1028,8 +1068,8 @@
 
     updateBackground(time) {
       if (this.background) {
-        this.background.tilePositionX = this.cameras.main.scrollX * 0.16;
-        this.background.tilePositionY = Math.sin(time * 0.00018) * 6;
+        this.background.tilePositionX = this.cameras.main.scrollX * 0.1;
+        this.background.tilePositionY = Math.sin(time * 0.00015) * 2;
       }
       this.motes?.forEach((mote) => {
         const speed = mote.getData("speed");
@@ -1043,7 +1083,6 @@
     updateMovement(time, delta) {
       const grounded = this.player.body.blocked.down || this.player.body.touching.down;
       const rushing = this.isWallRushActive(time);
-      const runAcceleration = rushing ? 3000 : 2200;
       if (grounded) this.lastGroundedAt = time;
 
       const left = this.cursors.left.isDown || this.keys.left.isDown || touchInput.left;
@@ -1062,7 +1101,24 @@
         return;
       }
 
-      if (jumpPressed) this.jumpBufferedUntil = time + 145;
+      if (left !== right) {
+        this.hasMoved = true;
+        if (this.player.x < 900) hideCoach();
+      }
+
+      if (jumpPressed) {
+        this.jumpBufferedUntil = time + 190;
+        this.hasJumped = true;
+        hideCoach();
+      }
+
+      if (!grounded && jumpHeld && this.player.body.velocity.y < 0) {
+        this.player.body.setGravityY(240);
+      } else if (!grounded) {
+        this.player.body.setGravityY(690);
+      } else {
+        this.player.body.setGravityY(500);
+      }
 
       if (time < this.dashEndsAt) {
         this.player.setAccelerationX(0);
@@ -1070,28 +1126,28 @@
         this.player.setVelocityY(Math.min(this.player.body.velocity.y, 70));
         if (!REDUCED_MOTION && Math.random() > 0.45) this.createAfterimage();
       } else {
-        if (left === right) {
-          this.player.setAccelerationX(0);
-        } else if (left) {
-          this.facing = -1;
-          this.player.setAccelerationX(-runAcceleration);
-        } else {
-          this.facing = 1;
-          this.player.setAccelerationX(runAcceleration);
-        }
+        const direction = left === right ? 0 : left ? -1 : 1;
+        if (direction) this.facing = direction;
+        const maxSpeed = rushing ? (grounded ? 590 : 610) : grounded ? 440 : 465;
+        const targetVelocity = direction * maxSpeed;
+        const reversing = direction && Math.sign(this.player.body.velocity.x) !== direction;
+        const responseRate = grounded ? (reversing ? 0.019 : direction ? 0.011 : 0.016) : 0.0068;
+        const response = 1 - Math.exp(-delta * responseRate);
+        this.player.setAccelerationX(0);
+        this.player.setVelocityX(Phaser.Math.Linear(this.player.body.velocity.x, targetVelocity, response));
       }
 
-      const jumpAvailable = time - this.lastGroundedAt <= 120;
+      const jumpAvailable = time - this.lastGroundedAt <= 170;
       if (this.jumpBufferedUntil >= time && jumpAvailable) {
-        this.player.setVelocityY(-790);
+        this.player.setVelocityY(-705);
         this.jumpBufferedUntil = 0;
         this.lastGroundedAt = -1000;
         audio.jump();
-        this.squashPlayer(1.12, 0.84, 100);
+        this.squashPlayer(1.08, 0.9, 90);
       }
 
-      if (!jumpHeld && this.player.body.velocity.y < -310) {
-        this.player.setVelocityY(this.player.body.velocity.y * 0.58);
+      if (!jumpHeld && this.player.body.velocity.y < -285) {
+        this.player.setVelocityY(this.player.body.velocity.y * 0.76);
       }
 
       if (dashPressed && time >= this.dashAvailableAt) {
@@ -1104,9 +1160,23 @@
       }
 
       if (this.player.x < 80) this.player.x = 80;
-      const maxSpeed = rushing ? (grounded ? 570 : 600) : grounded ? 410 : 435;
-      if (time >= this.dashEndsAt && Math.abs(this.player.body.velocity.x) > maxSpeed) {
-        this.player.setVelocityX(Math.sign(this.player.body.velocity.x) * maxSpeed);
+
+      if (grounded && !this.wasGrounded && time - this.runStartedAt > 250) {
+        this.squashPlayer(1.06, 0.92, 80);
+        if (!REDUCED_MOTION) this.burst(this.player.x, this.player.y + 26, 0x74bac4, 4, 0.4);
+      }
+      this.wasGrounded = grounded;
+    }
+
+    updateTutorials(time) {
+      if (!this.idleCoachShown && !this.hasMoved && time - this.runStartedAt > 2700) {
+        this.idleCoachShown = true;
+        showCoach("Controls", "Move with arrows or A / D", "Then jump with Up, W, or Space.", "neutral", 5200);
+      }
+
+      if (!this.jumpCoachShown && !this.hasJumped && this.player.x > 1250) {
+        this.jumpCoachShown = true;
+        showCoach("Red ahead", "Jump now", "Press Up, W, or Space. Red costs 20 HP.", "danger", 4400);
       }
     }
 
@@ -1164,13 +1234,11 @@
       this.wallCharge = WALL_RUSH_TARGET;
       this.rushEndsAt = now + WALL_RUSH_DURATION;
       this.rushWasActive = true;
-      this.multiplier = 4;
       this.invulnerableUntil = Math.max(this.invulnerableUntil, this.rushEndsAt);
-      this.score += 500;
       audio.wallRush();
       this.burst(this.player.x, this.player.y, level.palette.precursor, 30, 2);
-      this.floatText(this.player.x, this.player.y - 52, "WALL RUSH! x4", "#dfffee");
-      showToast("WALL RUSH | Faster, invulnerable, x4 score", 2500);
+      this.floatText(this.player.x, this.player.y - 52, "WALL RUSH!", "#dfffee");
+      showCoach("Wall Rush", "Smash red for +1,000", "You are invulnerable until the green meter empties.", "good", 3900);
       setLiveStatus("Wall Rush active. Red hazards can now be smashed.");
       if (!REDUCED_MOTION) this.cameras.main.flash(170, 83, 255, 187, false);
       updateHud({
@@ -1186,8 +1254,6 @@
 
     updateWallRush(time) {
       const rushing = this.isWallRushActive(time);
-      this.multiplier = rushing ? 4 : 1;
-
       if (rushing) {
         this.player.setTint(0xbaffdf);
         if (!REDUCED_MOTION && time - this.lastRushTrailAt > 75) {
@@ -1246,12 +1312,11 @@
     updatePlayerVisuals(time) {
       this.player.setFlipX(this.facing < 0);
       const grounded = this.player.body.blocked.down || this.player.body.touching.down;
-      const speedRatio = clamp(Math.abs(this.player.body.velocity.x) / 410, 0, 1);
+      const speedRatio = clamp(Math.abs(this.player.body.velocity.x) / 440, 0, 1);
       if (grounded && speedRatio > 0.12 && !this.tweens.isTweening(this.player)) {
-        this.player.y += Math.sin(time * 0.025) * speedRatio * 0.6;
-        this.player.angle = Math.sin(time * 0.018) * speedRatio * 2.5;
+        this.player.angle = Math.sin(time * 0.016) * speedRatio * 1.2;
       } else if (!grounded) {
-        this.player.angle = clamp(this.player.body.velocity.y / 36, -12, 13);
+        this.player.angle = clamp(this.player.body.velocity.y / 52, -9, 10);
       } else {
         this.player.angle *= 0.82;
       }
@@ -1264,17 +1329,15 @@
 
       this.dashMeter.clear();
       if (this.isWallRushActive(time)) {
-        const pulse = 0.72 + Math.sin(time * 0.014) * 0.18;
-        this.dashMeter.lineStyle(8, level.palette.precursor, pulse);
-        this.dashMeter.strokeCircle(this.player.x, this.player.y, 52);
-        this.dashMeter.lineStyle(3, 0xffffff, 0.72);
-        this.dashMeter.strokeCircle(this.player.x, this.player.y, 60 + Math.sin(time * 0.02) * 4);
+        const pulse = 0.64 + Math.sin(time * 0.014) * 0.16;
+        this.dashMeter.lineStyle(5, level.palette.precursor, pulse);
+        this.dashMeter.strokeCircle(this.player.x, this.player.y, 51 + Math.sin(time * 0.018) * 2);
         return;
       }
       const ready = clamp(1 - (this.dashAvailableAt - time) / 1050, 0, 1);
-      this.dashMeter.lineStyle(4, ready >= 1 ? level.palette.precursor : 0x5d7a84, 0.9);
+      this.dashMeter.lineStyle(2, ready >= 1 ? level.palette.membraneLight : 0x5d7a84, 0.58);
       this.dashMeter.beginPath();
-      this.dashMeter.arc(this.player.x, this.player.y, 49, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ready, false);
+      this.dashMeter.arc(this.player.x, this.player.y, 45, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ready, false);
       this.dashMeter.strokePath();
     }
 
@@ -1290,11 +1353,10 @@
     collectPickup(_player, pickup) {
       if (!pickup.active) return;
       const rushing = this.isWallRushActive();
-      const points = (pickup.getData("value") || 100) * (rushing ? 4 : 1);
+      const points = pickup.getData("value") || 100;
       pickup.disableBody(true, true);
       this.pickupsCollected += 1;
       this.score += points;
-      this.health = clamp(this.health + 0.8, 0, MAX_HEALTH);
       if (rushing) {
         this.rushEndsAt += 180;
       } else {
@@ -1308,20 +1370,23 @@
         rushing ? `+${points}  RUSH` : `+${points}  ${this.wallCharge}/${WALL_RUSH_TARGET}`,
         "#b9ffe6"
       );
+      if (!this.seenCallouts.has("first-block")) {
+        this.seenCallouts.add("first-block");
+        showCoach("Green block: +100", `${this.wallCharge} / ${WALL_RUSH_TARGET} to Wall Rush`, "Collect four more green blocks.", "good", 3200);
+      }
       if (!rushing && this.wallCharge >= WALL_RUSH_TARGET) this.startWallRush();
     }
 
     collectRepair(_player, repair) {
       if (!repair.active) return;
       repair.disableBody(true, true);
-      this.health = clamp(this.health + 18, 0, MAX_HEALTH);
-      this.score += 350 * this.multiplier;
+      this.health = clamp(this.health + 20, 0, MAX_HEALTH);
       audio.repair();
       this.burst(repair.x, repair.y, level.palette.membrane, 14, 1.2);
-      this.floatText(repair.x, repair.y - 32, "+18 HEALTH", "#9ceeff");
+      this.floatText(repair.x, repair.y - 32, "+20 HP", "#9ceeff");
       if (!this.seenCallouts.has("repair")) {
         this.seenCallouts.add("repair");
-        announce("Repair kit", "Cyan kits restore 18 health. Green blocks charge Wall Rush.", "good", "Cyan = help");
+        showCoach("Cyan health kit", "+20 HP", "Cyan helpers restore health. Green blocks add points.", "neutral", 3300);
       }
     }
 
@@ -1353,8 +1418,8 @@
       hazard.setData("cooldown", true);
       hazard.body.enable = false;
       hazard.setAlpha(0.28);
-      this.applyDamage(hazard.getData("damage") || 16, hazard.x);
-      this.time.delayedCall(1350, () => {
+      this.applyDamage(hazard.getData("damage") || 20, hazard.x);
+      this.time.delayedCall(1550, () => {
         if (!hazard.active || this.runFinished) return;
         hazard.body.enable = true;
         hazard.setAlpha(1);
@@ -1362,7 +1427,6 @@
       });
       if (!this.seenCallouts.has("ampicillin")) {
         this.seenCallouts.add("ampicillin");
-        announce("Red hazard", "Red hurts your health. Jump over it, or smash through during Wall Rush.", "danger", "Red = avoid");
       }
     }
 
@@ -1371,12 +1435,12 @@
         this.smashHazard(hazard);
         return;
       }
-      const amount = hazard.getData("damage") || 22;
+      const amount = hazard.getData("damage") || 20;
       this.applyDamage(amount, hazard.x);
       if (hazard.getData("transient")) hazard.destroy();
       if (hazard.texture?.key === "autolysin" && !this.seenCallouts.has("autolysin")) {
         this.seenCallouts.add("autolysin");
-        announce("Spinning hazard", "This red hazard patrols the path. Time your jump.", "danger", "Red = avoid");
+        showCoach("Moving red hazard", "Jump over it", "All red hazards cost 20 HP outside Wall Rush.", "danger", 3200);
       }
     }
 
@@ -1384,27 +1448,32 @@
       if (!hazard?.active) return;
       const x = hazard.x;
       const y = hazard.y;
-      const points = hazard.texture?.key === "phage" ? 650 : 400;
-      this.score += points * 4;
+      const points = 1000;
+      this.score += points;
       if (typeof hazard.disableBody === "function") hazard.disableBody(true, true);
       else hazard.destroy();
       audio.smash();
       this.burst(x, y, level.palette.danger, 12, 1.4);
       this.burst(x, y, level.palette.precursor, 10, 1.15);
-      this.floatText(x, y - 32, `SMASH +${points * 4}`, "#fff1a8");
+      this.floatText(x, y - 32, `SMASH +${points}`, "#fff1a8");
     }
 
     applyDamage(amount, sourceX) {
       const now = this.time.now;
       if (now < this.invulnerableUntil || this.runFinished) return;
-      this.invulnerableUntil = now + 1050;
+      this.invulnerableUntil = now + 1350;
       this.health = clamp(this.health - amount, 0, MAX_HEALTH);
-      this.score = Math.max(0, this.score - 180);
+      this.score = Math.max(0, this.score - 200);
       this.player.setVelocityX(sourceX <= this.player.x ? 430 : -430);
       this.player.setVelocityY(-430);
       audio.hurt();
       this.burst(this.player.x, this.player.y, level.palette.danger, 16, 1.45);
-      this.floatText(this.player.x, this.player.y - 45, `-${amount} HEALTH`, "#ff9daa");
+      this.floatText(this.player.x, this.player.y - 45, `-${amount} HP  -200`, "#ff9daa");
+      pulseHealthHud();
+      if (!this.seenCallouts.has("damage")) {
+        this.seenCallouts.add("damage");
+        showCoach("Health", "Red costs 20 HP", "Watch the health bar above. Cyan health kits restore 20 HP.", "danger", 3600);
+      }
       if (!REDUCED_MOTION) {
         this.cameras.main.shake(150, 0.009);
         this.cameras.main.flash(120, 255, 52, 76, false);
@@ -1438,17 +1507,17 @@
       checkpoint.setData("activated", true);
       checkpoint.setTint(0xffffff);
       this.checkpoint = { x: checkpoint.x + 95, y: 600 };
-      const points = 750 * this.multiplier;
+      const points = 750;
       this.score += points;
-      this.health = clamp(this.health + 12, 0, MAX_HEALTH);
+      this.health = MAX_HEALTH;
       audio.checkpoint();
       this.burst(checkpoint.x, checkpoint.y, level.palette.route, 22, 1.55);
       this.floatText(checkpoint.x, checkpoint.y - 80, `CHECKPOINT +${points}`, "#ffe59a");
-      showToast(`Checkpoint ${checkpoint.getData("index") + 1} secured | Health +12`);
+      showToast(`Checkpoint saved | +750 points | Health full`);
       setLiveStatus(`Checkpoint ${checkpoint.getData("index") + 1} secured.`);
       if (!this.seenCallouts.has("checkpoint")) {
         this.seenCallouts.add("checkpoint");
-        announce("Gold checkpoint", "Gold saves your position and restores 12 health.", "route", "Gold = safe");
+        announce("Gold checkpoint", "Gold saves your position and restores full health.", "route", "Gold = safe");
       }
     }
 
@@ -1459,12 +1528,12 @@
 
     fallFromCourse() {
       const healthBeforeFall = this.health;
-      this.applyDamage(18, this.player.x - this.facing * 20);
+      this.applyDamage(20, this.player.x - this.facing * 20);
       if (this.health <= 0 || this.runFinished) return;
       this.player.setPosition(this.checkpoint.x, this.checkpoint.y);
       this.player.setVelocity(0, 0);
       this.cameras.main.centerOn(this.player.x + 250, this.player.y);
-      showToast(healthBeforeFall === this.health ? "Returned to checkpoint" : "Returned to checkpoint | Health -18");
+      showToast(healthBeforeFall === this.health ? "Returned to checkpoint" : "Returned to checkpoint | -20 HP");
     }
 
     telegraphAntibioticPulse() {
@@ -1487,7 +1556,7 @@
           hazard.setScale(0.78);
           hazard.setVelocityY(270);
           hazard.setAngularVelocity(145);
-          hazard.setData({ damage: 22, transient: true });
+          hazard.setData({ damage: 20, transient: true });
         }
       });
       audio.tone(170, 120, 0.38, "square", 0.012);
@@ -1501,7 +1570,7 @@
       phage.setScale(0.75);
       phage.body.setAllowGravity(false);
       phage.setVelocityX(-290 - this.currentZoneIndex * 18);
-      phage.setData({ damage: 24, transient: true, phase: Math.random() * Math.PI * 2 });
+      phage.setData({ damage: 20, transient: true, phase: Math.random() * Math.PI * 2 });
       audio.tone(130, 88, 0.26, "sawtooth", 0.012);
     }
 
@@ -1549,7 +1618,7 @@
       if (ui.resultTitle) ui.resultTitle.textContent = success ? "Gold exit reached." : "Your health reached zero.";
       if (ui.finalScore) ui.finalScore.textContent = formatScore(this.score);
       if (ui.resultTime) ui.resultTime.textContent = formatTime(this.elapsedMs);
-      if (ui.resultHealth) ui.resultHealth.textContent = `${Math.ceil(this.health)}%`;
+      if (ui.resultHealth) ui.resultHealth.textContent = `${Math.ceil(this.health)} / ${MAX_HEALTH}`;
       if (ui.resultPickups) ui.resultPickups.textContent = `${this.pickupsCollected} / ${this.totalPickups}`;
       if (ui.resultBonus) ui.resultBonus.textContent = formatScore(speedBonus);
       if (ui.resultScreen) ui.resultScreen.hidden = false;
@@ -1655,7 +1724,7 @@
     squashPlayer(scaleX, scaleY, duration) {
       this.tweens.add({
         targets: this.player,
-        scaleX: scaleX * this.facing,
+        scaleX,
         scaleY,
         duration,
         yoyo: true,
@@ -1682,7 +1751,7 @@
     physics: {
       default: "arcade",
       arcade: {
-        gravity: { y: 760 },
+        gravity: { y: 640 },
         debug: false,
         fps: 60
       }
