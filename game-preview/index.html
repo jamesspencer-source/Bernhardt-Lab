@@ -59,7 +59,6 @@
         <div class="game-controls-key" aria-label="Keyboard controls">
           <span><kbd>&larr;</kbd><kbd>&rarr;</kbd> or <kbd>A</kbd><kbd>D</kbd> Move</span>
           <span><kbd>&uarr;</kbd> or <kbd>W</kbd><kbd>Space</kbd> Jump</span>
-          <span><kbd>Shift</kbd> Dash</span>
         </div>
       </section>
 
@@ -72,30 +71,32 @@
               <span>Score</span>
               <strong id="game-score">0</strong>
             </div>
-            <div class="hud-stat">
-              <span>Time</span>
-              <strong id="game-time">0:00.0</strong>
+            <div id="game-health-shell" class="hud-integrity">
+              <span>Integrity</span>
+              <div id="game-integrity-pips" class="integrity-pips" aria-label="5 of 5 integrity">
+                <i></i><i></i><i></i><i></i><i></i>
+              </div>
             </div>
-            <div class="hud-stat hud-combo">
-              <span>Wall Rush</span>
-              <strong id="game-rush-value">0 / 5</strong>
-              <i aria-hidden="true"><b id="game-rush-bar"></b></i>
+            <div class="hud-build">
+              <span>Build</span>
+              <strong id="game-build-value">0 / 3</strong>
+              <i aria-hidden="true"><b id="game-build-bar"></b></i>
             </div>
           </div>
 
           <div class="hud-center" aria-live="polite">
             <span id="game-zone-kicker">Level 1 · Escherichia coli</span>
-            <strong id="game-zone-name">Warm-Up</strong>
+            <strong id="game-zone-name">Build the Way</strong>
+            <small id="game-time">0:00.0</small>
           </div>
 
           <div class="hud-right">
-            <div id="game-health-shell" class="hud-health">
-              <span class="hud-health-icon" aria-hidden="true">+</span>
+            <div id="game-pressure-shell" class="hud-pressure">
               <div>
-                <span>Health</span>
-                <strong id="game-health-text">100 / 100</strong>
+                <span>Pressure</span>
+                <strong id="game-pressure-label">Dormant</strong>
               </div>
-              <i aria-hidden="true"><b id="game-health-bar"></b></i>
+              <i aria-hidden="true"><b id="game-pressure-bar"></b></i>
             </div>
             <button id="game-sound" class="hud-icon-button" type="button" aria-pressed="true" title="Mute sound">
               <span aria-hidden="true">&#9835;</span>
@@ -109,15 +110,9 @@
         </div>
 
         <div class="game-progress" aria-label="Level progress">
-          <span id="game-progress-label">Start</span>
+          <span id="game-progress-label">Build the Way</span>
           <i aria-hidden="true"><b id="game-progress-bar"></b></i>
-          <span>Gold exit</span>
-        </div>
-
-        <div class="game-legend" aria-label="Game object legend">
-          <span><i class="legend-swatch legend-good"></i><b>+100</b> Green</span>
-          <span><i class="legend-swatch legend-danger"></i><b>-20 HP</b> Red</span>
-          <span><i class="legend-swatch legend-route"></i><b>+750</b> Gold</span>
+          <span>PBP gate</span>
         </div>
 
         <div id="game-coach" class="game-coach" hidden aria-live="polite">
@@ -127,9 +122,9 @@
         </div>
 
         <div id="game-callout" class="game-callout" hidden aria-live="polite">
-          <span id="game-callout-kicker">Green = get it</span>
-          <strong id="game-callout-title">Wall block</strong>
-          <p id="game-callout-copy">Grab five to trigger Wall Rush.</p>
+          <span id="game-callout-kicker">Green builds the way</span>
+          <strong id="game-callout-title">PG precursor</strong>
+          <p id="game-callout-copy">Collect three to assemble the next bridge.</p>
         </div>
 
         <div id="game-toast" class="game-toast" hidden aria-live="polite">Checkpoint secured</div>
@@ -137,31 +132,32 @@
         <div id="game-start-screen" class="game-screen game-start-screen">
           <div class="game-screen-inner">
             <p class="screen-kicker"><em>Escherichia coli</em> | Level 1</p>
-            <h2>Build. Dodge. Escape.</h2>
+            <h2>Build the way out.</h2>
             <p class="screen-copy">
-              You are the cyan cell. Move right, collect green blocks, avoid red hazards, and reach the gold exit.
+              You are the cyan cell. Collect three green precursors to assemble each missing bridge, avoid red antibiotics, and reach the gold PBP gate.
             </p>
 
             <div class="objective-row" aria-label="Level objectives">
               <div class="objective objective-good">
-                <span aria-hidden="true">+</span>
-                <p><strong>Green: +100</strong>Collect 5 for Wall Rush</p>
+                <span aria-hidden="true">3</span>
+                <p><strong>Green builds</strong>Collect three precursors</p>
               </div>
               <div class="objective objective-danger">
                 <span aria-hidden="true">!</span>
-                <p><strong>Red: -20 HP</strong>Jump over it</p>
+                <p><strong>Red damages</strong>Jump over antibiotics</p>
               </div>
               <div class="objective objective-route">
                 <span aria-hidden="true">&#8594;</span>
-                <p><strong>Gold: +750</strong>Save progress and fully heal</p>
+                <p><strong>Gold is safe</strong>Reach the PBP gate</p>
               </div>
             </div>
 
             <div class="quick-controls" aria-label="How to play">
               <span><b>Move</b><kbd>&larr;</kbd><kbd>&rarr;</kbd> or <kbd>A</kbd><kbd>D</kbd></span>
               <span><b>Jump</b><kbd>&uarr;</kbd> or <kbd>W</kbd><kbd>Space</kbd></span>
-              <span><b>Rush</b>Smash red for +1,000</span>
+              <span><b>Survive</b>Five integrity segments</span>
             </div>
+            <p class="score-note">Faster finishes and an intact envelope earn larger score bonuses.</p>
 
             <form id="game-start-form" class="start-form">
               <label for="game-player-name">Player name</label>
@@ -202,8 +198,8 @@
             </div>
             <dl class="result-breakdown">
               <div><dt>Run time</dt><dd id="game-result-time">0:00.0</dd></div>
-              <div><dt>Health</dt><dd id="game-result-health">100%</dd></div>
-              <div><dt>Wall blocks</dt><dd id="game-result-pickups">0 / 0</dd></div>
+              <div><dt>Integrity</dt><dd id="game-result-health">5 / 5</dd></div>
+              <div><dt>Precursors</dt><dd id="game-result-pickups">0</dd></div>
               <div><dt>Speed bonus</dt><dd id="game-result-bonus">0</dd></div>
             </dl>
             <div class="result-actions">
@@ -219,21 +215,23 @@
             <button data-touch="right" type="button" aria-label="Move right">&#8594;</button>
           </div>
           <div>
-            <button data-touch="dash" type="button" aria-label="Dash">&#187;</button>
             <button data-touch="jump" type="button" aria-label="Jump">&#8593;</button>
           </div>
         </div>
       </section>
 
-      <section class="score-strip" aria-labelledby="score-strip-title">
-        <div>
+      <details class="score-strip">
+        <summary>
+          <span>
           <p class="game-eyebrow">Local playtest board</p>
-          <h2 id="score-strip-title">Fastest envelope builders</h2>
-        </div>
+          <strong>Fastest envelope builders</strong>
+          </span>
+          <span>View scores</span>
+        </summary>
         <ol id="game-local-board" class="score-list">
           <li class="score-empty">Complete a run to set the first score on this device.</li>
         </ol>
-      </section>
+      </details>
     </main>
 
     <p id="game-live-status" class="sr-only" aria-live="assertive"></p>

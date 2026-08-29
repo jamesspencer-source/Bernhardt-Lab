@@ -12,12 +12,10 @@
   }
 
   const WORLD_HEIGHT = 900;
-  const GROUND_Y = 790;
-  const GROUND_HEIGHT = 64;
-  const MAX_HEALTH = 100;
-  const WALL_RUSH_TARGET = 5;
-  const WALL_RUSH_DURATION = 4500;
-  const BOARD_KEY = "bernhardt-envelope-platformer-preview-board-v1";
+  const ROUTE_Y = 770;
+  const MAX_INTEGRITY = 5;
+  const BUILD_TARGET = 3;
+  const BOARD_KEY = "bernhardt-envelope-platformer-preview-board-v2";
   const PLAYER_KEY = "bernhardt-envelope-platformer-preview-player";
   const REDUCED_MOTION = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
@@ -29,12 +27,15 @@
     nameFeedback: document.getElementById("game-name-feedback"),
     score: document.getElementById("game-score"),
     time: document.getElementById("game-time"),
-    rushShell: document.querySelector(".hud-combo"),
-    rushLabel: document.getElementById("game-rush-value"),
-    rushBar: document.getElementById("game-rush-bar"),
+    buildShell: document.querySelector(".hud-build"),
+    buildLabel: document.getElementById("game-build-value"),
+    buildBar: document.getElementById("game-build-bar"),
     healthShell: document.getElementById("game-health-shell"),
-    healthText: document.getElementById("game-health-text"),
-    healthBar: document.getElementById("game-health-bar"),
+    integrityPips: Array.from(document.querySelectorAll("#game-integrity-pips i")),
+    integrityGroup: document.getElementById("game-integrity-pips"),
+    pressureShell: document.getElementById("game-pressure-shell"),
+    pressureLabel: document.getElementById("game-pressure-label"),
+    pressureBar: document.getElementById("game-pressure-bar"),
     zoneKicker: document.getElementById("game-zone-kicker"),
     zoneName: document.getElementById("game-zone-name"),
     progressLabel: document.getElementById("game-progress-label"),
@@ -70,9 +71,7 @@
     left: false,
     right: false,
     jump: false,
-    jumpPressed: false,
-    dash: false,
-    dashPressed: false
+    jumpPressed: false
   };
 
   let activeScene = null;
@@ -81,7 +80,6 @@
   let calloutTimer = 0;
   let toastTimer = 0;
   let coachTimer = 0;
-  let healthPulseTimer = 0;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -141,10 +139,20 @@
     renderBoard(entries);
   }
 
+  function formatBoardDate(value) {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Playtest";
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit"
+    }).format(date);
+  }
+
   function renderBoard(entries = readBoard()) {
     if (!ui.localBoard) return;
     ui.localBoard.replaceChildren();
-
     if (!entries.length) {
       const empty = document.createElement("li");
       empty.className = "score-empty";
@@ -153,7 +161,7 @@
       return;
     }
 
-    entries.slice(0, 3).forEach((entry, index) => {
+    entries.slice(0, 5).forEach((entry, index) => {
       const item = document.createElement("li");
       const rank = document.createElement("span");
       const player = document.createElement("span");
@@ -168,22 +176,10 @@
       meta.textContent = `${formatTime(entry.elapsedMs)} | ${formatBoardDate(entry.playedAt)}`;
       points.className = "score-points";
       points.textContent = formatScore(entry.score);
-
       player.append(name, meta);
       item.append(rank, player, points);
       ui.localBoard.append(item);
     });
-  }
-
-  function formatBoardDate(value) {
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "Playtest";
-    return new Intl.DateTimeFormat("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit"
-    }).format(date);
   }
 
   function announce(title, copy, tone = "good", kicker = "New object", duration = 3600) {
@@ -234,24 +230,36 @@
   function updateHud(state) {
     if (ui.score) ui.score.textContent = formatScore(state.score);
     if (ui.time) ui.time.textContent = formatTime(state.elapsedMs);
-    if (ui.rushLabel) ui.rushLabel.textContent = state.rushActive ? "RUSH!" : `${state.wallCharge} / ${WALL_RUSH_TARGET}`;
-    if (ui.rushBar) ui.rushBar.style.width = `${state.rushProgress}%`;
-    if (ui.rushShell) ui.rushShell.classList.toggle("is-rushing", state.rushActive);
-    if (ui.healthText) ui.healthText.textContent = `${Math.ceil(state.health)} / ${MAX_HEALTH}`;
-    if (ui.healthBar) {
-      ui.healthBar.style.width = `${state.health}%`;
-      ui.healthBar.style.background = state.health <= 35 ? "var(--game-danger)" : "var(--game-mint)";
-    }
-    if (ui.healthShell) ui.healthShell.classList.toggle("is-warning", state.health <= 35);
-    if (ui.progressBar) ui.progressBar.style.width = `${state.progress}%`;
-  }
+    if (ui.buildLabel) ui.buildLabel.textContent = `${state.buildCharge} / ${BUILD_TARGET}`;
+    if (ui.buildBar) ui.buildBar.style.width = `${(state.buildCharge / BUILD_TARGET) * 100}%`;
+    if (ui.buildShell) ui.buildShell.classList.toggle("is-ready", state.buildCharge >= BUILD_TARGET);
 
-  function pulseHealthHud() {
-    if (!ui.healthShell) return;
-    window.clearTimeout(healthPulseTimer);
-    ui.healthShell.classList.remove("is-hit");
-    window.requestAnimationFrame(() => ui.healthShell.classList.add("is-hit"));
-    healthPulseTimer = window.setTimeout(() => ui.healthShell.classList.remove("is-hit"), 720);
+    ui.integrityPips.forEach((pip, index) => {
+      pip.classList.toggle("is-lost", index >= state.integrity);
+    });
+    if (ui.integrityGroup) {
+      ui.integrityGroup.setAttribute("aria-label", `${state.integrity} of ${MAX_INTEGRITY} integrity`);
+    }
+    if (ui.healthShell) ui.healthShell.classList.toggle("is-warning", state.integrity <= 2);
+
+    const pressure = clamp(state.pressure, 0, 100);
+    if (ui.pressureBar) ui.pressureBar.style.width = `${pressure}%`;
+    if (ui.pressureLabel) {
+      ui.pressureLabel.textContent = !state.pressureActive
+        ? "Dormant"
+        : pressure >= 78
+          ? "Critical"
+          : pressure >= 50
+            ? "Near"
+            : pressure >= 24
+              ? "Closing"
+              : "Far";
+    }
+    if (ui.pressureShell) {
+      ui.pressureShell.classList.toggle("is-active", state.pressureActive);
+      ui.pressureShell.classList.toggle("is-critical", pressure >= 78);
+    }
+    if (ui.progressBar) ui.progressBar.style.width = `${state.progress}%`;
   }
 
   class AudioRack {
@@ -276,7 +284,7 @@
       else if (activeScene?.runStarted && !activeScene?.runFinished && !activeScene?.runPaused) this.startMusic();
     }
 
-    tone(startFrequency, endFrequency, duration, type = "sine", volume = 0.035, delay = 0) {
+    tone(startFrequency, endFrequency, duration, type = "sine", volume = 0.03, delay = 0) {
       if (!this.enabled || !this.context) return;
       const now = this.context.currentTime + delay;
       const oscillator = this.context.createOscillator();
@@ -293,17 +301,17 @@
       oscillator.stop(now + duration + 0.03);
     }
 
-    noise(duration = 0.12, volume = 0.045) {
+    noise(duration = 0.12, volume = 0.035) {
       if (!this.enabled || !this.context) return;
       const frameCount = Math.floor(this.context.sampleRate * duration);
       const buffer = this.context.createBuffer(1, frameCount, this.context.sampleRate);
       const data = buffer.getChannelData(0);
-      for (let i = 0; i < frameCount; i += 1) data[i] = Math.random() * 2 - 1;
+      for (let index = 0; index < frameCount; index += 1) data[index] = Math.random() * 2 - 1;
       const source = this.context.createBufferSource();
       const filter = this.context.createBiquadFilter();
       const gain = this.context.createGain();
       filter.type = "bandpass";
-      filter.frequency.value = 620;
+      filter.frequency.value = 680;
       gain.gain.setValueAtTime(volume, this.context.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + duration);
       source.buffer = buffer;
@@ -314,45 +322,24 @@
     }
 
     jump() {
-      this.tone(240, 520, 0.13, "square", 0.025);
+      this.tone(230, 510, 0.14, "triangle", 0.025);
     }
 
-    dash() {
-      this.tone(180, 780, 0.16, "sawtooth", 0.025);
-      this.tone(410, 220, 0.14, "square", 0.014, 0.03);
+    pickup(charge) {
+      const base = 430 + charge * 90;
+      this.tone(base, base * 1.22, 0.11, "sine", 0.034);
+      this.tone(base * 1.18, base * 1.5, 0.13, "triangle", 0.022, 0.05);
     }
 
-    pickup(charge = 1) {
-      const base = 480 + charge * 48;
-      this.tone(base, base * 1.22, 0.1, "sine", 0.032);
-      this.tone(base * 1.25, base * 1.5, 0.1, "triangle", 0.02, 0.06);
-    }
-
-    wallRush() {
-      [330, 440, 660, 880].forEach((frequency, index) => {
-        this.tone(frequency, frequency * 1.3, 0.24, index % 2 ? "square" : "triangle", 0.032, index * 0.055);
+    bridge() {
+      [330, 440, 554, 660].forEach((frequency, index) => {
+        this.tone(frequency, frequency * 1.08, 0.28, "triangle", 0.03, index * 0.08);
       });
     }
 
-    bounce() {
-      this.tone(180, 620, 0.2, "square", 0.026);
-      this.tone(360, 920, 0.18, "sine", 0.018, 0.04);
-    }
-
-    smash() {
-      this.noise(0.08, 0.035);
-      this.tone(260, 110, 0.14, "square", 0.026);
-      this.tone(520, 760, 0.12, "triangle", 0.018, 0.03);
-    }
-
-    repair() {
-      this.tone(330, 660, 0.22, "triangle", 0.035);
-      this.tone(495, 880, 0.24, "sine", 0.025, 0.07);
-    }
-
     hurt() {
-      this.noise(0.15, 0.06);
-      this.tone(190, 72, 0.24, "sawtooth", 0.045);
+      this.noise(0.15, 0.055);
+      this.tone(185, 72, 0.24, "sawtooth", 0.045);
     }
 
     checkpoint() {
@@ -361,24 +348,29 @@
       });
     }
 
+    pressure() {
+      this.tone(120, 82, 0.44, "sawtooth", 0.018);
+      this.tone(180, 110, 0.34, "square", 0.01, 0.1);
+    }
+
     finish() {
       [392, 494, 587, 784].forEach((frequency, index) => {
-        this.tone(frequency, frequency * 1.08, 0.32, "triangle", 0.032, index * 0.1);
+        this.tone(frequency, frequency * 1.08, 0.34, "triangle", 0.032, index * 0.1);
       });
     }
 
     startMusic() {
       if (!this.enabled || !this.context || this.musicTimer) return;
-      const notes = [98, 123.47, 146.83, 123.47, 110, 146.83, 164.81, 146.83];
+      const notes = [98, 123.47, 146.83, 164.81, 146.83, 123.47, 110, 146.83];
       const playStep = () => {
         if (!this.enabled || !activeScene?.runStarted || activeScene?.runFinished || activeScene?.runPaused) return;
         const note = notes[this.musicStep % notes.length];
         this.musicStep += 1;
-        this.tone(note, note, 0.42, "triangle", 0.009);
-        if (this.musicStep % 2 === 0) this.tone(note * 2, note * 2.02, 0.2, "sine", 0.005, 0.08);
+        this.tone(note, note * 1.005, 0.54, "triangle", 0.008);
+        if (this.musicStep % 4 === 0) this.tone(note * 2, note * 2.01, 0.18, "sine", 0.004, 0.08);
       };
       playStep();
-      this.musicTimer = window.setInterval(playStep, 520);
+      this.musicTimer = window.setInterval(playStep, 560);
     }
 
     stopMusic() {
@@ -392,36 +384,7 @@
   class EnvelopeScene extends Phaser.Scene {
     constructor() {
       super("EnvelopeScene");
-      this.runStarted = false;
-      this.runFinished = false;
-      this.runPaused = false;
-      this.score = 0;
-      this.health = MAX_HEALTH;
-      this.wallCharge = 0;
-      this.rushEndsAt = 0;
-      this.rushWasActive = false;
-      this.lastRushTrailAt = 0;
-      this.elapsedMs = 0;
-      this.pickupsCollected = 0;
-      this.totalPickups = 0;
-      this.currentZoneIndex = 0;
-      this.checkpoint = { ...level.spawn };
-      this.lastGroundedAt = 0;
-      this.jumpBufferedUntil = 0;
-      this.dashAvailableAt = 0;
-      this.dashEndsAt = 0;
-      this.invulnerableUntil = 0;
-      this.lastHudUpdate = 0;
-      this.lastPulseAt = 0;
-      this.lastPhageAt = 0;
-      this.runStartedAt = 0;
-      this.hasMoved = false;
-      this.hasJumped = false;
-      this.idleCoachShown = false;
-      this.jumpCoachShown = false;
-      this.wasGrounded = false;
-      this.facing = 1;
-      this.seenCallouts = new Set();
+      this.resetRunState();
     }
 
     init(data = {}) {
@@ -433,36 +396,39 @@
       this.runFinished = false;
       this.runPaused = false;
       this.score = 0;
-      this.health = MAX_HEALTH;
-      this.wallCharge = 0;
-      this.rushEndsAt = 0;
-      this.rushWasActive = false;
-      this.lastRushTrailAt = 0;
+      this.integrity = MAX_INTEGRITY;
+      this.buildCharge = 0;
+      this.currentBridgeIndex = 0;
       this.elapsedMs = 0;
       this.pickupsCollected = 0;
-      this.totalPickups = 0;
       this.currentZoneIndex = 0;
       this.checkpoint = { ...level.spawn };
       this.lastGroundedAt = 0;
       this.jumpBufferedUntil = 0;
-      this.dashAvailableAt = 0;
-      this.dashEndsAt = 0;
       this.invulnerableUntil = 0;
       this.lastHudUpdate = 0;
-      this.lastPulseAt = 0;
-      this.lastPhageAt = 0;
       this.runStartedAt = 0;
       this.hasMoved = false;
       this.hasJumped = false;
       this.idleCoachShown = false;
       this.jumpCoachShown = false;
+      this.forkCoachShown = false;
+      this.pressureActive = false;
+      this.pressureX = -1200;
+      this.lastPressureHitAt = 0;
       this.wasGrounded = false;
       this.facing = 1;
       this.seenCallouts = new Set();
     }
 
     preload() {
-      this.load.image("envelope-bg", "../assets/game-next/images/ecoli-envelope-background.webp");
+      const base = "../assets/game-next/images/";
+      this.load.image("envelope-bg-v2", `${base}periplasm-run-background-v2.png`);
+      this.load.image("ecoli-player-v3", `${base}ecoli-player-v3.png`);
+      this.load.image("pg-precursor-v2", `${base}pg-precursor-v2.png`);
+      this.load.image("pbp-platform-v2", `${base}pbp-platform-v2.png`);
+      this.load.image("pbp-gate-v2", `${base}pbp-gate-v2.png`);
+      this.load.image("phage-pressure-v2", `${base}phage-pressure-v2.png`);
     }
 
     create() {
@@ -471,6 +437,7 @@
       this.buildTextures();
       this.createBackground();
       this.createCourse();
+      this.createPressureFront();
       this.createPlayer();
       this.createInputs();
       this.createPhysics();
@@ -480,9 +447,9 @@
       this.physics.world.pause();
       this.input.keyboard.enabled = false;
       this.cameras.main.setBounds(0, 0, level.worldWidth, WORLD_HEIGHT);
-      this.cameras.main.startFollow(this.player, true, 0.095, 0.13);
+      this.cameras.main.startFollow(this.player, true, 0.1, 0.14);
       this.updateCameraLead(this.scale.width);
-      this.cameras.main.setDeadzone(280, 150);
+      this.cameras.main.setDeadzone(250, 150);
       this.cameras.main.roundPixels = true;
 
       this.scale.on("resize", this.resizeBackground, this);
@@ -499,299 +466,174 @@
     }
 
     buildTextures() {
-      this.makePlayerTexture();
-      this.makePlatformTexture();
-      this.makePickupTexture();
-      this.makeBouncePadTexture();
-      this.makeRepairTexture();
-      this.makeAntibioticTexture();
-      this.makeAutolysinTexture();
-      this.makeCheckpointTexture();
-      this.makeGoalTexture();
-      this.makePhageTexture();
-      this.makeMoteTexture();
-    }
+      const collision = this.make.graphics({ add: false });
+      collision.fillStyle(0xffffff, 0.01);
+      collision.fillRect(0, 0, 8, 8);
+      collision.generateTexture("collision-pixel", 8, 8);
+      collision.destroy();
 
-    makePlayerTexture() {
-      const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0x062033, 0.72);
-      graphics.fillRoundedRect(9, 18, 84, 44, 22);
-      graphics.fillStyle(level.palette.membrane, 1);
-      graphics.fillRoundedRect(6, 14, 84, 44, 22);
-      graphics.lineStyle(2, level.palette.membraneLight, 0.88);
-      graphics.strokeRoundedRect(7, 15, 82, 42, 21);
-      graphics.fillStyle(0x1b8199, 0.9);
-      graphics.fillRoundedRect(14, 21, 68, 30, 15);
-      graphics.fillStyle(0x082b43, 0.85);
-      graphics.fillEllipse(39, 36, 32, 17);
-      graphics.fillStyle(0xdffffb, 0.92);
-      graphics.fillCircle(78, 35, 3.5);
-      graphics.lineStyle(2, 0x77d9df, 0.65);
-      graphics.beginPath();
-      graphics.moveTo(8, 36);
-      graphics.lineTo(1, 31);
-      graphics.lineTo(0, 22);
-      graphics.lineTo(4, 14);
-      graphics.strokePath();
-      graphics.generateTexture("ecoli-player", 98, 76);
-      graphics.destroy();
-    }
+      const route = this.make.graphics({ add: false });
+      route.fillStyle(0x061825, 0.72);
+      route.fillRoundedRect(0, 13, 256, 46, 20);
+      route.lineStyle(2, 0x4cb4be, 0.52);
+      for (let x = 12; x < 256; x += 44) {
+        route.lineBetween(x, 26, x + 30, 47);
+        route.lineBetween(x + 30, 47, x + 44, 26);
+      }
+      for (let x = 10; x < 266; x += 44) {
+        route.fillStyle(x % 88 ? 0x1b7788 : 0x319eaa, 0.92);
+        route.fillCircle(x, 25, 7);
+        route.fillStyle(0x12526b, 0.92);
+        route.fillCircle(x + 22, 48, 7);
+        route.fillStyle(0xa0edf0, 0.34);
+        route.fillCircle(x - 2, 23, 2.4);
+      }
+      route.generateTexture("pg-route", 256, 72);
+      route.destroy();
 
-    makePlatformTexture() {
-      const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0x061725, 0.82);
-      graphics.fillRoundedRect(0, 3, 128, 33, 7);
-      graphics.fillStyle(0x123b4c, 1);
-      graphics.fillRoundedRect(2, 2, 124, 29, 6);
-      graphics.fillStyle(0x1d5665, 0.8);
-      graphics.fillRoundedRect(5, 8, 118, 18, 4);
-      graphics.lineStyle(2, 0x69cbd3, 0.8);
-      graphics.lineBetween(6, 4, 122, 4);
-      graphics.generateTexture("membrane-platform", 128, 36);
-      graphics.destroy();
-    }
+      const antibiotic = this.make.graphics({ add: false });
+      antibiotic.fillStyle(0x3d0712, 0.55);
+      antibiotic.fillRoundedRect(4, 6, 92, 38, 19);
+      antibiotic.fillStyle(0xb41432, 1);
+      antibiotic.fillRoundedRect(2, 2, 94, 38, 19);
+      antibiotic.fillStyle(0xf15b69, 1);
+      antibiotic.fillRoundedRect(49, 2, 47, 38, { tl: 0, tr: 19, bl: 0, br: 19 });
+      antibiotic.lineStyle(3, 0xffa0a9, 0.9);
+      antibiotic.strokeRoundedRect(3, 3, 92, 36, 18);
+      antibiotic.lineStyle(3, 0x6d0d20, 0.8);
+      antibiotic.lineBetween(49, 5, 49, 37);
+      antibiotic.generateTexture("beta-lactam", 102, 48);
+      antibiotic.destroy();
 
-    makePickupTexture() {
-      const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0x041b19, 0.68);
-      graphics.fillRoundedRect(8, 9, 48, 48, 8);
-      graphics.fillStyle(level.palette.precursor, 1);
-      graphics.fillRoundedRect(4, 4, 48, 48, 7);
-      graphics.lineStyle(2, 0xcaffec, 0.92);
-      graphics.strokeRoundedRect(5, 5, 46, 46, 6);
-      graphics.fillStyle(0x176d64, 0.92);
-      graphics.fillRect(24, 12, 8, 32);
-      graphics.fillRect(12, 24, 32, 8);
-      graphics.generateTexture("wall-block", 62, 64);
-      graphics.destroy();
-    }
-
-    makeBouncePadTexture() {
-      const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0x0a4052, 1);
-      graphics.fillRoundedRect(2, 17, 92, 20, 8);
-      graphics.fillStyle(level.palette.membrane, 1);
-      graphics.fillRoundedRect(5, 7, 86, 20, 8);
-      graphics.lineStyle(3, 0xd9fbff, 0.95);
-      graphics.strokeRoundedRect(5, 7, 86, 20, 8);
-      graphics.fillStyle(0xffffff, 0.95);
-      graphics.fillTriangle(28, 20, 38, 9, 48, 20);
-      graphics.fillTriangle(48, 20, 58, 9, 68, 20);
-      graphics.generateTexture("bounce-pad", 96, 40);
-      graphics.destroy();
-    }
-
-    makeRepairTexture() {
-      const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0x62cfe4, 0.96);
-      graphics.fillRoundedRect(8, 8, 48, 48, 12);
-      graphics.lineStyle(4, 0xd9fbff, 0.95);
-      graphics.strokeRoundedRect(8, 8, 48, 48, 12);
-      graphics.fillStyle(0xffffff, 0.95);
-      graphics.fillRect(27, 17, 10, 30);
-      graphics.fillRect(17, 27, 30, 10);
-      graphics.generateTexture("pbp-repair", 64, 64);
-      graphics.destroy();
-    }
-
-    makeAntibioticTexture() {
-      const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0x3b0815, 0.72);
-      graphics.fillRoundedRect(13, 11, 42, 60, 20);
-      graphics.fillStyle(level.palette.danger, 1);
-      graphics.fillRoundedRect(9, 7, 42, 60, 20);
-      graphics.lineStyle(2, 0xffb8c1, 0.92);
-      graphics.strokeRoundedRect(10, 8, 40, 58, 19);
-      graphics.lineStyle(4, 0xffffff, 0.94);
-      graphics.lineBetween(24, 24, 40, 40);
-      graphics.lineBetween(40, 24, 24, 40);
-      graphics.generateTexture("ampicillin", 64, 76);
-      graphics.destroy();
-    }
-
-    makeAutolysinTexture() {
-      const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0xa52843, 1);
-      graphics.fillCircle(38, 38, 26);
-      graphics.lineStyle(5, 0xff8795, 1);
-      graphics.strokeCircle(38, 38, 27);
-      graphics.fillStyle(0xff8795, 1);
+      const autolysin = this.make.graphics({ add: false });
+      autolysin.fillStyle(0x4c0816, 0.75);
+      autolysin.fillCircle(45, 45, 39);
       for (let index = 0; index < 10; index += 1) {
         const angle = (Math.PI * 2 * index) / 10;
-        const x = 38 + Math.cos(angle) * 33;
-        const y = 38 + Math.sin(angle) * 33;
-        graphics.fillTriangle(x - 5, y + 4, x + 5, y + 4, 38 + Math.cos(angle) * 41, 38 + Math.sin(angle) * 41);
+        const x = 45 + Math.cos(angle) * 39;
+        const y = 45 + Math.sin(angle) * 39;
+        autolysin.fillStyle(0xe33a52, 1);
+        autolysin.fillTriangle(
+          x + Math.cos(angle) * 12,
+          y + Math.sin(angle) * 12,
+          x + Math.cos(angle + 1.15) * 9,
+          y + Math.sin(angle + 1.15) * 9,
+          x + Math.cos(angle - 1.15) * 9,
+          y + Math.sin(angle - 1.15) * 9
+        );
       }
-      graphics.fillStyle(0x4a1120, 1);
-      graphics.fillCircle(38, 38, 10);
-      graphics.generateTexture("autolysin", 76, 76);
-      graphics.destroy();
-    }
+      autolysin.fillStyle(0xf26472, 1);
+      autolysin.fillCircle(45, 45, 27);
+      autolysin.fillStyle(0x380711, 1);
+      autolysin.fillCircle(45, 45, 13);
+      autolysin.lineStyle(3, 0xffa2aa, 0.72);
+      autolysin.strokeCircle(45, 45, 27);
+      autolysin.generateTexture("autolysin", 90, 90);
+      autolysin.destroy();
 
-    makeCheckpointTexture() {
-      const graphics = this.make.graphics({ add: false });
-      graphics.lineStyle(5, level.palette.route, 0.95);
-      graphics.strokeCircle(42, 47, 29);
-      graphics.lineStyle(2, 0xfff1b0, 0.72);
-      graphics.strokeCircle(42, 47, 20);
-      graphics.fillStyle(level.palette.route, 1);
-      graphics.fillPoints(
-        [
-          new Phaser.Geom.Point(42, 18),
-          new Phaser.Geom.Point(56, 47),
-          new Phaser.Geom.Point(42, 76),
-          new Phaser.Geom.Point(28, 47)
-        ],
-        true
-      );
-      graphics.fillStyle(0xfff4c2, 1);
-      graphics.fillCircle(42, 47, 5);
-      graphics.lineStyle(5, level.palette.route, 0.85);
-      graphics.lineBetween(42, 75, 42, 112);
-      graphics.generateTexture("checkpoint", 84, 120);
-      graphics.destroy();
-    }
+      const pressure = this.make.graphics({ add: false });
+      for (let index = 0; index < 16; index += 1) {
+        pressure.fillStyle(0xc31d3a, (index / 15) * 0.45);
+        pressure.fillRect(index * 16, 0, 17, WORLD_HEIGHT);
+      }
+      pressure.lineStyle(5, 0xff5368, 0.78);
+      pressure.lineBetween(250, 0, 250, WORLD_HEIGHT);
+      pressure.generateTexture("pressure-band", 256, WORLD_HEIGHT);
+      pressure.destroy();
 
-    makeGoalTexture() {
-      const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0x0b3040, 0.96);
-      graphics.fillRoundedRect(9, 18, 110, 150, 14);
-      graphics.lineStyle(7, level.palette.route, 1);
-      graphics.strokeRoundedRect(9, 18, 110, 150, 14);
-      graphics.fillStyle(0x70efc2, 0.18);
-      graphics.fillRoundedRect(29, 40, 70, 128, 8);
-      graphics.lineStyle(3, 0xb8ffe8, 0.72);
-      for (let y = 52; y < 158; y += 18) graphics.lineBetween(34, y, 94, y);
-      graphics.fillStyle(level.palette.route, 1);
-      graphics.fillPoints(
-        [
-          new Phaser.Geom.Point(64, 0),
-          new Phaser.Geom.Point(76, 14),
-          new Phaser.Geom.Point(64, 28),
-          new Phaser.Geom.Point(52, 14)
-        ],
-        true
-      );
-      graphics.generateTexture("division-gate", 128, 176);
-      graphics.destroy();
-    }
-
-    makePhageTexture() {
-      const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0xc84062, 1);
-      graphics.fillPoints(
-        [
-          new Phaser.Geom.Point(34, 6),
-          new Phaser.Geom.Point(54, 18),
-          new Phaser.Geom.Point(54, 40),
-          new Phaser.Geom.Point(34, 52),
-          new Phaser.Geom.Point(14, 40),
-          new Phaser.Geom.Point(14, 18)
-        ],
-        true
-      );
-      graphics.lineStyle(4, 0xffa0ad, 0.95);
-      graphics.strokePoints(
-        [
-          new Phaser.Geom.Point(34, 6),
-          new Phaser.Geom.Point(54, 18),
-          new Phaser.Geom.Point(54, 40),
-          new Phaser.Geom.Point(34, 52),
-          new Phaser.Geom.Point(14, 40),
-          new Phaser.Geom.Point(14, 18)
-        ],
-        true
-      );
-      graphics.lineStyle(4, 0xff7f91, 0.95);
-      graphics.lineBetween(34, 52, 34, 77);
-      graphics.lineBetween(22, 76, 46, 76);
-      graphics.lineBetween(22, 76, 12, 91);
-      graphics.lineBetween(22, 76, 25, 94);
-      graphics.lineBetween(46, 76, 43, 94);
-      graphics.lineBetween(46, 76, 56, 91);
-      graphics.generateTexture("phage", 68, 100);
-      graphics.destroy();
-    }
-
-    makeMoteTexture() {
-      const graphics = this.make.graphics({ add: false });
-      graphics.fillStyle(0xa8f5ee, 0.5);
-      graphics.fillCircle(5, 5, 3);
-      graphics.generateTexture("mote", 10, 10);
-      graphics.destroy();
+      const mote = this.make.graphics({ add: false });
+      mote.fillStyle(0xa8f5ee, 0.5);
+      mote.fillCircle(5, 5, 3);
+      mote.generateTexture("mote", 10, 10);
+      mote.destroy();
     }
 
     createBackground() {
       this.background = this.add
-        .tileSprite(0, 0, this.scale.width, this.scale.height, "envelope-bg")
+        .image(0, 0, "envelope-bg-v2")
         .setOrigin(0)
         .setScrollFactor(0)
         .setDepth(-100);
-      this.background.setTileScale(1);
+      this.resizeBackground(this.scale.gameSize);
 
       this.backgroundShade = this.add
-        .rectangle(0, 0, this.scale.width, this.scale.height, 0x020a12, 0.1)
+        .rectangle(0, 0, this.scale.width, this.scale.height, 0x020812, 0.18)
         .setOrigin(0)
         .setScrollFactor(0)
         .setDepth(-90);
 
-      const lowerShade = this.add
-        .rectangle(0, 735, level.worldWidth, 165, 0x020a12, 0.32)
+      this.depthMist = this.add
+        .rectangle(0, this.scale.height * 0.18, this.scale.width, this.scale.height * 0.62, 0x061627, 0.14)
         .setOrigin(0)
-        .setDepth(-20);
-      lowerShade.setBlendMode(Phaser.BlendModes.MULTIPLY);
+        .setScrollFactor(0)
+        .setDepth(-85);
     }
 
     resizeBackground(gameSize) {
-      this.background?.setSize(gameSize.width, gameSize.height);
-      this.backgroundShade?.setSize(gameSize.width, gameSize.height);
-      this.updateCameraLead(gameSize.width);
+      if (!this.background) return;
+      const width = gameSize.width || this.scale.width;
+      const height = gameSize.height || this.scale.height;
+      const texture = this.textures.get("envelope-bg-v2").getSourceImage();
+      const scale = Math.max(width / texture.width, height / texture.height);
+      this.backgroundBaseY = (height - texture.height * scale) / 2;
+      this.background
+        .setScale(scale)
+        .setPosition((width - texture.width * scale) / 2, this.backgroundBaseY);
+      this.backgroundShade?.setSize(width, height);
+      this.depthMist?.setSize(width, height * 0.62).setY(height * 0.18);
+      this.updateCameraLead(width);
     }
 
     updateCameraLead(viewportWidth) {
-      const horizontalLead = -Math.min(200, Math.max(42, viewportWidth * 0.12));
-      const verticalLead = viewportWidth < 760 ? 20 : 60;
+      const horizontalLead = -Math.min(220, Math.max(52, viewportWidth * 0.14));
+      const verticalLead = viewportWidth < 760 ? 22 : 64;
       this.cameras.main.setFollowOffset(horizontalLead, verticalLead);
     }
 
     createCourse() {
-      this.platforms = this.physics.add.staticGroup();
+      this.platformBodies = this.physics.add.staticGroup();
       this.movingPlatforms = this.physics.add.group({ allowGravity: false, immovable: true });
       this.collectibles = this.physics.add.staticGroup();
-      this.repairPickups = this.physics.add.staticGroup();
-      this.bouncePads = this.physics.add.staticGroup();
       this.antibiotics = this.physics.add.staticGroup();
       this.autolysins = this.physics.add.group({ allowGravity: false, immovable: true });
       this.checkpoints = this.physics.add.staticGroup();
-      this.fallingHazards = this.physics.add.group();
-      this.phages = this.physics.add.group({ allowGravity: false });
+      this.bridges = [];
 
       level.ground.forEach(([start, end]) => {
-        this.addPlatform((start + end) / 2, GROUND_Y, end - start, GROUND_HEIGHT, true);
+        this.addRoutePlatform((start + end) / 2, ROUTE_Y, end - start, 72, "ground");
+      });
+      level.platforms.forEach((definition) => {
+        this.addRoutePlatform(definition.x, definition.y, definition.width, 46, "platform");
+      });
+      level.movingPlatforms.forEach((definition, index) => this.addMovingPlatform(definition, index));
+      level.bridges.forEach((definition, index) => this.addBridge(definition, index));
+
+      level.pickups.forEach((definition, index) => {
+        const pickup = this.collectibles.create(definition.x, definition.y, "pg-precursor-v2");
+        pickup.setDisplaySize(58, 58);
+        pickup.refreshBody();
+        pickup.setData({ bridge: definition.bridge, bonus: Boolean(definition.bonus), index });
+        this.tweens.add({
+          targets: pickup,
+          y: definition.y - 9,
+          angle: index % 2 ? 4 : -4,
+          duration: 760 + (index % 4) * 90,
+          yoyo: true,
+          repeat: -1,
+          ease: "Sine.inOut"
+        });
       });
 
-      level.platforms.forEach(([x, y, width]) => this.addPlatform(x, y, width, 38, false));
-      level.movingPlatforms.forEach((definition) => this.addMovingPlatform(definition));
-      this.createPickups();
-
-      (level.bouncePads || []).forEach((definition) => {
-        const pad = this.bouncePads.create(definition.x, definition.y, "bounce-pad");
-        pad.setData({ strength: definition.strength, readyAt: 0 });
-        pad.refreshBody();
-        this.add
-          .ellipse(definition.x, definition.y + 5, 116, 22, level.palette.membrane, 0.16)
-          .setDepth(3);
-      });
-
-      level.antibiotics.forEach(([x, y], index) => {
-        const hazard = this.antibiotics.create(x, y, "ampicillin");
-        hazard.setScale(index % 3 === 0 ? 0.82 : 0.72);
+      level.antibiotics.forEach((definition, index) => {
+        const hazard = this.antibiotics.create(definition.x, definition.y, "beta-lactam");
+        hazard.setScale(index % 2 ? 0.88 : 0.96);
+        hazard.setAngle(index % 2 ? 12 : -12);
         hazard.refreshBody();
-        hazard.setData("damage", 20);
+        hazard.setData("cooldown", false);
         this.tweens.add({
           targets: hazard,
-          angle: index % 2 ? 6 : -6,
-          duration: 700 + (index % 4) * 90,
+          y: definition.y - 5,
+          duration: 820 + (index % 3) * 110,
           yoyo: true,
           repeat: -1,
           ease: "Sine.inOut"
@@ -800,153 +642,181 @@
 
       level.autolysins.forEach((definition, index) => {
         const hazard = this.autolysins.create(definition.x, definition.y, "autolysin");
+        hazard.setDisplaySize(82, 82);
         hazard.body.setAllowGravity(false);
         hazard.body.setImmovable(true);
         hazard.setData({
           baseX: definition.x,
           distance: definition.distance,
           speed: definition.speed,
-          direction: index % 2 ? -1 : 1,
-          damage: 20
+          direction: index % 2 ? -1 : 1
         });
       });
 
       level.checkpoints.forEach((x, index) => {
-        const checkpoint = this.checkpoints.create(x, 675, "checkpoint");
-        checkpoint.setData({ index, activated: false });
+        const checkpoint = this.checkpoints.create(x, 645, "pbp-gate-v2");
+        checkpoint.setDisplaySize(122, 218);
         checkpoint.refreshBody();
+        checkpoint.setData({ index, activated: false });
+        checkpoint.setAlpha(0.88);
       });
 
-      this.goal = this.physics.add.staticImage(level.goalX, 650, "division-gate");
+      this.goal = this.physics.add.staticImage(level.goalX, 600, "pbp-gate-v2");
+      this.goal.setDisplaySize(196, 350);
       this.goal.refreshBody();
+      this.goalGlow = this.add.ellipse(level.goalX, 640, 230, 310, level.palette.route, 0.09).setDepth(3);
+      this.tweens.add({
+        targets: this.goalGlow,
+        alpha: 0.22,
+        scaleX: 1.12,
+        scaleY: 1.08,
+        duration: 1100,
+        yoyo: true,
+        repeat: -1,
+        ease: "Sine.inOut"
+      });
+
       this.createCourseLabels();
     }
 
-    addPlatform(x, y, width, height, isGround) {
-      const platform = this.platforms.create(x, y, "membrane-platform");
-      platform.setDisplaySize(width, height);
-      platform.refreshBody();
-      platform.setData("ground", isGround);
-      return platform;
+    addRoutePlatform(x, y, width, height, kind) {
+      const body = this.platformBodies.create(x, y, "collision-pixel");
+      body.setDisplaySize(width, height);
+      body.refreshBody();
+      body.setVisible(false);
+
+      const visualHeight = kind === "ground" ? 58 : 48;
+      const visual = this.add.tileSprite(x, y - (kind === "ground" ? 10 : 3), width + 18, visualHeight, "pg-route");
+      visual.setDepth(kind === "ground" ? 2 : 4);
+      visual.setAlpha(kind === "ground" ? 0.76 : 0.88);
+      if (kind === "platform") visual.setTint(0x69dce3);
+      return body;
     }
 
-    addMovingPlatform(definition) {
-      const platform = this.movingPlatforms.create(definition.x, definition.y, "membrane-platform");
-      platform.setDisplaySize(definition.width, 38);
-      platform.body.setSize(definition.width, 38, true);
+    addMovingPlatform(definition, index) {
+      const platform = this.movingPlatforms.create(definition.x, definition.y, "pbp-platform-v2");
+      platform.setDisplaySize(definition.width, 118);
+      platform.body.setSize(560, 104);
+      platform.body.setOffset(80, 105);
       platform.body.setAllowGravity(false);
       platform.body.setImmovable(true);
+      platform.setDepth(5);
       platform.setData({
         baseX: definition.x,
         baseY: definition.y,
         axis: definition.axis,
         distance: definition.distance,
         speed: definition.speed,
-        direction: 1
+        direction: index % 2 ? -1 : 1
       });
     }
 
-    createPickups() {
-      const blockedRanges = level.checkpoints.map((x) => [x - 95, x + 95]);
-      const addBlock = (x, y, value = 100, scale = 0.72) => {
-        if (blockedRanges.some(([start, end]) => x > start && x < end)) return;
-        const pickup = this.collectibles.create(x, y, "wall-block");
-        pickup.setScale(scale);
-        pickup.refreshBody();
-        pickup.setData("value", value);
-        this.totalPickups += 1;
-        this.tweens.add({
-          targets: pickup,
-          y: y - 8,
-          duration: 720 + (Math.floor(x) % 5) * 60,
-          yoyo: true,
-          repeat: -1,
-          ease: "Sine.inOut"
-        });
-      };
+    addBridge(definition, index) {
+      const body = this.platformBodies.create(definition.x, definition.y, "collision-pixel");
+      body.setDisplaySize(definition.width, 72);
+      body.refreshBody();
+      body.setVisible(false);
+      body.body.enable = false;
 
-      [480, 700, 920, 1140, 1360].forEach((x) => addBlock(x, 690));
+      const segmentWidth = definition.width / BUILD_TARGET;
+      const segments = [];
+      for (let segmentIndex = 0; segmentIndex < BUILD_TARGET; segmentIndex += 1) {
+        const segment = this.add
+          .tileSprite(
+            definition.x - definition.width / 2 + segmentWidth * (segmentIndex + 0.5),
+            definition.y + 2,
+            segmentWidth + 10,
+            60,
+            "pg-route"
+          )
+          .setDepth(5)
+          .setTint(level.palette.precursor)
+          .setAlpha(0.1)
+          .setScale(0.92, 0.74);
+        segments.push(segment);
+      }
 
-      [
-        { start: 2030, count: 5, step: 145, y: 682, arc: 88 },
-        { start: 3950, count: 6, step: 190, y: 670, arc: 130 },
-        { start: 5540, count: 6, step: 230, y: 680, arc: 92 },
-        { start: 7340, count: 6, step: 240, y: 675, arc: 150 },
-        { start: 9080, count: 6, step: 255, y: 682, arc: 115 },
-        { start: 10920, count: 6, step: 250, y: 680, arc: 145 },
-        { start: 12920, count: 6, step: 245, y: 680, arc: 105 },
-        { start: 14800, count: 6, step: 225, y: 680, arc: 145 },
-        { start: 16420, count: 6, step: 220, y: 680, arc: 125 },
-        { start: 18020, count: 5, step: 185, y: 675, arc: 105 }
-      ].forEach((formation) => {
-        for (let index = 0; index < formation.count; index += 1) {
-          const ratio = formation.count === 1 ? 0 : index / (formation.count - 1);
-          addBlock(
-            formation.start + formation.step * index,
-            formation.y - Math.sin(ratio * Math.PI) * formation.arc
-          );
-        }
-      });
-
-      level.platforms.forEach(([x, y], index) => {
-        if (index % 3 !== 1) return;
-        addBlock(x, y - 72, 100, 0.68);
-      });
-
-      [2860, 5720, 8620, 11880, 15120, 18180].forEach((x) => {
-        const repair = this.repairPickups.create(x, 590, "pbp-repair");
-        repair.setScale(0.78);
-        repair.refreshBody();
-      });
+      const marker = this.add
+        .text(definition.x, definition.y - 78, index === 0 ? "3 PRECURSORS BUILD THIS BRIDGE" : "BRIDGE REQUIRES 3", {
+          fontFamily: "Manrope, Arial, sans-serif",
+          fontSize: "13px",
+          fontStyle: "bold",
+          color: "#9ff6cb",
+          backgroundColor: "rgba(3, 14, 23, 0.86)",
+          padding: { x: 10, y: 6 },
+          stroke: "#03101a",
+          strokeThickness: 3
+        })
+        .setOrigin(0.5)
+        .setDepth(8);
+      this.bridges.push({ ...definition, body, segments, marker, built: false, index });
     }
 
     createCourseLabels() {
-      level.labels.forEach((label) => {
-        const color =
-          label.tone === "danger"
-            ? "#ff8d9a"
-            : label.tone === "route"
-              ? "#ffe297"
-              : label.tone === "helper"
-                ? "#8deeff"
-                : "#9ff8d8";
-        const line = this.add.rectangle(label.x, label.y + 47, 180, 3, Phaser.Display.Color.HexStringToColor(color).color, 0.72);
-        line.setOrigin(0, 0.5).setDepth(2);
+      this.addObjectLabel(470, 570, "GREEN", "PG PRECURSOR", "good");
+      this.addObjectLabel(2550, 610, "RED", "BETA-LACTAM", "danger");
+      this.addObjectLabel(2920, 275, "CYAN", "FAST PBP ROUTE", "cyan");
+      this.addObjectLabel(5950, 470, "RED", "AUTOLYSIN", "danger");
+      this.addObjectLabel(11890, 370, "GOLD", "PBP GATE", "gold");
+    }
+
+    addObjectLabel(x, y, kicker, title, tone) {
+      const colors = {
+        good: { accent: 0x65efac, text: "#99f8c7" },
+        danger: { accent: 0xf24f61, text: "#ff9ca8" },
+        cyan: { accent: 0x45d6e6, text: "#a7f6fb" },
+        gold: { accent: 0xf5c965, text: "#ffe19a" }
+      };
+      const color = colors[tone];
+      const group = this.add.container(x, y).setDepth(8);
+      const panel = this.add.rectangle(0, 0, 154, 48, 0x04111e, 0.86).setStrokeStyle(1, color.accent, 0.54);
+      const kickerText = this.add
+        .text(-64, -14, kicker, {
+          fontFamily: "Manrope, Arial, sans-serif",
+          fontSize: "9px",
+          fontStyle: "bold",
+          color: color.text
+        })
+        .setOrigin(0, 0.5);
+      const titleText = this.add
+        .text(-64, 8, title, {
+          fontFamily: "Manrope, Arial, sans-serif",
+          fontSize: "12px",
+          fontStyle: "bold",
+          color: "#edf8fa"
+        })
+        .setOrigin(0, 0.5);
+      group.add([panel, kickerText, titleText]);
+      return group;
+    }
+
+    createPressureFront() {
+      this.pressureBand = this.add.image(this.pressureX, WORLD_HEIGHT / 2, "pressure-band").setDepth(12).setAlpha(0);
+      this.pressurePhages = [220, 450, 680].map((y, index) =>
         this.add
-          .text(label.x, label.y, label.title, {
-            fontFamily: "Manrope, Arial, sans-serif",
-            fontSize: "18px",
-            fontStyle: "bold",
-            color,
-            stroke: "#06111c",
-            strokeThickness: 5
-          })
-          .setDepth(3);
-        this.add
-          .text(label.x, label.y + 25, label.subtitle, {
-            fontFamily: "Manrope, Arial, sans-serif",
-            fontSize: "11px",
-            fontStyle: "bold",
-            color: "#d5e9ed",
-            stroke: "#06111c",
-            strokeThickness: 4
-          })
-          .setDepth(3);
-      });
+          .image(this.pressureX + 80 + index * 38, y, "phage-pressure-v2")
+          .setDisplaySize(86 + index * 6, 86 + index * 6)
+          .setDepth(13)
+          .setAlpha(0)
+      );
     }
 
     createPlayer() {
-      this.player = this.physics.add.sprite(level.spawn.x, level.spawn.y, "ecoli-player");
-      this.player.setDepth(10);
+      this.player = this.physics.add.sprite(level.spawn.x, level.spawn.y, "ecoli-player-v3");
+      this.player.setDisplaySize(158, 89);
+      this.playerBaseScaleX = this.player.scaleX;
+      this.playerBaseScaleY = this.player.scaleY;
+      this.airborneSince = 0;
+      this.player.setDepth(16);
       this.player.setCollideWorldBounds(false);
-      this.player.body.setSize(78, 46);
-      this.player.body.setOffset(10, 16);
-      this.player.body.setMaxVelocity(800, 980);
+      this.player.body.setSize(420, 250);
+      this.player.body.setOffset(115, 96);
+      this.player.body.setMaxVelocity(650, 930);
       this.player.body.setDragX(0);
-      this.player.body.setGravityY(500);
+      this.player.body.setGravityY(470);
 
-      this.playerShadow = this.add.ellipse(level.spawn.x, 750, 86, 18, 0x02070c, 0.4).setDepth(4);
-      this.dashMeter = this.add.graphics().setDepth(11);
+      this.playerShadow = this.add.ellipse(level.spawn.x, 742, 88, 18, 0x02070c, 0.42).setDepth(9);
+      this.playerAura = this.add.ellipse(level.spawn.x, level.spawn.y, 124, 68, level.palette.membrane, 0.08).setDepth(14);
     }
 
     createInputs() {
@@ -956,45 +826,46 @@
         right: Phaser.Input.Keyboard.KeyCodes.D,
         jump: Phaser.Input.Keyboard.KeyCodes.W,
         jumpAlt: Phaser.Input.Keyboard.KeyCodes.SPACE,
-        dash: Phaser.Input.Keyboard.KeyCodes.SHIFT,
         pause: Phaser.Input.Keyboard.KeyCodes.ESC
       });
     }
 
     createPhysics() {
-      this.physics.add.collider(this.player, this.platforms);
+      this.physics.add.collider(this.player, this.platformBodies);
       this.physics.add.collider(this.player, this.movingPlatforms);
       this.physics.add.overlap(this.player, this.collectibles, this.collectPickup, undefined, this);
-      this.physics.add.overlap(this.player, this.repairPickups, this.collectRepair, undefined, this);
-      this.physics.add.overlap(this.player, this.bouncePads, this.hitBouncePad, undefined, this);
-      this.physics.add.overlap(this.player, this.antibiotics, this.hitStaticHazard, undefined, this);
-      this.physics.add.overlap(this.player, this.autolysins, this.hitDynamicHazard, undefined, this);
-      this.physics.add.overlap(this.player, this.fallingHazards, this.hitDynamicHazard, undefined, this);
-      this.physics.add.overlap(this.player, this.phages, this.hitDynamicHazard, undefined, this);
+      this.physics.add.overlap(this.player, this.antibiotics, this.hitAntibiotic, undefined, this);
+      this.physics.add.overlap(this.player, this.autolysins, this.hitAutolysin, undefined, this);
       this.physics.add.overlap(this.player, this.checkpoints, this.activateCheckpoint, undefined, this);
       this.physics.add.overlap(this.player, this.goal, this.reachGoal, undefined, this);
-      this.physics.add.collider(this.fallingHazards, this.platforms, this.resolveFallingHazard, undefined, this);
-      this.physics.add.collider(this.fallingHazards, this.movingPlatforms, this.resolveFallingHazard, undefined, this);
     }
 
     createAmbientLife() {
       this.motes = [];
-      for (let index = 0; index < 14; index += 1) {
+      for (let index = 0; index < 18; index += 1) {
         const mote = this.add
-          .image(Math.random() * level.worldWidth, 150 + Math.random() * 570, "mote")
-          .setAlpha(0.06 + Math.random() * 0.12)
-          .setScale(0.45 + Math.random() * 0.8)
+          .image(Math.random() * level.worldWidth, 160 + Math.random() * 520, "mote")
+          .setAlpha(0.05 + Math.random() * 0.11)
+          .setScale(0.4 + Math.random() * 0.8)
           .setDepth(-5);
-        mote.setData({ speed: 5 + Math.random() * 16, phase: Math.random() * Math.PI * 2 });
+        mote.setData({ speed: 5 + Math.random() * 14, phase: Math.random() * Math.PI * 2 });
         this.motes.push(mote);
       }
     }
 
     resetHud() {
-      updateHud({ score: 0, elapsedMs: 0, wallCharge: 0, rushActive: false, rushProgress: 0, health: MAX_HEALTH, progress: 0 });
+      updateHud({
+        score: 0,
+        elapsedMs: 0,
+        buildCharge: 0,
+        integrity: MAX_INTEGRITY,
+        pressure: 0,
+        pressureActive: false,
+        progress: 0
+      });
       if (ui.zoneKicker) ui.zoneKicker.textContent = `Level ${level.number} | ${level.species}`;
       if (ui.zoneName) ui.zoneName.textContent = level.zones[0].name;
-      if (ui.progressLabel) ui.progressLabel.textContent = "Start";
+      if (ui.progressLabel) ui.progressLabel.textContent = level.zones[0].name;
     }
 
     startRun() {
@@ -1003,12 +874,12 @@
       this.runPaused = false;
       this.physics.world.resume();
       this.input.keyboard.enabled = true;
-      audio.unlock();
-      audio.startMusic();
       this.player.setVelocity(0, 0);
       this.runStartedAt = this.time.now;
+      audio.unlock();
+      audio.startMusic();
       setLiveStatus("Envelope Escape run started.");
-      showCoach("You are cyan", "Move right", "Use the arrow keys or A and D.", "neutral", 2300);
+      showCoach("You are cyan", "Move right", "Use the arrow keys or A and D. Jump with Up, W, or Space.", "neutral", 3000);
     }
 
     pauseRun() {
@@ -1039,42 +910,28 @@
       if (!this.runStarted || this.runFinished || this.runPaused) return;
 
       this.elapsedMs += delta;
-      this.updateWallRush(time);
       this.updateMovement(time, delta);
       this.updateTutorials(time);
-      this.updateMovingObjects(delta);
-      this.updateZone(time);
-      this.updateEscalation(time);
+      this.updateMovingObjects();
+      this.updateZone();
+      this.updateCheckpointProgress();
+      this.updatePressure(time, delta);
       this.updatePlayerVisuals(time);
-      this.updateProjectiles();
 
-      if (this.player.y > WORLD_HEIGHT + 45) this.fallFromCourse();
-      if (time - this.lastHudUpdate > 80) {
+      if (this.player.y > WORLD_HEIGHT + 50) this.fallFromCourse();
+      if (time - this.lastHudUpdate > 70) {
         this.lastHudUpdate = time;
-        updateHud({
-          score: this.score,
-          elapsedMs: this.elapsedMs,
-          wallCharge: this.wallCharge,
-          rushActive: this.isWallRushActive(time),
-          rushProgress: this.getRushProgress(time),
-          health: this.health,
-          progress: clamp((this.player.x / level.goalX) * 100, 0, 100)
-        });
+        this.refreshHud();
       }
-
       touchInput.jumpPressed = false;
-      touchInput.dashPressed = false;
     }
 
     updateBackground(time) {
-      if (this.background) {
-        this.background.tilePositionX = this.cameras.main.scrollX * 0.1;
-        this.background.tilePositionY = Math.sin(time * 0.00015) * 2;
-      }
+      if (this.background) this.background.y = (this.backgroundBaseY || 0) + Math.sin(time * 0.00035) * 2;
       this.motes?.forEach((mote) => {
         const speed = mote.getData("speed");
         const phase = mote.getData("phase");
-        mote.y += Math.sin(time * 0.0005 + phase) * 0.04;
+        mote.y += Math.sin(time * 0.0005 + phase) * 0.035;
         mote.x += speed * 0.004;
         if (mote.x > level.worldWidth) mote.x = 0;
       });
@@ -1082,8 +939,8 @@
 
     updateMovement(time, delta) {
       const grounded = this.player.body.blocked.down || this.player.body.touching.down;
-      const rushing = this.isWallRushActive(time);
       if (grounded) this.lastGroundedAt = time;
+      else if (this.wasGrounded) this.airborneSince = time;
 
       const left = this.cursors.left.isDown || this.keys.left.isDown || touchInput.left;
       const right = this.cursors.right.isDown || this.keys.right.isDown || touchInput.right;
@@ -1092,91 +949,89 @@
         Phaser.Input.Keyboard.JustDown(this.keys.jump) ||
         Phaser.Input.Keyboard.JustDown(this.keys.jumpAlt) ||
         touchInput.jumpPressed;
-      const jumpHeld =
-        this.cursors.up.isDown || this.keys.jump.isDown || this.keys.jumpAlt.isDown || touchInput.jump;
-      const dashPressed = Phaser.Input.Keyboard.JustDown(this.keys.dash) || touchInput.dashPressed;
+      const jumpHeld = this.cursors.up.isDown || this.keys.jump.isDown || this.keys.jumpAlt.isDown || touchInput.jump;
 
       if (Phaser.Input.Keyboard.JustDown(this.keys.pause)) {
         this.pauseRun();
         return;
       }
 
-      if (left !== right) {
+      const direction = left === right ? 0 : left ? -1 : 1;
+      if (direction) {
+        this.facing = direction;
         this.hasMoved = true;
-        if (this.player.x < 900) hideCoach();
+        if (this.player.x < 850) hideCoach();
       }
 
       if (jumpPressed) {
-        this.jumpBufferedUntil = time + 190;
+        this.jumpBufferedUntil = time + 180;
         this.hasJumped = true;
         hideCoach();
       }
 
-      if (!grounded && jumpHeld && this.player.body.velocity.y < 0) {
-        this.player.body.setGravityY(240);
-      } else if (!grounded) {
-        this.player.body.setGravityY(690);
-      } else {
-        this.player.body.setGravityY(500);
-      }
+      const maxSpeed = grounded ? 410 : 425;
+      const targetVelocity = direction * maxSpeed;
+      const reversing = direction && Math.sign(this.player.body.velocity.x) !== direction;
+      const responseRate = grounded ? (reversing ? 0.022 : direction ? 0.013 : 0.018) : 0.008;
+      const response = 1 - Math.exp(-delta * responseRate);
+      this.player.setVelocityX(Phaser.Math.Linear(this.player.body.velocity.x, targetVelocity, response));
 
-      if (time < this.dashEndsAt) {
-        this.player.setAccelerationX(0);
-        this.player.setVelocityX(this.facing * 760);
-        this.player.setVelocityY(Math.min(this.player.body.velocity.y, 70));
-        if (!REDUCED_MOTION && Math.random() > 0.45) this.createAfterimage();
-      } else {
-        const direction = left === right ? 0 : left ? -1 : 1;
-        if (direction) this.facing = direction;
-        const maxSpeed = rushing ? (grounded ? 590 : 610) : grounded ? 440 : 465;
-        const targetVelocity = direction * maxSpeed;
-        const reversing = direction && Math.sign(this.player.body.velocity.x) !== direction;
-        const responseRate = grounded ? (reversing ? 0.019 : direction ? 0.011 : 0.016) : 0.0068;
-        const response = 1 - Math.exp(-delta * responseRate);
-        this.player.setAccelerationX(0);
-        this.player.setVelocityX(Phaser.Math.Linear(this.player.body.velocity.x, targetVelocity, response));
-      }
+      const nearApex = !grounded && Math.abs(this.player.body.velocity.y) < 90;
+      if (!grounded && jumpHeld && this.player.body.velocity.y < 0) this.player.body.setGravityY(215);
+      else if (nearApex) this.player.body.setGravityY(300);
+      else if (!grounded) this.player.body.setGravityY(760);
+      else this.player.body.setGravityY(470);
 
-      const jumpAvailable = time - this.lastGroundedAt <= 170;
+      const jumpAvailable = time - this.lastGroundedAt <= 165;
       if (this.jumpBufferedUntil >= time && jumpAvailable) {
-        this.player.setVelocityY(-705);
+        this.player.setVelocityY(-655);
         this.jumpBufferedUntil = 0;
         this.lastGroundedAt = -1000;
         audio.jump();
-        this.squashPlayer(1.08, 0.9, 90);
+        this.squashPlayer(1.07, 0.9, 90);
       }
 
-      if (!jumpHeld && this.player.body.velocity.y < -285) {
-        this.player.setVelocityY(this.player.body.velocity.y * 0.76);
+      if (!jumpHeld && this.player.body.velocity.y < -270) {
+        this.player.setVelocityY(this.player.body.velocity.y * 0.74);
       }
 
-      if (dashPressed && time >= this.dashAvailableAt) {
-        this.dashAvailableAt = time + 1050;
-        this.dashEndsAt = time + 165;
-        this.player.setVelocityX(this.facing * 760);
-        this.player.setVelocityY(Math.min(this.player.body.velocity.y, 40));
-        audio.dash();
-        this.burst(this.player.x, this.player.y, level.palette.membraneLight, 10, 1.25);
-      }
-
-      if (this.player.x < 80) this.player.x = 80;
-
-      if (grounded && !this.wasGrounded && time - this.runStartedAt > 250) {
-        this.squashPlayer(1.06, 0.92, 80);
-        if (!REDUCED_MOTION) this.burst(this.player.x, this.player.y + 26, 0x74bac4, 4, 0.4);
+      if (this.player.x < 70) this.player.x = 70;
+      if (
+        grounded &&
+        !this.wasGrounded &&
+        time - this.runStartedAt > 250 &&
+        time - this.airborneSince > 100
+      ) {
+        this.squashPlayer(1.05, 0.92, 80);
+        if (!REDUCED_MOTION) this.burst(this.player.x, this.player.y + 25, level.palette.membraneLight, 4, 0.35);
       }
       this.wasGrounded = grounded;
     }
 
     updateTutorials(time) {
-      if (!this.idleCoachShown && !this.hasMoved && time - this.runStartedAt > 2700) {
+      if (!this.idleCoachShown && !this.hasMoved && time - this.runStartedAt > 2400) {
         this.idleCoachShown = true;
-        showCoach("Controls", "Move with arrows or A / D", "Then jump with Up, W, or Space.", "neutral", 5200);
+        showCoach("Controls", "Move with arrows or A / D", "Jump with Up, W, or Space.", "neutral", 5200);
+      }
+      if (!this.jumpCoachShown && !this.hasJumped && this.player.x > 2400) {
+        this.jumpCoachShown = true;
+        showCoach("Red means damage", "Jump over the antibiotic", "Each red hit removes one integrity segment.", "danger", 4300);
+      }
+      if (!this.forkCoachShown && this.player.x > 2500) {
+        this.forkCoachShown = true;
+        showCoach("Choose a route", "Cyan PBPs are the fast path", "Stay low for a steadier route, or climb for a faster time.", "neutral", 4600);
       }
 
-      if (!this.jumpCoachShown && !this.hasJumped && this.player.x > 1250) {
-        this.jumpCoachShown = true;
-        showCoach("Red ahead", "Jump now", "Press Up, W, or Space. Red costs 20 HP.", "danger", 4400);
+      const bridge = this.bridges[this.currentBridgeIndex];
+      if (bridge && !bridge.built && this.player.x > bridge.x - bridge.width / 2 - 120) {
+        const needed = BUILD_TARGET - this.buildCharge;
+        showCoach(
+          "Missing wall",
+          needed === BUILD_TARGET ? "Collect three green precursors" : `Find ${needed} more green precursor${needed === 1 ? "" : "s"}`,
+          "Green precursors assemble this bridge.",
+          "good",
+          2800
+        );
       }
     }
 
@@ -1207,73 +1062,11 @@
         if (hazard.x > baseX + distance) hazard.setData("direction", -1);
         if (hazard.x < baseX - distance) hazard.setData("direction", 1);
         hazard.setVelocityX(hazard.getData("speed") * hazard.getData("direction"));
-        hazard.angle += hazard.getData("direction") * 2.4;
-      });
-
-      this.phages.children.iterate((phage) => {
-        if (!phage?.active) return;
-        const phase = phage.getData("phase") || 0;
-        phage.setVelocityY(Math.sin(this.time.now * 0.004 + phase) * 90);
-        phage.angle = Math.sin(this.time.now * 0.003 + phase) * 5;
+        hazard.angle += hazard.getData("direction") * 2.1;
       });
     }
 
-    isWallRushActive(time = this.time.now) {
-      return this.rushEndsAt > time;
-    }
-
-    getRushProgress(time = this.time.now) {
-      if (this.isWallRushActive(time)) {
-        return clamp(((this.rushEndsAt - time) / WALL_RUSH_DURATION) * 100, 0, 100);
-      }
-      return clamp((this.wallCharge / WALL_RUSH_TARGET) * 100, 0, 100);
-    }
-
-    startWallRush() {
-      const now = this.time.now;
-      this.wallCharge = WALL_RUSH_TARGET;
-      this.rushEndsAt = now + WALL_RUSH_DURATION;
-      this.rushWasActive = true;
-      this.invulnerableUntil = Math.max(this.invulnerableUntil, this.rushEndsAt);
-      audio.wallRush();
-      this.burst(this.player.x, this.player.y, level.palette.precursor, 30, 2);
-      this.floatText(this.player.x, this.player.y - 52, "WALL RUSH!", "#dfffee");
-      showCoach("Wall Rush", "Smash red for +1,000", "You are invulnerable until the green meter empties.", "good", 3900);
-      setLiveStatus("Wall Rush active. Red hazards can now be smashed.");
-      if (!REDUCED_MOTION) this.cameras.main.flash(170, 83, 255, 187, false);
-      updateHud({
-        score: this.score,
-        elapsedMs: this.elapsedMs,
-        wallCharge: this.wallCharge,
-        rushActive: true,
-        rushProgress: 100,
-        health: this.health,
-        progress: clamp((this.player.x / level.goalX) * 100, 0, 100)
-      });
-    }
-
-    updateWallRush(time) {
-      const rushing = this.isWallRushActive(time);
-      if (rushing) {
-        this.player.setTint(0xbaffdf);
-        if (!REDUCED_MOTION && time - this.lastRushTrailAt > 75) {
-          this.lastRushTrailAt = time;
-          this.createAfterimage();
-        }
-        return;
-      }
-
-      if (this.rushWasActive) {
-        this.rushWasActive = false;
-        this.rushEndsAt = 0;
-        this.wallCharge = 0;
-        this.player.clearTint();
-        showToast("Wall Rush ended | Grab 5 green blocks", 1900);
-        setLiveStatus("Wall Rush ended. Collect five green wall blocks to recharge.");
-      }
-    }
-
-    updateZone(time) {
+    updateZone() {
       let nextZone = 0;
       for (let index = 0; index < level.zones.length; index += 1) {
         if (this.player.x >= level.zones[index].start) nextZone = index;
@@ -1284,300 +1077,261 @@
       if (ui.zoneName) ui.zoneName.textContent = zone.name;
       if (ui.progressLabel) ui.progressLabel.textContent = zone.name;
       this.showZoneBanner(zone.name, zone.mechanic);
-      if (nextZone === 2 && !this.seenCallouts.has("pulse")) {
-        this.seenCallouts.add("pulse");
-        announce("Incoming strike", "Red target on the ground = move before the capsule lands.", "danger", "Red = avoid", 4000);
-      }
-      if (nextZone === 4 && !this.seenCallouts.has("phage")) {
-        this.seenCallouts.add("phage");
-        announce("Phage chase", "Red phages fly in from ahead. Jump over or duck under them.", "danger", "Red = avoid", 4000);
-      }
-      if (time > 0) audio.tone(260, 390, 0.18, "triangle", 0.018);
+      audio.tone(260, 390, 0.18, "triangle", 0.018);
     }
 
-    updateEscalation(time) {
-      const zone = this.currentZoneIndex;
-      const pulseInterval = zone === 5 ? 860 : zone === 2 ? 1280 : 0;
-      if (pulseInterval && time - this.lastPulseAt > pulseInterval) {
-        this.lastPulseAt = time;
-        this.telegraphAntibioticPulse();
-      }
+    updateCheckpointProgress() {
+      this.checkpoints.children.iterate((checkpoint) => {
+        if (!checkpoint?.active || checkpoint.getData("activated")) return;
+        if (this.player.x >= checkpoint.x - 36) this.activateCheckpoint(this.player, checkpoint);
+      });
+    }
 
-      if (zone === 4 && time - this.lastPhageAt > 1850) {
-        this.lastPhageAt = time;
-        this.spawnPhage();
+    updatePressure(time, delta) {
+      if (!this.pressureActive && this.player.x >= level.pressureStartsAt) {
+        this.pressureActive = true;
+        this.pressureX = this.player.x - 980;
+        this.pressureBand.setAlpha(0.92);
+        this.pressurePhages.forEach((phage) => phage.setAlpha(0.88));
+        audio.pressure();
+        announce(
+          "Pressure front",
+          "Keep moving right. If the red front catches you, it removes one integrity segment.",
+          "danger",
+          "Red is closing in",
+          4800
+        );
+        setLiveStatus("Antibiotic pressure front active. Keep moving right.");
       }
+      if (!this.pressureActive) return;
+
+      const distance = this.player.x - this.pressureX;
+      const baseSpeed = this.player.x >= 10880 ? 238 : 182;
+      const catchup = distance > 1120 ? (distance - 1120) * 0.11 : 0;
+      this.pressureX += (baseSpeed + catchup) * (delta / 1000);
+      this.pressureBand.setPosition(this.pressureX - 128, WORLD_HEIGHT / 2);
+      this.pressurePhages.forEach((phage, index) => {
+        phage.x = this.pressureX - 6 + index * 34;
+        phage.y = [230, 455, 680][index] + Math.sin(time * 0.003 + index * 1.7) * 28;
+        phage.angle = Math.sin(time * 0.002 + index) * 5;
+      });
+
+      if (distance < 80 && time - this.lastPressureHitAt > 1300) {
+        this.lastPressureHitAt = time;
+        this.applyDamage("PRESSURE", this.pressureX);
+        this.pressureX = this.player.x - 780;
+        showToast("Pressure pushed back | Keep moving");
+      }
+    }
+
+    getPressurePercent() {
+      if (!this.pressureActive) return 0;
+      const distance = this.player.x - this.pressureX;
+      return clamp(100 - (distance / 1000) * 100, 0, 100);
     }
 
     updatePlayerVisuals(time) {
       this.player.setFlipX(this.facing < 0);
       const grounded = this.player.body.blocked.down || this.player.body.touching.down;
-      const speedRatio = clamp(Math.abs(this.player.body.velocity.x) / 440, 0, 1);
+      const speedRatio = clamp(Math.abs(this.player.body.velocity.x) / 410, 0, 1);
       if (grounded && speedRatio > 0.12 && !this.tweens.isTweening(this.player)) {
-        this.player.angle = Math.sin(time * 0.016) * speedRatio * 1.2;
+        this.player.angle = Math.sin(time * 0.015) * speedRatio * 1.2;
       } else if (!grounded) {
-        this.player.angle = clamp(this.player.body.velocity.y / 52, -9, 10);
+        this.player.angle = clamp(this.player.body.velocity.y / 62, -7, 8);
       } else {
         this.player.angle *= 0.82;
       }
 
       this.playerShadow.x = this.player.x;
-      this.playerShadow.y = Math.min(752, this.player.y + 62);
-      const airDistance = clamp((750 - this.player.y) / 420, 0, 0.72);
+      this.playerShadow.y = Math.min(746, this.player.y + 58);
+      const airDistance = clamp((742 - this.player.y) / 380, 0, 0.7);
       this.playerShadow.setScale(1 - airDistance, 1 - airDistance * 0.5);
-      this.playerShadow.setAlpha(0.38 - airDistance * 0.25);
-
-      this.dashMeter.clear();
-      if (this.isWallRushActive(time)) {
-        const pulse = 0.64 + Math.sin(time * 0.014) * 0.16;
-        this.dashMeter.lineStyle(5, level.palette.precursor, pulse);
-        this.dashMeter.strokeCircle(this.player.x, this.player.y, 51 + Math.sin(time * 0.018) * 2);
-        return;
-      }
-      const ready = clamp(1 - (this.dashAvailableAt - time) / 1050, 0, 1);
-      this.dashMeter.lineStyle(2, ready >= 1 ? level.palette.membraneLight : 0x5d7a84, 0.58);
-      this.dashMeter.beginPath();
-      this.dashMeter.arc(this.player.x, this.player.y, 45, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ready, false);
-      this.dashMeter.strokePath();
-    }
-
-    updateProjectiles() {
-      this.fallingHazards.children.iterate((hazard) => {
-        if (hazard?.active && hazard.y > WORLD_HEIGHT + 80) hazard.destroy();
-      });
-      this.phages.children.iterate((phage) => {
-        if (phage?.active && phage.x < this.cameras.main.scrollX - 180) phage.destroy();
-      });
+      this.playerShadow.setAlpha(0.4 - airDistance * 0.28);
+      this.playerAura.setPosition(this.player.x, this.player.y);
+      this.playerAura.setScale(1 + Math.sin(time * 0.006) * 0.05);
+      this.playerAura.setAlpha(0.06 + speedRatio * 0.05);
     }
 
     collectPickup(_player, pickup) {
       if (!pickup.active) return;
-      const rushing = this.isWallRushActive();
-      const points = pickup.getData("value") || 100;
+      const bridgeIndex = pickup.getData("bridge");
+      const isCurrentBridge = bridgeIndex === this.currentBridgeIndex && !this.bridges[bridgeIndex]?.built;
+      const points = pickup.getData("bonus") ? 150 : 100;
+      const x = pickup.x;
+      const y = pickup.y;
       pickup.disableBody(true, true);
       this.pickupsCollected += 1;
       this.score += points;
-      if (rushing) {
-        this.rushEndsAt += 180;
-      } else {
-        this.wallCharge = clamp(this.wallCharge + 1, 0, WALL_RUSH_TARGET);
-      }
-      audio.pickup(rushing ? WALL_RUSH_TARGET : this.wallCharge);
-      this.burst(pickup.x, pickup.y, level.palette.precursor, 9, 1);
+
+      if (isCurrentBridge) this.buildCharge = clamp(this.buildCharge + 1, 0, BUILD_TARGET);
+      audio.pickup(isCurrentBridge ? this.buildCharge : BUILD_TARGET);
+      this.burst(x, y, level.palette.precursor, 12, 1.1);
       this.floatText(
-        pickup.x,
-        pickup.y - 28,
-        rushing ? `+${points}  RUSH` : `+${points}  ${this.wallCharge}/${WALL_RUSH_TARGET}`,
-        "#b9ffe6"
+        x,
+        y - 30,
+        isCurrentBridge ? `+${points}   BUILD ${this.buildCharge}/${BUILD_TARGET}` : `BONUS +${points}`,
+        "#a9ffd0"
       );
-      if (!this.seenCallouts.has("first-block")) {
-        this.seenCallouts.add("first-block");
-        showCoach("Green block: +100", `${this.wallCharge} / ${WALL_RUSH_TARGET} to Wall Rush`, "Collect four more green blocks.", "good", 3200);
+
+      if (!this.seenCallouts.has("first-precursor")) {
+        this.seenCallouts.add("first-precursor");
+        announce(
+          "PG precursor",
+          "Collect three green precursors to assemble the next missing wall bridge.",
+          "good",
+          "Green builds the way"
+        );
       }
-      if (!rushing && this.wallCharge >= WALL_RUSH_TARGET) this.startWallRush();
+      if (isCurrentBridge && this.buildCharge >= BUILD_TARGET) this.buildBridge(bridgeIndex);
+      this.refreshHud();
     }
 
-    collectRepair(_player, repair) {
-      if (!repair.active) return;
-      repair.disableBody(true, true);
-      this.health = clamp(this.health + 20, 0, MAX_HEALTH);
-      audio.repair();
-      this.burst(repair.x, repair.y, level.palette.membrane, 14, 1.2);
-      this.floatText(repair.x, repair.y - 32, "+20 HP", "#9ceeff");
-      if (!this.seenCallouts.has("repair")) {
-        this.seenCallouts.add("repair");
-        showCoach("Cyan health kit", "+20 HP", "Cyan helpers restore health. Green blocks add points.", "neutral", 3300);
+    buildBridge(index) {
+      const bridge = this.bridges[index];
+      if (!bridge || bridge.built) return;
+      bridge.built = true;
+      bridge.marker.setVisible(false);
+      const restoredIntegrity = this.integrity < MAX_INTEGRITY;
+      if (restoredIntegrity) this.integrity += 1;
+      audio.bridge();
+      this.score += 500;
+      this.floatText(
+        bridge.x,
+        bridge.y - 90,
+        restoredIntegrity ? "BRIDGE BUILT  +500  +1 INTEGRITY" : "BRIDGE BUILT  +500",
+        "#b8ffd8"
+      );
+      bridge.segments.forEach((segment, segmentIndex) => {
+        this.tweens.add({
+          targets: segment,
+          alpha: 1,
+          scaleX: 1,
+          scaleY: 1,
+          y: bridge.y + 2,
+          duration: REDUCED_MOTION ? 80 : 320,
+          delay: segmentIndex * 130,
+          ease: "Back.out",
+          onStart: () => this.burst(segment.x, segment.y, level.palette.precursor, 8, 0.8)
+        });
+      });
+      this.time.delayedCall(REDUCED_MOTION ? 80 : 420, () => {
+        bridge.body.body.enable = true;
+        bridge.body.refreshBody();
+        this.currentBridgeIndex = index + 1;
+        this.buildCharge = 0;
+        showToast(`Bridge ${index + 1} assembled | +500${restoredIntegrity ? " | +1 integrity" : ""}`);
+        setLiveStatus(`Peptidoglycan bridge ${index + 1} assembled.`);
+        this.refreshHud();
+      });
+      if (index === 0) {
+        showCoach("Bridge assembled", "Cross while it is stable", "The build meter has reset for the next missing span.", "good", 3600);
       }
+      if (!REDUCED_MOTION) this.cameras.main.flash(120, 82, 229, 170, false);
     }
 
-    hitBouncePad(_player, pad) {
-      const now = this.time.now;
-      if (now < (pad.getData("readyAt") || 0)) return;
-      pad.setData("readyAt", now + 320);
-      this.player.setY(this.player.y - 20);
-      this.player.setVelocityY(-(pad.getData("strength") || 980));
-      this.player.setVelocityX(this.facing * Math.max(520, Math.abs(this.player.body.velocity.x)));
-      this.lastGroundedAt = -1000;
-      this.invulnerableUntil = Math.max(this.invulnerableUntil, now + 420);
-      audio.bounce();
-      this.burst(pad.x, pad.y - 8, level.palette.membrane, 16, 1.4);
-      this.floatText(pad.x, pad.y - 35, "BOUNCE!", "#b9f7ff");
-      this.squashPlayer(0.82, 1.18, 110);
-      if (!this.seenCallouts.has("bounce")) {
-        this.seenCallouts.add("bounce");
-        announce("Bounce pad", "Cyan pads launch you toward faster routes and more green blocks.", "good", "Cyan = boost", 3900);
-      }
-    }
-
-    hitStaticHazard(_player, hazard) {
-      if (this.isWallRushActive()) {
-        this.smashHazard(hazard);
-        return;
-      }
+    hitAntibiotic(_player, hazard) {
       if (hazard.getData("cooldown") || this.time.now < this.invulnerableUntil) return;
       hazard.setData("cooldown", true);
       hazard.body.enable = false;
-      hazard.setAlpha(0.28);
-      this.applyDamage(hazard.getData("damage") || 20, hazard.x);
-      this.time.delayedCall(1550, () => {
+      hazard.setAlpha(0.25);
+      this.applyDamage("ANTIBIOTIC", hazard.x);
+      this.time.delayedCall(1500, () => {
         if (!hazard.active || this.runFinished) return;
         hazard.body.enable = true;
         hazard.setAlpha(1);
         hazard.setData("cooldown", false);
       });
-      if (!this.seenCallouts.has("ampicillin")) {
-        this.seenCallouts.add("ampicillin");
-      }
     }
 
-    hitDynamicHazard(_player, hazard) {
-      if (this.isWallRushActive()) {
-        this.smashHazard(hazard);
-        return;
-      }
-      const amount = hazard.getData("damage") || 20;
-      this.applyDamage(amount, hazard.x);
-      if (hazard.getData("transient")) hazard.destroy();
-      if (hazard.texture?.key === "autolysin" && !this.seenCallouts.has("autolysin")) {
+    hitAutolysin(_player, hazard) {
+      if (this.time.now < this.invulnerableUntil) return;
+      this.applyDamage("AUTOLYSIN", hazard.x);
+      if (!this.seenCallouts.has("autolysin")) {
         this.seenCallouts.add("autolysin");
-        showCoach("Moving red hazard", "Jump over it", "All red hazards cost 20 HP outside Wall Rush.", "danger", 3200);
+        showCoach("Autolysin", "Time the moving red enzyme", "Wait for an opening, then jump through.", "danger", 3400);
       }
     }
 
-    smashHazard(hazard) {
-      if (!hazard?.active) return;
-      const x = hazard.x;
-      const y = hazard.y;
-      const points = 1000;
-      this.score += points;
-      if (typeof hazard.disableBody === "function") hazard.disableBody(true, true);
-      else hazard.destroy();
-      audio.smash();
-      this.burst(x, y, level.palette.danger, 12, 1.4);
-      this.burst(x, y, level.palette.precursor, 10, 1.15);
-      this.floatText(x, y - 32, `SMASH +${points}`, "#fff1a8");
-    }
-
-    applyDamage(amount, sourceX) {
+    applyDamage(label, sourceX) {
       const now = this.time.now;
       if (now < this.invulnerableUntil || this.runFinished) return;
-      this.invulnerableUntil = now + 1350;
-      this.health = clamp(this.health - amount, 0, MAX_HEALTH);
-      this.score = Math.max(0, this.score - 200);
-      this.player.setVelocityX(sourceX <= this.player.x ? 430 : -430);
-      this.player.setVelocityY(-430);
+      this.invulnerableUntil = now + 1500;
+      this.integrity = clamp(this.integrity - 1, 0, MAX_INTEGRITY);
+      this.score = Math.max(0, this.score - 250);
+      this.player.setVelocityX(sourceX <= this.player.x ? 390 : -390);
+      this.player.setVelocityY(-390);
       audio.hurt();
-      this.burst(this.player.x, this.player.y, level.palette.danger, 16, 1.45);
-      this.floatText(this.player.x, this.player.y - 45, `-${amount} HP  -200`, "#ff9daa");
-      pulseHealthHud();
-      if (!this.seenCallouts.has("damage")) {
-        this.seenCallouts.add("damage");
-        showCoach("Health", "Red costs 20 HP", "Watch the health bar above. Cyan health kits restore 20 HP.", "danger", 3600);
-      }
+      this.burst(this.player.x, this.player.y, level.palette.danger, 18, 1.35);
+      this.floatText(this.player.x, this.player.y - 48, `${label}  -1 INTEGRITY`, "#ff9eaa");
+      ui.healthShell?.classList.remove("is-hit");
+      window.requestAnimationFrame(() => ui.healthShell?.classList.add("is-hit"));
       if (!REDUCED_MOTION) {
         this.cameras.main.shake(150, 0.009);
         this.cameras.main.flash(120, 255, 52, 76, false);
       }
-      this.player.setTint(0xff7b89);
+      this.player.setTint(0xff7887);
       this.tweens.add({
         targets: this.player,
         alpha: 0.34,
-        duration: 90,
+        duration: 80,
         yoyo: true,
         repeat: 5,
         onComplete: () => {
           this.player.clearTint();
           this.player.setAlpha(1);
+          ui.healthShell?.classList.remove("is-hit");
         }
       });
-      updateHud({
-        score: this.score,
-        elapsedMs: this.elapsedMs,
-        wallCharge: this.wallCharge,
-        rushActive: false,
-        rushProgress: this.getRushProgress(now),
-        health: this.health,
-        progress: clamp((this.player.x / level.goalX) * 100, 0, 100)
-      });
-      if (this.health <= 0) this.finishRun(false);
+      this.refreshHud();
+      if (this.integrity <= 0) this.finishRun(false);
     }
 
     activateCheckpoint(_player, checkpoint) {
       if (checkpoint.getData("activated")) return;
       checkpoint.setData("activated", true);
-      checkpoint.setTint(0xffffff);
-      this.checkpoint = { x: checkpoint.x + 95, y: 600 };
-      const points = 750;
-      this.score += points;
-      this.health = MAX_HEALTH;
+      checkpoint.body.enable = false;
+      checkpoint.setAlpha(1);
+      checkpoint.setTint(0xfff0b0);
+      this.checkpoint = { x: checkpoint.x + 120, y: 610 };
+      this.score += 750;
+      this.integrity = MAX_INTEGRITY;
+      if (this.pressureActive) this.pressureX = this.player.x - 900;
       audio.checkpoint();
-      this.burst(checkpoint.x, checkpoint.y, level.palette.route, 22, 1.55);
-      this.floatText(checkpoint.x, checkpoint.y - 80, `CHECKPOINT +${points}`, "#ffe59a");
-      showToast(`Checkpoint saved | +750 points | Health full`);
-      setLiveStatus(`Checkpoint ${checkpoint.getData("index") + 1} secured.`);
-      if (!this.seenCallouts.has("checkpoint")) {
-        this.seenCallouts.add("checkpoint");
-        announce("Gold checkpoint", "Gold saves your position and restores full health.", "route", "Gold = safe");
-      }
+      this.burst(checkpoint.x, checkpoint.y, level.palette.route, 24, 1.55);
+      this.floatText(checkpoint.x, checkpoint.y - 100, "PBP CHECKPOINT  +750", "#ffe59a");
+      showToast("PBP checkpoint | Integrity restored");
+      setLiveStatus(`Checkpoint ${checkpoint.getData("index") + 1} secured. Integrity restored.`);
+      this.refreshHud();
     }
 
     reachGoal() {
-      if (this.runFinished) return;
-      this.finishRun(true);
+      if (!this.runFinished) this.finishRun(true);
     }
 
     fallFromCourse() {
-      const healthBeforeFall = this.health;
-      this.applyDamage(20, this.player.x - this.facing * 20);
-      if (this.health <= 0 || this.runFinished) return;
+      const bridge = this.bridges[this.currentBridgeIndex];
+      this.applyDamage("RUPTURE", this.player.x - this.facing * 30);
+      if (this.integrity <= 0 || this.runFinished) return;
       this.player.setPosition(this.checkpoint.x, this.checkpoint.y);
       this.player.setVelocity(0, 0);
-      this.cameras.main.centerOn(this.player.x + 250, this.player.y);
-      showToast(healthBeforeFall === this.health ? "Returned to checkpoint" : "Returned to checkpoint | -20 HP");
+      if (this.pressureActive) this.pressureX = this.player.x - 820;
+      if (bridge && !bridge.built) {
+        showToast(`Returned to checkpoint | Need ${BUILD_TARGET - this.buildCharge} green`);
+      } else {
+        showToast("Returned to checkpoint | -1 integrity");
+      }
     }
 
-    telegraphAntibioticPulse() {
-      if (this.runFinished) return;
-      const targetX = clamp(this.player.x + Phaser.Math.Between(260, 760), 150, level.goalX - 160);
-      const marker = this.add.ellipse(targetX, 744, 104, 22, level.palette.danger, 0.15).setDepth(5);
-      marker.setStrokeStyle(5, level.palette.danger, 0.95);
-      this.tweens.add({
-        targets: marker,
-        scaleX: 0.55,
-        scaleY: 0.7,
-        alpha: 0.9,
-        duration: 210,
-        yoyo: true,
-        repeat: 2,
-        onComplete: () => {
-          marker.destroy();
-          if (this.runFinished) return;
-          const hazard = this.fallingHazards.create(targetX, 70, "ampicillin");
-          hazard.setScale(0.78);
-          hazard.setVelocityY(270);
-          hazard.setAngularVelocity(145);
-          hazard.setData({ damage: 20, transient: true });
-        }
+    refreshHud() {
+      updateHud({
+        score: this.score,
+        elapsedMs: this.elapsedMs,
+        buildCharge: this.buildCharge,
+        integrity: this.integrity,
+        pressure: this.getPressurePercent(),
+        pressureActive: this.pressureActive,
+        progress: clamp((this.player.x / level.goalX) * 100, 0, 100)
       });
-      audio.tone(170, 120, 0.38, "square", 0.012);
-    }
-
-    spawnPhage() {
-      if (this.runFinished) return;
-      const x = clamp(this.player.x + this.cameras.main.width * 0.72, 0, level.goalX - 100);
-      const y = Phaser.Math.Between(260, 620);
-      const phage = this.phages.create(x, y, "phage");
-      phage.setScale(0.75);
-      phage.body.setAllowGravity(false);
-      phage.setVelocityX(-290 - this.currentZoneIndex * 18);
-      phage.setData({ damage: 20, transient: true, phase: Math.random() * Math.PI * 2 });
-      audio.tone(130, 88, 0.26, "sawtooth", 0.012);
-    }
-
-    resolveFallingHazard(hazard) {
-      if (!hazard?.active) return;
-      this.burst(hazard.x, hazard.y, level.palette.danger, 8, 0.9);
-      hazard.destroy();
     }
 
     finishRun(success) {
@@ -1587,13 +1341,14 @@
       this.input.keyboard.enabled = false;
       audio.stopMusic();
 
-      const speedBonus = success ? Math.max(0, Math.floor(36000 - this.elapsedMs * 0.075)) : 0;
-      const healthBonus = success ? Math.floor(this.health * 85) : 0;
-      this.score = Math.floor(this.score + speedBonus + healthBonus);
+      const speedBonus = success ? Math.max(0, Math.floor(30000 - this.elapsedMs * 0.09)) : 0;
+      const integrityBonus = success ? this.integrity * 900 : 0;
+      const pressureBonus = success && this.pressureActive ? Math.floor((100 - this.getPressurePercent()) * 45) : 0;
+      this.score = Math.floor(this.score + speedBonus + integrityBonus + pressureBonus + (success ? 1500 : 0));
 
       if (success) {
         audio.finish();
-        this.burst(this.goal.x, this.goal.y, level.palette.route, 42, 2.1);
+        this.burst(this.goal.x, this.goal.y, level.palette.route, 44, 2.05);
         addBoardEntry({
           name: currentPlayerName || "Anonymous",
           score: this.score,
@@ -1604,22 +1359,13 @@
         audio.hurt();
       }
 
-      updateHud({
-        score: this.score,
-        elapsedMs: this.elapsedMs,
-        wallCharge: this.wallCharge,
-        rushActive: this.isWallRushActive(),
-        rushProgress: this.getRushProgress(),
-        health: this.health,
-        progress: success ? 100 : clamp((this.player.x / level.goalX) * 100, 0, 100)
-      });
-
-      if (ui.resultKicker) ui.resultKicker.textContent = success ? "Escaped" : "Run ended";
-      if (ui.resultTitle) ui.resultTitle.textContent = success ? "Gold exit reached." : "Your health reached zero.";
+      this.refreshHud();
+      if (ui.resultKicker) ui.resultKicker.textContent = success ? "Envelope secured" : "Run ended";
+      if (ui.resultTitle) ui.resultTitle.textContent = success ? "The PBP gate is open." : "Cell integrity reached zero.";
       if (ui.finalScore) ui.finalScore.textContent = formatScore(this.score);
       if (ui.resultTime) ui.resultTime.textContent = formatTime(this.elapsedMs);
-      if (ui.resultHealth) ui.resultHealth.textContent = `${Math.ceil(this.health)} / ${MAX_HEALTH}`;
-      if (ui.resultPickups) ui.resultPickups.textContent = `${this.pickupsCollected} / ${this.totalPickups}`;
+      if (ui.resultHealth) ui.resultHealth.textContent = `${this.integrity} / ${MAX_INTEGRITY}`;
+      if (ui.resultPickups) ui.resultPickups.textContent = String(this.pickupsCollected);
       if (ui.resultBonus) ui.resultBonus.textContent = formatScore(speedBonus);
       if (ui.resultScreen) ui.resultScreen.hidden = false;
       setLiveStatus(success ? `Run complete. Final score ${this.score}.` : `Run ended. Final score ${this.score}.`);
@@ -1627,11 +1373,11 @@
 
     showZoneBanner(title, subtitle) {
       const x = this.cameras.main.width / 2;
-      const y = this.cameras.main.height * 0.34;
-      const banner = this.add.container(x, y).setDepth(25).setScrollFactor(0);
-      const panel = this.add.rectangle(0, 0, 520, 92, 0x04121e, 0.88).setStrokeStyle(2, level.palette.membraneLight, 0.32);
+      const y = this.cameras.main.height * 0.36;
+      const banner = this.add.container(x, y).setDepth(30).setScrollFactor(0);
+      const panel = this.add.rectangle(0, 0, 520, 94, 0x04121e, 0.9).setStrokeStyle(2, level.palette.membraneLight, 0.28);
       const heading = this.add
-        .text(0, -15, title, {
+        .text(0, -16, title, {
           fontFamily: "Fraunces, Georgia, serif",
           fontSize: "30px",
           fontStyle: "bold",
@@ -1640,12 +1386,13 @@
         })
         .setOrigin(0.5);
       const copy = this.add
-        .text(0, 20, subtitle, {
+        .text(0, 21, subtitle, {
           fontFamily: "Manrope, Arial, sans-serif",
           fontSize: "13px",
           fontStyle: "bold",
           color: "#a9c9d0",
-          align: "center"
+          align: "center",
+          wordWrap: { width: 470 }
         })
         .setOrigin(0.5);
       banner.add([panel, heading, copy]);
@@ -1654,8 +1401,8 @@
         targets: banner,
         alpha: 1,
         y,
-        duration: REDUCED_MOTION ? 1 : 240,
-        hold: 1300,
+        duration: REDUCED_MOTION ? 1 : 220,
+        hold: 1250,
         yoyo: true,
         onComplete: () => banner.destroy()
       });
@@ -1666,16 +1413,14 @@
       for (let index = 0; index < count; index += 1) {
         const angle = Math.random() * Math.PI * 2;
         const distance = (24 + Math.random() * 62) * speedScale;
-        const particle = this.add
-          .circle(x, y, 2 + Math.random() * 4, color, 0.92)
-          .setDepth(20);
+        const particle = this.add.circle(x, y, 2 + Math.random() * 4, color, 0.92).setDepth(24);
         this.tweens.add({
           targets: particle,
           x: x + Math.cos(angle) * distance,
           y: y + Math.sin(angle) * distance,
           alpha: 0,
           scale: 0.2,
-          duration: REDUCED_MOTION ? 150 : 380 + Math.random() * 240,
+          duration: REDUCED_MOTION ? 150 : 360 + Math.random() * 220,
           ease: "Cubic.out",
           onComplete: () => particle.destroy()
         });
@@ -1693,10 +1438,10 @@
           strokeThickness: 5
         })
         .setOrigin(0.5)
-        .setDepth(24);
+        .setDepth(26);
       this.tweens.add({
         targets: label,
-        y: y - 60,
+        y: y - 58,
         alpha: 0,
         duration: REDUCED_MOTION ? 320 : 760,
         ease: "Cubic.out",
@@ -1704,32 +1449,17 @@
       });
     }
 
-    createAfterimage() {
-      const image = this.add
-        .image(this.player.x, this.player.y, "ecoli-player")
-        .setFlipX(this.player.flipX)
-        .setTint(level.palette.membraneLight)
-        .setAlpha(0.2)
-        .setDepth(8);
-      this.tweens.add({
-        targets: image,
-        alpha: 0,
-        scaleX: 0.82,
-        scaleY: 1.12,
-        duration: 180,
-        onComplete: () => image.destroy()
-      });
-    }
-
     squashPlayer(scaleX, scaleY, duration) {
+      if (this.tweens.isTweening(this.player)) return;
+      this.player.setScale(this.playerBaseScaleX, this.playerBaseScaleY);
       this.tweens.add({
         targets: this.player,
-        scaleX,
-        scaleY,
+        scaleX: this.playerBaseScaleX * scaleX,
+        scaleY: this.playerBaseScaleY * scaleY,
         duration,
         yoyo: true,
         ease: "Quad.out",
-        onComplete: () => this.player.setScale(1)
+        onComplete: () => this.player.setScale(this.playerBaseScaleX, this.playerBaseScaleY)
       });
     }
   }
@@ -1746,12 +1476,12 @@
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
       width: ui.root?.clientWidth || 1600,
-      height: ui.root?.clientHeight || 900
+      height: ui.root?.clientHeight || 820
     },
     physics: {
       default: "arcade",
       arcade: {
-        gravity: { y: 640 },
+        gravity: { y: 650 },
         debug: false,
         fps: 60
       }
@@ -1832,9 +1562,6 @@
       if (action === "jump") {
         touchInput.jump = true;
         touchInput.jumpPressed = true;
-      } else if (action === "dash") {
-        touchInput.dash = true;
-        touchInput.dashPressed = true;
       } else {
         touchInput[action] = true;
       }
@@ -1843,7 +1570,6 @@
       event.preventDefault();
       button.classList.remove("is-active");
       if (action === "jump") touchInput.jump = false;
-      else if (action === "dash") touchInput.dash = false;
       else touchInput[action] = false;
     };
     button.addEventListener("pointerdown", press);
