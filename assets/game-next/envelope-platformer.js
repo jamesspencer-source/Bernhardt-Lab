@@ -2,8 +2,7 @@
   "use strict";
 
   const Phaser = window.Phaser;
-  const levels = window.ENVELOPE_NEXT_LEVELS;
-  const level = Array.isArray(levels) ? levels[0] : null;
+  const level = window.ENVELOPE_RUNNER_LEVEL;
 
   if (!Phaser || !level) {
     const root = document.getElementById("envelope-next-game");
@@ -11,11 +10,9 @@
     return;
   }
 
-  const WORLD_HEIGHT = 900;
-  const ROUTE_Y = 770;
+  const WORLD_HEIGHT = 720;
   const MAX_INTEGRITY = 5;
-  const BUILD_TARGET = 3;
-  const BOARD_KEY = "bernhardt-envelope-platformer-preview-board-v2";
+  const BOARD_KEY = "bernhardt-envelope-runner-preview-board-v3";
   const PLAYER_KEY = "bernhardt-envelope-platformer-preview-player";
   const REDUCED_MOTION = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
 
@@ -26,19 +23,16 @@
     playerName: document.getElementById("game-player-name"),
     nameFeedback: document.getElementById("game-name-feedback"),
     score: document.getElementById("game-score"),
+    combo: document.getElementById("game-combo"),
+    comboBar: document.getElementById("game-combo-bar"),
     time: document.getElementById("game-time"),
-    buildShell: document.querySelector(".hud-build"),
-    buildLabel: document.getElementById("game-build-value"),
-    buildBar: document.getElementById("game-build-bar"),
     healthShell: document.getElementById("game-health-shell"),
     integrityPips: Array.from(document.querySelectorAll("#game-integrity-pips i")),
     integrityGroup: document.getElementById("game-integrity-pips"),
-    pressureShell: document.getElementById("game-pressure-shell"),
-    pressureLabel: document.getElementById("game-pressure-label"),
-    pressureBar: document.getElementById("game-pressure-bar"),
-    zoneKicker: document.getElementById("game-zone-kicker"),
+    speedPips: Array.from(document.querySelectorAll("#game-speed-pips i")),
+    speedGroup: document.getElementById("game-speed-pips"),
     zoneName: document.getElementById("game-zone-name"),
-    progressLabel: document.getElementById("game-progress-label"),
+    zoneCopy: document.getElementById("game-zone-copy"),
     progressBar: document.getElementById("game-progress-bar"),
     callout: document.getElementById("game-callout"),
     calloutKicker: document.getElementById("game-callout-kicker"),
@@ -60,6 +54,7 @@
     resultTime: document.getElementById("game-result-time"),
     resultHealth: document.getElementById("game-result-health"),
     resultPickups: document.getElementById("game-result-pickups"),
+    resultCombo: document.getElementById("game-result-combo"),
     resultBonus: document.getElementById("game-result-bonus"),
     restart: document.getElementById("game-restart"),
     localBoard: document.getElementById("game-local-board"),
@@ -68,18 +63,17 @@
   };
 
   const touchInput = {
-    left: false,
-    right: false,
     jump: false,
-    jumpPressed: false
+    jumpPressed: false,
+    duck: false,
+    duckPressed: false
   };
 
   let activeScene = null;
-  let pendingAutoStart = false;
   let currentPlayerName = "";
   let calloutTimer = 0;
-  let toastTimer = 0;
   let coachTimer = 0;
+  let toastTimer = 0;
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -182,7 +176,7 @@
     });
   }
 
-  function announce(title, copy, tone = "good", kicker = "New object", duration = 3600) {
+  function announce(kicker, title, copy, tone = "good", duration = 2300) {
     if (!ui.callout) return;
     window.clearTimeout(calloutTimer);
     ui.callout.dataset.tone = tone;
@@ -195,17 +189,7 @@
     }, duration);
   }
 
-  function showToast(message, duration = 1700) {
-    if (!ui.toast) return;
-    window.clearTimeout(toastTimer);
-    ui.toast.textContent = message;
-    ui.toast.hidden = false;
-    toastTimer = window.setTimeout(() => {
-      ui.toast.hidden = true;
-    }, duration);
-  }
-
-  function showCoach(kicker, title, copy, tone = "neutral", duration = 3600) {
+  function showCoach(kicker, title, copy, tone = "neutral", duration = 3200) {
     if (!ui.coach) return;
     window.clearTimeout(coachTimer);
     ui.coach.dataset.tone = tone;
@@ -223,43 +207,37 @@
     if (ui.coach) ui.coach.hidden = true;
   }
 
+  function showToast(message, duration = 1700) {
+    if (!ui.toast) return;
+    window.clearTimeout(toastTimer);
+    ui.toast.textContent = message;
+    ui.toast.hidden = false;
+    toastTimer = window.setTimeout(() => {
+      ui.toast.hidden = true;
+    }, duration);
+  }
+
   function setLiveStatus(message) {
     if (ui.liveStatus) ui.liveStatus.textContent = message;
   }
 
   function updateHud(state) {
+    const multiplier = Math.max(1, state.multiplier || 1);
+    const speedLevel = clamp(Math.ceil((state.speedRatio || 0) * 6), 1, 6);
+    const comboStep = state.streak % 4;
+
     if (ui.score) ui.score.textContent = formatScore(state.score);
+    if (ui.combo) ui.combo.textContent = `x${multiplier}`;
+    if (ui.comboBar) ui.comboBar.style.width = `${comboStep === 0 && state.streak ? 100 : comboStep * 25}%`;
     if (ui.time) ui.time.textContent = formatTime(state.elapsedMs);
-    if (ui.buildLabel) ui.buildLabel.textContent = `${state.buildCharge} / ${BUILD_TARGET}`;
-    if (ui.buildBar) ui.buildBar.style.width = `${(state.buildCharge / BUILD_TARGET) * 100}%`;
-    if (ui.buildShell) ui.buildShell.classList.toggle("is-ready", state.buildCharge >= BUILD_TARGET);
-
-    ui.integrityPips.forEach((pip, index) => {
-      pip.classList.toggle("is-lost", index >= state.integrity);
-    });
-    if (ui.integrityGroup) {
-      ui.integrityGroup.setAttribute("aria-label", `${state.integrity} of ${MAX_INTEGRITY} integrity`);
-    }
-    if (ui.healthShell) ui.healthShell.classList.toggle("is-warning", state.integrity <= 2);
-
-    const pressure = clamp(state.pressure, 0, 100);
-    if (ui.pressureBar) ui.pressureBar.style.width = `${pressure}%`;
-    if (ui.pressureLabel) {
-      ui.pressureLabel.textContent = !state.pressureActive
-        ? "Dormant"
-        : pressure >= 78
-          ? "Critical"
-          : pressure >= 50
-            ? "Near"
-            : pressure >= 24
-              ? "Closing"
-              : "Far";
-    }
-    if (ui.pressureShell) {
-      ui.pressureShell.classList.toggle("is-active", state.pressureActive);
-      ui.pressureShell.classList.toggle("is-critical", pressure >= 78);
-    }
     if (ui.progressBar) ui.progressBar.style.width = `${state.progress}%`;
+
+    ui.integrityPips.forEach((pip, index) => pip.classList.toggle("is-lost", index >= state.integrity));
+    ui.speedPips.forEach((pip, index) => pip.classList.toggle("is-active", index < speedLevel));
+
+    ui.integrityGroup?.setAttribute("aria-label", `${state.integrity} of ${MAX_INTEGRITY} integrity`);
+    ui.speedGroup?.setAttribute("aria-label", `Speed ${speedLevel} of 6`);
+    ui.healthShell?.classList.toggle("is-warning", state.integrity <= 2);
   }
 
   class AudioRack {
@@ -284,7 +262,7 @@
       else if (activeScene?.runStarted && !activeScene?.runFinished && !activeScene?.runPaused) this.startMusic();
     }
 
-    tone(startFrequency, endFrequency, duration, type = "sine", volume = 0.03, delay = 0) {
+    tone(startFrequency, endFrequency, duration, type = "sine", volume = 0.025, delay = 0) {
       if (!this.enabled || !this.context) return;
       const now = this.context.currentTime + delay;
       const oscillator = this.context.createOscillator();
@@ -301,17 +279,17 @@
       oscillator.stop(now + duration + 0.03);
     }
 
-    noise(duration = 0.12, volume = 0.035) {
+    noise(duration = 0.12, volume = 0.03) {
       if (!this.enabled || !this.context) return;
-      const frameCount = Math.floor(this.context.sampleRate * duration);
-      const buffer = this.context.createBuffer(1, frameCount, this.context.sampleRate);
+      const frames = Math.floor(this.context.sampleRate * duration);
+      const buffer = this.context.createBuffer(1, frames, this.context.sampleRate);
       const data = buffer.getChannelData(0);
-      for (let index = 0; index < frameCount; index += 1) data[index] = Math.random() * 2 - 1;
+      for (let index = 0; index < frames; index += 1) data[index] = Math.random() * 2 - 1;
       const source = this.context.createBufferSource();
       const filter = this.context.createBiquadFilter();
       const gain = this.context.createGain();
       filter.type = "bandpass";
-      filter.frequency.value = 680;
+      filter.frequency.value = 720;
       gain.gain.setValueAtTime(volume, this.context.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, this.context.currentTime + duration);
       source.buffer = buffer;
@@ -322,1222 +300,752 @@
     }
 
     jump() {
-      this.tone(230, 510, 0.14, "triangle", 0.025);
+      this.tone(240, 520, 0.12, "triangle", 0.028);
     }
 
-    pickup(charge) {
-      const base = 430 + charge * 90;
-      this.tone(base, base * 1.22, 0.11, "sine", 0.034);
-      this.tone(base * 1.18, base * 1.5, 0.13, "triangle", 0.022, 0.05);
+    pickup(multiplier) {
+      const base = 430 + multiplier * 60;
+      this.tone(base, base * 1.28, 0.1, "sine", 0.03);
     }
 
-    bridge() {
-      [330, 440, 554, 660].forEach((frequency, index) => {
-        this.tone(frequency, frequency * 1.08, 0.28, "triangle", 0.03, index * 0.08);
-      });
+    combo() {
+      [520, 660, 820].forEach((frequency, index) => this.tone(frequency, frequency * 1.05, 0.18, "triangle", 0.025, index * 0.055));
     }
 
     hurt() {
-      this.noise(0.15, 0.055);
-      this.tone(185, 72, 0.24, "sawtooth", 0.045);
+      this.noise(0.15, 0.045);
+      this.tone(180, 70, 0.24, "sawtooth", 0.04);
     }
 
-    checkpoint() {
-      [392, 523, 659].forEach((frequency, index) => {
-        this.tone(frequency, frequency * 1.04, 0.24, "triangle", 0.025, index * 0.09);
-      });
-    }
-
-    pressure() {
-      this.tone(120, 82, 0.44, "sawtooth", 0.018);
-      this.tone(180, 110, 0.34, "square", 0.01, 0.1);
+    pbp() {
+      [392, 494, 659].forEach((frequency, index) => this.tone(frequency, frequency * 1.08, 0.24, "triangle", 0.03, index * 0.08));
     }
 
     finish() {
-      [392, 494, 587, 784].forEach((frequency, index) => {
-        this.tone(frequency, frequency * 1.08, 0.34, "triangle", 0.032, index * 0.1);
-      });
+      [392, 494, 587, 784].forEach((frequency, index) => this.tone(frequency, frequency * 1.08, 0.32, "triangle", 0.032, index * 0.1));
     }
 
     startMusic() {
       if (!this.enabled || !this.context || this.musicTimer) return;
-      const notes = [98, 123.47, 146.83, 164.81, 146.83, 123.47, 110, 146.83];
-      const playStep = () => {
-        if (!this.enabled || !activeScene?.runStarted || activeScene?.runFinished || activeScene?.runPaused) return;
-        const note = notes[this.musicStep % notes.length];
+      const sequence = [110, 147, 165, 147, 123, 165, 196, 165];
+      this.musicTimer = window.setInterval(() => {
+        if (!this.enabled || !activeScene?.runStarted || activeScene?.runPaused || activeScene?.runFinished) return;
+        const note = sequence[this.musicStep % sequence.length];
+        this.tone(note, note, 0.14, "triangle", 0.008);
+        if (this.musicStep % 2 === 0) this.tone(note * 2, note * 2, 0.08, "sine", 0.005);
         this.musicStep += 1;
-        this.tone(note, note * 1.005, 0.54, "triangle", 0.008);
-        if (this.musicStep % 4 === 0) this.tone(note * 2, note * 2.01, 0.18, "sine", 0.004, 0.08);
-      };
-      playStep();
-      this.musicTimer = window.setInterval(playStep, 560);
+      }, 330);
     }
 
     stopMusic() {
       window.clearInterval(this.musicTimer);
       this.musicTimer = 0;
+      this.musicStep = 0;
     }
   }
 
   const audio = new AudioRack();
 
-  class EnvelopeScene extends Phaser.Scene {
+  class RunnerScene extends Phaser.Scene {
     constructor() {
-      super("EnvelopeScene");
-      this.resetRunState();
-    }
-
-    init(data = {}) {
-      this.autoStart = Boolean(data.autoStart);
-    }
-
-    resetRunState() {
+      super("RunnerScene");
       this.runStarted = false;
       this.runFinished = false;
       this.runPaused = false;
-      this.score = 0;
+      this.isDucking = false;
       this.integrity = MAX_INTEGRITY;
-      this.buildCharge = 0;
-      this.currentBridgeIndex = 0;
+      this.score = 0;
+      this.streak = 0;
+      this.multiplier = 1;
+      this.bestMultiplier = 1;
+      this.pickups = 0;
       this.elapsedMs = 0;
-      this.pickupsCollected = 0;
-      this.currentZoneIndex = 0;
-      this.checkpoint = { ...level.spawn };
+      this.pausedTotal = 0;
+      this.pauseStartedAt = 0;
+      this.currentSpeed = level.baseSpeed;
       this.lastGroundedAt = 0;
       this.jumpBufferedUntil = 0;
+      this.jumpStartedAt = 0;
+      this.jumpCutApplied = false;
+      this.duckAssistUntil = 0;
       this.invulnerableUntil = 0;
-      this.lastHudUpdate = 0;
-      this.runStartedAt = 0;
-      this.hasMoved = false;
-      this.hasJumped = false;
-      this.idleCoachShown = false;
-      this.jumpCoachShown = false;
-      this.forkCoachShown = false;
-      this.pressureActive = false;
-      this.pressureX = -1200;
-      this.lastPressureHitAt = 0;
-      this.wasGrounded = false;
-      this.facing = 1;
-      this.seenCallouts = new Set();
+      this.speedBoostUntil = 0;
+      this.currentZoneIndex = 0;
+      this.lastCheckpointX = level.spawnX;
+      this.hasActed = false;
+      this.coachShown = new Set();
+      this.hazardRecords = [];
     }
 
     preload() {
       const base = "../assets/game-next/images/";
-      this.load.image("envelope-bg-v2", `${base}periplasm-run-background-v2.png`);
-      this.load.image("ecoli-player-v3", `${base}ecoli-player-v3.png`);
-      this.load.image("pg-precursor-v2", `${base}pg-precursor-v2.png`);
-      this.load.image("pbp-platform-v2", `${base}pbp-platform-v2.png`);
-      this.load.image("pbp-gate-v2", `${base}pbp-gate-v2.png`);
-      this.load.image("phage-pressure-v2", `${base}phage-pressure-v2.png`);
+      this.load.image("runner-player", `${base}runner-player-v3.png`);
+      this.load.image("runner-track", `${base}runner-track-v3.png`);
+      this.load.image("runner-precursor", `${base}runner-precursor-v3.png`);
+      this.load.image("runner-antibiotic", `${base}runner-antibiotic-v3.png`);
+      this.load.image("runner-autolysin", `${base}runner-autolysin-v3.png`);
+      this.load.image("runner-pbp", `${base}runner-pbp-v3.png`);
     }
 
     create() {
       activeScene = this;
-      this.resetRunState();
-      this.buildTextures();
-      this.createBackground();
-      this.createCourse();
-      this.createPressureFront();
-      this.createPlayer();
-      this.createInputs();
-      this.createPhysics();
-      this.createAmbientLife();
-
-      this.physics.world.setBounds(0, 0, level.worldWidth, WORLD_HEIGHT + 120);
-      this.physics.world.pause();
-      this.input.keyboard.enabled = false;
+      this.physics.world.setBounds(0, 0, level.worldWidth, WORLD_HEIGHT + 160);
       this.cameras.main.setBounds(0, 0, level.worldWidth, WORLD_HEIGHT);
-      this.cameras.main.startFollow(this.player, true, 0.1, 0.14);
-      this.updateCameraLead(this.scale.width);
-      this.cameras.main.setDeadzone(250, 150);
       this.cameras.main.roundPixels = true;
 
-      this.scale.on("resize", this.resizeBackground, this);
-      this.events.once("shutdown", () => {
-        this.scale.off("resize", this.resizeBackground, this);
-        if (activeScene === this) activeScene = null;
-      });
+      this.solids = this.physics.add.staticGroup();
+      this.tokens = this.physics.add.staticGroup();
+      this.hazards = this.physics.add.staticGroup();
+      this.bonuses = this.physics.add.staticGroup();
 
-      this.resetHud();
-      if (this.autoStart || pendingAutoStart) {
-        pendingAutoStart = false;
-        this.time.delayedCall(80, () => this.startRun());
-      }
-    }
+      this.createCourse();
+      this.createPlayer();
+      this.createInput();
+      this.createCollisions();
+      this.resizeCamera(this.scale.gameSize);
+      this.scale.on("resize", this.resizeCamera, this);
+      this.events.once("shutdown", () => this.scale.off("resize", this.resizeCamera, this));
 
-    buildTextures() {
-      const collision = this.make.graphics({ add: false });
-      collision.fillStyle(0xffffff, 0.01);
-      collision.fillRect(0, 0, 8, 8);
-      collision.generateTexture("collision-pixel", 8, 8);
-      collision.destroy();
-
-      const route = this.make.graphics({ add: false });
-      route.fillStyle(0x061825, 0.72);
-      route.fillRoundedRect(0, 13, 256, 46, 20);
-      route.lineStyle(2, 0x4cb4be, 0.52);
-      for (let x = 12; x < 256; x += 44) {
-        route.lineBetween(x, 26, x + 30, 47);
-        route.lineBetween(x + 30, 47, x + 44, 26);
-      }
-      for (let x = 10; x < 266; x += 44) {
-        route.fillStyle(x % 88 ? 0x1b7788 : 0x319eaa, 0.92);
-        route.fillCircle(x, 25, 7);
-        route.fillStyle(0x12526b, 0.92);
-        route.fillCircle(x + 22, 48, 7);
-        route.fillStyle(0xa0edf0, 0.34);
-        route.fillCircle(x - 2, 23, 2.4);
-      }
-      route.generateTexture("pg-route", 256, 72);
-      route.destroy();
-
-      const antibiotic = this.make.graphics({ add: false });
-      antibiotic.fillStyle(0x3d0712, 0.55);
-      antibiotic.fillRoundedRect(4, 6, 92, 38, 19);
-      antibiotic.fillStyle(0xb41432, 1);
-      antibiotic.fillRoundedRect(2, 2, 94, 38, 19);
-      antibiotic.fillStyle(0xf15b69, 1);
-      antibiotic.fillRoundedRect(49, 2, 47, 38, { tl: 0, tr: 19, bl: 0, br: 19 });
-      antibiotic.lineStyle(3, 0xffa0a9, 0.9);
-      antibiotic.strokeRoundedRect(3, 3, 92, 36, 18);
-      antibiotic.lineStyle(3, 0x6d0d20, 0.8);
-      antibiotic.lineBetween(49, 5, 49, 37);
-      antibiotic.generateTexture("beta-lactam", 102, 48);
-      antibiotic.destroy();
-
-      const autolysin = this.make.graphics({ add: false });
-      autolysin.fillStyle(0x4c0816, 0.75);
-      autolysin.fillCircle(45, 45, 39);
-      for (let index = 0; index < 10; index += 1) {
-        const angle = (Math.PI * 2 * index) / 10;
-        const x = 45 + Math.cos(angle) * 39;
-        const y = 45 + Math.sin(angle) * 39;
-        autolysin.fillStyle(0xe33a52, 1);
-        autolysin.fillTriangle(
-          x + Math.cos(angle) * 12,
-          y + Math.sin(angle) * 12,
-          x + Math.cos(angle + 1.15) * 9,
-          y + Math.sin(angle + 1.15) * 9,
-          x + Math.cos(angle - 1.15) * 9,
-          y + Math.sin(angle - 1.15) * 9
-        );
-      }
-      autolysin.fillStyle(0xf26472, 1);
-      autolysin.fillCircle(45, 45, 27);
-      autolysin.fillStyle(0x380711, 1);
-      autolysin.fillCircle(45, 45, 13);
-      autolysin.lineStyle(3, 0xffa2aa, 0.72);
-      autolysin.strokeCircle(45, 45, 27);
-      autolysin.generateTexture("autolysin", 90, 90);
-      autolysin.destroy();
-
-      const pressure = this.make.graphics({ add: false });
-      for (let index = 0; index < 16; index += 1) {
-        pressure.fillStyle(0xc31d3a, (index / 15) * 0.45);
-        pressure.fillRect(index * 16, 0, 17, WORLD_HEIGHT);
-      }
-      pressure.lineStyle(5, 0xff5368, 0.78);
-      pressure.lineBetween(250, 0, 250, WORLD_HEIGHT);
-      pressure.generateTexture("pressure-band", 256, WORLD_HEIGHT);
-      pressure.destroy();
-
-      const mote = this.make.graphics({ add: false });
-      mote.fillStyle(0xa8f5ee, 0.5);
-      mote.fillCircle(5, 5, 3);
-      mote.generateTexture("mote", 10, 10);
-      mote.destroy();
-    }
-
-    createBackground() {
-      this.background = this.add
-        .image(0, 0, "envelope-bg-v2")
-        .setOrigin(0)
-        .setScrollFactor(0)
-        .setDepth(-100);
-      this.resizeBackground(this.scale.gameSize);
-
-      this.backgroundShade = this.add
-        .rectangle(0, 0, this.scale.width, this.scale.height, 0x020812, 0.18)
-        .setOrigin(0)
-        .setScrollFactor(0)
-        .setDepth(-90);
-
-      this.depthMist = this.add
-        .rectangle(0, this.scale.height * 0.18, this.scale.width, this.scale.height * 0.62, 0x061627, 0.14)
-        .setOrigin(0)
-        .setScrollFactor(0)
-        .setDepth(-85);
-    }
-
-    resizeBackground(gameSize) {
-      if (!this.background) return;
-      const width = gameSize.width || this.scale.width;
-      const height = gameSize.height || this.scale.height;
-      const texture = this.textures.get("envelope-bg-v2").getSourceImage();
-      const scale = Math.max(width / texture.width, height / texture.height);
-      this.backgroundBaseY = (height - texture.height * scale) / 2;
-      this.background
-        .setScale(scale)
-        .setPosition((width - texture.width * scale) / 2, this.backgroundBaseY);
-      this.backgroundShade?.setSize(width, height);
-      this.depthMist?.setSize(width, height * 0.62).setY(height * 0.18);
-      this.updateCameraLead(width);
-    }
-
-    updateCameraLead(viewportWidth) {
-      const horizontalLead = -Math.min(220, Math.max(52, viewportWidth * 0.14));
-      const verticalLead = viewportWidth < 760 ? 22 : 64;
-      this.cameras.main.setFollowOffset(horizontalLead, verticalLead);
+      this.input.keyboard.enabled = false;
+      this.updateInterface();
     }
 
     createCourse() {
-      this.platformBodies = this.physics.add.staticGroup();
-      this.movingPlatforms = this.physics.add.group({ allowGravity: false, immovable: true });
-      this.collectibles = this.physics.add.staticGroup();
-      this.antibiotics = this.physics.add.staticGroup();
-      this.autolysins = this.physics.add.group({ allowGravity: false, immovable: true });
-      this.checkpoints = this.physics.add.staticGroup();
-      this.bridges = [];
-
-      level.ground.forEach(([start, end]) => {
-        this.addRoutePlatform((start + end) / 2, ROUTE_Y, end - start, 72, "ground");
+      const sortedGaps = [...level.gaps].sort((a, b) => a.x - b.x);
+      let cursor = 0;
+      sortedGaps.forEach((gap) => {
+        this.addTrack(cursor, gap.x - gap.width / 2);
+        cursor = gap.x + gap.width / 2;
       });
-      level.platforms.forEach((definition) => {
-        this.addRoutePlatform(definition.x, definition.y, definition.width, 46, "platform");
-      });
-      level.movingPlatforms.forEach((definition, index) => this.addMovingPlatform(definition, index));
-      level.bridges.forEach((definition, index) => this.addBridge(definition, index));
+      this.addTrack(cursor, level.worldWidth);
 
-      level.pickups.forEach((definition, index) => {
-        const pickup = this.collectibles.create(definition.x, definition.y, "pg-precursor-v2");
-        pickup.setDisplaySize(58, 58);
-        pickup.refreshBody();
-        pickup.setData({ bridge: definition.bridge, bonus: Boolean(definition.bonus), index });
-        this.tweens.add({
-          targets: pickup,
-          y: definition.y - 9,
-          angle: index % 2 ? 4 : -4,
-          duration: 760 + (index % 4) * 90,
-          yoyo: true,
-          repeat: -1,
-          ease: "Sine.inOut"
-        });
-      });
+      level.platforms.forEach((platform) => this.addPlatform(platform));
+      level.hazards.forEach((hazard) => this.addHazard(hazard));
+      level.tokenRuns.forEach((run) => this.addTokenRun(run));
+      level.pbpBonuses.forEach((bonus) => this.addPbpBonus(bonus));
 
-      level.antibiotics.forEach((definition, index) => {
-        const hazard = this.antibiotics.create(definition.x, definition.y, "beta-lactam");
-        hazard.setScale(index % 2 ? 0.88 : 0.96);
-        hazard.setAngle(index % 2 ? 12 : -12);
-        hazard.refreshBody();
-        hazard.setData("cooldown", false);
-        this.tweens.add({
-          targets: hazard,
-          y: definition.y - 5,
-          duration: 820 + (index % 3) * 110,
-          yoyo: true,
-          repeat: -1,
-          ease: "Sine.inOut"
-        });
-      });
+      const goal = this.bonuses.create(level.goalX, level.floorY - 54, "runner-pbp");
+      goal.setDisplaySize(102, 106).refreshBody();
+      goal.setData("goal", true);
+      goal.setDepth(8);
 
-      level.autolysins.forEach((definition, index) => {
-        const hazard = this.autolysins.create(definition.x, definition.y, "autolysin");
-        hazard.setDisplaySize(82, 82);
-        hazard.body.setAllowGravity(false);
-        hazard.body.setImmovable(true);
-        hazard.setData({
-          baseX: definition.x,
-          distance: definition.distance,
-          speed: definition.speed,
-          direction: index % 2 ? -1 : 1
-        });
-      });
-
-      level.checkpoints.forEach((x, index) => {
-        const checkpoint = this.checkpoints.create(x, 645, "pbp-gate-v2");
-        checkpoint.setDisplaySize(122, 218);
-        checkpoint.refreshBody();
-        checkpoint.setData({ index, activated: false });
-        checkpoint.setAlpha(0.88);
-      });
-
-      this.goal = this.physics.add.staticImage(level.goalX, 600, "pbp-gate-v2");
-      this.goal.setDisplaySize(196, 350);
-      this.goal.refreshBody();
-      this.goalGlow = this.add.ellipse(level.goalX, 640, 230, 310, level.palette.route, 0.09).setDepth(3);
-      this.tweens.add({
-        targets: this.goalGlow,
-        alpha: 0.22,
-        scaleX: 1.12,
-        scaleY: 1.08,
-        duration: 1100,
-        yoyo: true,
-        repeat: -1,
-        ease: "Sine.inOut"
-      });
-
-      this.createCourseLabels();
-    }
-
-    addRoutePlatform(x, y, width, height, kind) {
-      const body = this.platformBodies.create(x, y, "collision-pixel");
-      body.setDisplaySize(width, height);
-      body.refreshBody();
-      body.setVisible(false);
-
-      const visualHeight = kind === "ground" ? 58 : 48;
-      const visual = this.add.tileSprite(x, y - (kind === "ground" ? 10 : 3), width + 18, visualHeight, "pg-route");
-      visual.setDepth(kind === "ground" ? 2 : 4);
-      visual.setAlpha(kind === "ground" ? 0.76 : 0.88);
-      if (kind === "platform") visual.setTint(0x69dce3);
-      return body;
-    }
-
-    addMovingPlatform(definition, index) {
-      const platform = this.movingPlatforms.create(definition.x, definition.y, "pbp-platform-v2");
-      platform.setDisplaySize(definition.width, 118);
-      platform.body.setSize(560, 104);
-      platform.body.setOffset(80, 105);
-      platform.body.setAllowGravity(false);
-      platform.body.setImmovable(true);
-      platform.setDepth(5);
-      platform.setData({
-        baseX: definition.x,
-        baseY: definition.y,
-        axis: definition.axis,
-        distance: definition.distance,
-        speed: definition.speed,
-        direction: index % 2 ? -1 : 1
-      });
-    }
-
-    addBridge(definition, index) {
-      const body = this.platformBodies.create(definition.x, definition.y, "collision-pixel");
-      body.setDisplaySize(definition.width, 72);
-      body.refreshBody();
-      body.setVisible(false);
-      body.body.enable = false;
-
-      const segmentWidth = definition.width / BUILD_TARGET;
-      const segments = [];
-      for (let segmentIndex = 0; segmentIndex < BUILD_TARGET; segmentIndex += 1) {
-        const segment = this.add
-          .tileSprite(
-            definition.x - definition.width / 2 + segmentWidth * (segmentIndex + 0.5),
-            definition.y + 2,
-            segmentWidth + 10,
-            60,
-            "pg-route"
-          )
-          .setDepth(5)
-          .setTint(level.palette.precursor)
-          .setAlpha(0.1)
-          .setScale(0.92, 0.74);
-        segments.push(segment);
-      }
-
-      const marker = this.add
-        .text(definition.x, definition.y - 78, index === 0 ? "3 PRECURSORS BUILD THIS BRIDGE" : "BRIDGE REQUIRES 3", {
+      this.add
+        .text(level.goalX, level.floorY - 137, "PBP GATE", {
           fontFamily: "Manrope, Arial, sans-serif",
-          fontSize: "13px",
+          fontSize: "18px",
           fontStyle: "bold",
-          color: "#9ff6cb",
-          backgroundColor: "rgba(3, 14, 23, 0.86)",
-          padding: { x: 10, y: 6 },
-          stroke: "#03101a",
-          strokeThickness: 3
+          color: "#f6cf68",
+          backgroundColor: "rgba(4, 17, 29, 0.86)",
+          padding: { x: 10, y: 6 }
         })
         .setOrigin(0.5)
-        .setDepth(8);
-      this.bridges.push({ ...definition, body, segments, marker, built: false, index });
-    }
+        .setDepth(10);
 
-    createCourseLabels() {
-      this.addObjectLabel(470, 570, "GREEN", "PG PRECURSOR", "good");
-      this.addObjectLabel(2550, 610, "RED", "BETA-LACTAM", "danger");
-      this.addObjectLabel(2920, 275, "CYAN", "FAST PBP ROUTE", "cyan");
-      this.addObjectLabel(5950, 470, "RED", "AUTOLYSIN", "danger");
-      this.addObjectLabel(11890, 370, "GOLD", "PBP GATE", "gold");
-    }
-
-    addObjectLabel(x, y, kicker, title, tone) {
-      const colors = {
-        good: { accent: 0x65efac, text: "#99f8c7" },
-        danger: { accent: 0xf24f61, text: "#ff9ca8" },
-        cyan: { accent: 0x45d6e6, text: "#a7f6fb" },
-        gold: { accent: 0xf5c965, text: "#ffe19a" }
-      };
-      const color = colors[tone];
-      const group = this.add.container(x, y).setDepth(8);
-      const panel = this.add.rectangle(0, 0, 154, 48, 0x04111e, 0.86).setStrokeStyle(1, color.accent, 0.54);
-      const kickerText = this.add
-        .text(-64, -14, kicker, {
+      this.add
+        .text(15240, 354, "GOLD PBP ROUTE", {
           fontFamily: "Manrope, Arial, sans-serif",
-          fontSize: "9px",
+          fontSize: "17px",
           fontStyle: "bold",
-          color: color.text
+          color: "#f6cf68",
+          backgroundColor: "rgba(4, 17, 29, 0.8)",
+          padding: { x: 11, y: 6 }
         })
-        .setOrigin(0, 0.5);
-      const titleText = this.add
-        .text(-64, 8, title, {
-          fontFamily: "Manrope, Arial, sans-serif",
-          fontSize: "12px",
-          fontStyle: "bold",
-          color: "#edf8fa"
-        })
-        .setOrigin(0, 0.5);
-      group.add([panel, kickerText, titleText]);
-      return group;
+        .setOrigin(0.5)
+        .setDepth(9);
     }
 
-    createPressureFront() {
-      this.pressureBand = this.add.image(this.pressureX, WORLD_HEIGHT / 2, "pressure-band").setDepth(12).setAlpha(0);
-      this.pressurePhages = [220, 450, 680].map((y, index) =>
-        this.add
-          .image(this.pressureX + 80 + index * 38, y, "phage-pressure-v2")
-          .setDisplaySize(86 + index * 6, 86 + index * 6)
-          .setDepth(13)
-          .setAlpha(0)
+    addTrack(start, end) {
+      const width = end - start;
+      if (width < 8) return;
+      const center = start + width / 2;
+      const visual = this.add.tileSprite(center, level.floorY + 5, width + 4, 52, "runner-track");
+      visual.setTileScale(0.32, 0.68).setDepth(4);
+
+      const zone = this.add.zone(center, level.floorY + 38, width, 76);
+      this.physics.add.existing(zone, true);
+      this.solids.add(zone);
+    }
+
+    addPlatform(platform) {
+      const visual = this.add.tileSprite(platform.x, platform.y + 5, platform.width, 50, "runner-track");
+      visual.setTileScale(0.3, 0.66).setTint(0xf5c965).setDepth(5);
+
+      const zone = this.add.zone(platform.x, platform.y + 32, platform.width, 64);
+      this.physics.add.existing(zone, true);
+      this.solids.add(zone);
+    }
+
+    addHazard(definition) {
+      const isCapsule = definition.type === "antibiotic";
+      const visual = this.add.image(
+        definition.x,
+        isCapsule ? level.floorY - 28 : level.floorY - 98,
+        isCapsule ? "runner-antibiotic" : "runner-autolysin"
       );
+      visual.setDisplaySize(isCapsule ? 86 : 76, isCapsule ? 54 : 154).setDepth(7);
+
+      const zone = this.add.zone(
+        definition.x,
+        isCapsule ? level.floorY - 13 : level.floorY - 40,
+        isCapsule ? 72 : 70,
+        isCapsule ? 26 : 30
+      );
+      this.physics.add.existing(zone, true);
+      zone.setData({ type: definition.type, coach: definition.coach || "", visual });
+      this.hazards.add(zone);
+      this.hazardRecords.push({ ...definition, zone, visual, prompted: false });
+
+      if (definition.coach) {
+        const label = isCapsule ? "ANTIBIOTIC | JUMP" : "AUTOLYSIN | DUCK";
+        this.add
+          .text(definition.x, isCapsule ? level.floorY - 93 : level.floorY - 202, label, {
+            fontFamily: "Manrope, Arial, sans-serif",
+            fontSize: "16px",
+            fontStyle: "bold",
+            color: "#ffb8bd",
+            backgroundColor: "rgba(54, 9, 20, 0.88)",
+            padding: { x: 10, y: 6 }
+          })
+          .setOrigin(0.5)
+          .setDepth(10);
+      }
+    }
+
+    addTokenRun(run) {
+      const count = run.count;
+      for (let index = 0; index < count; index += 1) {
+        const progress = count === 1 ? 0.5 : index / (count - 1);
+        const x = run.x + index * run.spacing;
+        let y = level.floorY - 54;
+
+        if (run.shape === "arc" || run.shape === "gap") {
+          y -= Math.sin(progress * Math.PI) * (run.lift || 90);
+        } else if (run.shape === "wave") {
+          y -= Math.abs(Math.sin(index * 0.88)) * (run.lift || 84);
+        } else if (run.shape === "low") {
+          y = level.floorY - 20;
+        } else if (run.shape === "platform") {
+          y = run.y;
+        }
+
+        const token = this.tokens.create(x, y, "runner-precursor");
+        token.setDisplaySize(run.bonus ? 48 : 42, run.bonus ? 50 : 44).refreshBody();
+        token.setData("bonus", Boolean(run.bonus));
+        token.setDepth(8);
+      }
+    }
+
+    addPbpBonus(definition) {
+      const bonus = this.bonuses.create(definition.x, definition.y, "runner-pbp");
+      bonus.setDisplaySize(70, 74).refreshBody();
+      bonus.setData("pbp", true);
+      bonus.setDepth(8);
     }
 
     createPlayer() {
-      this.player = this.physics.add.sprite(level.spawn.x, level.spawn.y, "ecoli-player-v3");
-      this.player.setDisplaySize(158, 89);
-      this.playerBaseScaleX = this.player.scaleX;
-      this.playerBaseScaleY = this.player.scaleY;
-      this.airborneSince = 0;
-      this.player.setDepth(16);
+      this.player = this.physics.add.sprite(level.spawnX, level.floorY - 21, "runner-player");
+      this.player.setDisplaySize(132, 44).setAlpha(0).setDepth(12);
       this.player.setCollideWorldBounds(false);
-      this.player.body.setSize(420, 250);
-      this.player.body.setOffset(115, 96);
-      this.player.body.setMaxVelocity(650, 930);
-      this.player.body.setDragX(0);
-      this.player.body.setGravityY(470);
+      this.player.body.setMaxVelocity(level.maxSpeed + 80, 1100);
 
-      this.playerShadow = this.add.ellipse(level.spawn.x, 742, 88, 18, 0x02070c, 0.42).setDepth(9);
-      this.playerAura = this.add.ellipse(level.spawn.x, level.spawn.y, 124, 68, level.palette.membrane, 0.08).setDepth(14);
+      const frameWidth = this.player.frame.realWidth;
+      const frameHeight = this.player.frame.realHeight;
+      this.playerBody = {
+        width: frameWidth * 0.82,
+        standHeight: frameHeight * 0.8,
+        standOffsetX: frameWidth * 0.13,
+        standOffsetY: frameHeight * 0.12,
+        duckHeight: frameHeight * 0.4,
+        duckOffsetY: frameHeight * 0.52
+      };
+      this.applyPlayerBody(false);
+
+      this.playerVisual = this.add.image(this.player.x, this.player.y, "runner-player");
+      this.playerVisual.setDisplaySize(132, 44).setDepth(13).setVisible(false);
+      this.playerVisualBaseScale = { x: this.playerVisual.scaleX, y: this.playerVisual.scaleY };
+
+      this.playerGhosts = [0, 1].map((index) => {
+        const ghost = this.add.image(this.player.x - 26 - index * 24, this.player.y, "runner-player");
+        ghost.setDisplaySize(132, 44).setAlpha(0).setTint(0x45d6e6).setDepth(11).setVisible(false);
+        return ghost;
+      });
     }
 
-    createInputs() {
+    createInput() {
       this.cursors = this.input.keyboard.createCursorKeys();
       this.keys = this.input.keyboard.addKeys({
-        left: Phaser.Input.Keyboard.KeyCodes.A,
-        right: Phaser.Input.Keyboard.KeyCodes.D,
         jump: Phaser.Input.Keyboard.KeyCodes.W,
         jumpAlt: Phaser.Input.Keyboard.KeyCodes.SPACE,
-        pause: Phaser.Input.Keyboard.KeyCodes.ESC
+        duck: Phaser.Input.Keyboard.KeyCodes.S
       });
+      this.input.keyboard.removeCapture([
+        Phaser.Input.Keyboard.KeyCodes.W,
+        Phaser.Input.Keyboard.KeyCodes.S,
+        Phaser.Input.Keyboard.KeyCodes.SPACE,
+        Phaser.Input.Keyboard.KeyCodes.UP,
+        Phaser.Input.Keyboard.KeyCodes.DOWN
+      ]);
     }
 
-    createPhysics() {
-      this.physics.add.collider(this.player, this.platformBodies);
-      this.physics.add.collider(this.player, this.movingPlatforms);
-      this.physics.add.overlap(this.player, this.collectibles, this.collectPickup, undefined, this);
-      this.physics.add.overlap(this.player, this.antibiotics, this.hitAntibiotic, undefined, this);
-      this.physics.add.overlap(this.player, this.autolysins, this.hitAutolysin, undefined, this);
-      this.physics.add.overlap(this.player, this.checkpoints, this.activateCheckpoint, undefined, this);
-      this.physics.add.overlap(this.player, this.goal, this.reachGoal, undefined, this);
+    createCollisions() {
+      this.physics.add.collider(this.player, this.solids);
+      this.physics.add.overlap(this.player, this.tokens, this.collectToken, undefined, this);
+      this.physics.add.overlap(this.player, this.hazards, this.hitHazard, undefined, this);
+      this.physics.add.overlap(this.player, this.bonuses, this.collectBonus, undefined, this);
     }
 
-    createAmbientLife() {
-      this.motes = [];
-      for (let index = 0; index < 18; index += 1) {
-        const mote = this.add
-          .image(Math.random() * level.worldWidth, 160 + Math.random() * 520, "mote")
-          .setAlpha(0.05 + Math.random() * 0.11)
-          .setScale(0.4 + Math.random() * 0.8)
-          .setDepth(-5);
-        mote.setData({ speed: 5 + Math.random() * 14, phase: Math.random() * Math.PI * 2 });
-        this.motes.push(mote);
-      }
+    applyPlayerBody(ducking) {
+      const metrics = this.playerBody;
+      const height = ducking ? metrics.duckHeight : metrics.standHeight;
+      const offsetY = ducking ? metrics.duckOffsetY : metrics.standOffsetY;
+      this.player.body.setSize(metrics.width, height, false);
+      this.player.body.setOffset(metrics.standOffsetX, offsetY);
     }
 
-    resetHud() {
-      updateHud({
-        score: 0,
-        elapsedMs: 0,
-        buildCharge: 0,
-        integrity: MAX_INTEGRITY,
-        pressure: 0,
-        pressureActive: false,
-        progress: 0
-      });
-      if (ui.zoneKicker) ui.zoneKicker.textContent = `Level ${level.number} | ${level.species}`;
-      if (ui.zoneName) ui.zoneName.textContent = level.zones[0].name;
-      if (ui.progressLabel) ui.progressLabel.textContent = level.zones[0].name;
+    resizeCamera(gameSize) {
+      const zoom = Math.max(0.62, gameSize.height / WORLD_HEIGHT);
+      this.cameras.main.setZoom(zoom);
     }
 
     startRun() {
-      if (this.runStarted || this.runFinished) return;
+      if (this.runStarted && !this.runFinished) return;
       this.runStarted = true;
+      this.runFinished = false;
       this.runPaused = false;
-      this.physics.world.resume();
+      this.integrity = MAX_INTEGRITY;
+      this.score = 0;
+      this.streak = 0;
+      this.multiplier = 1;
+      this.bestMultiplier = 1;
+      this.pickups = 0;
+      this.elapsedMs = 0;
+      this.pausedTotal = 0;
+      this.pauseStartedAt = 0;
+      this.currentZoneIndex = 0;
+      this.runStartTime = this.time.now;
+      this.lastGroundedAt = this.time.now;
+      this.lastCheckpointX = level.spawnX;
+      this.hasActed = false;
+      this.player.setPosition(level.spawnX, level.floorY - 21).setVelocity(0, 0).setActive(true);
+      this.playerVisual.setVisible(true).clearTint().setAlpha(1);
+      this.playerGhosts.forEach((ghost) => ghost.setVisible(true));
       this.input.keyboard.enabled = true;
-      this.player.setVelocity(0, 0);
-      this.runStartedAt = this.time.now;
-      audio.unlock();
+      ui.startScreen.hidden = true;
+      ui.resultScreen.hidden = true;
+      ui.pauseScreen.hidden = true;
+      ui.pause.disabled = false;
+      document.querySelector(".game-stage")?.classList.add("is-running");
       audio.startMusic();
-      setLiveStatus("Envelope Escape run started.");
-      showCoach("You are cyan", "Move right", "Use the arrow keys or A and D. Jump with Up, W, or Space.", "neutral", 3000);
-    }
+      setLiveStatus("Run started. The cell moves automatically. Collect green precursors and avoid coral hazards.");
 
-    pauseRun() {
-      if (!this.runStarted || this.runFinished || this.runPaused) return;
-      this.runPaused = true;
-      this.physics.world.pause();
-      this.input.keyboard.enabled = false;
-      audio.stopMusic();
-      if (ui.pauseScreen) ui.pauseScreen.hidden = false;
-      if (ui.pause) ui.pause.setAttribute("aria-pressed", "true");
-      setLiveStatus("Envelope Escape paused.");
-    }
-
-    resumeRun() {
-      if (!this.runStarted || this.runFinished || !this.runPaused) return;
-      this.runPaused = false;
-      this.physics.world.resume();
-      this.input.keyboard.enabled = true;
-      audio.unlock();
-      audio.startMusic();
-      if (ui.pauseScreen) ui.pauseScreen.hidden = true;
-      if (ui.pause) ui.pause.setAttribute("aria-pressed", "false");
-      setLiveStatus("Envelope Escape resumed.");
-    }
-
-    update(time, delta) {
-      this.updateBackground(time);
-      if (!this.runStarted || this.runFinished || this.runPaused) return;
-
-      this.elapsedMs += delta;
-      this.updateMovement(time, delta);
-      this.updateTutorials(time);
-      this.updateMovingObjects();
-      this.updateZone();
-      this.updateCheckpointProgress();
-      this.updatePressure(time, delta);
-      this.updatePlayerVisuals(time);
-
-      if (this.player.y > WORLD_HEIGHT + 50) this.fallFromCourse();
-      if (time - this.lastHudUpdate > 70) {
-        this.lastHudUpdate = time;
-        this.refreshHud();
-      }
-      touchInput.jumpPressed = false;
-    }
-
-    updateBackground(time) {
-      if (this.background) this.background.y = (this.backgroundBaseY || 0) + Math.sin(time * 0.00035) * 2;
-      this.motes?.forEach((mote) => {
-        const speed = mote.getData("speed");
-        const phase = mote.getData("phase");
-        mote.y += Math.sin(time * 0.0005 + phase) * 0.035;
-        mote.x += speed * 0.004;
-        if (mote.x > level.worldWidth) mote.x = 0;
+      this.time.delayedCall(850, () => {
+        if (this.runStarted && !this.runFinished && !this.hasActed) {
+          showCoach("You run automatically", "Jump the coral capsule", "Press Space, W, or the Up arrow.", "jump", 4200);
+        }
       });
     }
 
-    updateMovement(time, delta) {
+    update(time, delta) {
+      if (!this.player || !this.playerVisual) return;
+
+      if (!this.runStarted || this.runFinished || this.runPaused) {
+        this.syncPlayerVisual(time, false);
+        touchInput.jumpPressed = false;
+        touchInput.duckPressed = false;
+        return;
+      }
+
       const grounded = this.player.body.blocked.down || this.player.body.touching.down;
       if (grounded) this.lastGroundedAt = time;
-      else if (this.wasGrounded) this.airborneSince = time;
 
-      const left = this.cursors.left.isDown || this.keys.left.isDown || touchInput.left;
-      const right = this.cursors.right.isDown || this.keys.right.isDown || touchInput.right;
       const jumpPressed =
         Phaser.Input.Keyboard.JustDown(this.cursors.up) ||
         Phaser.Input.Keyboard.JustDown(this.keys.jump) ||
         Phaser.Input.Keyboard.JustDown(this.keys.jumpAlt) ||
         touchInput.jumpPressed;
       const jumpHeld = this.cursors.up.isDown || this.keys.jump.isDown || this.keys.jumpAlt.isDown || touchInput.jump;
-
-      if (Phaser.Input.Keyboard.JustDown(this.keys.pause)) {
-        this.pauseRun();
-        return;
-      }
-
-      const direction = left === right ? 0 : left ? -1 : 1;
-      if (direction) {
-        this.facing = direction;
-        this.hasMoved = true;
-        if (this.player.x < 850) hideCoach();
-      }
+      const duckPressed = Phaser.Input.Keyboard.JustDown(this.cursors.down) || Phaser.Input.Keyboard.JustDown(this.keys.duck) || touchInput.duckPressed;
+      if (duckPressed) this.duckAssistUntil = time + 1100;
+      const duckHeld = this.cursors.down.isDown || this.keys.duck.isDown || touchInput.duck || time < this.duckAssistUntil;
 
       if (jumpPressed) {
-        this.jumpBufferedUntil = time + 180;
-        this.hasJumped = true;
+        this.jumpBufferedUntil = time + 170;
+        this.hasActed = true;
         hideCoach();
       }
+      if (duckHeld) this.hasActed = true;
 
-      const maxSpeed = grounded ? 410 : 425;
-      const targetVelocity = direction * maxSpeed;
-      const reversing = direction && Math.sign(this.player.body.velocity.x) !== direction;
-      const responseRate = grounded ? (reversing ? 0.022 : direction ? 0.013 : 0.018) : 0.008;
-      const response = 1 - Math.exp(-delta * responseRate);
-      this.player.setVelocityX(Phaser.Math.Linear(this.player.body.velocity.x, targetVelocity, response));
+      this.setDucking(duckHeld && grounded && this.jumpBufferedUntil < time);
 
-      const nearApex = !grounded && Math.abs(this.player.body.velocity.y) < 90;
-      if (!grounded && jumpHeld && this.player.body.velocity.y < 0) this.player.body.setGravityY(215);
-      else if (nearApex) this.player.body.setGravityY(300);
-      else if (!grounded) this.player.body.setGravityY(760);
-      else this.player.body.setGravityY(470);
-
-      const jumpAvailable = time - this.lastGroundedAt <= 165;
+      const jumpAvailable = time - this.lastGroundedAt <= 145;
       if (this.jumpBufferedUntil >= time && jumpAvailable) {
-        this.player.setVelocityY(-655);
+        this.setDucking(false);
+        this.player.setVelocityY(-690);
+        this.jumpStartedAt = time;
+        this.jumpCutApplied = false;
         this.jumpBufferedUntil = 0;
-        this.lastGroundedAt = -1000;
         audio.jump();
-        this.squashPlayer(1.07, 0.9, 90);
       }
 
-      if (!jumpHeld && this.player.body.velocity.y < -270) {
-        this.player.setVelocityY(this.player.body.velocity.y * 0.74);
+      const minimumJumpActive = !grounded && time - this.jumpStartedAt < 190;
+      if (!grounded && (jumpHeld || minimumJumpActive) && this.player.body.velocity.y < 0) this.player.body.setGravityY(980);
+      else this.player.body.setGravityY(1650);
+
+      if (!jumpHeld && !this.jumpCutApplied && time - this.jumpStartedAt >= 190 && this.player.body.velocity.y < -260) {
+        this.player.setVelocityY(this.player.body.velocity.y * 0.88);
+        this.jumpCutApplied = true;
       }
 
-      if (this.player.x < 70) this.player.x = 70;
-      if (
-        grounded &&
-        !this.wasGrounded &&
-        time - this.runStartedAt > 250 &&
-        time - this.airborneSince > 100
-      ) {
-        this.squashPlayer(1.05, 0.92, 80);
-        if (!REDUCED_MOTION) this.burst(this.player.x, this.player.y + 25, level.palette.membraneLight, 4, 0.35);
-      }
-      this.wasGrounded = grounded;
+      this.elapsedMs = time - this.runStartTime - this.pausedTotal;
+      const progress = clamp((this.player.x - level.spawnX) / (level.goalX - level.spawnX), 0, 1);
+      const easedProgress = progress * progress * (3 - 2 * progress);
+      const boost = time < this.speedBoostUntil ? 34 : 0;
+      const comboPace = (this.multiplier - 1) * 5;
+      this.currentSpeed = Phaser.Math.Linear(level.baseSpeed, level.maxSpeed, easedProgress) + boost + comboPace;
+      this.player.setVelocityX(this.currentSpeed);
+      this.score += (this.currentSpeed * delta * 0.001) * 0.72;
+
+      this.updateZone();
+      this.updateCheckpoint();
+      this.updateCoaching();
+      this.updateCamera();
+      this.syncPlayerVisual(time, grounded);
+      this.updateInterface(progress);
+
+      if (this.player.y > WORLD_HEIGHT + 50) this.handleFall();
+      if (this.player.x >= level.goalX - 10) this.finishRun();
+      touchInput.jumpPressed = false;
+      touchInput.duckPressed = false;
     }
 
-    updateTutorials(time) {
-      if (!this.idleCoachShown && !this.hasMoved && time - this.runStartedAt > 2400) {
-        this.idleCoachShown = true;
-        showCoach("Controls", "Move with arrows or A / D", "Jump with Up, W, or Space.", "neutral", 5200);
-      }
-      if (!this.jumpCoachShown && !this.hasJumped && this.player.x > 2400) {
-        this.jumpCoachShown = true;
-        showCoach("Red means damage", "Jump over the antibiotic", "Each red hit removes one integrity segment.", "danger", 4300);
-      }
-      if (!this.forkCoachShown && this.player.x > 2500) {
-        this.forkCoachShown = true;
-        showCoach("Choose a route", "Cyan PBPs are the fast path", "Stay low for a steadier route, or climb for a faster time.", "neutral", 4600);
-      }
-
-      const bridge = this.bridges[this.currentBridgeIndex];
-      if (bridge && !bridge.built && this.player.x > bridge.x - bridge.width / 2 - 120) {
-        const needed = BUILD_TARGET - this.buildCharge;
-        showCoach(
-          "Missing wall",
-          needed === BUILD_TARGET ? "Collect three green precursors" : `Find ${needed} more green precursor${needed === 1 ? "" : "s"}`,
-          "Green precursors assemble this bridge.",
-          "good",
-          2800
-        );
-      }
+    setDucking(ducking) {
+      if (ducking === this.isDucking) return;
+      this.isDucking = ducking;
+      this.applyPlayerBody(ducking);
     }
 
-    updateMovingObjects() {
-      this.movingPlatforms.children.iterate((platform) => {
-        if (!platform?.active) return;
-        const axis = platform.getData("axis");
-        const direction = platform.getData("direction");
-        const speed = platform.getData("speed");
-        const distance = platform.getData("distance");
-        const baseX = platform.getData("baseX");
-        const baseY = platform.getData("baseY");
-        if (axis === "x") {
-          if (platform.x > baseX + distance) platform.setData("direction", -1);
-          if (platform.x < baseX - distance) platform.setData("direction", 1);
-          platform.setVelocityX(speed * platform.getData("direction"));
-        } else {
-          if (platform.y > baseY + distance) platform.setData("direction", -1);
-          if (platform.y < baseY - distance) platform.setData("direction", 1);
-          platform.setVelocityY(speed * platform.getData("direction"));
-        }
+    syncPlayerVisual(time, grounded) {
+      const duckScale = this.isDucking ? 0.58 : 1;
+      const targetY = this.player.y + (this.isDucking ? 9 : 0);
+      const verticalSpeed = this.player.body?.velocity?.y || 0;
+      const targetAngle = grounded ? 0 : clamp(verticalSpeed * 0.018, -9, 12);
+
+      this.playerVisual.setPosition(this.player.x, targetY);
+      this.playerVisual.scaleX = Phaser.Math.Linear(this.playerVisual.scaleX, this.playerVisualBaseScale.x, 0.22);
+      this.playerVisual.scaleY = Phaser.Math.Linear(this.playerVisual.scaleY, this.playerVisualBaseScale.y * duckScale, 0.28);
+      this.playerVisual.angle = Phaser.Math.Linear(this.playerVisual.angle, targetAngle, 0.16);
+
+      if (grounded && this.runStarted && !this.runFinished && !this.isDucking && !REDUCED_MOTION) {
+        this.playerVisual.y += Math.sin(time * 0.02) * 1.3;
+      }
+
+      this.playerGhosts.forEach((ghost, index) => {
+        ghost.setPosition(this.playerVisual.x - 30 - index * 27, this.playerVisual.y + index * 1.5);
+        ghost.setScale(this.playerVisual.scaleX, this.playerVisual.scaleY);
+        ghost.setAngle(this.playerVisual.angle);
+        ghost.setAlpha(this.runStarted && !this.runFinished ? 0.11 - index * 0.035 : 0);
       });
 
-      this.autolysins.children.iterate((hazard) => {
-        if (!hazard?.active) return;
-        const baseX = hazard.getData("baseX");
-        const distance = hazard.getData("distance");
-        if (hazard.x > baseX + distance) hazard.setData("direction", -1);
-        if (hazard.x < baseX - distance) hazard.setData("direction", 1);
-        hazard.setVelocityX(hazard.getData("speed") * hazard.getData("direction"));
-        hazard.angle += hazard.getData("direction") * 2.1;
-      });
+      const flash = this.time.now < this.invulnerableUntil && Math.floor(this.time.now / 90) % 2 === 0;
+      this.playerVisual.setAlpha(flash ? 0.32 : 1);
+    }
+
+    updateCamera() {
+      const camera = this.cameras.main;
+      const viewWidth = camera.width / camera.zoom;
+      const target = clamp(this.player.x - viewWidth * 0.22, 0, level.worldWidth - viewWidth);
+      camera.scrollX = Phaser.Math.Linear(camera.scrollX, target, 0.12);
+      camera.scrollY = 68;
     }
 
     updateZone() {
       let nextZone = 0;
-      for (let index = 0; index < level.zones.length; index += 1) {
-        if (this.player.x >= level.zones[index].start) nextZone = index;
-      }
+      level.zones.forEach((zone, index) => {
+        if (this.player.x >= zone.start) nextZone = index;
+      });
       if (nextZone === this.currentZoneIndex) return;
       this.currentZoneIndex = nextZone;
       const zone = level.zones[nextZone];
-      if (ui.zoneName) ui.zoneName.textContent = zone.name;
-      if (ui.progressLabel) ui.progressLabel.textContent = zone.name;
-      this.showZoneBanner(zone.name, zone.mechanic);
-      audio.tone(260, 390, 0.18, "triangle", 0.018);
+      showToast(`Zone ${nextZone + 1} | ${zone.name}`, 2100);
+      setLiveStatus(`${zone.name}. ${zone.mechanic}`);
     }
 
-    updateCheckpointProgress() {
-      this.checkpoints.children.iterate((checkpoint) => {
-        if (!checkpoint?.active || checkpoint.getData("activated")) return;
-        if (this.player.x >= checkpoint.x - 36) this.activateCheckpoint(this.player, checkpoint);
+    updateCheckpoint() {
+      level.checkpoints.forEach((checkpoint) => {
+        if (this.player.x >= checkpoint && checkpoint > this.lastCheckpointX) this.lastCheckpointX = checkpoint;
       });
     }
 
-    updatePressure(time, delta) {
-      if (!this.pressureActive && this.player.x >= level.pressureStartsAt) {
-        this.pressureActive = true;
-        this.pressureX = this.player.x - 980;
-        this.pressureBand.setAlpha(0.92);
-        this.pressurePhages.forEach((phage) => phage.setAlpha(0.88));
-        audio.pressure();
-        announce(
-          "Pressure front",
-          "Keep moving right. If the red front catches you, it removes one integrity segment.",
-          "danger",
-          "Red is closing in",
-          4800
-        );
-        setLiveStatus("Antibiotic pressure front active. Keep moving right.");
-      }
-      if (!this.pressureActive) return;
-
-      const distance = this.player.x - this.pressureX;
-      const baseSpeed = this.player.x >= 10880 ? 238 : 182;
-      const catchup = distance > 1120 ? (distance - 1120) * 0.11 : 0;
-      this.pressureX += (baseSpeed + catchup) * (delta / 1000);
-      this.pressureBand.setPosition(this.pressureX - 128, WORLD_HEIGHT / 2);
-      this.pressurePhages.forEach((phage, index) => {
-        phage.x = this.pressureX - 6 + index * 34;
-        phage.y = [230, 455, 680][index] + Math.sin(time * 0.003 + index * 1.7) * 28;
-        phage.angle = Math.sin(time * 0.002 + index) * 5;
-      });
-
-      if (distance < 80 && time - this.lastPressureHitAt > 1300) {
-        this.lastPressureHitAt = time;
-        this.applyDamage("PRESSURE", this.pressureX);
-        this.pressureX = this.player.x - 780;
-        showToast("Pressure pushed back | Keep moving");
-      }
-    }
-
-    getPressurePercent() {
-      if (!this.pressureActive) return 0;
-      const distance = this.player.x - this.pressureX;
-      return clamp(100 - (distance / 1000) * 100, 0, 100);
-    }
-
-    updatePlayerVisuals(time) {
-      this.player.setFlipX(this.facing < 0);
-      const grounded = this.player.body.blocked.down || this.player.body.touching.down;
-      const speedRatio = clamp(Math.abs(this.player.body.velocity.x) / 410, 0, 1);
-      if (grounded && speedRatio > 0.12 && !this.tweens.isTweening(this.player)) {
-        this.player.angle = Math.sin(time * 0.015) * speedRatio * 1.2;
-      } else if (!grounded) {
-        this.player.angle = clamp(this.player.body.velocity.y / 62, -7, 8);
-      } else {
-        this.player.angle *= 0.82;
-      }
-
-      this.playerShadow.x = this.player.x;
-      this.playerShadow.y = Math.min(746, this.player.y + 58);
-      const airDistance = clamp((742 - this.player.y) / 380, 0, 0.7);
-      this.playerShadow.setScale(1 - airDistance, 1 - airDistance * 0.5);
-      this.playerShadow.setAlpha(0.4 - airDistance * 0.28);
-      this.playerAura.setPosition(this.player.x, this.player.y);
-      this.playerAura.setScale(1 + Math.sin(time * 0.006) * 0.05);
-      this.playerAura.setAlpha(0.06 + speedRatio * 0.05);
-    }
-
-    collectPickup(_player, pickup) {
-      if (!pickup.active) return;
-      const bridgeIndex = pickup.getData("bridge");
-      const isCurrentBridge = bridgeIndex === this.currentBridgeIndex && !this.bridges[bridgeIndex]?.built;
-      const points = pickup.getData("bonus") ? 150 : 100;
-      const x = pickup.x;
-      const y = pickup.y;
-      pickup.disableBody(true, true);
-      this.pickupsCollected += 1;
-      this.score += points;
-
-      if (isCurrentBridge) this.buildCharge = clamp(this.buildCharge + 1, 0, BUILD_TARGET);
-      audio.pickup(isCurrentBridge ? this.buildCharge : BUILD_TARGET);
-      this.burst(x, y, level.palette.precursor, 12, 1.1);
-      this.floatText(
-        x,
-        y - 30,
-        isCurrentBridge ? `+${points}   BUILD ${this.buildCharge}/${BUILD_TARGET}` : `BONUS +${points}`,
-        "#a9ffd0"
-      );
-
-      if (!this.seenCallouts.has("first-precursor")) {
-        this.seenCallouts.add("first-precursor");
-        announce(
-          "PG precursor",
-          "Collect three green precursors to assemble the next missing wall bridge.",
-          "good",
-          "Green builds the way"
-        );
-      }
-      if (isCurrentBridge && this.buildCharge >= BUILD_TARGET) this.buildBridge(bridgeIndex);
-      this.refreshHud();
-    }
-
-    buildBridge(index) {
-      const bridge = this.bridges[index];
-      if (!bridge || bridge.built) return;
-      bridge.built = true;
-      bridge.marker.setVisible(false);
-      const restoredIntegrity = this.integrity < MAX_INTEGRITY;
-      if (restoredIntegrity) this.integrity += 1;
-      audio.bridge();
-      this.score += 500;
-      this.floatText(
-        bridge.x,
-        bridge.y - 90,
-        restoredIntegrity ? "BRIDGE BUILT  +500  +1 INTEGRITY" : "BRIDGE BUILT  +500",
-        "#b8ffd8"
-      );
-      bridge.segments.forEach((segment, segmentIndex) => {
-        this.tweens.add({
-          targets: segment,
-          alpha: 1,
-          scaleX: 1,
-          scaleY: 1,
-          y: bridge.y + 2,
-          duration: REDUCED_MOTION ? 80 : 320,
-          delay: segmentIndex * 130,
-          ease: "Back.out",
-          onStart: () => this.burst(segment.x, segment.y, level.palette.precursor, 8, 0.8)
-        });
-      });
-      this.time.delayedCall(REDUCED_MOTION ? 80 : 420, () => {
-        bridge.body.body.enable = true;
-        bridge.body.refreshBody();
-        this.currentBridgeIndex = index + 1;
-        this.buildCharge = 0;
-        showToast(`Bridge ${index + 1} assembled | +500${restoredIntegrity ? " | +1 integrity" : ""}`);
-        setLiveStatus(`Peptidoglycan bridge ${index + 1} assembled.`);
-        this.refreshHud();
-      });
-      if (index === 0) {
-        showCoach("Bridge assembled", "Cross while it is stable", "The build meter has reset for the next missing span.", "good", 3600);
-      }
-      if (!REDUCED_MOTION) this.cameras.main.flash(120, 82, 229, 170, false);
-    }
-
-    hitAntibiotic(_player, hazard) {
-      if (hazard.getData("cooldown") || this.time.now < this.invulnerableUntil) return;
-      hazard.setData("cooldown", true);
-      hazard.body.enable = false;
-      hazard.setAlpha(0.25);
-      this.applyDamage("ANTIBIOTIC", hazard.x);
-      this.time.delayedCall(1500, () => {
-        if (!hazard.active || this.runFinished) return;
-        hazard.body.enable = true;
-        hazard.setAlpha(1);
-        hazard.setData("cooldown", false);
-      });
-    }
-
-    hitAutolysin(_player, hazard) {
-      if (this.time.now < this.invulnerableUntil) return;
-      this.applyDamage("AUTOLYSIN", hazard.x);
-      if (!this.seenCallouts.has("autolysin")) {
-        this.seenCallouts.add("autolysin");
-        showCoach("Autolysin", "Time the moving red enzyme", "Wait for an opening, then jump through.", "danger", 3400);
-      }
-    }
-
-    applyDamage(label, sourceX) {
-      const now = this.time.now;
-      if (now < this.invulnerableUntil || this.runFinished) return;
-      this.invulnerableUntil = now + 1500;
-      this.integrity = clamp(this.integrity - 1, 0, MAX_INTEGRITY);
-      this.score = Math.max(0, this.score - 250);
-      this.player.setVelocityX(sourceX <= this.player.x ? 390 : -390);
-      this.player.setVelocityY(-390);
-      audio.hurt();
-      this.burst(this.player.x, this.player.y, level.palette.danger, 18, 1.35);
-      this.floatText(this.player.x, this.player.y - 48, `${label}  -1 INTEGRITY`, "#ff9eaa");
-      ui.healthShell?.classList.remove("is-hit");
-      window.requestAnimationFrame(() => ui.healthShell?.classList.add("is-hit"));
-      if (!REDUCED_MOTION) {
-        this.cameras.main.shake(150, 0.009);
-        this.cameras.main.flash(120, 255, 52, 76, false);
-      }
-      this.player.setTint(0xff7887);
-      this.tweens.add({
-        targets: this.player,
-        alpha: 0.34,
-        duration: 80,
-        yoyo: true,
-        repeat: 5,
-        onComplete: () => {
-          this.player.clearTint();
-          this.player.setAlpha(1);
-          ui.healthShell?.classList.remove("is-hit");
+    updateCoaching() {
+      this.hazardRecords.forEach((record) => {
+        if (!record.coach || record.prompted) return;
+        const distance = record.x - this.player.x;
+        if (distance > 0 && distance < 820) {
+          record.prompted = true;
+          if (record.coach === "jump") {
+            showCoach("Coral capsule", "Jump", "Space, W, or Up. Green tokens mark the safe arc.", "jump", 3500);
+          } else {
+            showCoach("Hanging autolysin", "Duck", "Hold S or Down until you pass underneath.", "duck", 3500);
+          }
         }
       });
-      this.refreshHud();
-      if (this.integrity <= 0) this.finishRun(false);
     }
 
-    activateCheckpoint(_player, checkpoint) {
-      if (checkpoint.getData("activated")) return;
-      checkpoint.setData("activated", true);
-      checkpoint.body.enable = false;
-      checkpoint.setAlpha(1);
-      checkpoint.setTint(0xfff0b0);
-      this.checkpoint = { x: checkpoint.x + 120, y: 610 };
-      this.score += 750;
-      this.integrity = MAX_INTEGRITY;
-      if (this.pressureActive) this.pressureX = this.player.x - 900;
-      audio.checkpoint();
-      this.burst(checkpoint.x, checkpoint.y, level.palette.route, 24, 1.55);
-      this.floatText(checkpoint.x, checkpoint.y - 100, "PBP CHECKPOINT  +750", "#ffe59a");
-      showToast("PBP checkpoint | Integrity restored");
-      setLiveStatus(`Checkpoint ${checkpoint.getData("index") + 1} secured. Integrity restored.`);
-      this.refreshHud();
-    }
-
-    reachGoal() {
-      if (!this.runFinished) this.finishRun(true);
-    }
-
-    fallFromCourse() {
-      const bridge = this.bridges[this.currentBridgeIndex];
-      this.applyDamage("RUPTURE", this.player.x - this.facing * 30);
-      if (this.integrity <= 0 || this.runFinished) return;
-      this.player.setPosition(this.checkpoint.x, this.checkpoint.y);
-      this.player.setVelocity(0, 0);
-      if (this.pressureActive) this.pressureX = this.player.x - 820;
-      if (bridge && !bridge.built) {
-        showToast(`Returned to checkpoint | Need ${BUILD_TARGET - this.buildCharge} green`);
-      } else {
-        showToast("Returned to checkpoint | -1 integrity");
-      }
-    }
-
-    refreshHud() {
+    updateInterface(progress = 0) {
+      const zone = level.zones[this.currentZoneIndex] || level.zones[0];
+      if (ui.zoneName) ui.zoneName.textContent = zone.name;
+      if (ui.zoneCopy) ui.zoneCopy.textContent = zone.mechanic;
       updateHud({
         score: this.score,
-        elapsedMs: this.elapsedMs,
-        buildCharge: this.buildCharge,
+        streak: this.streak,
+        multiplier: this.multiplier,
         integrity: this.integrity,
-        pressure: this.getPressurePercent(),
-        pressureActive: this.pressureActive,
-        progress: clamp((this.player.x / level.goalX) * 100, 0, 100)
+        elapsedMs: this.elapsedMs,
+        progress: progress * 100,
+        speedRatio: (this.currentSpeed - level.baseSpeed) / (level.maxSpeed - level.baseSpeed)
       });
     }
 
-    finishRun(success) {
-      if (this.runFinished) return;
-      this.runFinished = true;
-      this.physics.world.pause();
-      this.input.keyboard.enabled = false;
-      audio.stopMusic();
+    collectToken(_player, token) {
+      if (!token.active) return;
+      const wasMultiplier = this.multiplier;
+      const bonus = token.getData("bonus") ? 1.35 : 1;
+      token.disableBody(true, true);
+      this.pickups += 1;
+      this.streak += 1;
+      this.multiplier = Math.min(5, 1 + Math.floor(this.streak / 4));
+      this.bestMultiplier = Math.max(this.bestMultiplier, this.multiplier);
+      const points = Math.round(100 * this.multiplier * bonus);
+      this.score += points;
+      audio.pickup(this.multiplier);
+      this.spawnScoreBurst(token.x, token.y, `+${points}`, 0x61f0a9, "runner-precursor");
 
-      const speedBonus = success ? Math.max(0, Math.floor(30000 - this.elapsedMs * 0.09)) : 0;
-      const integrityBonus = success ? this.integrity * 900 : 0;
-      const pressureBonus = success && this.pressureActive ? Math.floor((100 - this.getPressurePercent()) * 45) : 0;
-      this.score = Math.floor(this.score + speedBonus + integrityBonus + pressureBonus + (success ? 1500 : 0));
-
-      if (success) {
-        audio.finish();
-        this.burst(this.goal.x, this.goal.y, level.palette.route, 44, 2.05);
-        addBoardEntry({
-          name: currentPlayerName || "Anonymous",
-          score: this.score,
-          elapsedMs: Math.floor(this.elapsedMs),
-          playedAt: new Date().toISOString()
-        });
-      } else {
-        audio.hurt();
-      }
-
-      this.refreshHud();
-      if (ui.resultKicker) ui.resultKicker.textContent = success ? "Envelope secured" : "Run ended";
-      if (ui.resultTitle) ui.resultTitle.textContent = success ? "The PBP gate is open." : "Cell integrity reached zero.";
-      if (ui.finalScore) ui.finalScore.textContent = formatScore(this.score);
-      if (ui.resultTime) ui.resultTime.textContent = formatTime(this.elapsedMs);
-      if (ui.resultHealth) ui.resultHealth.textContent = `${this.integrity} / ${MAX_INTEGRITY}`;
-      if (ui.resultPickups) ui.resultPickups.textContent = String(this.pickupsCollected);
-      if (ui.resultBonus) ui.resultBonus.textContent = formatScore(speedBonus);
-      if (ui.resultScreen) ui.resultScreen.hidden = false;
-      setLiveStatus(success ? `Run complete. Final score ${this.score}.` : `Run ended. Final score ${this.score}.`);
-    }
-
-    showZoneBanner(title, subtitle) {
-      const x = this.cameras.main.width / 2;
-      const y = this.cameras.main.height * 0.36;
-      const banner = this.add.container(x, y).setDepth(30).setScrollFactor(0);
-      const panel = this.add.rectangle(0, 0, 520, 94, 0x04121e, 0.9).setStrokeStyle(2, level.palette.membraneLight, 0.28);
-      const heading = this.add
-        .text(0, -16, title, {
-          fontFamily: "Fraunces, Georgia, serif",
-          fontSize: "30px",
-          fontStyle: "bold",
-          color: "#f0fbfd",
-          align: "center"
-        })
-        .setOrigin(0.5);
-      const copy = this.add
-        .text(0, 21, subtitle, {
-          fontFamily: "Manrope, Arial, sans-serif",
-          fontSize: "13px",
-          fontStyle: "bold",
-          color: "#a9c9d0",
-          align: "center",
-          wordWrap: { width: 470 }
-        })
-        .setOrigin(0.5);
-      banner.add([panel, heading, copy]);
-      banner.setAlpha(0).setY(y + 18);
-      this.tweens.add({
-        targets: banner,
-        alpha: 1,
-        y,
-        duration: REDUCED_MOTION ? 1 : 220,
-        hold: 1250,
-        yoyo: true,
-        onComplete: () => banner.destroy()
-      });
-    }
-
-    burst(x, y, color, count = 10, speedScale = 1) {
-      if (REDUCED_MOTION) count = Math.min(count, 6);
-      for (let index = 0; index < count; index += 1) {
-        const angle = Math.random() * Math.PI * 2;
-        const distance = (24 + Math.random() * 62) * speedScale;
-        const particle = this.add.circle(x, y, 2 + Math.random() * 4, color, 0.92).setDepth(24);
-        this.tweens.add({
-          targets: particle,
-          x: x + Math.cos(angle) * distance,
-          y: y + Math.sin(angle) * distance,
-          alpha: 0,
-          scale: 0.2,
-          duration: REDUCED_MOTION ? 150 : 360 + Math.random() * 220,
-          ease: "Cubic.out",
-          onComplete: () => particle.destroy()
-        });
+      if (this.pickups === 1) {
+        announce("PG precursor", `+${points}`, "Keep collecting green to raise the combo multiplier.", "good", 3000);
+      } else if (this.multiplier > wasMultiplier) {
+        audio.combo();
+        announce("Chain upgraded", `x${this.multiplier} combo`, "A hit resets the chain, so protect the envelope.", "good", 2200);
       }
     }
 
-    floatText(x, y, text, color) {
-      const label = this.add
-        .text(x, y, text, {
+    collectBonus(_player, bonus) {
+      if (!bonus.active) return;
+      if (bonus.getData("goal")) {
+        this.finishRun();
+        return;
+      }
+      if (!bonus.getData("pbp")) return;
+
+      bonus.disableBody(true, true);
+      const points = 600 * this.multiplier;
+      this.score += points;
+      this.speedBoostUntil = this.time.now + 2600;
+      this.integrity = Math.min(MAX_INTEGRITY, this.integrity + 1);
+      audio.pbp();
+      this.spawnScoreBurst(bonus.x, bonus.y, `PBP +${points}`, 0xf5c965, "runner-pbp");
+      announce("PBP cross-link", `+${points}`, "Gold restores one integrity and briefly accelerates the run.", "gold", 2500);
+      setLiveStatus(`PBP bonus collected. ${points} points and one integrity restored.`);
+    }
+
+    hitHazard(_player, hazard) {
+      if (this.time.now < this.invulnerableUntil || !this.runStarted || this.runFinished) return;
+      this.invulnerableUntil = this.time.now + 1250;
+      this.integrity -= 1;
+      this.score = Math.max(0, this.score - 300);
+      this.streak = 0;
+      this.multiplier = 1;
+      audio.hurt();
+      this.cameras.main.shake(130, 0.006);
+      this.cameras.main.flash(90, 242, 79, 97, false);
+
+      const type = hazard.getData("type");
+      const title = type === "autolysin" ? "Autolysin strike" : "Antibiotic hit";
+      const instruction = type === "autolysin" ? "Duck under the hanging coral cutter." : "Jump over the coral capsule.";
+      announce("Integrity -1", title, `${instruction} Combo reset.`, "danger", 2600);
+      setLiveStatus(`${title}. ${this.integrity} integrity remains.`);
+
+      if (this.integrity <= 0) this.failRun("Envelope ruptured.");
+    }
+
+    handleFall() {
+      if (this.time.now < this.invulnerableUntil || this.runFinished) return;
+      this.invulnerableUntil = this.time.now + 1500;
+      this.integrity -= 1;
+      this.score = Math.max(0, this.score - 400);
+      this.streak = 0;
+      this.multiplier = 1;
+      audio.hurt();
+
+      const gap = level.gaps.find((item) => Math.abs(this.player.x - item.x) <= item.width / 2 + 120);
+      const recoveryX = gap ? gap.x + gap.width / 2 + 125 : this.lastCheckpointX;
+      this.player.setPosition(recoveryX, level.floorY - 120).setVelocity(this.currentSpeed, 0);
+      this.cameras.main.flash(120, 242, 79, 97, false);
+      announce("Wall gap", "Integrity -1", "The assay recovered the cell beyond the gap. Combo reset.", "danger", 2600);
+      setLiveStatus(`Fell through a wall gap. ${this.integrity} integrity remains.`);
+
+      if (this.integrity <= 0) this.failRun("Envelope ruptured.");
+    }
+
+    spawnScoreBurst(x, y, label, color, texture) {
+      const text = this.add
+        .text(x, y - 22, label, {
           fontFamily: "Manrope, Arial, sans-serif",
-          fontSize: "18px",
+          fontSize: "16px",
           fontStyle: "bold",
-          color,
-          stroke: "#03101a",
-          strokeThickness: 5
+          color: `#${color.toString(16).padStart(6, "0")}`
         })
         .setOrigin(0.5)
-        .setDepth(26);
-      this.tweens.add({
-        targets: label,
-        y: y - 58,
-        alpha: 0,
-        duration: REDUCED_MOTION ? 320 : 760,
-        ease: "Cubic.out",
-        onComplete: () => label.destroy()
-      });
+        .setDepth(20);
+
+      if (!REDUCED_MOTION) {
+        this.tweens.add({ targets: text, y: y - 62, alpha: 0, duration: 440, ease: "Cubic.easeOut", onComplete: () => text.destroy() });
+        for (let index = 0; index < 2; index += 1) {
+          const particle = this.add.image(x, y, texture).setDisplaySize(18, 19).setDepth(19);
+          this.tweens.add({
+            targets: particle,
+            x: x + (index === 0 ? -34 : 34),
+            y: y - 48,
+            alpha: 0,
+            angle: (index - 1) * 35,
+            duration: 420,
+            ease: "Cubic.easeOut",
+            onComplete: () => particle.destroy()
+          });
+        }
+      } else {
+        this.time.delayedCall(500, () => text.destroy());
+      }
     }
 
-    squashPlayer(scaleX, scaleY, duration) {
-      if (this.tweens.isTweening(this.player)) return;
-      this.player.setScale(this.playerBaseScaleX, this.playerBaseScaleY);
-      this.tweens.add({
-        targets: this.player,
-        scaleX: this.playerBaseScaleX * scaleX,
-        scaleY: this.playerBaseScaleY * scaleY,
-        duration,
-        yoyo: true,
-        ease: "Quad.out",
-        onComplete: () => this.player.setScale(this.playerBaseScaleX, this.playerBaseScaleY)
-      });
+    finishRun() {
+      if (this.runFinished) return;
+      const timeBonus = Math.max(0, Math.round((68000 - this.elapsedMs) * 0.12));
+      const finishBonus = timeBonus + this.integrity * 800;
+      this.score += finishBonus;
+      this.endRun(true, finishBonus);
+    }
+
+    failRun(message) {
+      if (this.runFinished) return;
+      this.endRun(false, 0, message);
+    }
+
+    endRun(success, finishBonus, failureMessage = "Envelope ruptured.") {
+      this.runFinished = true;
+      this.player.setVelocity(0, 0);
+      this.player.body.setGravityY(0);
+      this.input.keyboard.enabled = false;
+      audio.stopMusic();
+      if (success) audio.finish();
+      document.querySelector(".game-stage")?.classList.remove("is-running");
+      hideCoach();
+      this.updateInterface(clamp((this.player.x - level.spawnX) / (level.goalX - level.spawnX), 0, 1));
+
+      if (success) {
+        addBoardEntry({
+          name: currentPlayerName || "Anonymous",
+          score: Math.floor(this.score),
+          elapsedMs: this.elapsedMs,
+          playedAt: new Date().toISOString()
+        });
+      }
+
+      ui.resultKicker.textContent = success ? "Envelope intact" : "Assay ended";
+      ui.resultTitle.textContent = success ? "PBP gate reached." : failureMessage;
+      ui.finalScore.textContent = formatScore(this.score);
+      ui.resultTime.textContent = formatTime(this.elapsedMs);
+      ui.resultHealth.textContent = `${Math.max(0, this.integrity)} / ${MAX_INTEGRITY}`;
+      ui.resultPickups.textContent = String(this.pickups);
+      ui.resultCombo.textContent = `x${this.bestMultiplier}`;
+      ui.resultBonus.textContent = formatScore(finishBonus);
+      ui.resultScreen.hidden = false;
+      ui.pause.disabled = true;
+      setLiveStatus(success ? `Run complete with ${formatScore(this.score)} points.` : failureMessage);
+    }
+
+    pauseRun() {
+      if (!this.runStarted || this.runFinished || this.runPaused) return;
+      this.runPaused = true;
+      this.pauseStartedAt = this.time.now;
+      this.physics.pause();
+      this.input.keyboard.enabled = false;
+      audio.stopMusic();
+      ui.pauseScreen.hidden = false;
+      ui.pause.setAttribute("aria-pressed", "true");
+      setLiveStatus("Game paused.");
+    }
+
+    resumeRun() {
+      if (!this.runPaused) return;
+      this.pausedTotal += Math.max(0, this.time.now - this.pauseStartedAt);
+      this.pauseStartedAt = 0;
+      this.runPaused = false;
+      this.physics.resume();
+      this.input.keyboard.enabled = true;
+      audio.startMusic();
+      ui.pauseScreen.hidden = true;
+      ui.pause.setAttribute("aria-pressed", "false");
+      setLiveStatus("Game resumed.");
     }
   }
 
-  const game = new Phaser.Game({
+  const config = {
     type: Phaser.AUTO,
     parent: "envelope-next-game",
-    backgroundColor: "#06111c",
-    transparent: false,
-    pixelArt: false,
-    antialias: true,
-    roundPixels: true,
+    transparent: true,
+    render: {
+      antialias: true,
+      roundPixels: true
+    },
     scale: {
       mode: Phaser.Scale.RESIZE,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
-      width: ui.root?.clientWidth || 1600,
-      height: ui.root?.clientHeight || 820
+      width: "100%",
+      height: "100%"
     },
     physics: {
       default: "arcade",
       arcade: {
-        gravity: { y: 650 },
-        debug: false,
-        fps: 60
+        gravity: { y: 0 },
+        debug: false
       }
     },
-    render: {
-      antialias: true,
-      powerPreference: "high-performance"
-    },
-    scene: EnvelopeScene
-  });
+    scene: RunnerScene
+  };
 
-  if (ui.playerName) {
-    try {
-      ui.playerName.value = normalizePlayerName(localStorage.getItem(PLAYER_KEY));
-    } catch {
-      // A remembered name is optional.
-    }
-    ["keydown", "keyup", "keypress"].forEach((eventName) => {
-      ui.playerName.addEventListener(eventName, (event) => event.stopPropagation());
-    });
-  }
+  const game = new Phaser.Game(config);
 
-  ui.startForm?.addEventListener("submit", (event) => {
+  function beginRunFromForm(event) {
     event.preventDefault();
-    const name = normalizePlayerName(ui.playerName?.value);
+    const name = normalizePlayerName(ui.playerName.value);
     if (!name) {
-      if (ui.nameFeedback) {
-        ui.nameFeedback.textContent = "Enter a name before beginning the run.";
-        ui.nameFeedback.hidden = false;
-      }
-      ui.playerName?.focus();
+      ui.nameFeedback.textContent = "Enter a name before starting the run.";
+      ui.nameFeedback.hidden = false;
+      ui.playerName.focus();
       return;
     }
 
     currentPlayerName = name;
+    ui.playerName.value = name;
+    ui.nameFeedback.hidden = true;
     try {
       localStorage.setItem(PLAYER_KEY, name);
     } catch {
-      // Remembering the name is optional.
+      // Player-name persistence is optional.
     }
-    if (ui.nameFeedback) ui.nameFeedback.hidden = true;
-    if (ui.startScreen) ui.startScreen.hidden = true;
-    ui.playerName?.blur();
     audio.unlock();
-    if (activeScene) activeScene.startRun();
-    else pendingAutoStart = true;
-  });
+    activeScene?.startRun();
+  }
 
-  ui.sound?.addEventListener("click", () => {
-    const enabled = ui.sound.getAttribute("aria-pressed") !== "true";
-    ui.sound.setAttribute("aria-pressed", String(enabled));
-    ui.sound.title = enabled ? "Mute sound" : "Turn on sound";
-    const srText = ui.sound.querySelector(".sr-only");
-    if (srText) srText.textContent = enabled ? "Mute sound" : "Turn on sound";
+  ui.startForm?.addEventListener("submit", beginRunFromForm);
+  ui.playerName?.addEventListener("keydown", (event) => event.stopPropagation());
+  ui.playerName?.addEventListener("keyup", (event) => event.stopPropagation());
+
+  ui.restart?.addEventListener("click", () => {
     audio.unlock();
-    audio.setEnabled(enabled);
+    ui.resultScreen.hidden = true;
+    game.scene.stop("RunnerScene");
+    game.scene.start("RunnerScene");
+    window.setTimeout(() => activeScene?.startRun(), 80);
   });
 
   ui.pause?.addEventListener("click", () => {
@@ -1546,46 +1054,74 @@
   });
   ui.resume?.addEventListener("click", () => activeScene?.resumeRun());
 
-  ui.restart?.addEventListener("click", () => {
-    if (ui.resultScreen) ui.resultScreen.hidden = true;
-    if (ui.pauseScreen) ui.pauseScreen.hidden = true;
-    audio.stopMusic();
-    pendingAutoStart = true;
-    activeScene?.scene.restart({ autoStart: true });
+  ui.sound?.addEventListener("click", () => {
+    audio.unlock();
+    audio.setEnabled(!audio.enabled);
+    ui.sound.setAttribute("aria-pressed", String(audio.enabled));
+    ui.sound.title = audio.enabled ? "Mute sound" : "Turn sound on";
+    const label = ui.sound.querySelector(".sr-only");
+    if (label) label.textContent = audio.enabled ? "Mute sound" : "Turn sound on";
   });
 
-  ui.touchControls?.querySelectorAll("button[data-touch]").forEach((button) => {
-    const action = button.dataset.touch;
-    const press = (event) => {
+  document.querySelectorAll("[data-touch]").forEach((button) => {
+    const action = button.getAttribute("data-touch");
+    const start = (event) => {
       event.preventDefault();
-      button.classList.add("is-active");
+      audio.unlock();
       if (action === "jump") {
         touchInput.jump = true;
         touchInput.jumpPressed = true;
-      } else {
-        touchInput[action] = true;
+      } else if (action === "duck") {
+        touchInput.duck = true;
+        touchInput.duckPressed = true;
       }
+      button.classList.add("is-active");
     };
-    const release = (event) => {
+    const end = (event) => {
       event.preventDefault();
-      button.classList.remove("is-active");
       if (action === "jump") touchInput.jump = false;
-      else touchInput[action] = false;
+      if (action === "duck") touchInput.duck = false;
+      button.classList.remove("is-active");
     };
-    button.addEventListener("pointerdown", press);
-    button.addEventListener("pointerup", release);
-    button.addEventListener("pointercancel", release);
-    button.addEventListener("pointerleave", release);
+    button.addEventListener("pointerdown", start);
+    button.addEventListener("pointerup", end);
+    button.addEventListener("pointercancel", end);
+    button.addEventListener("pointerleave", end);
+  });
+
+  function isTypingTarget(target) {
+    return target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || target?.isContentEditable;
+  }
+
+  window.addEventListener("keydown", (event) => {
+    if (isTypingTarget(event.target) || !activeScene?.runStarted || activeScene?.runFinished || activeScene?.runPaused) return;
+    if (["Space", "ArrowUp", "KeyW"].includes(event.code)) {
+      if (!event.repeat) touchInput.jumpPressed = true;
+      touchInput.jump = true;
+      event.preventDefault();
+    } else if (["ArrowDown", "KeyS"].includes(event.code)) {
+      touchInput.duck = true;
+      if (!event.repeat) touchInput.duckPressed = true;
+      event.preventDefault();
+    }
+  });
+
+  window.addEventListener("keyup", (event) => {
+    if (isTypingTarget(event.target)) return;
+    if (["Space", "ArrowUp", "KeyW"].includes(event.code)) touchInput.jump = false;
+    if (["ArrowDown", "KeyS"].includes(event.code)) touchInput.duck = false;
   });
 
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) activeScene?.pauseRun();
   });
 
-  window.addEventListener("beforeunload", () => {
-    audio.stopMusic();
-    game.destroy(true);
-  });
+  try {
+    const savedName = normalizePlayerName(localStorage.getItem(PLAYER_KEY));
+    if (savedName && ui.playerName) ui.playerName.value = savedName;
+  } catch {
+    // Player-name persistence is optional.
+  }
 
   renderBoard();
 })();

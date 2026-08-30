@@ -5,10 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="robots" content="noindex, nofollow" />
     <title>Envelope Escape Preview | Bernhardt Lab</title>
-    <meta
-      name="description"
-      content="Private playtest preview of the next Envelope Escape game for the Bernhardt Lab website."
-    />
+    <meta name="description" content="Private playtest preview of the next Envelope Escape game for the Bernhardt Lab website." />
     <meta property="og:title" content="Envelope Escape Preview | Thomas Bernhardt Lab" />
     <meta property="og:description" content="Playtest preview of the next Envelope Escape game." />
     <meta property="og:type" content="website" />
@@ -37,205 +34,108 @@
     <header class="preview-header">
       <a class="preview-brand" href="../" aria-label="Return to the Bernhardt Lab homepage">
         <span class="preview-brand-mark" aria-hidden="true">BL</span>
-        <span>
-          <strong>Bernhardt Lab</strong>
-          <small>Lab Arcade Playtest</small>
-        </span>
+        <span><strong>Bernhardt Lab</strong><small>Lab Arcade Playtest</small></span>
       </a>
       <div class="preview-header-actions">
         <span class="preview-build-tag">Preview build</span>
-        <a class="icon-link" href="../" aria-label="Close preview and return to the website" title="Return to website">
-          <span aria-hidden="true">&#10005;</span>
-        </a>
+        <a class="icon-link" href="../" aria-label="Close preview and return to the website"><span aria-hidden="true">&#10005;</span></a>
       </div>
     </header>
 
     <main class="game-page">
-      <section class="game-titlebar" aria-labelledby="game-title">
-        <div>
-          <p class="game-eyebrow">Lab Arcade</p>
-          <h1 id="game-title">Envelope Escape</h1>
-        </div>
-        <div class="game-controls-key" aria-label="Keyboard controls">
-          <span><kbd>&larr;</kbd><kbd>&rarr;</kbd> or <kbd>A</kbd><kbd>D</kbd> Move</span>
-          <span><kbd>&uarr;</kbd> or <kbd>W</kbd><kbd>Space</kbd> Jump</span>
-        </div>
-      </section>
-
-      <section id="game-stage" class="game-stage" aria-label="Envelope Escape game">
-        <div id="envelope-next-game" class="game-canvas-root" aria-label="Side-scrolling platform game canvas"></div>
-
+      <section id="game-stage" class="game-stage" aria-labelledby="game-title">
         <div class="game-hud" aria-label="Current run status">
-          <div class="hud-left">
-            <div class="hud-stat hud-score">
-              <span>Score</span>
-              <strong id="game-score">0</strong>
-            </div>
-            <div id="game-health-shell" class="hud-integrity">
-              <span>Integrity</span>
-              <div id="game-integrity-pips" class="integrity-pips" aria-label="5 of 5 integrity">
-                <i></i><i></i><i></i><i></i><i></i>
-              </div>
-            </div>
-            <div class="hud-build">
-              <span>Build</span>
-              <strong id="game-build-value">0 / 3</strong>
-              <i aria-hidden="true"><b id="game-build-bar"></b></i>
-            </div>
+          <div class="hud-title"><p>Envelope biology arcade</p><h1 id="game-title">Envelope Escape</h1></div>
+          <div class="hud-stat hud-score"><span>Score</span><strong id="game-score">0</strong></div>
+          <div class="hud-stat hud-combo"><span>Combo</span><strong id="game-combo">x1</strong><i aria-hidden="true"><b id="game-combo-bar"></b></i></div>
+          <div id="game-health-shell" class="hud-integrity">
+            <span>Integrity</span>
+            <div id="game-integrity-pips" class="integrity-pips" aria-label="5 of 5 integrity"><i></i><i></i><i></i><i></i><i></i></div>
           </div>
-
-          <div class="hud-center" aria-live="polite">
-            <span id="game-zone-kicker">Level 1 · Escherichia coli</span>
-            <strong id="game-zone-name">Build the Way</strong>
-            <small id="game-time">0:00.0</small>
-          </div>
-
-          <div class="hud-right">
-            <div id="game-pressure-shell" class="hud-pressure">
-              <div>
-                <span>Pressure</span>
-                <strong id="game-pressure-label">Dormant</strong>
-              </div>
-              <i aria-hidden="true"><b id="game-pressure-bar"></b></i>
-            </div>
-            <button id="game-sound" class="hud-icon-button" type="button" aria-pressed="true" title="Mute sound">
-              <span aria-hidden="true">&#9835;</span>
-              <span class="sr-only">Mute sound</span>
-            </button>
-            <button id="game-pause" class="hud-icon-button" type="button" aria-pressed="false" title="Pause game">
-              <span aria-hidden="true">&#8214;</span>
-              <span class="sr-only">Pause game</span>
-            </button>
+          <div class="hud-speed"><span>Speed</span><div id="game-speed-pips" class="speed-pips" aria-label="Speed 1 of 6"><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+          <div class="hud-actions">
+            <button id="game-sound" class="hud-icon-button" type="button" aria-pressed="true" title="Mute sound"><span aria-hidden="true">&#9835;</span><span class="sr-only">Mute sound</span></button>
+            <button id="game-pause" class="hud-icon-button" type="button" aria-pressed="false" title="Pause game"><span aria-hidden="true">&#8214;</span><span class="sr-only">Pause game</span></button>
           </div>
         </div>
 
         <div class="game-progress" aria-label="Level progress">
-          <span id="game-progress-label">Build the Way</span>
+          <span id="game-zone-name">Calibration Lane</span>
           <i aria-hidden="true"><b id="game-progress-bar"></b></i>
-          <span>PBP gate</span>
+          <span id="game-time">0:00.0</span>
         </div>
 
-        <div id="game-coach" class="game-coach" hidden aria-live="polite">
-          <span id="game-coach-kicker">First move</span>
-          <strong id="game-coach-title">Move right</strong>
-          <small id="game-coach-copy">Use the arrow keys or A and D.</small>
-        </div>
+        <div class="game-viewport">
+          <div id="envelope-next-game" class="game-canvas-root" aria-label="Side-scrolling runner game canvas"></div>
+          <div class="game-species"><span>Level 1</span><strong><em>Escherichia coli</em></strong><small id="game-zone-copy">Green builds. Coral damages. Learn jump, then duck.</small></div>
 
-        <div id="game-callout" class="game-callout" hidden aria-live="polite">
-          <span id="game-callout-kicker">Green builds the way</span>
-          <strong id="game-callout-title">PG precursor</strong>
-          <p id="game-callout-copy">Collect three to assemble the next bridge.</p>
-        </div>
-
-        <div id="game-toast" class="game-toast" hidden aria-live="polite">Checkpoint secured</div>
-
-        <div id="game-start-screen" class="game-screen game-start-screen">
-          <div class="game-screen-inner">
-            <p class="screen-kicker"><em>Escherichia coli</em> | Level 1</p>
-            <h2>Build the way out.</h2>
-            <p class="screen-copy">
-              You are the cyan cell. Collect three green precursors to assemble each missing bridge, avoid red antibiotics, and reach the gold PBP gate.
-            </p>
-
-            <div class="objective-row" aria-label="Level objectives">
-              <div class="objective objective-good">
-                <span aria-hidden="true">3</span>
-                <p><strong>Green builds</strong>Collect three precursors</p>
-              </div>
-              <div class="objective objective-danger">
-                <span aria-hidden="true">!</span>
-                <p><strong>Red damages</strong>Jump over antibiotics</p>
-              </div>
-              <div class="objective objective-route">
-                <span aria-hidden="true">&#8594;</span>
-                <p><strong>Gold is safe</strong>Reach the PBP gate</p>
-              </div>
-            </div>
-
-            <div class="quick-controls" aria-label="How to play">
-              <span><b>Move</b><kbd>&larr;</kbd><kbd>&rarr;</kbd> or <kbd>A</kbd><kbd>D</kbd></span>
-              <span><b>Jump</b><kbd>&uarr;</kbd> or <kbd>W</kbd><kbd>Space</kbd></span>
-              <span><b>Survive</b>Five integrity segments</span>
-            </div>
-            <p class="score-note">Faster finishes and an intact envelope earn larger score bonuses.</p>
-
-            <form id="game-start-form" class="start-form">
-              <label for="game-player-name">Player name</label>
-              <div class="start-form-row">
-                <input
-                  id="game-player-name"
-                  name="player-name"
-                  type="text"
-                  maxlength="24"
-                  autocomplete="nickname"
-                  placeholder="Enter your name"
-                  required
-                />
-                <button class="primary-button" type="submit">
-                  Start run <span aria-hidden="true">&#8594;</span>
-                </button>
-              </div>
-              <p id="game-name-feedback" class="form-feedback" hidden></p>
-            </form>
+          <div id="game-coach" class="game-coach" hidden aria-live="polite">
+            <span id="game-coach-kicker">First move</span><strong id="game-coach-title">Jump the capsule</strong><small id="game-coach-copy">Press Space, W, or the Up arrow.</small>
           </div>
-        </div>
-
-        <div id="game-pause-screen" class="game-screen game-pause-screen" hidden>
-          <div class="game-screen-inner game-screen-inner--compact">
-            <p class="screen-kicker">Assay paused</p>
-            <h2>Ready when you are.</h2>
-            <button id="game-resume" class="primary-button" type="button">Resume run</button>
+          <div id="game-callout" class="game-callout" hidden aria-live="polite">
+            <span id="game-callout-kicker">PG precursor</span><strong id="game-callout-title">+100</strong><p id="game-callout-copy">Keep the chain alive for a larger multiplier.</p>
           </div>
-        </div>
+          <div id="game-toast" class="game-toast" hidden aria-live="polite">Checkpoint secured</div>
 
-        <div id="game-result-screen" class="game-screen game-result-screen" hidden>
-          <div class="game-screen-inner game-screen-inner--result">
-            <p id="game-result-kicker" class="screen-kicker">Escaped</p>
-            <h2 id="game-result-title">Gold exit reached.</h2>
-            <div class="result-score">
-              <span>Final score</span>
-              <strong id="game-final-score">0</strong>
-            </div>
-            <dl class="result-breakdown">
-              <div><dt>Run time</dt><dd id="game-result-time">0:00.0</dd></div>
-              <div><dt>Integrity</dt><dd id="game-result-health">5 / 5</dd></div>
-              <div><dt>Precursors</dt><dd id="game-result-pickups">0</dd></div>
-              <div><dt>Speed bonus</dt><dd id="game-result-bonus">0</dd></div>
-            </dl>
-            <div class="result-actions">
-              <button id="game-restart" class="primary-button" type="button">Run again</button>
-              <a class="secondary-button" href="../">Return to lab website</a>
+          <div id="game-start-screen" class="game-screen game-start-screen">
+            <div class="game-screen-inner">
+              <p class="screen-kicker"><em>Escherichia coli</em> | The Cross-Link Run</p>
+              <h2>Run. Read. React.</h2>
+              <p class="screen-copy">Your cell runs automatically. Build a precursor chain, protect envelope integrity, and reach the PBP gate.</p>
+              <div class="objective-row" aria-label="How to play">
+                <div class="objective objective-good"><img src="../assets/game-next/images/runner-precursor-v3.png" alt="" /><p><strong>Collect green</strong>PG precursors build combo</p></div>
+                <div class="objective objective-danger"><img src="../assets/game-next/images/runner-antibiotic-v3.png" alt="" /><p><strong>Avoid coral</strong>Jump low. Duck high.</p></div>
+                <div class="objective objective-route"><img src="../assets/game-next/images/runner-pbp-v3.png" alt="" /><p><strong>Chase gold</strong>PBP routes pay a bonus</p></div>
+              </div>
+              <div class="quick-controls" aria-label="Controls">
+                <span><b>Jump</b><kbd>Space</kbd><kbd>&uarr;</kbd><kbd>W</kbd></span>
+                <span><b>Duck</b><kbd>&darr;</kbd><kbd>S</kbd></span>
+                <span><b>Survive</b>Five integrity shields</span>
+              </div>
+              <form id="game-start-form" class="start-form">
+                <label for="game-player-name">Leaderboard name</label>
+                <div class="start-form-row">
+                  <input id="game-player-name" name="player-name" type="text" maxlength="24" autocomplete="nickname" placeholder="Enter your name" required />
+                  <button class="primary-button" type="submit">Start run <span aria-hidden="true">&#8594;</span></button>
+                </div>
+                <p id="game-name-feedback" class="form-feedback" hidden></p>
+              </form>
             </div>
           </div>
-        </div>
 
-        <div id="game-touch-controls" class="touch-controls" aria-label="Touch controls">
-          <div>
-            <button data-touch="left" type="button" aria-label="Move left">&#8592;</button>
-            <button data-touch="right" type="button" aria-label="Move right">&#8594;</button>
+          <div id="game-pause-screen" class="game-screen game-pause-screen" hidden>
+            <div class="game-screen-inner game-screen-inner--compact"><p class="screen-kicker">Assay paused</p><h2>Ready when you are.</h2><button id="game-resume" class="primary-button" type="button">Resume run</button></div>
           </div>
-          <div>
-            <button data-touch="jump" type="button" aria-label="Jump">&#8593;</button>
+
+          <div id="game-result-screen" class="game-screen game-result-screen" hidden>
+            <div class="game-screen-inner game-screen-inner--result">
+              <p id="game-result-kicker" class="screen-kicker">Envelope intact</p><h2 id="game-result-title">PBP gate reached.</h2>
+              <div class="result-score"><span>Final score</span><strong id="game-final-score">0</strong></div>
+              <dl class="result-breakdown">
+                <div><dt>Run time</dt><dd id="game-result-time">0:00.0</dd></div>
+                <div><dt>Integrity</dt><dd id="game-result-health">5 / 5</dd></div>
+                <div><dt>Precursors</dt><dd id="game-result-pickups">0</dd></div>
+                <div><dt>Best combo</dt><dd id="game-result-combo">x1</dd></div>
+                <div><dt>Finish bonus</dt><dd id="game-result-bonus">0</dd></div>
+              </dl>
+              <div class="result-actions"><button id="game-restart" class="primary-button" type="button">Run again</button><a class="secondary-button" href="../">Return to lab website</a></div>
+            </div>
+          </div>
+
+          <div id="game-touch-controls" class="touch-controls" aria-label="Touch controls">
+            <button data-touch="jump" type="button"><span>Jump</span><b>&uarr;</b></button>
+            <button data-touch="duck" type="button"><span>Duck</span><b>&darr;</b></button>
           </div>
         </div>
       </section>
 
       <details class="score-strip">
-        <summary>
-          <span>
-          <p class="game-eyebrow">Local playtest board</p>
-          <strong>Fastest envelope builders</strong>
-          </span>
-          <span>View scores</span>
-        </summary>
-        <ol id="game-local-board" class="score-list">
-          <li class="score-empty">Complete a run to set the first score on this device.</li>
-        </ol>
+        <summary><span><p>Local playtest board</p><strong>Top envelope runs on this device</strong></span><span>View scores</span></summary>
+        <ol id="game-local-board" class="score-list"><li class="score-empty">Complete a run to set the first score on this device.</li></ol>
       </details>
     </main>
 
     <p id="game-live-status" class="sr-only" aria-live="assertive"></p>
-
     <script src="../assets/vendor/phaser-3.90.0.min.js"></script>
     <script src="../assets/game-next/level-data.js"></script>
     <script src="../assets/game-next/envelope-platformer.js"></script>

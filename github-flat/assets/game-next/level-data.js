@@ -1,127 +1,89 @@
-window.ENVELOPE_NEXT_LEVELS = Object.freeze([
-  {
-    id: "ecoli",
+(() => {
+  "use strict";
+
+  const level = {
+    id: "ecoli-envelope-run",
     number: 1,
     species: "Escherichia coli",
-    title: "Build the Way",
-    worldWidth: 12600,
-    spawn: { x: 260, y: 625 },
-    goalX: 12160,
-    pressureStartsAt: 8060,
-    palette: {
-      membrane: 0x45d6e6,
-      membraneLight: 0xb9fbff,
-      cytoplasm: 0x082d4a,
-      precursor: 0x61f0a9,
-      danger: 0xf24f61,
-      route: 0xf5c965
-    },
+    title: "The Cross-Link Run",
+    worldWidth: 24200,
+    goalX: 23820,
+    spawnX: 420,
+    floorY: 590,
+    baseSpeed: 320,
+    maxSpeed: 535,
     zones: [
-      {
-        start: 0,
-        name: "Build the Way",
-        mechanic: "Collect three green PG precursors to assemble the missing bridge."
-      },
-      {
-        start: 2450,
-        name: "PBP Fork",
-        mechanic: "The cyan PBP route is faster. The lower route is steadier."
-      },
-      {
-        start: 5420,
-        name: "Autolysin Works",
-        mechanic: "Time your jumps past the red wall-cutting enzymes."
-      },
-      {
-        start: 8200,
-        name: "Pressure Front",
-        mechanic: "Keep moving. The antibiotic pressure front is closing in."
-      },
-      {
-        start: 10880,
-        name: "Final Cross-Link",
-        mechanic: "Build the last span and reach the gold PBP gate."
-      }
+      { start: 0, name: "Calibration Lane", mechanic: "Green builds. Coral damages. Learn jump, then duck." },
+      { start: 4500, name: "Cross-Link Rhythm", mechanic: "Chain precursors across capsules and short wall gaps." },
+      { start: 9500, name: "Autolysin Corridor", mechanic: "Read each coral silhouette: jump low, duck high." },
+      { start: 14500, name: "PBP Split", mechanic: "Take the raised gold route for a larger bonus." },
+      { start: 19500, name: "Pressure Sprint", mechanic: "The assay accelerates. Protect the envelope to the gate." }
     ],
-    ground: [
-      [0, 1840],
-      [2400, 4860],
-      [5410, 7600],
-      [8190, 10380],
-      [11010, 12600]
+    gaps: [
+      { x: 5200, width: 210 },
+      { x: 10820, width: 238 },
+      { x: 17420, width: 248 },
+      { x: 21620, width: 262 }
     ],
     platforms: [
-      { x: 720, y: 620, width: 250 },
-      { x: 1180, y: 555, width: 240 },
-      { x: 1600, y: 640, width: 250 },
-      { x: 2820, y: 635, width: 290 },
-      { x: 3290, y: 585, width: 260 },
-      { x: 3890, y: 635, width: 300 },
-      { x: 4480, y: 570, width: 250 },
-      { x: 5700, y: 630, width: 270 },
-      { x: 6230, y: 525, width: 250 },
-      { x: 6810, y: 625, width: 280 },
-      { x: 7320, y: 540, width: 230 },
-      { x: 8490, y: 630, width: 260 },
-      { x: 9020, y: 535, width: 240 },
-      { x: 9580, y: 625, width: 280 },
-      { x: 10080, y: 525, width: 230 },
-      { x: 11310, y: 620, width: 260 },
-      { x: 11720, y: 515, width: 230 }
+      { x: 15240, y: 500, width: 1500, kind: "pbp-route" }
     ],
-    movingPlatforms: [
-      { x: 2920, y: 480, width: 250, axis: "y", distance: 90, speed: 70 },
-      { x: 3550, y: 390, width: 250, axis: "x", distance: 160, speed: 86 },
-      { x: 4240, y: 475, width: 250, axis: "y", distance: 105, speed: 78 },
-      { x: 6480, y: 395, width: 235, axis: "x", distance: 150, speed: 92 },
-      { x: 9300, y: 390, width: 235, axis: "y", distance: 115, speed: 92 },
-      { x: 11480, y: 400, width: 250, axis: "x", distance: 160, speed: 100 }
+    hazards: [
+      { type: "antibiotic", x: 1600, coach: "jump" },
+      { type: "autolysin", x: 3020, coach: "duck" },
+      { type: "antibiotic", x: 4100 },
+      { type: "antibiotic", x: 6350 },
+      { type: "antibiotic", x: 6510 },
+      { type: "autolysin", x: 7600 },
+      { type: "antibiotic", x: 8700 },
+      { type: "antibiotic", x: 9780 },
+      { type: "autolysin", x: 10320 },
+      { type: "antibiotic", x: 11640 },
+      { type: "autolysin", x: 12480 },
+      { type: "antibiotic", x: 13280 },
+      { type: "antibiotic", x: 13430 },
+      { type: "autolysin", x: 14980, route: "lower" },
+      { type: "antibiotic", x: 15520, route: "lower" },
+      { type: "autolysin", x: 16520 },
+      { type: "antibiotic", x: 16980 },
+      { type: "antibiotic", x: 18440 },
+      { type: "autolysin", x: 18940 },
+      { type: "antibiotic", x: 19820 },
+      { type: "antibiotic", x: 19970 },
+      { type: "autolysin", x: 20500 },
+      { type: "antibiotic", x: 21020 },
+      { type: "autolysin", x: 22460 },
+      { type: "antibiotic", x: 22980 }
     ],
-    bridges: [
-      { x: 2120, y: 770, width: 560 },
-      { x: 5135, y: 770, width: 550 },
-      { x: 7895, y: 770, width: 590 },
-      { x: 10695, y: 770, width: 630 }
+    tokenRuns: [
+      { shape: "arc", x: 1420, count: 5, spacing: 78, lift: 92 },
+      { shape: "low", x: 2860, count: 5, spacing: 72 },
+      { shape: "arc", x: 3920, count: 5, spacing: 78, lift: 86 },
+      { shape: "gap", x: 4930, count: 7, spacing: 82, lift: 118 },
+      { shape: "arc", x: 6180, count: 7, spacing: 76, lift: 96 },
+      { shape: "low", x: 7440, count: 5, spacing: 72 },
+      { shape: "arc", x: 8520, count: 5, spacing: 78, lift: 92 },
+      { shape: "wave", x: 9580, count: 11, spacing: 78, lift: 88 },
+      { shape: "gap", x: 10530, count: 7, spacing: 82, lift: 122 },
+      { shape: "arc", x: 11460, count: 5, spacing: 78, lift: 90 },
+      { shape: "low", x: 12320, count: 5, spacing: 72 },
+      { shape: "arc", x: 13100, count: 7, spacing: 76, lift: 94 },
+      { shape: "platform", x: 14620, count: 11, spacing: 120, y: 458, bonus: true },
+      { shape: "wave", x: 16320, count: 9, spacing: 80, lift: 86 },
+      { shape: "gap", x: 17120, count: 8, spacing: 80, lift: 124 },
+      { shape: "wave", x: 18220, count: 11, spacing: 78, lift: 94 },
+      { shape: "arc", x: 19620, count: 7, spacing: 75, lift: 96 },
+      { shape: "low", x: 20340, count: 5, spacing: 70 },
+      { shape: "gap", x: 21290, count: 9, spacing: 78, lift: 128 },
+      { shape: "wave", x: 22250, count: 11, spacing: 76, lift: 96 }
     ],
-    pickups: [
-      { x: 600, y: 675, bridge: 0 },
-      { x: 1080, y: 675, bridge: 0 },
-      { x: 1570, y: 675, bridge: 0 },
-      { x: 2760, y: 680, bridge: 1 },
-      { x: 3360, y: 680, bridge: 1 },
-      { x: 4260, y: 680, bridge: 1 },
-      { x: 2910, y: 415, bridge: 1, bonus: true },
-      { x: 3570, y: 320, bridge: 1, bonus: true },
-      { x: 4240, y: 400, bridge: 1, bonus: true },
-      { x: 4580, y: 680, bridge: 1 },
-      { x: 5670, y: 680, bridge: 2 },
-      { x: 6250, y: 680, bridge: 2 },
-      { x: 6890, y: 680, bridge: 2 },
-      { x: 7450, y: 680, bridge: 2 },
-      { x: 6420, y: 455, bridge: 2, bonus: true },
-      { x: 7260, y: 470, bridge: 2, bonus: true },
-      { x: 8480, y: 680, bridge: 3 },
-      { x: 9150, y: 680, bridge: 3 },
-      { x: 9800, y: 680, bridge: 3 },
-      { x: 10150, y: 680, bridge: 3 },
-      { x: 9230, y: 455, bridge: 3, bonus: true },
-      { x: 10020, y: 455, bridge: 3, bonus: true }
+    pbpBonuses: [
+      { x: 14880, y: 455 },
+      { x: 15340, y: 455 },
+      { x: 15800, y: 455 }
     ],
-    antibiotics: [
-      { x: 2600, y: 700 },
-      { x: 3160, y: 700 },
-      { x: 4050, y: 700 },
-      { x: 5840, y: 700 },
-      { x: 7060, y: 700 },
-      { x: 8680, y: 700 },
-      { x: 9720, y: 700 },
-      { x: 11550, y: 700 }
-    ],
-    autolysins: [
-      { x: 6020, y: 665, distance: 190, speed: 105 },
-      { x: 6750, y: 570, distance: 170, speed: 118 },
-      { x: 7350, y: 655, distance: 150, speed: 128 }
-    ],
-    checkpoints: [5410, 8190, 11010]
-  }
-]);
+    checkpoints: [4800, 9400, 14300, 19300, 21950]
+  };
+
+  window.ENVELOPE_RUNNER_LEVEL = Object.freeze(level);
+})();
