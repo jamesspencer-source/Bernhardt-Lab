@@ -80,10 +80,11 @@ That validator blocks regressions against Tom's requested content rules: the cur
 
 The build also rejects broken local page links or fragments, public images without `alt` attributes, and referenced public images larger than 1 MB.
 
-Publish website updates to `main`:
+Preview and publish an explicitly selected people update to `main`:
 
 ```bash
-python3 scripts/publish_site.py
+python3 scripts/publish_site.py --dry-run --include data/people.json
+python3 scripts/publish_site.py --include data/people.json --message "site: update people"
 ```
 
 This will:
@@ -109,18 +110,21 @@ YouTube view stats are also refreshed by GitHub Actions once per month.
 For the normal end-to-end website workflow, use:
 
 ```bash
-python3 scripts/publish_site.py
+python3 scripts/publish_site.py --dry-run --manifest /path/to/reviewed-source-files.json
+python3 scripts/publish_site.py --manifest /path/to/reviewed-source-files.json
 ```
 
 This command will:
 
 - confirm you are on `main`
-- fetch and verify `origin/main` is not ahead
-- remove transient local noise such as `.DS_Store` and Python cache folders
-- run `python3 scripts/build_site.py`
-- stage only approved website paths
+- fetch and require `main` to match `origin/main`, without unreviewed local commits
+- build selected source files over a clean snapshot in a temporary directory
+- reject unrelated changes and hand-edited generated output
+- stage only the exact source files and reproducible generated changes shown in the plan
 - commit only if a real website diff remains
 - push the result to `origin main`
+
+The manifest is a JSON array of exact repository-relative source file paths. Do not select directories or `github-flat/`; generated output is derived automatically. `--dry-run` leaves working files and Git state untouched. Numbered siblings and other unrelated files are never automatically deleted. Use a clean review checkout when the canonical checkout contains unrelated work. A successful push is not a confirmed deployment: check Pages and the live URLs afterward.
 
 Archive scientific media is curated manually:
 
@@ -209,7 +213,8 @@ Standard workflow for this repo is to verify, commit, and push completed scoped 
 The preferred command-driven path for that workflow is:
 
 ```bash
-python3 scripts/publish_site.py
+python3 scripts/publish_site.py --dry-run --include data/people.json
+python3 scripts/publish_site.py --include data/people.json
 ```
 
 Do not hand-edit:

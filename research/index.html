@@ -23,7 +23,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/brands/favicon-32.png?v=20260504b" />
     <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/brands/apple-touch-icon.png?v=20260504b" />
     <link rel="shortcut icon" href="../favicon.ico?v=20260504b" />
-    <link rel="stylesheet" href="../assets/alumni.css?v=20260809a" />
+    <link rel="stylesheet" href="../assets/alumni.css?v=20260908a" />
     <script>
       document.documentElement.classList.remove("no-js");
       document.documentElement.classList.add("js");
@@ -73,10 +73,12 @@
         <div class="container">
           <div class="library-grid">
             <article class="library-card" id="mreb-trackmate">
-              <img src="../assets/images/research/mreb-trackmate.gif" alt="MreB trackmate movie" loading="lazy" />
+              <img id="microscopy-animation" width="1500" height="600" src="../assets/images/research/mreb-trackmate-poster.png" data-animation-src="../assets/images/research/mreb-trackmate.gif" alt="MreB TrackMate time-lapse" loading="lazy" />
               <div class="body">
-                <h3>MreB TrackMate Time-lapse</h3>
+                <h2>MreB TrackMate Time-lapse</h2>
                 <p>Live-cell movie used in the Research in Motion section.</p>
+                <button id="microscopy-toggle" type="button" class="alumni-link" aria-controls="microscopy-animation" aria-pressed="false" hidden>Play animation</button>
+                <a id="microscopy-fallback" href="../assets/images/research/mreb-trackmate.gif">Open time-lapse</a>
                 <a href="../#research">Back to research highlights</a>
               </div>
             </article>
@@ -84,7 +86,7 @@
             <article class="library-card" id="pseudomonas-tem">
               <img src="../assets/images/research/pseudomonas-tem.jpg" alt="Pseudomonas TEM" loading="lazy" />
               <div class="body">
-                <h3>Pseudomonas TEM</h3>
+                <h2>Pseudomonas TEM</h2>
                 <p>Transmission electron microscopy image of envelope architecture.</p>
                 <a href="../#research">Back to research highlights</a>
               </div>
@@ -93,7 +95,7 @@
             <article class="library-card" id="coryfdaa">
               <img src="../assets/images/research/coryfdaa.png" alt="Corynebacterium fluorescent D-amino acid labeling" loading="lazy" />
               <div class="body">
-                <h3>Corynebacterium FDAA Labeling</h3>
+                <h2>Corynebacterium FDAA Labeling</h2>
                 <p>Fluorescence pulse-labeling image used to visualize envelope growth patterns.</p>
                 <a href="../#research">Back to research highlights</a>
               </div>
@@ -102,7 +104,7 @@
             <article class="library-card" id="corynebacterium-phage">
               <img src="../assets/images/research/corynebacterium-phage.jpg" alt="Corynebacterium phage image" loading="lazy" />
               <div class="body">
-                <h3>Corynebacterium–Phage Imaging</h3>
+                <h2>Corynebacterium–Phage Imaging</h2>
                 <p>Image used in studies of Corynebacterium envelope biology and phage interactions.</p>
                 <a href="../#research">Back to research highlights</a>
               </div>
@@ -111,7 +113,7 @@
             <article class="library-card" id="species-envelope">
               <img src="../assets/images/research/species-envelope.png" alt="Comparative bacterial morphology panel" loading="lazy" />
               <div class="body">
-                <h3>Species-Spanning Envelope Phenotypes</h3>
+                <h2>Species-Spanning Envelope Phenotypes</h2>
                 <p>Comparative morphology panel used to illustrate species-diverse model systems.</p>
                 <a href="../#research">Back to research highlights</a>
               </div>
@@ -120,7 +122,7 @@
             <article class="library-card" id="fluorescence-envelope">
               <img src="../assets/images/research/fluorescence-envelope.jpg" alt="Mosaic colony phenotype screen image" loading="lazy" />
               <div class="body">
-                <h3>Mosaic Colony Phenotype Screen</h3>
+                <h2>Mosaic Colony Phenotype Screen</h2>
                 <p>Colony imaging from a plasmid-loss screen associated with envelope phenotypes.</p>
                 <a href="../#research">Back to research highlights</a>
               </div>
@@ -129,7 +131,7 @@
             <article class="library-card" id="nmicro2022-divisome-fluorescence">
               <img src="../assets/images/highlights/nmicro2022-divisome-fluorescence.jpg" alt="Division-site fluorescence architecture panel" loading="lazy" />
               <div class="body">
-                <h3>Division-Site Fluorescence Architecture</h3>
+                <h2>Division-Site Fluorescence Architecture</h2>
                 <p>Microscopy panels from Nature Microbiology 2022 showing envelope dynamics in division mutants.</p>
                 <a href="https://pubmed.ncbi.nlm.nih.gov/36097171/" target="_blank" rel="noreferrer">Open article on PubMed</a>
               </div>
@@ -138,7 +140,7 @@
             <article class="library-card" id="nmicro2022-timelapse-rods">
               <img src="../assets/images/highlights/nmicro2022-timelapse-rods.jpg" alt="Live-cell timelapse frame series" loading="lazy" />
               <div class="body">
-                <h3>Live-Cell Time-lapse Frame Series</h3>
+                <h2>Live-Cell Time-lapse Frame Series</h2>
                 <p>Representative frames linked to the supplementary movie set in Nature Microbiology 2022.</p>
                 <a href="https://pubmed.ncbi.nlm.nih.gov/36097171/" target="_blank" rel="noreferrer">Open article on PubMed</a>
               </div>
@@ -147,7 +149,7 @@
             <article class="library-card" id="nmicro2022-cryo-tomography">
               <img src="../assets/images/highlights/nmicro2022-cryo-tomography.jpg" alt="Cryo electron tomography workflow and representative micrographs" loading="lazy" />
               <div class="body">
-                <h3>Cryo-ET / Cryo-FIB Envelope Workflow</h3>
+                <h2>Cryo-ET / Cryo-FIB Envelope Workflow</h2>
                 <p>Cryo-electron tomography workflow and representative lamella imagery from open-access publication data.</p>
                 <a href="https://pubmed.ncbi.nlm.nih.gov/36097171/" target="_blank" rel="noreferrer">Open article on PubMed</a>
               </div>
@@ -156,7 +158,7 @@
             <article class="library-card" id="mbio2023-pcda-localization">
               <img src="../assets/images/highlights/mbio2023-pcda-localization.jpg" alt="PcdA localization microscopy panel" loading="lazy" />
               <div class="body">
-                <h3>PcdA Localization Panels</h3>
+                <h2>PcdA Localization Panels</h2>
                 <p>Microscopy panels from mBio 2023 tracking PcdA organization across division states.</p>
                 <a href="https://pubmed.ncbi.nlm.nih.gov/37886572/" target="_blank" rel="noreferrer">Open article on PubMed</a>
               </div>
@@ -165,7 +167,7 @@
             <article class="library-card" id="mbio2023-division-maps">
               <img src="../assets/images/highlights/mbio2023-division-maps.jpg" alt="Divisome-associated localization maps panel" loading="lazy" />
               <div class="body">
-                <h3>Divisome Localization Maps</h3>
+                <h2>Divisome Localization Maps</h2>
                 <p>Microscopy-rich mapping panel from mBio 2023 linking localization to septation geometry.</p>
                 <a href="https://pubmed.ncbi.nlm.nih.gov/37886572/" target="_blank" rel="noreferrer">Open article on PubMed</a>
               </div>
@@ -174,7 +176,7 @@
             <article class="library-card" id="mbio2023saur-facz-pg">
               <img src="../assets/images/highlights/mbio2023saur-facz-pg.jpg" alt="FacZ peptidoglycan microscopy panel" loading="lazy" />
               <div class="body">
-                <h3>FacZ / Peptidoglycan Patterning</h3>
+                <h2>FacZ / Peptidoglycan Patterning</h2>
                 <p>Fluorescence microscopy panel from mBio 2023 highlighting septal and peripheral patterning in <em class="species-name">S. aureus</em>.</p>
                 <a href="https://pubmed.ncbi.nlm.nih.gov/37162900/" target="_blank" rel="noreferrer">Open article on PubMed</a>
               </div>
@@ -198,6 +200,6 @@
         </div>
       </div>
     </footer>
-    <script type="module" src="../assets/site.js?v=20260710a"></script>
+    <script type="module" src="../assets/site.js?v=20260908a"></script>
   </body>
 </html>

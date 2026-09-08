@@ -110,15 +110,18 @@
 }
 
 
+/* Source: css/primitives.css */
+/* Shared behavioral rules required by every page family. */
+[hidden] {
+  display: none !important;
+}
+
+
 /* Source: css/base.css */
 /* Source slice for base.css. */
 
 * {
   box-sizing: border-box;
-}
-
-[hidden] {
-  display: none !important;
 }
 
 html {
@@ -1249,6 +1252,63 @@ p {
   background: linear-gradient(130deg, var(--midnight-soft), var(--midnight));
 }
 
+.team-filter-wrap {
+  display: none;
+  gap: 0.42rem;
+  color: var(--text-mid);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.team-filter-control {
+  position: relative;
+  display: grid;
+  width: min(100%, 26rem);
+}
+
+.team-filter-control select {
+  width: 100%;
+  min-height: 2.92rem;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  background: var(--surface-control-strong);
+  color: var(--text-high);
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.7rem 2.75rem 0.7rem 0.95rem;
+  box-shadow: inset 0 1px 0 rgba(246, 249, 255, 0.03);
+}
+
+.team-filter-control select:focus-visible {
+  outline: 2px solid rgba(var(--accent-secondary-rgb), 0.42);
+  outline-offset: 2px;
+  border-color: var(--accent-secondary);
+}
+
+.team-filter-chevron {
+  position: absolute;
+  top: 50%;
+  right: 1.08rem;
+  width: 0.52rem;
+  height: 0.52rem;
+  border-right: 2px solid var(--text-mid);
+  border-bottom: 2px solid var(--text-mid);
+  pointer-events: none;
+  transform: translateY(-68%) rotate(45deg);
+}
+
+@media (max-width: 760px) {
+  .section-people .role-filters {
+    display: none;
+  }
+
+  .section-people .team-filter-wrap {
+    display: grid;
+  }
+}
+
 .people-grid {
   display: grid;
   gap: 1rem;
@@ -2354,7 +2414,7 @@ p {
     padding: 0.8rem;
   }
 
-  .research-video-copy h4 {
+  .research-video-copy h3 {
     font-size: 1.12rem;
   }
 
@@ -2677,7 +2737,7 @@ p {
 .person-body h3,
 .alumni-item h3,
 .contact-card h2,
-.research-video-copy h4,
+.research-video-copy h3,
 .media-card h3 {
   color: var(--text-high);
 }
@@ -2863,6 +2923,24 @@ p {
 
 .collab-showcase {
   overflow: visible;
+}
+
+.no-js .collab-showcase {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  width: 100%;
+  min-width: 0;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collab-showcase {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    width: 100%;
+    min-width: 0;
+    transform: none;
+  }
 }
 
 .map-frame,
@@ -4031,6 +4109,37 @@ body {
 }
 
 
+/* Source: css/gallery.css */
+/* Reserve the same stage and controls before and after lazy initialization. */
+.gallery-grid {
+  --gallery-stage-height: 28rem;
+  --gallery-controls-height: 2.75rem;
+}
+
+.js .gallery-grid:empty::before {
+  content: "";
+  display: block;
+  height: calc(var(--gallery-stage-height) + var(--gallery-controls-height) + 0.66rem);
+}
+
+.gallery-stage,
+.gallery-stage img {
+  height: var(--gallery-stage-height);
+  min-height: 0;
+}
+
+.gallery-controls {
+  min-height: var(--gallery-controls-height);
+}
+
+@media (max-width: 760px) {
+  .gallery-grid {
+    --gallery-stage-height: 14rem;
+    --gallery-controls-height: 5.5rem;
+  }
+}
+
+
 /* Source: css/header.css */
 /* Shared site header and primary navigation. */
 
@@ -4111,7 +4220,7 @@ body.is-scrolled .site-header {
   color: var(--text-mid);
   font-size: 0.84rem;
   font-weight: 700;
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   text-decoration: none;
   box-shadow: inset 0 1px 0 rgba(246, 249, 255, 0.03);
   transition:

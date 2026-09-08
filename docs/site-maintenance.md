@@ -63,18 +63,21 @@ This command now runs data validation, generated-page validation, favicon valida
 ## Publish command
 
 ```bash
-python3 scripts/publish_site.py
+python3 scripts/publish_site.py --dry-run --include data/people.json
+python3 scripts/publish_site.py --include data/people.json --message "site: update people"
 ```
 
 Use this for the normal website workflow. It will:
 
 - verify you are on `main`
-- fetch `origin/main` and stop if the remote is ahead or diverged
-- remove transient local artifacts such as `.DS_Store` and Python cache folders
-- run `python3 scripts/build_site.py`
-- stage only approved website paths
+- fetch `origin/main` and stop unless local `main` matches it exactly
+- build only the selected source changes over a clean temporary snapshot
+- refuse unrelated working changes or generated edits that do not match that build
+- stage only the exact source and generated files shown in the output plan
 - commit only if a real website diff remains
 - push to `origin main`
+
+Use `--include` with exact repository-relative source file paths, never directory names. For larger releases, use `--manifest /path/to/reviewed-source-files.json`, containing a JSON array of those paths. Do not include `github-flat/` or generated CSS: the isolated build determines those outputs. A dry run leaves the checkout and index untouched. The publisher does not clean or delete numbered duplicates; use a clean review checkout if unrelated work is present. After publishing, verify GitHub Pages and the changed live URLs before calling the change live.
 
 For homepage or visual styling updates, add a small visual QA pass before publish. At minimum, review:
 
@@ -85,6 +88,17 @@ For homepage or visual styling updates, add a small visual QA pass before publis
 - one profile page
 
 Confirm the changed surfaces still read as part of one editorial system before publishing.
+
+Run the focused regression tests after building:
+
+```bash
+python3 -B -m unittest discover -s scripts -p 'test_*.py' -v
+node scripts/check_site_browser.cjs http://127.0.0.1:5180 /path/to/local-evidence
+```
+
+The browser check requires the Playwright Node package and its Chromium browser, or `PLAYWRIGHT_CHANNEL=chrome` for installed Chrome. Start a local HTTP server for the reviewed checkout first. It checks actual filtered-card visibility, keyboard focus, mobile selectors, five layout widths, natural photo proportions, gallery space, animation controls, and V1 dialog opening. It never submits game scores. Keep screenshots outside the public repository.
+
+Featured alumni selection and approved short role labels remain in `data/featured-alumni.json`. Names and linked source types are checked against `data/people.json`; source-button labels come from one builder mapping. `assets/data/featured-alumni.json` is generated runtime data, not an editing source. For entries marked `roleFromPeople`, conflicting duplicated career text blocks the build. A source label describes the link destination, not a guarantee that every listed career fact has been freshly verified.
 
 This regenerates:
 
@@ -153,18 +167,18 @@ someone to alumni does not automatically feature them on the homepage.
 
 ### Update homepage copy
 
-Edit `data/site-copy.json`, then run `python3 scripts/publish_site.py`.
+Edit the appropriate source, then select it explicitly for publishing. `data/site-copy.json` owns selected settings such as slides and featured video data; other approved homepage prose lives in `index.html`. For example: `python3 scripts/publish_site.py --include data/site-copy.json`.
 
 ### Update gallery or featured alumni
 
-Edit `data/gallery.json` or `data/featured-alumni.json`, then run `python3 scripts/publish_site.py`.
+Edit `data/gallery.json` or `data/featured-alumni.json`, then select that exact file with `python3 scripts/publish_site.py --include <source-file>`.
 
 ### Update scientific archive media
 
 1. Import stills and poster frames into `assets/images/research/`
 2. Import browser-safe local videos into `assets/media/research/`
 3. Update `data/scientific-media.json`
-4. Run `python3 scripts/publish_site.py`
+4. Review a `--dry-run` manifest listing `data/scientific-media.json` and each intentionally imported asset, then publish with that same manifest.
 
 ## Leaderboard health check
 

@@ -28,10 +28,10 @@
     <link rel="icon" type="image/png" sizes="32x32" href="../assets/images/brands/favicon-32.png?v=20260504b" />
     <link rel="apple-touch-icon" sizes="180x180" href="../assets/images/brands/apple-touch-icon.png?v=20260504b" />
     <link rel="shortcut icon" href="../favicon.ico?v=20260504b" />
-    <link rel="stylesheet" href="../assets/alumni.css?v=20260809a" />
+    <link rel="stylesheet" href="../assets/alumni.css?v=20260908a" />
     <link rel="canonical" href="https://bernhardtlab.com/alumni/" />
   </head>
-  <body>
+  <body class="alumni-page">
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="scroll-meter" aria-hidden="true"></div>
     <header class="site-header">
@@ -71,14 +71,7 @@
             <div class="meta-strip">
               <p><strong>Primary source:</strong> Bernhardt lab records</p>
               <p><strong>Verification method:</strong> Public institutional profile pages where available</p>
-              <p><strong>Updated:</strong> <span data-freshness-key="alumniDirectoryUpdated">July 10, 2026</span></p>
-              <p class="meta-utility">
-                <a
-                  href="mailto:James_Spencer@hms.harvard.edu?subject=Bernhardt%20Lab%20website%20update%2Fremoval%20request&body=Page%20URL%3A%20%0D%0AName%20(or%20entry)%3A%20%0D%0ARequested%20change%20(removal%2Fupdate)%3A%20%0D%0AProposed%20replacement%20text%20(if%20any)%3A%20%0D%0ASupporting%20link%20(if%20any)%3A%20%0D%0A"
-                  >Request an update or removal</a
-                >
-                <span>Include your name, entry URL, and requested correction/removal.</span>
-              </p>
+              <p><strong>Updated:</strong> <span data-freshness-key="alumniDirectoryUpdated">September 7, 2026</span></p>
             </div>
           </div>
 
@@ -88,12 +81,19 @@
               <input id="alumni-search" type="search" placeholder="Search alumni" autocomplete="off" />
             </label>
             <div id="alumni-filters" class="alumni-filters" role="group" aria-label="Filter alumni"></div>
+            <label class="sort-wrap alumni-role-wrap" for="alumni-role-filter">
+              <span>Filter by lab role</span>
+              <select id="alumni-role-filter" aria-controls="alumni-directory"></select>
+            </label>
             <label class="sort-wrap" for="alumni-sort">
-              <span>Sort by</span>
-              <select id="alumni-sort" name="alumni-sort">
-                <option value="recent" selected>Most recently left lab</option>
-                <option value="lastName">Last name (A-Z)</option>
-              </select>
+              <span>Sort alumni</span>
+              <span class="sort-control">
+                <select id="alumni-sort" name="alumni-sort">
+                  <option value="recent" selected>Most recently left lab</option>
+                  <option value="lastName">Last name (A-Z)</option>
+                </select>
+                <span class="sort-chevron" aria-hidden="true"></span>
+              </span>
             </label>
             <p id="alumni-count" class="alumni-count" aria-live="polite"><!-- generated-alumni-count:start -->
 Showing 60 alumni entries
@@ -111,11 +111,11 @@ Showing 60 alumni entries
         <div class="container">
           <div id="alumni-directory" class="alumni-grid" aria-live="polite">
 <!-- generated-alumni-grid:start -->
-          <article class="alumni-card" data-name="Wilaysha Evans" data-role-in-lab="ChemBio Graduate Student" data-lab-dates="Sep 2022 - Jun 2026" data-current-role="Upper School Science Teacher, Trinity School, New York City" data-bucket="Graduate Alumni" data-sort-recent="202606" data-sort-last-name="evans" data-search="Wilaysha Evans ChemBio Graduate Student Sep 2022 - Jun 2026 Upper School Science Teacher, Trinity School, New York City Graduate Alumni">
+          <article class="alumni-card" data-name="Wilaysha Evans" data-role-in-lab="ChemBio Graduate Student" data-lab-dates="Sep 2022 - Aug 2026" data-current-role="Upper School Science Teacher, Trinity School, New York City" data-bucket="Graduate Alumni" data-sort-recent="202608" data-sort-last-name="evans" data-search="Wilaysha Evans ChemBio Graduate Student Sep 2022 - Aug 2026 Upper School Science Teacher, Trinity School, New York City Graduate Alumni">
             <div class="alumni-top"></div>
             <h3>Wilaysha Evans</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> ChemBio Graduate Student</p>
-            <p class="alumni-role"><strong>Lab dates:</strong> Sep 2022 - Jun 2026</p>
+            <p class="alumni-role"><strong>Lab dates:</strong> Sep 2022 - Aug 2026</p>
             <p class="alumni-current"><strong>Current / latest role:</strong> Upper School Science Teacher, Trinity School, New York City</p>
             <p class="alumni-source"><strong>Source:</strong> Bernhardt lab records</p>
             <div class="alumni-links">
@@ -148,7 +148,7 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Lindsey Marmont" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2018 – 2025" data-current-role="Principal investigator, McMaster University, Hamilton, Ontario" data-bucket="Postdoctoral Alumni" data-sort-recent="202512" data-sort-last-name="marmont" data-search="Lindsey Marmont Postdoctoral Fellow 2018 – 2025 Principal investigator, McMaster University, Hamilton, Ontario Postdoctoral Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Lindsey Marmont</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Postdoctoral Fellow</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2018 – 2025</p>
@@ -157,7 +157,7 @@ Showing 60 alumni entries
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://experts.mcmaster.ca/people/marmontl" target="_blank" rel="noreferrer">McMaster University</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/lindsey-marmont/">Open alumni profile</a>
-              <a class="alumni-link" href="https://experts.mcmaster.ca/people/marmontl" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://experts.mcmaster.ca/people/marmontl" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
           <article class="alumni-card" data-name="Amelia McKitterick" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2019 – 2025" data-current-role="Principal Investigator, McKitterick Lab - UMass Chan Medical School" data-bucket="Postdoctoral Alumni" data-sort-recent="202512" data-sort-last-name="mckitterick" data-search="Amelia McKitterick Postdoctoral Fellow 2019 – 2025 Principal Investigator, McKitterick Lab - UMass Chan Medical School Postdoctoral Alumni">
@@ -247,16 +247,16 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Paula Navarro" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2023 – 2024" data-current-role="Principal investigator, Navarro Lab, Department of Fundamental Microbiology, University of Lausanne, Switzerland" data-bucket="Postdoctoral Alumni" data-sort-recent="202412" data-sort-last-name="navarro" data-search="Paula Navarro Postdoctoral Fellow 2023 – 2024 Principal investigator, Navarro Lab, Department of Fundamental Microbiology, University of Lausanne, Switzerland Postdoctoral Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"></div>
             <h3>Paula Navarro</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Postdoctoral Fellow</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2023 – 2024</p>
             <p class="alumni-current"><strong>Current / latest role:</strong> Principal investigator, Navarro Lab, Department of Fundamental Microbiology, University of Lausanne, Switzerland</p>
             <p class="alumni-source"><strong>Source:</strong> Bernhardt lab records</p>
-            <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://wp.unil.ch/navarrolab/" target="_blank" rel="noreferrer">University of Lausanne</a></p>
+            <p class="alumni-source"><strong>Institutional lab page:</strong> <a class="alumni-inline-link" href="https://wp.unil.ch/navarrolab/" target="_blank" rel="noreferrer">University of Lausanne</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/paula-navarro/">Open alumni profile</a>
-              <a class="alumni-link" href="https://wp.unil.ch/navarrolab/" target="_blank" rel="noreferrer">View current institutional profile</a>
+
             </div>
           </article>
           <article class="alumni-card" data-name="Amanda Nazareth" data-role-in-lab="Undergraduate Lab Assistant" data-lab-dates="2023 – 2024" data-current-role="Undergraduate student, Emmanuel College" data-bucket="Undergraduate Alumni" data-sort-recent="202412" data-sort-last-name="nazareth" data-search="Amanda Nazareth Undergraduate Lab Assistant 2023 – 2024 Undergraduate student, Emmanuel College Undergraduate Alumni">
@@ -272,7 +272,7 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Andrea Vettiger" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2019 – 2024" data-current-role="Principal investigator, Vettiger Lab, Department of Fundamental Microbiology, University of Lausanne, Switzerland" data-bucket="Postdoctoral Alumni" data-sort-recent="202412" data-sort-last-name="vettiger" data-search="Andrea Vettiger Postdoctoral Fellow 2019 – 2024 Principal investigator, Vettiger Lab, Department of Fundamental Microbiology, University of Lausanne, Switzerland Postdoctoral Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Andrea Vettiger</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Postdoctoral Fellow</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2019 – 2024</p>
@@ -281,7 +281,7 @@ Showing 60 alumni entries
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://wp.unil.ch/vettiger-lab/people/andrea-vettiger-phd/" target="_blank" rel="noreferrer">University of Lausanne</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/andrea-vettiger/">Open alumni profile</a>
-              <a class="alumni-link" href="https://wp.unil.ch/vettiger-lab/people/andrea-vettiger-phd/" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://wp.unil.ch/vettiger-lab/people/andrea-vettiger-phd/" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
           <article class="alumni-card" data-name="Angelika Grundling" data-role-in-lab="Professor Visiting on Sabbatical" data-lab-dates="Sep 2023 – Aug 2024" data-current-role="Professor of Molecular Microbiology, Imperial College London" data-bucket="Other Alumni" data-sort-recent="202408" data-sort-last-name="grundling" data-search="Angelika Grundling Professor Visiting on Sabbatical Sep 2023 – Aug 2024 Professor of Molecular Microbiology, Imperial College London Other Alumni">
@@ -309,16 +309,16 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Kate Hummels" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2019 – 2023" data-current-role="Principal investigator, Hummels Lab, University of Georgia, Athens, GA" data-bucket="Postdoctoral Alumni" data-sort-recent="202312" data-sort-last-name="hummels" data-search="Kate Hummels Postdoctoral Fellow 2019 – 2023 Principal investigator, Hummels Lab, University of Georgia, Athens, GA Postdoctoral Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"></div>
             <h3>Kate Hummels</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Postdoctoral Fellow</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2019 – 2023</p>
             <p class="alumni-current"><strong>Current / latest role:</strong> Principal investigator, Hummels Lab, University of Georgia, Athens, GA</p>
             <p class="alumni-source"><strong>Source:</strong> Bernhardt lab records</p>
-            <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://mib.uga.edu/research/lab/hummels-lab" target="_blank" rel="noreferrer">University of Georgia (Hummels Lab)</a></p>
+            <p class="alumni-source"><strong>Institutional lab page:</strong> <a class="alumni-inline-link" href="https://mib.uga.edu/research/lab/hummels-lab" target="_blank" rel="noreferrer">University of Georgia (Hummels Lab)</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/kate-hummels/">Open alumni profile</a>
-              <a class="alumni-link" href="https://mib.uga.edu/research/lab/hummels-lab" target="_blank" rel="noreferrer">View current institutional profile</a>
+
             </div>
           </article>
           <article class="alumni-card" data-name="Evan Lyerly" data-role-in-lab="Research Technician" data-lab-dates="2021 – 2023" data-current-role="MD student" data-bucket="Research Staff Alumni" data-sort-recent="202312" data-sort-last-name="lyerly" data-search="Evan Lyerly Research Technician 2021 – 2023 MD student Research Staff Alumni">
@@ -397,7 +397,7 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Josue Flores-Kim" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2017 – 2022" data-current-role="Principal investigator, Flores-Kim Lab, UMass Chan Medical School" data-bucket="Postdoctoral Alumni" data-sort-recent="202212" data-sort-last-name="flores-kim" data-search="Josue Flores-Kim Postdoctoral Fellow 2017 – 2022 Principal investigator, Flores-Kim Lab, UMass Chan Medical School Postdoctoral Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Josue Flores-Kim</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Postdoctoral Fellow</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2017 – 2022</p>
@@ -406,11 +406,11 @@ Showing 60 alumni entries
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://profiles.umassmed.edu/display/28733746" target="_blank" rel="noreferrer">UMass Chan Medical School</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/josue-flores-kim/">Open alumni profile</a>
-              <a class="alumni-link" href="https://profiles.umassmed.edu/display/28733746" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://profiles.umassmed.edu/display/28733746" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
           <article class="alumni-card" data-name="Camilla Jensen" data-role-in-lab="Visiting Postdoctoral Researcher" data-lab-dates="2022" data-current-role="University of Copenhagen, Denmark" data-bucket="Postdoctoral Alumni" data-sort-recent="202212" data-sort-last-name="jensen" data-search="Camilla Jensen Visiting Postdoctoral Researcher 2022 University of Copenhagen, Denmark Postdoctoral Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Camilla Jensen</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Visiting Postdoctoral Researcher</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2022</p>
@@ -419,7 +419,7 @@ Showing 60 alumni entries
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://www.bio.ku.dk/english/staff/?pure=en/persons/200910" target="_blank" rel="noreferrer">University of Copenhagen</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/camilla-jensen/">Open alumni profile</a>
-              <a class="alumni-link" href="https://www.bio.ku.dk/english/staff/?pure=en/persons/200910" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://www.bio.ku.dk/english/staff/?pure=en/persons/200910" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
           <article class="alumni-card" data-name="Zhaoqi Li" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2021 – 2022" data-current-role="Senior Scientist, Immunology, Tango Therapeutics, Boston, MA" data-bucket="Postdoctoral Alumni" data-sort-recent="202212" data-sort-last-name="li" data-search="Zhaoqi Li Postdoctoral Fellow 2021 – 2022 Senior Scientist, Immunology, Tango Therapeutics, Boston, MA Postdoctoral Alumni">
@@ -488,7 +488,7 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Grasiela Torres" data-role-in-lab="Undergraduate Research Assistant" data-lab-dates="2016 – 2021" data-current-role="PhD candidate, UCLA Department of Microbiology, Immunology &amp; Molecular Genetics" data-bucket="Undergraduate Alumni" data-sort-recent="202112" data-sort-last-name="torres" data-search="Grasiela Torres Undergraduate Research Assistant 2016 – 2021 PhD candidate, UCLA Department of Microbiology, Immunology &amp; Molecular Genetics Undergraduate Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Grasiela Torres</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Undergraduate Research Assistant</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2016 – 2021</p>
@@ -497,7 +497,7 @@ Showing 60 alumni entries
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://mimg.ucla.edu/people/grasiela-torres" target="_blank" rel="noreferrer">UCLA MIMG</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/grasiela-torres/">Open alumni profile</a>
-              <a class="alumni-link" href="https://mimg.ucla.edu/people/grasiela-torres" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://mimg.ucla.edu/people/grasiela-torres" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
           <article class="alumni-card" data-name="Hoong Chuin Lim" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2014 – 2020" data-current-role="Senior Scientist, Manifold Biotechnologies" data-bucket="Postdoctoral Alumni" data-sort-recent="202012" data-sort-last-name="lim" data-search="Hoong Chuin Lim Postdoctoral Fellow 2014 – 2020 Senior Scientist, Manifold Biotechnologies Postdoctoral Alumni">
@@ -525,7 +525,7 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Jeanna Qiu" data-role-in-lab="Undergraduate Research Assistant" data-lab-dates="2017 – 2020" data-current-role="Medical student, Harvard Medical School" data-bucket="Undergraduate Alumni" data-sort-recent="202012" data-sort-last-name="qiu" data-search="Jeanna Qiu Undergraduate Research Assistant 2017 – 2020 Medical student, Harvard Medical School Undergraduate Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Jeanna Qiu</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Undergraduate Research Assistant</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2017 – 2020</p>
@@ -534,25 +534,25 @@ Showing 60 alumni entries
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://dunster.harvard.edu/people/jeanna-qui" target="_blank" rel="noreferrer">Harvard Dunster House</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/jeanna-qiu/">Open alumni profile</a>
-              <a class="alumni-link" href="https://dunster.harvard.edu/people/jeanna-qui" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://dunster.harvard.edu/people/jeanna-qui" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
-          <article class="alumni-card" data-name="Thao Truong" data-role-in-lab="Graduate Student" data-lab-dates="2016 – 2020" data-current-role="Assistant Professor, Department of Laboratory Medicine &amp; Pathology, University of Washington; Director, Microbiology and Molecular Microbiology Laboratories" data-bucket="Graduate Alumni" data-sort-recent="202012" data-sort-last-name="truong" data-search="Thao Truong Graduate Student 2016 – 2020 Assistant Professor, Department of Laboratory Medicine &amp; Pathology, University of Washington; Director, Microbiology and Molecular Microbiology Laboratories Graduate Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+          <article class="alumni-card" data-name="Thao Truong" data-role-in-lab="Graduate Student" data-lab-dates="2016 – 2020" data-current-role="Assistant Professor, Department of Laboratory Medicine &amp; Pathology, University of Washington" data-bucket="Graduate Alumni" data-sort-recent="202012" data-sort-last-name="truong" data-search="Thao Truong Graduate Student 2016 – 2020 Assistant Professor, Department of Laboratory Medicine &amp; Pathology, University of Washington Graduate Alumni">
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Thao Truong</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Graduate Student</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2016 – 2020</p>
-            <p class="alumni-current"><strong>Current / latest role:</strong> Assistant Professor, Department of Laboratory Medicine &amp; Pathology, University of Washington; Director, Microbiology and Molecular Microbiology Laboratories</p>
+            <p class="alumni-current"><strong>Current / latest role:</strong> Assistant Professor, Department of Laboratory Medicine &amp; Pathology, University of Washington</p>
             <p class="alumni-source"><strong>Source:</strong> Bernhardt lab records</p>
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://dlmp.uw.edu/faculty/truong-thao" target="_blank" rel="noreferrer">UW Medicine</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/thao-truong/">Open alumni profile</a>
-              <a class="alumni-link" href="https://dlmp.uw.edu/faculty/truong-thao" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://dlmp.uw.edu/faculty/truong-thao" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
-          <article class="alumni-card" data-name="Jessica Borhunter" data-role-in-lab="Graduate Student" data-lab-dates="2015 – 2019" data-current-role="CPEP clinical microbiology fellow, University of Rochester" data-bucket="Graduate Alumni" data-sort-recent="201912" data-sort-last-name="borhunter" data-search="Jessica Borhunter Graduate Student 2015 – 2019 CPEP clinical microbiology fellow, University of Rochester Graduate Alumni">
+          <article class="alumni-card" data-name="Jessica Bohrhunter" data-role-in-lab="Graduate Student" data-lab-dates="2015 – 2019" data-current-role="CPEP clinical microbiology fellow, University of Rochester" data-bucket="Graduate Alumni" data-sort-recent="201912" data-sort-last-name="bohrhunter" data-search="Jessica Bohrhunter Graduate Student 2015 – 2019 CPEP clinical microbiology fellow, University of Rochester Graduate Alumni">
             <div class="alumni-top"></div>
-            <h3>Jessica Borhunter</h3>
+            <h3>Jessica Bohrhunter</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Graduate Student</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2015 – 2019</p>
             <p class="alumni-current"><strong>Current / latest role:</strong> CPEP clinical microbiology fellow, University of Rochester</p>
@@ -576,16 +576,16 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Coralie Fumeaux" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2014 – 2019" data-current-role="Group leader, University of Lausanne, Switzerland" data-bucket="Postdoctoral Alumni" data-sort-recent="201912" data-sort-last-name="fumeaux" data-search="Coralie Fumeaux Postdoctoral Fellow 2014 – 2019 Group leader, University of Lausanne, Switzerland Postdoctoral Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"></div>
             <h3>Coralie Fumeaux</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Postdoctoral Fellow</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2014 – 2019</p>
             <p class="alumni-current"><strong>Current / latest role:</strong> Group leader, University of Lausanne, Switzerland</p>
             <p class="alumni-source"><strong>Source:</strong> Bernhardt lab records</p>
-            <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://www.chuv.ch/en/microbiologie/imu-home/research/research-groups/coralie-fumeaux-lab" target="_blank" rel="noreferrer">CHUV / University of Lausanne</a></p>
+            <p class="alumni-source"><strong>Institutional lab page:</strong> <a class="alumni-inline-link" href="https://www.chuv.ch/en/microbiologie/imu-home/research/research-groups/coralie-fumeaux-lab" target="_blank" rel="noreferrer">CHUV / University of Lausanne</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/coralie-fumeaux/">Open alumni profile</a>
-              <a class="alumni-link" href="https://www.chuv.ch/en/microbiologie/imu-home/research/research-groups/coralie-fumeaux-lab" target="_blank" rel="noreferrer">View current institutional profile</a>
+
             </div>
           </article>
           <article class="alumni-card" data-name="Clay Fuqua" data-role-in-lab="Professor Visiting on Sabbatical" data-lab-dates="2018 – 2019" data-current-role="Professor, Indiana University Bloomington" data-bucket="Other Alumni" data-sort-recent="201912" data-sort-last-name="fuqua" data-search="Clay Fuqua Professor Visiting on Sabbatical 2018 – 2019 Professor, Indiana University Bloomington Other Alumni">
@@ -615,7 +615,7 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Chris (Lok-To) Sham" data-role-in-lab="Graduate Student" data-lab-dates="2012 – 2019" data-current-role="Assistant Professor, National University of Singapore" data-bucket="Graduate Alumni" data-sort-recent="201912" data-sort-last-name="sham" data-search="Chris (Lok-To) Sham Graduate Student 2012 – 2019 Assistant Professor, National University of Singapore Graduate Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Chris (Lok-To) Sham</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Graduate Student</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2012 – 2019</p>
@@ -624,7 +624,7 @@ Showing 60 alumni entries
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://discovery.nus.edu.sg/11874-lok-to-sham" target="_blank" rel="noreferrer">National University of Singapore</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/chris-lok-to-sham/">Open alumni profile</a>
-              <a class="alumni-link" href="https://discovery.nus.edu.sg/11874-lok-to-sham" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://discovery.nus.edu.sg/11874-lok-to-sham" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
           <article class="alumni-card" data-name="Anastasiya Yakhnina" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2013 – 2019" data-current-role="Lab director, Seth Bordenstein Lab, Penn State University" data-bucket="Postdoctoral Alumni" data-sort-recent="201912" data-sort-last-name="yakhnina" data-search="Anastasiya Yakhnina Postdoctoral Fellow 2013 – 2019 Lab director, Seth Bordenstein Lab, Penn State University Postdoctoral Alumni">
@@ -641,7 +641,7 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Hongbaek Cho" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2010 (est.) – 2018" data-current-role="Assistant professor, Department of Biological Sciences, Sungkyunkwan University, South Korea" data-bucket="Postdoctoral Alumni" data-sort-recent="201812" data-sort-last-name="cho" data-search="Hongbaek Cho Postdoctoral Fellow 2010 (est.) – 2018 Assistant professor, Department of Biological Sciences, Sungkyunkwan University, South Korea Postdoctoral Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Hongbaek Cho</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Postdoctoral Fellow</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2010 (est.) – 2018</p>
@@ -650,7 +650,7 @@ Showing 60 alumni entries
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://professor.skku.edu/researcher_eng/professorList.do?categoryId=U&amp;jojikCode1=3172&amp;mode=view&amp;perId=LZStrBoCw7gwgqgog7ANQJwEsBSZUEkBuAONAIwQAUBzAXgqA%2B" target="_blank" rel="noreferrer">Sungkyunkwan University</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/hongbaek-cho/">Open alumni profile</a>
-              <a class="alumni-link" href="https://professor.skku.edu/researcher_eng/professorList.do?categoryId=U&amp;jojikCode1=3172&amp;mode=view&amp;perId=LZStrBoCw7gwgqgog7ANQJwEsBSZUEkBuAONAIwQAUBzAXgqA%2B" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://professor.skku.edu/researcher_eng/professorList.do?categoryId=U&amp;jojikCode1=3172&amp;mode=view&amp;perId=LZStrBoCw7gwgqgog7ANQJwEsBSZUEkBuAONAIwQAUBzAXgqA%2B" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
           <article class="alumni-card" data-name="Ting Pang" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2011 – 2018" data-current-role="Senior member of technical staff, Draper Laboratory, Cambridge" data-bucket="Postdoctoral Alumni" data-sort-recent="201812" data-sort-last-name="pang" data-search="Ting Pang Postdoctoral Fellow 2011 – 2018 Senior member of technical staff, Draper Laboratory, Cambridge Postdoctoral Alumni">
@@ -666,7 +666,7 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Sue Sim" data-role-in-lab="Research Associate" data-lab-dates="2016 – 2018" data-current-role="Postdoctoral Scholar, Cardiovascular Research Institute, UCSF School of Medicine" data-bucket="Research Staff Alumni" data-sort-recent="201812" data-sort-last-name="sim" data-search="Sue Sim Research Associate 2016 – 2018 Postdoctoral Scholar, Cardiovascular Research Institute, UCSF School of Medicine Research Staff Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Sue Sim</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Research Associate</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2016 – 2018</p>
@@ -675,7 +675,7 @@ Showing 60 alumni entries
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://profiles.ucsf.edu/sue.sim" target="_blank" rel="noreferrer">UCSF Profiles</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/sue-sim/">Open alumni profile</a>
-              <a class="alumni-link" href="https://profiles.ucsf.edu/sue.sim" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://profiles.ucsf.edu/sue.sim" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
           <article class="alumni-card" data-name="Michael Tom" data-role-in-lab="Graduate Student" data-lab-dates="2017 – 2018" data-current-role="HST MD student, Harvard Medical School" data-bucket="Graduate Alumni" data-sort-recent="201812" data-sort-last-name="tom" data-search="Michael Tom Graduate Student 2017 – 2018 HST MD student, Harvard Medical School Graduate Alumni">
@@ -690,21 +690,21 @@ Showing 60 alumni entries
 
             </div>
           </article>
-          <article class="alumni-card" data-name="Neil Greene" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2015 – 2017" data-current-role="Director of Medical Laboratory Science Undergraduate Program and Clinical Assistant Professor, University of Rhode Island" data-bucket="Postdoctoral Alumni" data-sort-recent="201712" data-sort-last-name="greene" data-search="Neil Greene Postdoctoral Fellow 2015 – 2017 Director of Medical Laboratory Science Undergraduate Program and Clinical Assistant Professor, University of Rhode Island Postdoctoral Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+          <article class="alumni-card" data-name="Neil Greene" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2015 – 2017" data-current-role="Clinical Associate Professor; Director, Medical Laboratory Science Program, University of Rhode Island" data-bucket="Postdoctoral Alumni" data-sort-recent="201712" data-sort-last-name="greene" data-search="Neil Greene Postdoctoral Fellow 2015 – 2017 Clinical Associate Professor; Director, Medical Laboratory Science Program, University of Rhode Island Postdoctoral Alumni">
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Neil Greene</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Postdoctoral Fellow</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2015 – 2017</p>
-            <p class="alumni-current"><strong>Current / latest role:</strong> Director of Medical Laboratory Science Undergraduate Program and Clinical Assistant Professor, University of Rhode Island</p>
+            <p class="alumni-current"><strong>Current / latest role:</strong> Clinical Associate Professor; Director, Medical Laboratory Science Program, University of Rhode Island</p>
             <p class="alumni-source"><strong>Source:</strong> Bernhardt lab records</p>
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://web.uri.edu/cmb/meet/neil-greene/" target="_blank" rel="noreferrer">University of Rhode Island</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/neil-greene/">Open alumni profile</a>
-              <a class="alumni-link" href="https://web.uri.edu/cmb/meet/neil-greene/" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://web.uri.edu/cmb/meet/neil-greene/" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
           <article class="alumni-card" data-name="Andrew Fenton" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2013 – 2016" data-current-role="Lecturer, University of Sheffield" data-bucket="Postdoctoral Alumni" data-sort-recent="201612" data-sort-last-name="fenton" data-search="Andrew Fenton Postdoctoral Fellow 2013 – 2016 Lecturer, University of Sheffield Postdoctoral Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Andrew Fenton</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Postdoctoral Fellow</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2013 – 2016</p>
@@ -713,7 +713,7 @@ Showing 60 alumni entries
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://www.sheffield.ac.uk/biosciences/people/academic-staff/andrew-fenton" target="_blank" rel="noreferrer">University of Sheffield</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/andrew-fenton/">Open alumni profile</a>
-              <a class="alumni-link" href="https://www.sheffield.ac.uk/biosciences/people/academic-staff/andrew-fenton" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://www.sheffield.ac.uk/biosciences/people/academic-staff/andrew-fenton" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
           <article class="alumni-card" data-name="Ghee Chuan Lai" data-role-in-lab="Graduate Student" data-lab-dates="2010 – 2016" data-current-role="Postdoctoral fellow, National University of Singapore" data-bucket="Graduate Alumni" data-sort-recent="201612" data-sort-last-name="lai" data-search="Ghee Chuan Lai Graduate Student 2010 – 2016 Postdoctoral fellow, National University of Singapore Graduate Alumni">
@@ -766,7 +766,7 @@ Showing 60 alumni entries
             </div>
           </article>
           <article class="alumni-card" data-name="Nick Peters" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2010 – 2015" data-current-role="Associate Professor, Iowa State University" data-bucket="Postdoctoral Alumni" data-sort-recent="201512" data-sort-last-name="peters" data-search="Nick Peters Postdoctoral Fellow 2010 – 2015 Associate Professor, Iowa State University Postdoctoral Alumni">
-            <div class="alumni-top"><span class="alumni-verified">Verified profile</span></div>
+            <div class="alumni-top"><span class="alumni-verified">External profile</span></div>
             <h3>Nick Peters</h3>
             <p class="alumni-role"><strong>Role in lab:</strong> Postdoctoral Fellow</p>
             <p class="alumni-role"><strong>Lab dates:</strong> 2010 – 2015</p>
@@ -775,7 +775,7 @@ Showing 60 alumni entries
             <p class="alumni-source"><strong>Profile:</strong> <a class="alumni-inline-link" href="https://www.micro.iastate.edu/people/nicholas-peters" target="_blank" rel="noreferrer">Iowa State University</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/nick-peters/">Open alumni profile</a>
-              <a class="alumni-link" href="https://www.micro.iastate.edu/people/nicholas-peters" target="_blank" rel="noreferrer">View current institutional profile</a>
+              <a class="alumni-link" href="https://www.micro.iastate.edu/people/nicholas-peters" target="_blank" rel="noreferrer">View external profile</a>
             </div>
           </article>
           <article class="alumni-card" data-name="Heather Rose McManus" data-role-in-lab="Postdoctoral Fellow" data-lab-dates="2012 – 2013" data-current-role="Director of Operations, Watertown Community Foundation" data-bucket="Postdoctoral Alumni" data-sort-recent="201312" data-sort-last-name="mcmanus" data-search="Heather Rose McManus Postdoctoral Fellow 2012 – 2013 Director of Operations, Watertown Community Foundation Postdoctoral Alumni">
@@ -798,7 +798,7 @@ Showing 60 alumni entries
             <p class="alumni-role"><strong>Lab dates:</strong> 2006 – 2012</p>
             <p class="alumni-current"><strong>Current / latest role:</strong> Executive Director, Regulatory Affairs CMC, Autolus</p>
             <p class="alumni-source"><strong>Source:</strong> Alumni update request</p>
-            <p class="alumni-source"><strong>Institutional directory:</strong> <a class="alumni-inline-link" href="https://theorg.com/org/autolus/teams/regulatory-affairs" target="_blank" rel="noreferrer">Autolus Regulatory Affairs team listing</a></p>
+            <p class="alumni-source"><strong>Third-party directory:</strong> <a class="alumni-inline-link" href="https://theorg.com/org/autolus/teams/regulatory-affairs" target="_blank" rel="noreferrer">Autolus Regulatory Affairs team listing</a></p>
             <div class="alumni-links">
               <a class="alumni-link" href="../alumni/monica-markovski/">Open alumni profile</a>
 
@@ -864,6 +864,16 @@ Showing 60 alumni entries
           </article>
 <!-- generated-alumni-grid:end -->
           </div>
+        </div>
+      </section>
+
+      <section class="alumni-update-section" aria-label="Alumni directory corrections">
+        <div class="container alumni-update-utility">
+          <a
+            href="mailto:James_Spencer@hms.harvard.edu?subject=Bernhardt%20Lab%20website%20update%2Fremoval%20request&body=Page%20URL%3A%20%0D%0AName%20(or%20entry)%3A%20%0D%0ARequested%20change%20(removal%2Fupdate)%3A%20%0D%0AProposed%20replacement%20text%20(if%20any)%3A%20%0D%0ASupporting%20link%20(if%20any)%3A%20%0D%0A"
+            >Request an update or removal</a
+          >
+          <p>Include your name, entry URL, and requested correction/removal.</p>
         </div>
       </section>
     </main>

@@ -1,0 +1,4 @@
+/* Shared behavioral rules required by every page family. */
+[hidden] {
+  display: none !important;
+}

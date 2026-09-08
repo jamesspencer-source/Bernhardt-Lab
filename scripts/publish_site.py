@@ -1,266 +1,242 @@
 #!/usr/bin/env python3
-"""Clean, build, commit, and push website updates to main."""
+"""Build selected source changes in isolation, then commit and publish their exact output."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
+import re
 import shutil
 import subprocess
 import sys
+import tarfile
+import tempfile
 from pathlib import Path, PurePosixPath
 
-
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_MESSAGE = "site: publish website updates"
-ALLOWED_ROOT_FILES = {
-    ".gitignore",
-    "AGENTS.md",
-    "README.md",
-    "alumni.html",
-    "favicon.ico",
-    "index.html",
-    "people.html",
-    "research-library.html",
-    "robots.txt",
-    "sitemap.xml",
+SOURCE_ROOT_FILES = {
+    ".gitignore", "AGENTS.md", "README.md", "index.html",
 }
-STATIC_ALLOWED_DIRS = {
-    ".github",
-    "accessibility",
-    "alumni",
-    "alumni-profiles",
-    "assets",
-    "data",
-    "docs",
-    "github-flat",
-    "leaderboard-worker",
-    "people",
-    "research",
-    "research-library",
-    "scripts",
-    "team",
+SOURCE_DIRS = {
+    ".github", "assets", "data", "docs", "scripts", "leaderboard-worker",
 }
-EXCLUDED_ROOT_DIRS = {".git", ".venv", ".pycache", "__pycache__", ".playwright-cli", "node_modules", "output", "tmp"}
-TRANSIENT_DIR_NAMES = {".venv", ".pycache", "__pycache__", ".pytest_cache", ".playwright-cli", "output"}
-TRANSIENT_FILE_NAMES = {".DS_Store", "Thumbs.db"}
-
-
-def run_command(args: list[str], capture_output: bool = False) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        args,
-        cwd=ROOT,
-        check=True,
-        text=True,
-        capture_output=capture_output,
-    )
+TEMPLATE_FILES = {
+    "team/index.html", "alumni/index.html", "research/index.html",
+    "accessibility/index.html",
+}
+GENERATED_ASSETS = {
+    "assets/styles.css", "assets/profile.css", "assets/alumni.css",
+    "assets/envelope-escape-config.js",
+    "assets/data/featured-alumni.json",
+}
+SKIP_DIRS = {".git", "node_modules", "__pycache__", ".pycache", ".venv", "output"}
 
 
 def git_output(*args: str) -> str:
-    return run_command(["git", *args], capture_output=True).stdout.strip()
+    return subprocess.check_output(["git", *args], cwd=ROOT, text=True).strip()
 
 
-def print_step(message: str) -> None:
-    print(f"[publish] {message}")
-
-
-def discover_allowed_dirs() -> set[str]:
-    allowed = set(STATIC_ALLOWED_DIRS)
-    for child in ROOT.iterdir():
-        if not child.is_dir():
-            continue
-        if child.name in EXCLUDED_ROOT_DIRS:
-            continue
-        if child.name.startswith(".") and child.name != ".github":
-            continue
-        if (child / "index.html").exists():
-            allowed.add(child.name)
-    return allowed
-
-
-def numbered_duplicate_original(name: str) -> str | None:
-    path = PurePosixPath(name)
-    stem = path.stem
-    match = stem.rsplit(" ", 1)
-    if len(match) != 2 or not match[1].isdigit():
-        return None
-    return f"{match[0]}{path.suffix}"
-
-
-def is_numbered_duplicate(name: str, sibling_names: set[str] | None = None) -> bool:
-    if sibling_names is None:
-        return False
-    original_name = numbered_duplicate_original(name)
-    if not original_name:
-        return False
-    return original_name in sibling_names
-
-
-def is_transient_path(path_text: str) -> bool:
-    path = PurePosixPath(path_text)
-    parts = path.parts
-    if any(part in TRANSIENT_DIR_NAMES for part in parts):
-        return True
-    name = parts[-1] if parts else path_text
-    sibling_names: set[str] | None = None
-    try:
-        candidate = ROOT / Path(*parts)
-        if candidate.parent.exists():
-            sibling_names = {sibling.name for sibling in candidate.parent.iterdir()}
-    except OSError:
-        sibling_names = None
-    if name in TRANSIENT_FILE_NAMES or name.startswith("._"):
-        return True
-    if is_numbered_duplicate(name, sibling_names):
-        return True
-    if name.endswith((".pyc", ".pyo")):
-        return True
-    return False
-
-
-def is_allowed_path(path_text: str, allowed_dirs: set[str]) -> bool:
-    path = PurePosixPath(path_text)
-    if not path.parts:
-        return False
-    if len(path.parts) == 1:
-        return path.parts[0] in ALLOWED_ROOT_FILES
-    return path.parts[0] in allowed_dirs
-
-
-def parse_status_entries() -> list[tuple[str, str]]:
-    raw = subprocess.run(
-        ["git", "status", "--porcelain=v1", "--untracked-files=all", "-z"],
-        cwd=ROOT,
-        check=True,
-        capture_output=True,
-    ).stdout.decode("utf-8", "surrogateescape")
-    parts = raw.split("\0")
-    entries: list[tuple[str, str]] = []
+def status_paths() -> set[str]:
+    raw = subprocess.check_output(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all", "-z"], cwd=ROOT
+    ).decode("utf-8", "surrogateescape").split("\0")
+    paths = set()
     index = 0
-    while index < len(parts):
-        item = parts[index]
-        if not item:
-            break
-        status = item[:2]
-        path_text = item[3:]
-        entries.append((status, path_text))
-        if "R" in status or "C" in status:
+    while index < len(raw) and raw[index]:
+        item = raw[index]
+        paths.add(item[3:])
+        if "R" in item[:2] or "C" in item[:2]:
             index += 1
-            if index < len(parts) and parts[index]:
-                entries.append((status, parts[index]))
+            if index < len(raw) and raw[index]:
+                paths.add(raw[index])
         index += 1
-    return entries
+    return paths
 
 
-def unexpected_changes(allowed_dirs: set[str]) -> list[str]:
-    paths: set[str] = set()
-    for _, path_text in parse_status_entries():
-        if is_transient_path(path_text):
+def fingerprint(path: Path) -> tuple[str, int] | None:
+    if not path.exists():
+        return None
+    if path.is_symlink() or not path.is_file():
+        raise RuntimeError(f"Expected a regular file, not a directory or symlink: {path}")
+    return hashlib.sha256(path.read_bytes()).hexdigest(), path.stat().st_mode & 0o111
+
+
+def tree_state(root: Path) -> dict[str, tuple[str, int]]:
+    return {
+        path.relative_to(root).as_posix(): fingerprint(path)
+        for path in root.rglob("*")
+        if path.is_file() and not (set(path.relative_to(root).parts) & SKIP_DIRS)
+    }
+
+
+def validate_selection(paths: list[str]) -> list[str]:
+    result = []
+    tracked = set(subprocess.check_output(
+        ["git", "ls-files", "-z"], cwd=ROOT
+    ).decode("utf-8", "surrogateescape").split("\0"))
+    for value in paths:
+        path = PurePosixPath(value)
+        if path.is_absolute() or ".." in path.parts or value != path.as_posix():
+            raise RuntimeError(f"Use an exact repository-relative file path: {value}")
+        allowed = value in SOURCE_ROOT_FILES or value in TEMPLATE_FILES
+        allowed = allowed or (len(path.parts) > 1 and path.parts[0] in SOURCE_DIRS)
+        if not allowed or value in GENERATED_ASSETS:
+            raise RuntimeError(f"Select canonical source files, not generated or private output: {value}")
+        target = ROOT / value
+        if not target.resolve().is_relative_to(ROOT.resolve()):
+            raise RuntimeError(f"Source path escapes the repository: {value}")
+        if target.is_dir() or target.is_symlink():
+            raise RuntimeError(f"Select a regular file, not a directory or symlink: {value}")
+        if not target.exists() and value not in tracked:
+            raise RuntimeError(f"Source file does not exist: {value}")
+        if value not in result:
+            result.append(value)
+    return sorted(result)
+
+
+def extract_head(destination: Path) -> None:
+    # Never build in the operator's mixed working copy.
+    with tempfile.TemporaryFile() as archive:
+        subprocess.run(["git", "archive", "HEAD"], cwd=ROOT, stdout=archive, check=True)
+        archive.seek(0)
+        with tarfile.open(fileobj=archive) as tree:
+            for member in tree:
+                target = destination / member.name
+                if not target.resolve().is_relative_to(destination.resolve()):
+                    raise RuntimeError("Archive contains an unsafe path")
+                if member.isdir():
+                    target.mkdir(parents=True, exist_ok=True)
+                elif member.isfile():
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with tree.extractfile(member) as source, target.open("wb") as output:
+                        shutil.copyfileobj(source, output)
+                    target.chmod(member.mode)
+                else:
+                    raise RuntimeError(f"Unsupported archive entry: {member.name}")
+
+
+def prepare_plan(destination: Path, selected: list[str]) -> dict[str, tuple[str, int] | None]:
+    extract_head(destination)
+    before = tree_state(destination)
+    for name in selected:
+        source, target = ROOT / name, destination / name
+        if source.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(source, target)
+        else:
+            target.unlink(missing_ok=True)
+    subprocess.run([sys.executable, "-B", "scripts/build_site.py"], cwd=destination, check=True)
+    after = tree_state(destination)
+    plan = {
+        name: after.get(name)
+        for name in sorted(before.keys() | after.keys())
+        if before.get(name) != after.get(name)
+    }
+    for name, value in plan.items():
+        if value is None and name not in selected and re.search(r" \d+(?:\.[^.]+)?$", Path(name).name):
+            raise RuntimeError(f"Build would delete an unselected numbered file: {name}. Review it separately.")
+    return plan
+
+
+def assert_scope(plan: dict[str, tuple[str, int] | None], selected: list[str]) -> None:
+    unrelated = []
+    for name in sorted(status_paths()):
+        if name in selected:
             continue
-        if is_allowed_path(path_text, allowed_dirs):
+        # Prebuilt output is accepted only when it exactly matches the isolated build.
+        if name in plan and fingerprint(ROOT / name) == plan[name]:
             continue
-        paths.add(path_text)
-    return sorted(paths)
+        unrelated.append(name)
+    if unrelated:
+        raise RuntimeError(
+            "Unrelated or non-reproducible changes are present; nothing was deleted or staged. "
+            "Use a clean review checkout or explicitly select the intended source files:\n  "
+            + "\n  ".join(unrelated)
+        )
 
 
-def cleanup_transient_worktree_artifacts() -> None:
-    for pattern in (".DS_Store", "Thumbs.db", "._*"):
-        for path in ROOT.rglob(pattern):
-            if path.is_file():
-                path.unlink()
-    for dirname in (".pycache", "__pycache__", ".pytest_cache"):
-        for path in ROOT.rglob(dirname):
-            if path.is_dir():
-                shutil.rmtree(path)
-    for path in sorted(ROOT.rglob("*"), key=lambda entry: len(entry.parts), reverse=True):
-        if not path.exists():
-            continue
-        sibling_names = {sibling.name for sibling in path.parent.iterdir()}
-        if is_numbered_duplicate(path.name, sibling_names):
-            if path.is_dir():
-                shutil.rmtree(path)
-            else:
-                path.unlink()
-
-
-def ensure_main_branch() -> None:
-    branch = git_output("rev-parse", "--abbrev-ref", "HEAD")
-    if branch != "main":
-        raise RuntimeError(f"Publish only runs from main. Current branch: {branch}")
+def install_plan(destination: Path, plan: dict[str, tuple[str, int] | None]) -> None:
+    for name, expected in plan.items():
+        target = ROOT / name
+        if expected is None:
+            target.unlink(missing_ok=True)
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(destination / name, target)
+    for name, expected in plan.items():
+        if fingerprint(ROOT / name) != expected:
+            raise RuntimeError(f"Published output changed unexpectedly: {name}")
 
 
 def ensure_remote_is_safe() -> None:
-    print_step("Fetching origin/main")
-    run_command(["git", "fetch", "origin", "main"])
-    counts = git_output("rev-list", "--left-right", "--count", "HEAD...origin/main")
-    ahead, behind = [int(value) for value in counts.split()]
-    if behind:
-        raise RuntimeError("origin/main is ahead or diverged. Pull/reconcile before publishing.")
-    if ahead:
-        print_step(f"Local branch is already {ahead} commit(s) ahead of origin/main")
+    if git_output("branch", "--show-current") != "main":
+        raise RuntimeError("Publishing runs from main; dry-run may be used on a review branch.")
+    subprocess.run(["git", "fetch", "origin", "main"], cwd=ROOT, check=True)
+    ahead, behind = map(int, git_output("rev-list", "--left-right", "--count", "HEAD...origin/main").split())
+    if ahead or behind:
+        raise RuntimeError(
+            f"Local main is {ahead} ahead / {behind} behind origin/main. "
+            "Reconcile and review those commits before publishing this change."
+        )
 
 
-def stage_allowed_paths(allowed_dirs: set[str]) -> None:
-    pathspecs = sorted(ALLOWED_ROOT_FILES) + [f"{name}/" for name in sorted(allowed_dirs)]
-    run_command(["git", "add", "-A", "--", *pathspecs])
-
-
-def build_site() -> None:
-    print_step("Running site build")
-    run_command([sys.executable, "scripts/build_site.py"])
-
-
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--message", default=DEFAULT_MESSAGE, help="Commit message to use for the publish commit")
-    args = parser.parse_args()
+    parser.add_argument("--include", nargs="+", default=[], metavar="SOURCE_FILE")
+    parser.add_argument("--manifest", type=Path, help="JSON array of exact source file paths")
+    parser.add_argument("--dry-run", action="store_true", help="Build a temporary copy; leave files and Git state untouched")
+    parser.add_argument("--message", default="site: publish reviewed website updates")
+    args = parser.parse_args(argv)
 
-    if Path(git_output("rev-parse", "--show-toplevel")) != ROOT:
-        raise RuntimeError("publish_site.py must run from the website repository root.")
-
-    allowed_dirs = discover_allowed_dirs()
-
-    ensure_main_branch()
-    ensure_remote_is_safe()
-
-    print_step("Removing transient local artifacts")
-    cleanup_transient_worktree_artifacts()
-
-    outside_scope = unexpected_changes(allowed_dirs)
-    if outside_scope:
-        raise RuntimeError(
-            "Found changes outside the publish scope. Resolve or revert these before publishing:\n"
-            + "\n".join(f"  - {path}" for path in outside_scope)
-        )
-
-    build_site()
-    cleanup_transient_worktree_artifacts()
-
-    outside_scope = unexpected_changes(allowed_dirs)
-    if outside_scope:
-        raise RuntimeError(
-            "Build completed, but unexpected paths are still dirty:\n"
-            + "\n".join(f"  - {path}" for path in outside_scope)
-        )
-
-    print_step("Staging website files")
-    stage_allowed_paths(allowed_dirs)
-
-    staged_diff = subprocess.run(
-        ["git", "diff", "--cached", "--quiet"],
-        cwd=ROOT,
-        check=False,
-    )
-    if staged_diff.returncode == 0:
-        print_step("No meaningful website diff detected; nothing to commit.")
-        return 0
-    if staged_diff.returncode != 1:
-        raise RuntimeError("Could not determine staged diff state.")
-
-    print_step(f"Creating commit: {args.message}")
-    run_command(["git", "commit", "-m", args.message])
-    print_step("Pushing to origin main")
-    run_command(["git", "push", "origin", "main"])
-    print_step("Publish complete")
+    if Path(git_output("rev-parse", "--show-toplevel")).resolve() != ROOT.resolve():
+        raise RuntimeError("Run the publisher from its repository checkout.")
+    paths = list(args.include)
+    if args.manifest:
+        manifest = json.loads(args.manifest.read_text())
+        if not isinstance(manifest, list) or any(not isinstance(item, str) for item in manifest):
+            raise RuntimeError("Manifest must be a JSON array of file paths.")
+        paths.extend(manifest)
+    if not paths:
+        print("No files selected. Use --include SOURCE_FILE [...] or --manifest FILE.json.")
+        print("Start with --dry-run to review the exact build output. Nothing has changed.")
+        return 2
+    selected = validate_selection(paths)
+    if not args.dry_run:
+        ensure_remote_is_safe()
+    head = git_output("rev-parse", "HEAD")
+    selected_state = {name: fingerprint(ROOT / name) for name in selected}
+    with tempfile.TemporaryDirectory(prefix="bernhardt-publish-") as directory:
+        destination = Path(directory)
+        plan = prepare_plan(destination, selected)
+        if git_output("rev-parse", "HEAD") != head or any(
+            fingerprint(ROOT / name) != value for name, value in selected_state.items()
+        ):
+            raise RuntimeError("Source or HEAD changed during validation; retry after reviewing the changes.")
+        assert_scope(plan, selected)
+        print("[publish] Selected source files:")
+        for name in selected:
+            print(f"  {name}")
+        print(f"[publish] Exact output plan: {len(plan)} files")
+        for name, value in plan.items():
+            print(f"  {'delete' if value is None else 'write '} {name}")
+        if args.dry_run:
+            print("[publish] Dry-run passed. No working files, index, commits, or remote refs changed.")
+            return 0
+        if not plan:
+            print("[publish] No website changes to publish.")
+            return 0
+        install_plan(destination, plan)
+        subprocess.run(["git", "add", "-A", "--", *plan.keys()], cwd=ROOT, check=True)
+        staged = set(subprocess.check_output(
+            ["git", "diff", "--cached", "--name-only", "-z"], cwd=ROOT
+        ).decode("utf-8", "surrogateescape").split("\0")) - {""}
+        if staged != set(plan):
+            raise RuntimeError("The staged file list does not match the reviewed output plan; commit aborted.")
+        subprocess.run(["git", "diff", "--cached", "--check"], cwd=ROOT, check=True)
+        subprocess.run(["git", "commit", "-m", args.message], cwd=ROOT, check=True)
+        subprocess.run(["git", "push", "origin", "main"], cwd=ROOT, check=True)
+        print("[publish] Pushed reviewed changes. Verify GitHub Pages and the live URLs before declaring them live.")
     return 0
 
 

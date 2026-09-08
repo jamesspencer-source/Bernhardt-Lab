@@ -20,6 +20,7 @@ export function initAlumniDirectory() {
 
   const alumniSearch = document.getElementById("alumni-search");
   const alumniFilters = document.getElementById("alumni-filters");
+  const alumniRoleSelect = document.getElementById("alumni-role-filter");
   const alumniSort = document.getElementById("alumni-sort");
   const state = {
     query: "",
@@ -27,8 +28,16 @@ export function initAlumniDirectory() {
     sort: alumniSort?.value || "recent",
   };
 
+  const updateFilterState = () => {
+    alumniFilters?.querySelectorAll("button").forEach((button) => {
+      const selected = button.dataset.bucket === state.bucket;
+      button.classList.toggle("active", selected);
+      button.setAttribute("aria-pressed", String(selected));
+    });
+    if (alumniRoleSelect) alumniRoleSelect.value = state.bucket;
+  };
+
   const renderFilters = () => {
-    if (!alumniFilters) return;
     const counts = cards.reduce((acc, card) => {
       const bucket = cleanText(card.dataset.bucket);
       acc[bucket] = (acc[bucket] || 0) + 1;
@@ -40,22 +49,26 @@ export function initAlumniDirectory() {
       .sort((a, b) => a.localeCompare(b));
     const buckets = ["All", ...orderedBuckets, ...extraBuckets];
 
-    alumniFilters.innerHTML = buckets
-      .map((bucket) => {
-        const count = bucket === "All" ? cards.length : counts[bucket];
-        const active = bucket === state.bucket ? "active" : "";
-        const pressed = bucket === state.bucket ? "true" : "false";
-        return `<button type="button" class="${active}" data-bucket="${bucket}" aria-pressed="${pressed}" aria-controls="alumni-directory">${bucket} (${count})</button>`;
-      })
-      .join("");
-
-    alumniFilters.querySelectorAll("button").forEach((button) => {
+    buckets.forEach((bucket) => {
+      const count = bucket === "All" ? cards.length : counts[bucket];
+      const label = `${bucket} (${count})`;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.dataset.bucket = bucket;
+      button.textContent = label;
+      button.setAttribute("aria-controls", "alumni-directory");
       button.addEventListener("click", () => {
-        state.bucket = button.dataset.bucket || "All";
-        renderFilters();
+        state.bucket = bucket;
+        updateFilterState();
         renderDirectory();
       });
+      alumniFilters?.append(button);
+      const option = document.createElement("option");
+      option.value = bucket;
+      option.textContent = label;
+      alumniRoleSelect?.append(option);
     });
+    updateFilterState();
   };
 
   const renderDirectory = () => {
@@ -75,9 +88,12 @@ export function initAlumniDirectory() {
       }
       const byRecentDeparture = Number(b.dataset.sortRecent || -1) - Number(a.dataset.sortRecent || -1);
       if (byRecentDeparture !== 0) return byRecentDeparture;
+      const byLastName = cleanText(a.dataset.sortLastName).localeCompare(cleanText(b.dataset.sortLastName));
+      if (byLastName !== 0) return byLastName;
       return cleanText(a.dataset.name).localeCompare(cleanText(b.dataset.name));
     });
 
+    alumniRoot.querySelector(".alumni-empty")?.remove();
     cards.forEach((card) => card.remove());
     sorted.forEach((card) => {
       card.hidden = false;
@@ -111,6 +127,11 @@ export function initAlumniDirectory() {
   });
   alumniSort?.addEventListener("change", (event) => {
     state.sort = event.target.value;
+    renderDirectory();
+  });
+  alumniRoleSelect?.addEventListener("change", () => {
+    state.bucket = alumniRoleSelect.value;
+    updateFilterState();
     renderDirectory();
   });
 

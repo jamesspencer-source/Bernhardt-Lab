@@ -58,7 +58,8 @@ python3 scripts/validate_tom_compliance.py
 Publish website updates:
 
 ```bash
-python3 scripts/publish_site.py
+python3 scripts/publish_site.py --dry-run --include data/people.json
+python3 scripts/publish_site.py --include data/people.json
 ```
 
 Refresh machine-generated site data:
@@ -103,7 +104,7 @@ python3 scripts/check_leaderboard_worker.py --require-board-routing
 - `.DS_Store` should generally be discarded, not committed.
 - `github-flat` is regenerated from nested `assets/` and `data/` paths. Root-level non-HTML files there are legacy baggage and should not be reintroduced.
 - Never place private archives, import scratch files, raw TIFFs, or superseded personnel metadata inside this public repository.
-- Prefer `python3 scripts/publish_site.py` for the normal build/commit/push flow.
+- Prefer `python3 scripts/publish_site.py --include <exact-source-files>` for the normal build/commit/push flow; review with `--dry-run` first. Use `--manifest` for a JSON array of exact source paths in a larger release.
 - Do not bypass the Tom feedback compliance gate; if it fails, fix the canonical source rather than patching generated HTML.
 - Do not reintroduce `index.html` links on canonical pages; use `/team/`, `/alumni/`, `/research/`, and root-relative section links.
 
@@ -151,8 +152,9 @@ Update archive scientific media:
 - Push from `main`.
 - Before committing, make sure you are in the repo root, not inside `github-flat/`.
 - Default workflow for this repo: after completing a scoped change, run the relevant verification, commit it, and push it to `main` unless the user explicitly asks not to or there is a concrete blocker such as unrelated dirty changes, merge conflicts, or a failed check.
-- The preferred command-driven path is `python3 scripts/publish_site.py`.
-- That publish command cleans transient local artifacts, rebuilds the site, stages only approved website paths, commits if needed, and pushes to `origin main`.
+- The preferred command-driven path is `python3 scripts/publish_site.py --include <exact-source-files>`.
+- The publisher builds selected source changes in isolation, refuses unrelated modifications, and stages only the exact reproducible output. It never deletes numbered siblings or sweeps directories into a commit. Run `--dry-run` before publishing; keep the manifest outside the public project when it contains private operator context.
+- Confirm the resulting Pages deployment and changed live URLs after pushing.
 - If a push is blocked, report the blocker clearly instead of leaving the repo half-finished without explanation.
 
 ## Related docs

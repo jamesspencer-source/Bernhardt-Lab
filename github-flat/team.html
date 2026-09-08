@@ -29,7 +29,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brands/favicon-32.png?v=20260504b" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/brands/apple-touch-icon.png?v=20260504b" />
     <link rel="shortcut icon" href="favicon.ico?v=20260504b" />
-    <link rel="stylesheet" href="assets/styles.css?v=20260809d" />
+    <link rel="stylesheet" href="assets/styles.css?v=20260908a" />
     <link rel="canonical" href="https://bernhardtlab.com/team/" />
   </head>
   <body>
@@ -83,6 +83,15 @@
                 />
               </label>
               <div id="role-filters" class="role-filters" role="group" aria-label="Filter team members"></div>
+              <label class="team-filter-wrap" for="team-role-filter">
+                <span>Filter by role</span>
+                <span class="team-filter-control">
+                  <select id="team-role-filter" name="team-role-filter" aria-controls="people-grid">
+                    <option value="All">All team members</option>
+                  </select>
+                  <span class="team-filter-chevron" aria-hidden="true"></span>
+                </span>
+              </label>
             </div>
             <p id="people-count" class="people-count" aria-live="polite"><!-- generated-people-count:start -->
 Showing 20 current lab members
@@ -356,6 +365,6 @@ Showing 20 current lab members
       </div>
     </footer>
 
-    <script type="module" src="assets/main.js?v=20260809a"></script>
+    <script type="module" src="assets/main.js?v=20260908a"></script>
   </body>
 </html>

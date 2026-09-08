@@ -104,15 +104,18 @@
     },
     {
       "name": "Thao Truong",
+      "roleFromPeople": true,
       "roleInLab": "Former graduate student",
-      "currentRole": "CPEP Medical Microbiology and Public Health postdoctoral fellow, Children's Hospital Los Angeles / University of Southern California",
-      "sourceLabel": "Bernhardt lab records",
+      "currentRole": "Assistant Professor, Department of Laboratory Medicine & Pathology, University of Washington",
+      "source": "https://dlmp.uw.edu/faculty/truong-thao",
+      "sourceLabel": "UW Medicine",
       "profileSlug": "thao-truong"
     },
     {
       "name": "Neil Greene",
+      "roleFromPeople": true,
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Clinical Associate Professor and Program Director, University of Rhode Island",
+      "currentRole": "Clinical Associate Professor; Director, Medical Laboratory Science Program, University of Rhode Island",
       "source": "https://web.uri.edu/cmb/meet/neil-greene/",
       "sourceLabel": "University of Rhode Island",
       "profileSlug": "neil-greene"

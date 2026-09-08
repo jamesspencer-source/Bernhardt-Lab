@@ -18,6 +18,7 @@ export function initTeamDirectory() {
   if (!cards.length) return;
 
   const roleFilters = document.getElementById("role-filters");
+  const roleSelect = document.getElementById("team-role-filter");
   const searchInput = document.getElementById("people-search");
   const teamFallback = document.getElementById("team-fallback");
   if (teamFallback) teamFallback.setAttribute("hidden", "");
@@ -35,12 +36,14 @@ export function initTeamDirectory() {
   const groups = GROUP_PRIORITY.filter((group) => group === "All" || counts[group]);
 
   const updateFilterState = () => {
-    if (!roleFilters) return;
-    roleFilters.querySelectorAll("button").forEach((button) => {
-      const isActive = button.dataset.group === state.activeGroup;
-      button.classList.toggle("active", isActive);
-      button.setAttribute("aria-pressed", String(isActive));
-    });
+    if (roleFilters) {
+      roleFilters.querySelectorAll("button").forEach((button) => {
+        const isActive = button.dataset.group === state.activeGroup;
+        button.classList.toggle("active", isActive);
+        button.setAttribute("aria-pressed", String(isActive));
+      });
+    }
+    if (roleSelect) roleSelect.value = state.activeGroup;
   };
 
   const renderDirectory = () => {
@@ -100,6 +103,24 @@ export function initTeamDirectory() {
     });
   };
 
+  const renderRoleSelect = () => {
+    if (!roleSelect) return;
+    const options = groups.map((group) => {
+      const count = group === "All" ? cards.length : counts[group];
+      const option = document.createElement("option");
+      option.value = group;
+      option.textContent = `${group === "All" ? "All team members" : group} (${count})`;
+      return option;
+    });
+    roleSelect.replaceChildren(...options);
+    roleSelect.value = state.activeGroup;
+    roleSelect.addEventListener("change", () => {
+      state.activeGroup = roleSelect.value || "All";
+      updateFilterState();
+      renderDirectory();
+    });
+  };
+
   if (searchInput) {
     searchInput.addEventListener("input", (event) => {
       state.query = event.target.value;
@@ -108,5 +129,6 @@ export function initTeamDirectory() {
   }
 
   renderFilters();
+  renderRoleSelect();
   renderDirectory();
 }

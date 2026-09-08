@@ -1,11 +1,11 @@
 import { observeRevealTargets } from "./site-core.js";
-import { alumniProfileHref, cleanText, prefersReducedMotion, requestJson, rootDataUrl, slugify } from "./shared.js";
+import { alumniProfileHref, assetDataUrl, cleanText, escapeHtml, prefersReducedMotion, requestJson, slugify } from "./shared.js";
 
 export async function initFeaturedAlumni() {
   const root = document.getElementById("alumni-grid");
   if (!root) return;
 
-  const payload = await requestJson(rootDataUrl("featured-alumni.json"));
+  const payload = await requestJson(assetDataUrl("featured-alumni.json"));
   const alumniItems = Array.isArray(payload?.items)
     ? payload.items
         .map((item) => ({
@@ -76,7 +76,7 @@ export async function initFeaturedAlumni() {
         <p class="alumni-source">Source: ${item.sourceLabel || "Institutional profile"}</p>
         <div class="alumni-link-row">
           ${item.profile ? `<a href="${item.profile}">Open alumni profile</a>` : ""}
-          ${item.source ? `<a href="${item.source}" target="_blank" rel="noreferrer">Verified institutional profile</a>` : ""}
+          ${item.source ? `<a href="${escapeHtml(item.source)}" target="_blank" rel="noreferrer">${escapeHtml(item.sourceLinkLabel || "View supporting source")}</a>` : ""}
         </div>
       </article>
     `;

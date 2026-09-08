@@ -6,4 +6,6 @@ async function initializeAlumniPage() {
   initAlumniDirectory();
 }
 
-initializeAlumniPage();
+initializeAlumniPage().catch((error) => {
+  console.error("Bernhardt Lab alumni initialization failed", error);
+});

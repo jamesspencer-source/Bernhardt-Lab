@@ -1,0 +1,28 @@
+/* Reserve the same stage and controls before and after lazy initialization. */
+.gallery-grid {
+  --gallery-stage-height: 28rem;
+  --gallery-controls-height: 2.75rem;
+}
+
+.js .gallery-grid:empty::before {
+  content: "";
+  display: block;
+  height: calc(var(--gallery-stage-height) + var(--gallery-controls-height) + 0.66rem);
+}
+
+.gallery-stage,
+.gallery-stage img {
+  height: var(--gallery-stage-height);
+  min-height: 0;
+}
+
+.gallery-controls {
+  min-height: var(--gallery-controls-height);
+}
+
+@media (max-width: 760px) {
+  .gallery-grid {
+    --gallery-stage-height: 14rem;
+    --gallery-controls-height: 5.5rem;
+  }
+}

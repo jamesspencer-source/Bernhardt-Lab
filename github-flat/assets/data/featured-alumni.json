@@ -1,0 +1,139 @@
+{
+  "items": [
+    {
+      "name": "Kate Hummels",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Assistant Professor, Department of Microbiology, University of Georgia",
+      "source": "https://mib.uga.edu/research/lab/hummels-lab",
+      "sourceLabel": "University of Georgia (Hummels Lab)",
+      "profileSlug": "kate-hummels",
+      "sourceLinkLabel": "View institutional lab page"
+    },
+    {
+      "name": "Thomas Bartlett",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Principal Investigator and Senior Staff Scientist, Wadsworth Center",
+      "source": "https://www.wadsworth.org/research/laboratories/bartlett/people",
+      "sourceLabel": "Wadsworth Center (Bartlett Lab)",
+      "profileSlug": "thomas-bartlett",
+      "sourceLinkLabel": "View institutional directory"
+    },
+    {
+      "name": "Lindsey Marmont",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Assistant Professor, Department of Biochemistry and Biomedical Sciences, McMaster University",
+      "source": "https://experts.mcmaster.ca/people/marmontl",
+      "sourceLabel": "McMaster University",
+      "profileSlug": "lindsey-marmont",
+      "sourceLinkLabel": "View external profile"
+    },
+    {
+      "name": "Coralie Fumeaux",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Assistant Professor and Group Leader, CHUV and University of Lausanne",
+      "source": "https://www.chuv.ch/en/microbiologie/imu-home/research/research-groups/coralie-fumeaux-lab",
+      "sourceLabel": "CHUV / University of Lausanne",
+      "profileSlug": "coralie-fumeaux",
+      "sourceLinkLabel": "View institutional lab page"
+    },
+    {
+      "name": "Josue Flores-Kim",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Assistant Professor, Department of Biochemistry and Molecular Biotechnology, UMass Chan Medical School",
+      "source": "https://profiles.umassmed.edu/display/28733746",
+      "sourceLabel": "UMass Chan Medical School",
+      "profileSlug": "josue-flores-kim",
+      "sourceLinkLabel": "View external profile"
+    },
+    {
+      "name": "Amelia McKitterick",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Assistant Professor, Department of Microbiology, UMass Chan Medical School",
+      "source": "https://www.umassmed.edu/mckitterick-lab/people/",
+      "sourceLabel": "UMass Chan Medical School",
+      "profileSlug": "amelia-mckitterick",
+      "sourceLinkLabel": "View institutional directory"
+    },
+    {
+      "name": "Paula Navarro",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Assistant Professor, Department of Fundamental Microbiology, University of Lausanne",
+      "source": "https://wp.unil.ch/navarrolab/",
+      "sourceLabel": "University of Lausanne",
+      "profileSlug": "paula-navarro",
+      "sourceLinkLabel": "View institutional lab page"
+    },
+    {
+      "name": "Andrea Vettiger",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Assistant Professor, Department of Fundamental Microbiology, University of Lausanne",
+      "source": "https://wp.unil.ch/vettiger-lab/people/andrea-vettiger-phd/",
+      "sourceLabel": "University of Lausanne",
+      "profileSlug": "andrea-vettiger",
+      "sourceLinkLabel": "View external profile"
+    },
+    {
+      "name": "Nick Peters",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Associate Professor, Microbiology Undergraduate Program, Iowa State University",
+      "source": "https://www.micro.iastate.edu/people/nicholas-peters",
+      "sourceLabel": "Iowa State University",
+      "profileSlug": "nick-peters",
+      "sourceLinkLabel": "View external profile"
+    },
+    {
+      "name": "Andrew Fenton",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Lecturer in Microbial Pathogenesis, University of Sheffield",
+      "source": "https://www.sheffield.ac.uk/biosciences/people/academic-staff/andrew-fenton",
+      "sourceLabel": "University of Sheffield",
+      "profileSlug": "andrew-fenton",
+      "sourceLinkLabel": "View external profile"
+    },
+    {
+      "name": "Chris (Lok-To) Sham",
+      "roleInLab": "Former graduate student",
+      "currentRole": "Assistant Professor, Department of Microbiology and Immunology, National University of Singapore",
+      "source": "https://discovery.nus.edu.sg/11874-lok-to-sham",
+      "sourceLabel": "National University of Singapore",
+      "profileSlug": "chris-lok-to-sham",
+      "sourceLinkLabel": "View external profile"
+    },
+    {
+      "name": "Jackson Buss",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Scientist, New England Biolabs",
+      "sourceLabel": "Bernhardt lab records",
+      "profileSlug": "jackson-buss",
+      "sourceLinkLabel": "View supporting source"
+    },
+    {
+      "name": "Hoong Chuin Lim",
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Senior Scientist, Manifold Biotechnologies",
+      "sourceLabel": "Bernhardt lab records",
+      "profileSlug": "hoong-chuin-lim",
+      "sourceLinkLabel": "View external profile"
+    },
+    {
+      "name": "Thao Truong",
+      "roleFromPeople": true,
+      "roleInLab": "Former graduate student",
+      "currentRole": "Assistant Professor, Department of Laboratory Medicine & Pathology, University of Washington",
+      "source": "https://dlmp.uw.edu/faculty/truong-thao",
+      "sourceLabel": "UW Medicine",
+      "profileSlug": "thao-truong",
+      "sourceLinkLabel": "View external profile"
+    },
+    {
+      "name": "Neil Greene",
+      "roleFromPeople": true,
+      "roleInLab": "Former postdoctoral fellow",
+      "currentRole": "Clinical Associate Professor; Director, Medical Laboratory Science Program, University of Rhode Island",
+      "source": "https://web.uri.edu/cmb/meet/neil-greene/",
+      "sourceLabel": "University of Rhode Island",
+      "profileSlug": "neil-greene",
+      "sourceLinkLabel": "View external profile"
+    }
+  ]
+}

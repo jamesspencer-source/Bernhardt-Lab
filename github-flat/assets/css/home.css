@@ -288,7 +288,7 @@
     padding: 0.8rem;
   }
 
-  .research-video-copy h4 {
+  .research-video-copy h3 {
     font-size: 1.12rem;
   }
 
@@ -611,7 +611,7 @@
 .person-body h3,
 .alumni-item h3,
 .contact-card h2,
-.research-video-copy h4,
+.research-video-copy h3,
 .media-card h3 {
   color: var(--text-high);
 }
@@ -797,6 +797,24 @@
 
 .collab-showcase {
   overflow: visible;
+}
+
+.no-js .collab-showcase {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  width: 100%;
+  min-width: 0;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collab-showcase {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+    width: 100%;
+    min-width: 0;
+    transform: none;
+  }
 }
 
 .map-frame,
