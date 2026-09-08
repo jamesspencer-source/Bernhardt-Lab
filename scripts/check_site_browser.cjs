@@ -162,7 +162,7 @@ async function main() {
         fs.mkdirSync(output, { recursive: true });
         await page.locator('#publications').screenshot({
           path: path.join(output, `publications-${width}.png`),
-          style: '.site-header { visibility: hidden !important; }',
+          style: '.site-header, .site-header * { visibility: hidden !important; }',
         });
       }
       if (width === 320) continue;

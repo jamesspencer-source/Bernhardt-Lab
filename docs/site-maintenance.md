@@ -190,8 +190,8 @@ PubMed indexing can lag publication; inspect the bibliography before assuming
 an absent paper is an error. The original approved six-paper collection stays
 unchanged in `data/curated-publications.json` but no longer drives the homepage.
 
-`update-latest-publications.yml` checks weekly on Monday at 10:30 UTC and can be
-run manually. Real citation changes go through the exact-file publisher and its
+`update-latest-publications.yml` checks weekly on Monday at 10:30 UTC, when its
+refresher code changes on main, and on manual runs. Real citation changes go through the exact-file publisher and its
 static/browser checks. It explicitly requests a Pages build when the live feed
 differs, because pushes using `GITHUB_TOKEN` do not trigger Pages automatically,
 then verifies that the updated feed is live. A failed publication/deployment

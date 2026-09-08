@@ -2,6 +2,12 @@ name: Update latest publications
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/update-latest-publications.yml"
+      - "scripts/refresh_recent_publications.py"
+      - "scripts/publication_data.py"
   schedule:
     - cron: "30 10 * * 1"
 
