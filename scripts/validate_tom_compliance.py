@@ -11,6 +11,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
+from publication_data import load_feed
 
 
 EXPECTED_PUBLICATIONS = [
@@ -271,12 +272,12 @@ class PublicationLinks(HTMLParser):
             self.href = None
 
 
-def expected_publication_positions(text: str) -> tuple[list[int], list[str]]:
+def expected_publication_positions(text: str, publications: list[dict]) -> tuple[list[int], list[str]]:
     parser = PublicationLinks()
     parser.feed(text)
     positions: list[int] = []
     missing: list[str] = []
-    for expected in EXPECTED_PUBLICATIONS:
+    for expected in publications:
         link = (expected["articleUrl"], expected["title"])
         if link not in parser.links:
             missing.append(expected["title"])
@@ -287,15 +288,21 @@ def expected_publication_positions(text: str) -> tuple[list[int], list[str]]:
 
 def validate_homepage_publications(root: Path, path: Path, text: str, errors: list[str]) -> None:
     label = relative_label(path, root)
+    try:
+        # September 2026: homepage moves to recent papers; the approved collection stays protected.
+        publications = load_feed(root)
+    except (ValueError, OSError) as exc:
+        errors.append(f"{label}: invalid recent-publications feed: {exc}")
+        return
     item_count = text.count('class="publication-archive-item"')
-    if item_count != len(EXPECTED_PUBLICATIONS):
-        errors.append(f"{label} must render exactly {len(EXPECTED_PUBLICATIONS)} homepage publication items, found {item_count}.")
+    if item_count != len(publications):
+        errors.append(f"{label} must render exactly {len(publications)} homepage publication items, found {item_count}.")
 
-    positions, missing = expected_publication_positions(text)
+    positions, missing = expected_publication_positions(text, publications)
     if missing:
-        errors.append(f"{label} is missing Tom-approved homepage publications: {', '.join(missing)}.")
+        errors.append(f"{label} is missing recent homepage publications: {', '.join(missing)}.")
     elif positions != sorted(positions):
-        errors.append(f"{label} renders Tom-approved homepage publications in the wrong order.")
+        errors.append(f"{label} renders recent homepage publications in the wrong order.")
 
     if REMOVED_TRAINING_SENTENCE_PREFIX in text:
         errors.append(f"{label} still contains the removed Training opportunities sentence beginning {REMOVED_TRAINING_SENTENCE_PREFIX!r}.")

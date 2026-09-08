@@ -550,7 +550,7 @@ body {
 }
 
 .publication-archive-title,
-.publication-archive-why,
+.publication-archive-authors,
 .publication-archive-citation {
   grid-column: 2;
 }
@@ -768,7 +768,7 @@ body {
 
   .publication-archive-item::before,
   .publication-archive-title,
-  .publication-archive-why,
+  .publication-archive-authors,
   .publication-archive-citation {
     grid-column: auto;
     grid-row: auto;

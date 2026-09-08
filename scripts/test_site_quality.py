@@ -119,15 +119,22 @@ class SiteQualityTests(unittest.TestCase):
             self.assertNotIn("cc=", profile)
 
     def test_publications_are_generated_from_one_source(self):
+        from publication_data import load_feed
+        papers = load_feed(site.ROOT)
         for path in (site.ROOT / "index.html", site.FLAT_DIR / "index.html"):
-            self.assertIn(site.render_curated_publications(), path.read_text())
-            positions, missing = tom.expected_publication_positions(path.read_text())
+            self.assertIn(site.render_recent_publications(), path.read_text())
+            positions, missing = tom.expected_publication_positions(path.read_text(), papers)
             self.assertEqual(missing, [])
             self.assertEqual(positions, list(range(6)))
-        changed = site.render_curated_publications().replace(tom.EXPECTED_PUBLICATIONS[0]["articleUrl"], "https://example.org/wrong-paper")
-        self.assertEqual(tom.expected_publication_positions(changed)[1], [tom.EXPECTED_PUBLICATIONS[0]["title"]])
+        changed = site.render_recent_publications().replace(papers[0]["articleUrl"], "https://example.org/wrong-paper")
+        self.assertEqual(tom.expected_publication_positions(changed, papers)[1], [papers[0]["title"]])
+        errors = []
+        tom.validate_curated_publications(site.ROOT, errors)
+        self.assertEqual(errors, [])
+        self.assertEqual(load_feed(site.ROOT), load_feed(site.FLAT_DIR))
         self.assertNotIn("publications.js", (site.ASSETS_DIR / "main.js").read_text())
         self.assertFalse((site.ROOT / ".github/workflows/refresh-publications.yml").exists())
+        self.assertTrue((site.ROOT / ".github/workflows/update-latest-publications.yml").exists())
 
     def test_shared_module_changes_invalidate_only_the_changed_url(self):
         with tempfile.TemporaryDirectory() as directory:

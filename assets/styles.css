@@ -3066,6 +3066,22 @@ p {
 }
 
 .publication-archive-citation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 1rem;
+  margin: 0 0 0.45rem;
+  color: #d6dbe6;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.publication-archive-citation time {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.publication-archive-authors {
   margin: 0.4rem 0 0;
   color: #d6dbe6;
   font-size: 0.88rem;
@@ -3778,7 +3794,7 @@ body {
 }
 
 .publication-archive-title,
-.publication-archive-why,
+.publication-archive-authors,
 .publication-archive-citation {
   grid-column: 2;
 }
@@ -3996,7 +4012,7 @@ body {
 
   .publication-archive-item::before,
   .publication-archive-title,
-  .publication-archive-why,
+  .publication-archive-authors,
   .publication-archive-citation {
     grid-column: auto;
     grid-row: auto;

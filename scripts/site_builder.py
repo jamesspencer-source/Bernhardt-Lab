@@ -13,6 +13,7 @@ from typing import Any
 from urllib.parse import quote, unquote, urlencode, urlparse
 
 from validate_tom_compliance import validate_tom_compliance
+from publication_data import date_label, load_feed
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -739,16 +740,15 @@ def load_curated_publications() -> list[dict[str, Any]]:
     return read_json(DATA_DIR / "curated-publications.json").get("items", [])
 
 
-def render_curated_publications() -> str:
+def render_recent_publications() -> str:
     cards = []
-    for item in load_curated_publications():
-        url = item.get("articleUrl") or f"https://doi.org/{item['doi']}"
+    for item in load_feed(ROOT):
         cards.append(f'''              <li class="publication-archive-item">
-                <a class="publication-archive-title" href="{escape(url)}" target="_blank" rel="noreferrer">
+                <p class="publication-archive-citation"><span>{escape(item['journal'])}</span><time datetime="{escape(item['publishedAt'])}">{date_label(item['publishedAt'])}</time></p>
+                <a class="publication-archive-title" href="{escape(item['articleUrl'])}" target="_blank" rel="noreferrer">
                   {format_species_text(item['title'])}
                 </a>
-                <p class="publication-archive-why">{format_species_text(item['why'])}</p>
-                <p class="publication-archive-citation">{escape(item['journal'])} ({escape(item['year'])})</p>
+                <p class="publication-archive-authors">{escape(item['authorsShort'])}</p>
               </li>''')
     return '            <ol class="publication-archive-list">\n' + "\n".join(cards) + '\n            </ol>'
 
@@ -769,7 +769,7 @@ def contact_mailto(route: str) -> str:
 
 def sync_homepage_content(text: str) -> str:
     pattern = r'(<div id="recent-publications"[^>]*>)\s*.*?(\n          </div>)'
-    text, count = re.subn(pattern, lambda m: m[1] + "\n" + render_curated_publications() + m[2], text, flags=re.S)
+    text, count = re.subn(pattern, lambda m: m[1] + "\n" + render_recent_publications() + m[2], text, flags=re.S)
     if count != 1:
         raise RuntimeError("Expected one generated homepage publications region")
     for route in ("general", "training"):

@@ -24,7 +24,7 @@ Tom's requested content rules are now enforced as a hard build gate. The normal 
 python3 scripts/validate_tom_compliance.py
 ```
 
-This protects the curated homepage publication set, corrected Betsy/Lindsey links, Tom-removed alumni, required featured alumni, gallery removals/caption wording, omitted alumni placeholder text, and species-name formatting. If this gate fails, edit the canonical source in `data/` or the relevant template, then rebuild. Do not patch generated HTML to work around the failure.
+This protects the saved curated publication set and corrected Betsy/Lindsey links, validated recent homepage citations, Tom-removed alumni, required featured alumni, gallery removals/caption wording, omitted alumni placeholder text, and species-name formatting. If this gate fails, edit the canonical data source or relevant template, then rebuild. Do not patch generated HTML to work around the failure.
 
 ## Canonical URL scheme
 
@@ -47,7 +47,8 @@ Legacy routes are redirect-only compatibility outputs. Keep `/people/`, `/people
 - People and alumni: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/people.json`
 - Gallery: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/gallery.json`
 - Featured alumni: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/featured-alumni.json`
-- Curated publications fallback: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/curated-publications.json`
+- Saved approved publication collection: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/curated-publications.json`
+- Recent homepage citations: `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/data/recent-publications.json`
 - Scientific media archive highlights: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/scientific-media.json`
 - Shared homepage/site copy: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/site-copy.json`
 - Runtime config such as the public leaderboard URL: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/runtime-config.json`
@@ -166,17 +167,38 @@ These scripts refresh machine-generated feeds and then rebuild automatically:
 ```bash
 python3 scripts/refresh_youtube_video_stats.py
 python3 scripts/refresh_research_in_motion.py
+python3 scripts/refresh_recent_publications.py
 ```
 
 The YouTube view-count workflow runs monthly. Manual refreshes are still
 available, but routine publishing should not create high-frequency view-count
 commits.
 
-The unused weekly PubMed-feed workflow has been retired. The manual
-`refresh_recent_publications.py` script and last feed snapshot are retained for
-reference only, not used by live pages. Homepage publication HTML is generated
-from the six approved entries in `data/curated-publications.json`; publication
-content does not depend on JavaScript or a runtime fetch.
+At James's September 2026 request, the homepage now shows the six latest
+PubMed-indexed journal publications coauthored by Bernhardt TG, including
+collaborations rather than only last-author papers. Online publication date
+determines newest-first order; issue dates are used only when no online date
+is available. Preprints, corrections, and retracted papers are excluded.
+The displayed date retains the precision supplied by PubMed.
+
+`refresh_recent_publications.py` maintains `assets/data/recent-publications.json`.
+It validates complete responses, author identity, dates, uniqueness, and article
+URLs before replacing the saved feed. Failures keep the last good snapshot;
+unchanged citation results do not change the saved timestamp. The builder reads
+this snapshot offline and emits the same citations in canonical and flat HTML.
+PubMed indexing can lag publication; inspect the bibliography before assuming
+an absent paper is an error. The original approved six-paper collection stays
+unchanged in `data/curated-publications.json` but no longer drives the homepage.
+
+`update-latest-publications.yml` checks weekly on Monday at 10:30 UTC and can be
+run manually. Real citation changes go through the exact-file publisher and its
+static/browser checks. It explicitly requests a Pages build when the live feed
+differs, because pushes using `GITHUB_TOKEN` do not trigger Pages automatically,
+then verifies that the updated feed is live. A failed publication/deployment
+check is reported as a failed workflow; rerunning can retry an unpublished feed.
+This workflow replaces the retired `refresh-publications.yml`, which must not
+be restored. It does not change the Pages source or domain settings.
+
 The small `assets/js/publications.js` compatibility module remains so cached
 older entrypoints do not encounter a missing import during the transition.
 

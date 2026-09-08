@@ -1,0 +1,84 @@
+name: Update latest publications
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 10 * * 1"
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: latest-publications
+  cancel-in-progress: false
+
+jobs:
+  update-publications:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Refresh saved PubMed citations
+        run: python3 scripts/refresh_recent_publications.py --no-build
+      - name: Detect publication changes
+        id: changes
+        run: |
+          if git diff --quiet -- assets/data/recent-publications.json; then
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-node@v4
+        if: steps.changes.outputs.updated == 'true'
+        with:
+          node-version: "24"
+      - name: Install browser test tools
+        if: steps.changes.outputs.updated == 'true'
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.62.1
+          npx playwright install --with-deps chromium
+      - name: Validate and publish exact publication update
+        if: steps.changes.outputs.updated == 'true'
+        env:
+          NODE_PATH: ${{ github.workspace }}/node_modules
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          python3 scripts/publish_site.py --include assets/data/recent-publications.json --message "site: refresh latest publications"
+      - name: Request Pages build for updated or previously unpublished citations
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          import os
+          import subprocess
+          import time
+          import urllib.request
+
+          expected = json.loads(Path("assets/data/recent-publications.json").read_text())["items"]
+          def is_live():
+              request = urllib.request.Request(
+                  "https://bernhardtlab.com/assets/data/recent-publications.json?check=" + str(time.time_ns()),
+                  headers={"Cache-Control": "no-cache"},
+              )
+              with urllib.request.urlopen(request, timeout=25) as response:
+                  return json.load(response).get("items") == expected
+
+          if not is_live():
+              # GITHUB_TOKEN pushes do not automatically trigger a Pages build.
+              subprocess.run(["gh", "api", "--method", "POST", f"repos/{os.environ['GITHUB_REPOSITORY']}/pages/builds"], check=True)
+              for attempt in range(12):
+                  time.sleep(20)
+                  if is_live():
+                      break
+              else:
+                  raise SystemExit("Publications committed, but live Pages verification failed; rerun this workflow.")
+          print("Latest publications are live.")
+          PY

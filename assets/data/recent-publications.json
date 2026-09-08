@@ -1,63 +1,130 @@
 {
-  "generatedAt": "2026-09-07T15:53:16+00:00",
-  "source": "pubmed-esummary-last-author-filter",
+  "source": "PubMed ESummary",
   "query": "Bernhardt TG[Author]",
-  "count": 5,
+  "selection": "journal-published",
+  "count": 6,
   "items": [
     {
       "pmid": "42399561",
       "doi": "10.1038/s41564-026-02403-6",
       "title": "The penicillin-binding protein PBP1b fortifies the Escherichia coli division site against osmotic rupture",
-      "journal": "Nature microbiology",
-      "year": "2026",
-      "pubDate": "2026 Aug",
+      "journal": "Nature Microbiology",
+      "publishedAt": "2026-07-03",
+      "authors": [
+        "Navarro PP",
+        "Vettiger A",
+        "Hajdu R",
+        "Ananda VY",
+        "López-Tavares A",
+        "Schmid EW",
+        "Walter JC",
+        "Loose M",
+        "Chao LH",
+        "Bernhardt TG"
+      ],
       "authorsShort": "Navarro PP, Vettiger A, Hajdu R, et al.",
-      "articleUrl": "https://doi.org/10.1038/s41564-026-02403-6",
-      "sourceLabel": "PubMed (Bernhardt TG last author)"
+      "articleUrl": "https://doi.org/10.1038/s41564-026-02403-6"
+    },
+    {
+      "pmid": "42215499",
+      "doi": "10.1038/s41467-026-73864-w",
+      "title": "Secretin-interacting plug proteins prevent antibiotic influx during type IV pilus assembly in Pseudomonas aeruginosa",
+      "journal": "Nature Communications",
+      "publishedAt": "2026-05-29",
+      "authors": [
+        "Kwon OH",
+        "Lee Y",
+        "Ryu B",
+        "Sher JW",
+        "Park S",
+        "Lauber F",
+        "Kim BO",
+        "Yoo Y",
+        "Cho SH",
+        "Choe D",
+        "Cho YH",
+        "Collet JF",
+        "Ohi MD",
+        "Bernhardt TG",
+        "Chung JM",
+        "Cho H"
+      ],
+      "authorsShort": "Kwon OH, Lee Y, Ryu B, et al.",
+      "articleUrl": "https://doi.org/10.1038/s41467-026-73864-w"
     },
     {
       "pmid": "42008678",
       "doi": "10.1073/pnas.2606687123",
       "title": "Bacteriophages target membrane-anchored glycopolymers to promote host cell lysis and progeny release",
-      "journal": "Proceedings of the National Academy of Sciences of the United States of America",
-      "year": "2026",
-      "pubDate": "2026 Apr 28",
+      "journal": "PNAS",
+      "publishedAt": "2026-04-20",
+      "authors": [
+        "McKitterick AC",
+        "Lyerly EW",
+        "Bernhardt TG"
+      ],
       "authorsShort": "McKitterick AC, Lyerly EW, Bernhardt TG",
-      "articleUrl": "https://doi.org/10.1073/pnas.2606687123",
-      "sourceLabel": "PubMed (Bernhardt TG last author)"
+      "articleUrl": "https://doi.org/10.1073/pnas.2606687123"
     },
     {
-      "pmid": "39992125",
-      "doi": "10.1128/mbio.03950-24",
-      "title": "Using fluorescently labeled wheat germ agglutinin to track lipopolysaccharide transport to the outer membrane in Escherichia coli",
-      "journal": "mBio",
-      "year": "2025",
-      "pubDate": "2025 Mar 12",
-      "authorsShort": "Dubois L, Vettiger A, Buss JA, Bernhardt TG",
-      "articleUrl": "https://doi.org/10.1128/mbio.03950-24",
-      "sourceLabel": "PubMed (Bernhardt TG last author)"
+      "pmid": "41183199",
+      "doi": "10.1073/pnas.2514198122",
+      "title": "Conformational regulation of two essential activators of bacterial cell elongation",
+      "journal": "PNAS",
+      "publishedAt": "2025-11-03",
+      "authors": [
+        "Gilman MSA",
+        "Shlosman I",
+        "Guerra DDS",
+        "Domecillo M",
+        "Fivenson EM",
+        "Bourett C",
+        "Bernhardt TG",
+        "Polizzi NF",
+        "Loparo JJ",
+        "Kruse AC"
+      ],
+      "authorsShort": "Gilman MSA, Shlosman I, Guerra DDS, et al.",
+      "articleUrl": "https://doi.org/10.1073/pnas.2514198122"
     },
     {
-      "pmid": "39904311",
-      "doi": "10.1016/j.cub.2024.11.002",
-      "title": "The mycomembrane",
-      "journal": "Current biology : CB",
-      "year": "2025",
-      "pubDate": "2025 Feb 3",
-      "authorsShort": "Hart EM, Bernhardt TG",
-      "articleUrl": "https://doi.org/10.1016/j.cub.2024.11.002",
-      "sourceLabel": "PubMed (Bernhardt TG last author)"
+      "pmid": "40691462",
+      "doi": "10.1038/s41467-025-62051-y",
+      "title": "The hit-and-run of cell wall synthesis: LpoB transiently binds and activates PBP1b through a conserved allosteric switch",
+      "journal": "Nature Communications",
+      "publishedAt": "2025-07-21",
+      "authors": [
+        "Shlosman I",
+        "Vettiger A",
+        "Bernhardt TG",
+        "Kruse AC",
+        "Loparo JJ"
+      ],
+      "authorsShort": "Shlosman I, Vettiger A, Bernhardt TG, et al.",
+      "articleUrl": "https://doi.org/10.1038/s41467-025-62051-y"
     },
     {
-      "pmid": "38829907",
-      "doi": "10.1371/journal.pgen.1011127",
-      "title": "The conserved \u03c3D envelope stress response monitors multiple aspects of envelope integrity in corynebacteria",
-      "journal": "PLoS genetics",
-      "year": "2024",
-      "pubDate": "2024 Jun",
-      "authorsShort": "Hart EM, Lyerly E, Bernhardt TG",
-      "articleUrl": "https://doi.org/10.1371/journal.pgen.1011127",
-      "sourceLabel": "PubMed (Bernhardt TG last author)"
+      "pmid": "40258142",
+      "doi": "10.1073/pnas.2414342122",
+      "title": "A diverse single-stranded DNA-annealing protein library enables efficient genome editing across bacterial phyla",
+      "journal": "PNAS",
+      "publishedAt": "2025-04-21",
+      "authors": [
+        "Filsinger GT",
+        "Mychack A",
+        "Lyerly E",
+        "Henriksen C",
+        "Bartlett TM",
+        "Kuchwara H",
+        "Eitzinger S",
+        "Bernhardt TG",
+        "Walker S",
+        "Church GM",
+        "Wannier TM"
+      ],
+      "authorsShort": "Filsinger GT, Mychack A, Lyerly E, et al.",
+      "articleUrl": "https://doi.org/10.1073/pnas.2414342122"
     }
-  ]
+  ],
+  "generatedAt": "2026-09-08T14:06:18+00:00"
 }

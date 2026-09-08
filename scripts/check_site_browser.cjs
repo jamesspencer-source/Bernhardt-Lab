@@ -12,7 +12,7 @@ const root = path.resolve(__dirname, '..');
 const people = JSON.parse(fs.readFileSync(path.join(root, 'data/people.json'), 'utf8')).people;
 const currentCount = people.filter(person => person.status === 'current').length;
 const alumniCount = people.filter(person => person.status === 'alumni').length;
-const selectedPapers = JSON.parse(fs.readFileSync(path.join(root, 'data/curated-publications.json'), 'utf8')).items;
+const recentPapers = JSON.parse(fs.readFileSync(path.join(root, 'assets/data/recent-publications.json'), 'utf8')).items;
 const profiles = [
   '/team/thomas-bernhardt/', '/team/franziska-maria-lichtenauer/',
   '/team/betsy-hart/', '/team/james-warner/',
@@ -54,12 +54,13 @@ async function main() {
       fs.mkdirSync(output, { recursive: true });
       await page.screenshot({ path: path.join(output, name + '.png'), fullPage: true });
     };
-    const checkLayout = async label => {
-      const overflow = await page.evaluate(() => [...document.querySelectorAll('main h1, main h2, main h3, main p, main a, main button, main select, .site-header')]
+    const checkLayout = async (label, scope = 'main') => {
+      const overflow = await page.evaluate(scope => [...document.querySelectorAll('main h1, main h2, main h3, main p, main a, main button, main select, .site-header')]
+        .filter(el => el.closest(scope) || el.classList.contains('site-header'))
         .filter(el => {
           const rect = el.getBoundingClientRect();
           return rect.width && rect.height && (rect.right > innerWidth + 2 || rect.left < -2 || el.scrollWidth > el.clientWidth + 3);
-        }).map(el => ({ text: el.textContent.trim().slice(0, 75), class: el.className })));
+        }).map(el => ({ text: el.textContent.trim().slice(0, 75), class: el.className })), scope);
       assert.deepEqual(overflow, [], `${label}: overflow`);
     };
 
@@ -143,7 +144,7 @@ async function main() {
       results.push(`Directory/profile layout, images, and controls: ${width}px`);
     }
 
-    for (const width of [390, 1280]) {
+    for (const width of [320, 390, 1280]) {
       await page.setViewportSize({ width, height: 900 });
       await visit('/');
       assert.equal(await page.locator('#home-team-preview .person-card').count(), 8);
@@ -153,7 +154,18 @@ async function main() {
       const training = new URL(await page.locator('[data-contact-route="training"]').getAttribute('href'));
       assert.equal(training.searchParams.has('cc'), false);
       assert.match(training.searchParams.get('body'), /Proposed start date and availability/);
-      assert.deepEqual(await page.locator('.publication-archive-title').evaluateAll(links => links.map(link => ({ title: link.textContent.trim().replace(/\s+/g, ' '), url: link.href }))), selectedPapers.map(item => ({ title: item.title, url: item.articleUrl })));
+      assert.deepEqual(await page.locator('.publication-archive-title').evaluateAll(links => links.map(link => ({ title: link.textContent.trim().replace(/\s+/g, ' '), url: link.href }))), recentPapers.map(item => ({ title: item.title, url: item.articleUrl })));
+      assert.deepEqual(await page.locator('#recent-publications time').evaluateAll(dates => dates.map(date => date.dateTime)), recentPapers.map(item => item.publishedAt));
+      await page.locator('#publications').scrollIntoViewIfNeeded();
+      await checkLayout(`Recent publications ${width}px`, '#publications');
+      if (output) {
+        fs.mkdirSync(output, { recursive: true });
+        await page.locator('#publications').screenshot({
+          path: path.join(output, `publications-${width}.png`),
+          style: '.site-header { visibility: hidden !important; }',
+        });
+      }
+      if (width === 320) continue;
       const before = await page.locator('#gallery-grid').evaluate(el => el.getBoundingClientRect().height);
       await page.locator('#gallery-grid').scrollIntoViewIfNeeded();
       await page.locator('#gallery-active-image').waitFor();
@@ -208,7 +220,7 @@ async function main() {
         assert.equal(await page.locator('.alumni-card:visible').count(), 1);
       }
     }
-    results.push('Contact routing, Julia profile, curated publications, generated module URLs, and flat-directory controls');
+    results.push('Contact routing, Julia profile, recent publication dates/links, generated module URLs, and flat-directory controls');
 
     for (const javaScriptEnabled of [false, true]) {
       const fallback = await browser.newContext({ javaScriptEnabled, reducedMotion: 'no-preference', viewport: { width: 390, height: 900 } });

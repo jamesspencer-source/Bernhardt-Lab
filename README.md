@@ -76,7 +76,7 @@ The normal build also runs the Tom feedback compliance gate. To run that gate by
 python3 scripts/validate_tom_compliance.py
 ```
 
-That validator blocks regressions against Tom's requested content rules: the curated six-paper homepage publication set, removed alumni, required featured alumni, corrected gallery caption, omitted placeholder verification/role text, and pasted raw formatting artifacts.
+That validator protects Tom's saved six-paper collection, the homepage's validated recent-publication links, removed alumni, required featured alumni, corrected gallery caption, omitted placeholder verification/role text, and pasted raw formatting artifacts.
 
 The build also rejects broken local page links or fragments, public images without `alt` attributes, and referenced public images larger than 1 MB.
 
@@ -103,13 +103,20 @@ These write canonical runtime data and then regenerate dependent outputs automat
 
 - `python3 scripts/refresh_youtube_video_stats.py`
 - `python3 scripts/refresh_research_in_motion.py`
+- `python3 scripts/refresh_recent_publications.py`
 
 YouTube view stats are also refreshed by GitHub Actions once per month.
 
-The unused automatic PubMed feed refresh has been retired. The manual refresh
-script and its last snapshot remain for reference, but do not populate the
-website. The six approved homepage papers come only from
-`data/curated-publications.json`, rendered during the build.
+The homepage shows the six latest PubMed-indexed journal publications with
+Thomas G. Bernhardt as an author, including collaborations. The saved feed is
+`assets/data/recent-publications.json`; pages are generated from it during the
+build, so citations remain visible without JavaScript or a live PubMed request.
+`update-latest-publications.yml` checks weekly and publishes only real changes
+after static and browser validation. Dates use online publication when available,
+then the journal issue date; preprints, corrections, and retracted papers are
+excluded. A failed or incomplete refresh preserves the previous saved feed.
+This replaces the fixed homepage selection at James's September 2026 request.
+Tom's original `data/curated-publications.json` collection is preserved unchanged.
 
 For the normal end-to-end website workflow, use:
 

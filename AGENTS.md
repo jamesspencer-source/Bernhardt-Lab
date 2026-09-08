@@ -67,6 +67,7 @@ Refresh machine-generated site data:
 ```bash
 python3 scripts/refresh_youtube_video_stats.py
 python3 scripts/refresh_research_in_motion.py
+python3 scripts/refresh_recent_publications.py
 ```
 
 YouTube view stats are scheduled monthly. Do not increase the cadence unless
@@ -82,9 +83,15 @@ Add future departures to `data/scheduled-updates.json`; the daily GitHub Action
 applies due transitions, rebuilds, and commits only when a real diff exists.
 Featured alumni is still manually curated.
 
-Homepage publications are generated from `data/curated-publications.json`,
-not hand-maintained in HTML or fetched from the legacy recent-publications feed.
-The unused weekly feed workflow is retired; its manual script is reference-only.
+Homepage publications are generated from `assets/data/recent-publications.json`:
+the six latest PubMed-indexed journal papers coauthored by Bernhardt TG, ordered
+by online publication date (issue date when online date is unavailable).
+The validated refresher and `update-latest-publications.yml` maintain this feed.
+Do not edit publication HTML or handwrite scientific summaries. Preprints,
+corrections, and retracted papers are excluded. Failed refreshes must preserve
+the last good snapshot, and unchanged results must not create date-only commits.
+James authorized this change in September 2026. Preserve Tom's original
+`data/curated-publications.json` collection and all other compliance rules.
 
 Featured alumni selection uses `profileSlug` in `data/featured-alumni.json`.
 Names, external URLs, and default current roles derive from `data/people.json`.
