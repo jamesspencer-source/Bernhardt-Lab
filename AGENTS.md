@@ -65,7 +65,6 @@ python3 scripts/publish_site.py --include data/people.json
 Refresh machine-generated site data:
 
 ```bash
-python3 scripts/refresh_recent_publications.py
 python3 scripts/refresh_youtube_video_stats.py
 python3 scripts/refresh_research_in_motion.py
 ```
@@ -82,6 +81,25 @@ python3 scripts/apply_scheduled_updates.py --dry-run
 Add future departures to `data/scheduled-updates.json`; the daily GitHub Action
 applies due transitions, rebuilds, and commits only when a real diff exists.
 Featured alumni is still manually curated.
+
+Homepage publications are generated from `data/curated-publications.json`,
+not hand-maintained in HTML or fetched from the legacy recent-publications feed.
+The unused weekly feed workflow is retired; its manual script is reference-only.
+
+Featured alumni selection uses `profileSlug` in `data/featured-alumni.json`.
+Names, external URLs, and default current roles derive from `data/people.json`.
+`currentRoleOverride` preserves an explicitly approved short role label where
+it differs from the directory. Do not reintroduce duplicate names or URLs.
+
+Before publishing, install the browser-check prerequisites described in
+`docs/site-maintenance.md`. The publisher requires both static and browser
+regressions in its isolated snapshot; missing prerequisites or failed tests
+block staging and publishing. `python3 scripts/check_site.py --browser` runs
+the same gate locally. GitHub runs it on pull requests and main pushes.
+
+CSS/entrypoint versions and the per-page shared-module import map are generated
+from file contents. Do not manually bump site script/style versions or add
+query strings to source imports. V1 game and favicon versions remain separate.
 
 Check the live leaderboard worker:
 

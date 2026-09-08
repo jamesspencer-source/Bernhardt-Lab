@@ -1,124 +1,92 @@
 {
   "items": [
     {
-      "name": "Kate Hummels",
+      "profileSlug": "kate-hummels",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Assistant Professor, Department of Microbiology, University of Georgia",
-      "source": "https://mib.uga.edu/research/lab/hummels-lab",
-      "sourceLabel": "University of Georgia (Hummels Lab)",
-      "profileSlug": "kate-hummels"
+      "currentRoleOverride": "Assistant Professor, Department of Microbiology, University of Georgia",
+      "sourceLabel": "University of Georgia (Hummels Lab)"
     },
     {
-      "name": "Thomas Bartlett",
+      "profileSlug": "thomas-bartlett",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Principal Investigator and Senior Staff Scientist, Wadsworth Center",
-      "source": "https://www.wadsworth.org/research/laboratories/bartlett/people",
-      "sourceLabel": "Wadsworth Center (Bartlett Lab)",
-      "profileSlug": "thomas-bartlett"
+      "currentRoleOverride": "Principal Investigator and Senior Staff Scientist, Wadsworth Center",
+      "sourceLabel": "Wadsworth Center (Bartlett Lab)"
     },
     {
-      "name": "Lindsey Marmont",
+      "profileSlug": "lindsey-marmont",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Assistant Professor, Department of Biochemistry and Biomedical Sciences, McMaster University",
-      "source": "https://experts.mcmaster.ca/people/marmontl",
-      "sourceLabel": "McMaster University",
-      "profileSlug": "lindsey-marmont"
+      "currentRoleOverride": "Assistant Professor, Department of Biochemistry and Biomedical Sciences, McMaster University",
+      "sourceLabel": "McMaster University"
     },
     {
-      "name": "Coralie Fumeaux",
+      "profileSlug": "coralie-fumeaux",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Assistant Professor and Group Leader, CHUV and University of Lausanne",
-      "source": "https://www.chuv.ch/en/microbiologie/imu-home/research/research-groups/coralie-fumeaux-lab",
-      "sourceLabel": "CHUV / University of Lausanne",
-      "profileSlug": "coralie-fumeaux"
+      "currentRoleOverride": "Assistant Professor and Group Leader, CHUV and University of Lausanne",
+      "sourceLabel": "CHUV / University of Lausanne"
     },
     {
-      "name": "Josue Flores-Kim",
+      "profileSlug": "josue-flores-kim",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Assistant Professor, Department of Biochemistry and Molecular Biotechnology, UMass Chan Medical School",
-      "source": "https://profiles.umassmed.edu/display/28733746",
-      "sourceLabel": "UMass Chan Medical School",
-      "profileSlug": "josue-flores-kim"
+      "currentRoleOverride": "Assistant Professor, Department of Biochemistry and Molecular Biotechnology, UMass Chan Medical School",
+      "sourceLabel": "UMass Chan Medical School"
     },
     {
-      "name": "Amelia McKitterick",
+      "profileSlug": "amelia-mckitterick",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Assistant Professor, Department of Microbiology, UMass Chan Medical School",
-      "source": "https://www.umassmed.edu/mckitterick-lab/people/",
-      "sourceLabel": "UMass Chan Medical School",
-      "profileSlug": "amelia-mckitterick"
+      "currentRoleOverride": "Assistant Professor, Department of Microbiology, UMass Chan Medical School",
+      "sourceLabel": "UMass Chan Medical School"
     },
     {
-      "name": "Paula Navarro",
+      "profileSlug": "paula-navarro",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Assistant Professor, Department of Fundamental Microbiology, University of Lausanne",
-      "source": "https://wp.unil.ch/navarrolab/",
-      "sourceLabel": "University of Lausanne",
-      "profileSlug": "paula-navarro"
+      "currentRoleOverride": "Assistant Professor, Department of Fundamental Microbiology, University of Lausanne",
+      "sourceLabel": "University of Lausanne"
     },
     {
-      "name": "Andrea Vettiger",
+      "profileSlug": "andrea-vettiger",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Assistant Professor, Department of Fundamental Microbiology, University of Lausanne",
-      "source": "https://wp.unil.ch/vettiger-lab/people/andrea-vettiger-phd/",
-      "sourceLabel": "University of Lausanne",
-      "profileSlug": "andrea-vettiger"
+      "currentRoleOverride": "Assistant Professor, Department of Fundamental Microbiology, University of Lausanne",
+      "sourceLabel": "University of Lausanne"
     },
     {
-      "name": "Nick Peters",
+      "profileSlug": "nick-peters",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Associate Professor, Microbiology Undergraduate Program, Iowa State University",
-      "source": "https://www.micro.iastate.edu/people/nicholas-peters",
-      "sourceLabel": "Iowa State University",
-      "profileSlug": "nick-peters"
+      "currentRoleOverride": "Associate Professor, Microbiology Undergraduate Program, Iowa State University",
+      "sourceLabel": "Iowa State University"
     },
     {
-      "name": "Andrew Fenton",
+      "profileSlug": "andrew-fenton",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Lecturer in Microbial Pathogenesis, University of Sheffield",
-      "source": "https://www.sheffield.ac.uk/biosciences/people/academic-staff/andrew-fenton",
-      "sourceLabel": "University of Sheffield",
-      "profileSlug": "andrew-fenton"
+      "currentRoleOverride": "Lecturer in Microbial Pathogenesis, University of Sheffield",
+      "sourceLabel": "University of Sheffield"
     },
     {
-      "name": "Chris (Lok-To) Sham",
+      "profileSlug": "chris-lok-to-sham",
       "roleInLab": "Former graduate student",
-      "currentRole": "Assistant Professor, Department of Microbiology and Immunology, National University of Singapore",
-      "source": "https://discovery.nus.edu.sg/11874-lok-to-sham",
-      "sourceLabel": "National University of Singapore",
-      "profileSlug": "chris-lok-to-sham"
+      "currentRoleOverride": "Assistant Professor, Department of Microbiology and Immunology, National University of Singapore",
+      "sourceLabel": "National University of Singapore"
     },
     {
-      "name": "Jackson Buss",
+      "profileSlug": "jackson-buss",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Scientist, New England Biolabs",
+      "currentRoleOverride": "Scientist, New England Biolabs",
       "sourceLabel": "Bernhardt lab records",
-      "profileSlug": "jackson-buss"
+      "showSource": false
     },
     {
-      "name": "Hoong Chuin Lim",
+      "profileSlug": "hoong-chuin-lim",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Senior Scientist, Manifold Biotechnologies",
-      "sourceLabel": "Bernhardt lab records",
-      "profileSlug": "hoong-chuin-lim"
+      "sourceLabel": "Bernhardt lab records"
     },
     {
-      "name": "Thao Truong",
-      "roleFromPeople": true,
+      "profileSlug": "thao-truong",
       "roleInLab": "Former graduate student",
-      "currentRole": "Assistant Professor, Department of Laboratory Medicine & Pathology, University of Washington",
-      "source": "https://dlmp.uw.edu/faculty/truong-thao",
-      "sourceLabel": "UW Medicine",
-      "profileSlug": "thao-truong"
+      "sourceLabel": "UW Medicine"
     },
     {
-      "name": "Neil Greene",
-      "roleFromPeople": true,
+      "profileSlug": "neil-greene",
       "roleInLab": "Former postdoctoral fellow",
-      "currentRole": "Clinical Associate Professor; Director, Medical Laboratory Science Program, University of Rhode Island",
-      "source": "https://web.uri.edu/cmb/meet/neil-greene/",
-      "sourceLabel": "University of Rhode Island",
-      "profileSlug": "neil-greene"
+      "sourceLabel": "University of Rhode Island"
     }
   ]
 }

@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -127,6 +128,12 @@ def prepare_plan(destination: Path, selected: list[str]) -> dict[str, tuple[str,
         else:
             target.unlink(missing_ok=True)
     subprocess.run([sys.executable, "-B", "scripts/build_site.py"], cwd=destination, check=True)
+    environment = dict(os.environ)
+    environment["NODE_PATH"] = os.pathsep.join(filter(None, [str(ROOT / "node_modules"), environment.get("NODE_PATH")]))
+    subprocess.run(
+        [sys.executable, "-B", "scripts/check_site.py", "--skip-build", "--browser"],
+        cwd=destination, env=environment, check=True,
+    )
     after = tree_state(destination)
     plan = {
         name: after.get(name)

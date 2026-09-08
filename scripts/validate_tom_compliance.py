@@ -7,6 +7,7 @@ import html
 import json
 import re
 import sys
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
@@ -196,7 +197,8 @@ def validate_people(root: Path, errors: list[str]) -> None:
 def validate_featured_alumni(root: Path, errors: list[str]) -> None:
     path = root / "data" / "featured-alumni.json"
     items = read_json(path).get("items", [])
-    names = {clean_text(item.get("name")) for item in items}
+    people = {person["slug"]: person for person in read_json(root / "data/people.json")["people"]}
+    names = {clean_text(people.get(item.get("profileSlug"), {}).get("name")) for item in items}
     slugs = {normalize_slug(item.get("profileSlug")) for item in items}
 
     missing = sorted(REQUIRED_FEATURED_ALUMNI - names)
@@ -204,14 +206,17 @@ def validate_featured_alumni(root: Path, errors: list[str]) -> None:
         errors.append(f"{relative_label(path, root)} is missing required Tom-approved featured alumni: {', '.join(missing)}.")
 
     for item in items:
-        name = clean_text(item.get("name"))
+        person = people.get(item.get("profileSlug"), {})
+        name = clean_text(person.get("name"))
+        if not person or person.get("status") != "alumni":
+            errors.append(f"{relative_label(path, root)} references a missing or non-alumni record: {item.get('profileSlug')}.")
         normalized_name = normalize_name(name)
         if normalized_name in BANNED_ALUMNI_NAMES or normalize_slug(item.get("profileSlug")) in BANNED_ALUMNI:
             errors.append(f"{relative_label(path, root)} still features Tom-removed alumnus: {name}.")
         if "chris" in normalized_name and "sham" in normalized_name and name != EXPECTED_CHRIS_SHAM:
             errors.append(f"{relative_label(path, root)} must feature {EXPECTED_CHRIS_SHAM!r}, not {name!r}.")
 
-        source = clean_text(item.get("source"))
+        source = clean_text((person.get("verification") or {}).get("url")) if item.get("showSource", True) else ""
         if source and is_social_only_url(source):
             errors.append(f"{relative_label(path, root)} uses social-only featured alumni source for {name}: {source}.")
 
@@ -243,18 +248,40 @@ def validate_gallery(root: Path, errors: list[str]) -> None:
             errors.append(f"{relative_label(path, root)} must say {REQUIRED_GALLERY_TITLE!r}, not {FORBIDDEN_GALLERY_TEXT!r}.")
 
 
+class PublicationLinks(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.links: list[tuple[str, str]] = []
+        self.href: str | None = None
+        self.parts: list[str] = []
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attributes = dict(attrs)
+        if tag == "a" and "publication-archive-title" in (attributes.get("class") or "").split():
+            self.href = attributes.get("href") or ""
+            self.parts = []
+
+    def handle_data(self, data: str) -> None:
+        if self.href is not None:
+            self.parts.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "a" and self.href is not None:
+            self.links.append((self.href, " ".join("".join(self.parts).split())))
+            self.href = None
+
+
 def expected_publication_positions(text: str) -> tuple[list[int], list[str]]:
+    parser = PublicationLinks()
+    parser.feed(text)
     positions: list[int] = []
     missing: list[str] = []
     for expected in EXPECTED_PUBLICATIONS:
-        url = html.escape(expected["articleUrl"], quote=True)
-        title = html.escape(expected["title"], quote=True)
-        url_index = text.find(url)
-        title_index = text.find(title)
-        if url_index == -1 or title_index == -1:
+        link = (expected["articleUrl"], expected["title"])
+        if link not in parser.links:
             missing.append(expected["title"])
             continue
-        positions.append(min(url_index, title_index))
+        positions.append(parser.links.index(link))
     return positions, missing
 
 

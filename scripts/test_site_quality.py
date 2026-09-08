@@ -3,14 +3,19 @@
 import contextlib
 import io
 import json
+import copy
+import html
+import re
 from pathlib import Path
 import subprocess
 import tempfile
 import unittest
 from unittest.mock import patch
+from urllib.parse import parse_qs, urlparse
 
 import publish_site as publish
 import site_builder as site
+import validate_tom_compliance as tom
 
 
 class SiteQualityTests(unittest.TestCase):
@@ -28,7 +33,7 @@ class SiteQualityTests(unittest.TestCase):
         self.assertEqual(self.by_slug["jessica-borhunter"]["name"], "Jessica Bohrhunter")
 
     def test_corrected_featured_roles_agree(self):
-        items = {item["profileSlug"]: item for item in site.read_json(site.DATA_DIR / "featured-alumni.json")["items"]}
+        items = {item["profileSlug"]: item for item in site.resolve_featured_alumni(self.people)}
         for slug in ("thao-truong", "neil-greene"):
             person = self.by_slug[slug]
             self.assertEqual(items[slug]["currentRole"], person["currentRole"])
@@ -62,11 +67,102 @@ class SiteQualityTests(unittest.TestCase):
         payload = site.read_json(site.ASSETS_DIR / "data/featured-alumni.json")
         self.assertEqual(payload["items"], list(items.values()))
 
-    def test_conflicting_featured_role_blocks_build(self):
-        people = [dict(person) for person in self.people]
-        next(person for person in people if person["slug"] == "neil-greene")["currentRole"] = "Different role"
-        with self.assertRaisesRegex(RuntimeError, "Featured role disagrees"):
+    def test_featured_identity_source_and_default_role_follow_people(self):
+        people = copy.deepcopy(self.people)
+        neil = next(person for person in people if person["slug"] == "neil-greene")
+        neil.update(name="Updated display name", currentRole="Updated role")
+        neil["verification"]["url"] = "https://example.org/new-profile"
+        item = next(item for item in site.resolve_featured_alumni(people) if item["profileSlug"] == "neil-greene")
+        self.assertEqual(item["name"], neil["name"])
+        self.assertEqual(item["currentRole"], neil["currentRole"])
+        self.assertEqual(item["source"], neil["verification"]["url"])
+
+    def test_featured_duplicate_fields_and_slugs_are_rejected(self):
+        items = site.load_featured_alumni_items()
+        with patch.object(site, "load_featured_alumni_items", return_value=[{**items[0], "name": "Stale name"}]), self.assertRaisesRegex(RuntimeError, "duplicated or unknown"):
+            site.resolve_featured_alumni(self.people)
+        with patch.object(site, "load_featured_alumni_items", return_value=[items[0], items[0]]), self.assertRaisesRegex(RuntimeError, "Duplicate featured"):
+            site.resolve_featured_alumni(self.people)
+
+    def test_featured_missing_person_is_rejected(self):
+        people = [person for person in self.people if person["slug"] != "neil-greene"]
+        with self.assertRaisesRegex(RuntimeError, "must reference an alumni record"):
             site.resolve_featured_alumni(people)
+
+    def test_julia_approved_details(self):
+        julia = self.by_slug["julia-silberman"]
+        self.assertEqual(julia["labRole"], "BBS Graduate Student")
+        self.assertEqual(julia["email"], "juliasilberman@g.harvard.edu")
+        self.assertEqual(julia["labDates"], "Jul 2026 \u2013 Present")
+        self.assertEqual(julia["education"], ["B.S. Biochemistry, Tufts University, Medford, MA"])
+        for flat in (True, False):
+            profile = site.render_current_profile(julia, flat)
+            self.assertIn('href="mailto:juliasilberman@g.harvard.edu"', profile)
+            self.assertIn("BBS Graduate Student", profile)
+
+    def test_contact_routing_and_direct_profile_email(self):
+        for path in (site.ROOT / "index.html", site.FLAT_DIR / "index.html"):
+            for route in ("general", "training"):
+                match = re.search(rf'data-contact-route="{route}"[^>]*href="([^"]+)"', path.read_text())
+                self.assertIsNotNone(match)
+                self.assertEqual(html.unescape(match[1]), site.contact_mailto(route))
+        general = parse_qs(urlparse(site.contact_mailto("general")).query)
+        self.assertEqual(general["cc"], ["james_spencer@hms.harvard.edu"])
+        self.assertEqual(general["subject"], ["[Bernhardt Lab website] General inquiry"])
+        training = parse_qs(urlparse(site.contact_mailto("training")).query)
+        self.assertNotIn("cc", training)
+        self.assertIn("[Bernhardt Lab website]", training["subject"][0])
+        self.assertIn("Proposed start date and availability:\r\n", training["body"][0])
+        for flat in (True, False):
+            profile = site.render_current_profile(self.by_slug["thomas-bernhardt"], flat)
+            self.assertIn('href="mailto:thomas_bernhardt@hms.harvard.edu"', profile)
+            self.assertNotIn("cc=", profile)
+
+    def test_publications_are_generated_from_one_source(self):
+        for path in (site.ROOT / "index.html", site.FLAT_DIR / "index.html"):
+            self.assertIn(site.render_curated_publications(), path.read_text())
+            positions, missing = tom.expected_publication_positions(path.read_text())
+            self.assertEqual(missing, [])
+            self.assertEqual(positions, list(range(6)))
+        changed = site.render_curated_publications().replace(tom.EXPECTED_PUBLICATIONS[0]["articleUrl"], "https://example.org/wrong-paper")
+        self.assertEqual(tom.expected_publication_positions(changed)[1], [tom.EXPECTED_PUBLICATIONS[0]["title"]])
+        self.assertNotIn("publications.js", (site.ASSETS_DIR / "main.js").read_text())
+        self.assertFalse((site.ROOT / ".github/workflows/refresh-publications.yml").exists())
+
+    def test_shared_module_changes_invalidate_only_the_changed_url(self):
+        with tempfile.TemporaryDirectory() as directory:
+            assets = Path(directory)
+            (assets / "js").mkdir()
+            (assets / "js/shared.js").write_text("first revision")
+            (assets / "js/other.js").write_text("unchanged")
+            with patch.object(site, "ASSETS_DIR", assets):
+                first = site.module_imports("../../")
+                (assets / "js/shared.js").write_text("second revision")
+                second = site.module_imports("../../")
+            self.assertNotEqual(first["../../assets/js/shared.js"], second["../../assets/js/shared.js"])
+            self.assertEqual(first["../../assets/js/other.js"], second["../../assets/js/other.js"])
+
+    def test_asset_references_are_current(self):
+        site.validate_site_quality_metadata()
+        for path in (site.ROOT / "index.html", site.ROOT / "team/julia-silberman/index.html", site.FLAT_DIR / "index.html"):
+            text = path.read_text()
+            self.assertEqual(text.count('id="site-module-map"'), 1)
+            self.assertLess(text.index('type="importmap"'), text.index('type="module"'))
+
+    def test_stale_module_map_blocks_validation(self):
+        with patch.object(site, "module_imports", return_value={"./changed.js": "./changed.js?v=new"}), self.assertRaisesRegex(RuntimeError, "stale module map"):
+            site.validate_site_quality_metadata()
+
+    def test_entrypoint_version_tracks_content(self):
+        with tempfile.TemporaryDirectory() as directory:
+            assets = Path(directory)
+            script = assets / "main.js"
+            script.write_text("first revision")
+            with patch.object(site, "ASSETS_DIR", assets):
+                version = site.asset_version("main.js")
+                self.assertEqual(version, site.asset_version("main.js"))
+                script.write_text("second revision")
+                self.assertNotEqual(version, site.asset_version("main.js"))
 
     def test_shared_profile_header(self):
         self.assertIn("header.css", site.PROFILE_CSS_SOURCE_ORDER)
@@ -108,8 +204,9 @@ class PublishSafetyTests(unittest.TestCase):
             'from pathlib import Path\n'
             'Path("github-flat/index.html").write_bytes(Path("index.html").read_bytes())\n'
         )
+        (self.root / "scripts/check_site.py").write_text('print("Fixture quality checks passed")\n')
         self.git("init", "-q")
-        self.git("add", "index.html", "github-flat/index.html", "assets/game.js", "scripts/build_site.py")
+        self.git("add", "index.html", "github-flat/index.html", "assets/game.js", "scripts/build_site.py", "scripts/check_site.py")
         self.git("-c", "user.name=Publish test", "-c", "user.email=test@example.invalid", "commit", "-qm", "fixture")
         (self.root / "index.html").write_text("approved update")
 
@@ -157,6 +254,16 @@ class PublishSafetyTests(unittest.TestCase):
         self.git("add", "assets/game.js")
         with self.plan() as plan, self.assertRaisesRegex(RuntimeError, "assets/game.js"):
             publish.assert_scope(plan, ["index.html"])
+
+    def test_failed_quality_checks_block_plan_without_changing_index(self):
+        checks = self.root / "scripts/check_site.py"
+        checks.write_text('raise SystemExit("Fixture browser regression")\n')
+        self.git("add", "scripts/check_site.py")
+        self.git("-c", "user.name=Publish test", "-c", "user.email=test@example.invalid", "commit", "-qm", "failing checks fixture")
+        before = publish.tree_state(self.root), self.git("diff", "--cached", "--binary")
+        with self.assertRaises(subprocess.CalledProcessError), self.plan():
+            pass
+        self.assertEqual(before, (publish.tree_state(self.root), self.git("diff", "--cached", "--binary")))
 
     def test_builder_cannot_silently_delete_tracked_numbered_files(self):
         numbered = self.root / "github-flat/page 2.html"

@@ -101,11 +101,15 @@ This will:
 
 These write canonical runtime data and then regenerate dependent outputs automatically:
 
-- `python3 scripts/refresh_recent_publications.py`
 - `python3 scripts/refresh_youtube_video_stats.py`
 - `python3 scripts/refresh_research_in_motion.py`
 
 YouTube view stats are also refreshed by GitHub Actions once per month.
+
+The unused automatic PubMed feed refresh has been retired. The manual refresh
+script and its last snapshot remain for reference, but do not populate the
+website. The six approved homepage papers come only from
+`data/curated-publications.json`, rendered during the build.
 
 For the normal end-to-end website workflow, use:
 
@@ -119,12 +123,18 @@ This command will:
 - confirm you are on `main`
 - fetch and require `main` to match `origin/main`, without unreviewed local commits
 - build selected source files over a clean snapshot in a temporary directory
+- run Tom compliance, unit regressions, build reproducibility, and desktop/mobile browser checks before staging
 - reject unrelated changes and hand-edited generated output
 - stage only the exact source files and reproducible generated changes shown in the plan
 - commit only if a real website diff remains
 - push the result to `origin main`
 
 The manifest is a JSON array of exact repository-relative source file paths. Do not select directories or `github-flat/`; generated output is derived automatically. `--dry-run` leaves working files and Git state untouched. Numbered siblings and other unrelated files are never automatically deleted. Use a clean review checkout when the canonical checkout contains unrelated work. A successful push is not a confirmed deployment: check Pages and the live URLs afterward.
+
+Publishing requires Node.js 20+ and Playwright 1.62.1 in addition to Python.
+See `docs/site-maintenance.md` for setup. `python3 scripts/check_site.py --browser`
+runs the same checks independently and starts/stops its own local test server.
+GitHub runs these checks on pull requests and pushes to `main` as well.
 
 Archive scientific media is curated manually:
 

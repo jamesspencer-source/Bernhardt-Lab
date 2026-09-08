@@ -2,14 +2,21 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const crypto = require('node:crypto');
 const { chromium } = require('playwright');
 
 const base = process.argv[2] || 'http://127.0.0.1:5180';
 const output = process.argv[3];
 const channel = process.env.PLAYWRIGHT_CHANNEL;
+const root = path.resolve(__dirname, '..');
+const people = JSON.parse(fs.readFileSync(path.join(root, 'data/people.json'), 'utf8')).people;
+const currentCount = people.filter(person => person.status === 'current').length;
+const alumniCount = people.filter(person => person.status === 'alumni').length;
+const selectedPapers = JSON.parse(fs.readFileSync(path.join(root, 'data/curated-publications.json'), 'utf8')).items;
 const profiles = [
   '/team/thomas-bernhardt/', '/team/franziska-maria-lichtenauer/',
   '/team/betsy-hart/', '/team/james-warner/',
+  '/team/julia-silberman/',
   '/alumni/monica-markovski/', '/alumni/alison-forchoh/',
 ];
 
@@ -24,6 +31,12 @@ async function main() {
     page.on('response', response => {
       if (response.url().startsWith(base) && response.status() >= 400) {
         errors.push(`${response.status()} ${response.url()}`);
+      }
+      const url = new URL(response.url());
+      if (url.origin === new URL(base).origin && /\/assets\/js\/[^/]+\.js$/.test(url.pathname)) {
+        const relative = 'assets/js/' + path.basename(url.pathname);
+        const expected = crypto.createHash('sha256').update(fs.readFileSync(path.join(root, relative))).digest('hex').slice(0, 16);
+        if (url.searchParams.get('v') !== expected) errors.push(`Stale shared module: ${url.href}`);
       }
     });
     // Tests must never submit a leaderboard score or other remote mutation.
@@ -53,7 +66,8 @@ async function main() {
     await page.setViewportSize({ width: 1280, height: 900 });
     await visit('/alumni/');
     await page.locator('#alumni-filters button').first().waitFor();
-    assert.equal(await page.locator('.alumni-card:visible').count(), 60);
+    assert.equal(await page.locator('.alumni-card:visible').count(), alumniCount);
+    const graduateCount = await page.locator('.alumni-card[data-bucket="Graduate Alumni"]').count();
     await page.locator('#alumni-search').fill('Mary');
     assert.equal(await page.locator('.alumni-card:visible').count(), 1);
     assert.match(await page.locator('.alumni-card:visible').innerText(), /Mary-Jane Tsang/);
@@ -70,13 +84,13 @@ async function main() {
     await page.keyboard.press('Enter');
     assert.equal(await graduate.evaluate(el => el === document.activeElement), true);
     assert.equal(await graduate.getAttribute('aria-pressed'), 'true');
-    assert.equal(await page.locator('.alumni-card:visible').count(), 15);
+    assert.equal(await page.locator('.alumni-card:visible').count(), graduateCount);
     for (const sort of ['lastName', 'recent']) {
       await page.locator('#alumni-sort').selectOption(sort);
-      assert.equal(await page.locator('.alumni-card:visible').count(), 15);
+      assert.equal(await page.locator('.alumni-card:visible').count(), graduateCount);
     }
     await page.locator('#alumni-filters button[data-bucket="All"]').click();
-    assert.equal(await page.locator('.alumni-card:visible').count(), 60);
+    assert.equal(await page.locator('.alumni-card:visible').count(), alumniCount);
     await screenshot('alumni-desktop');
     results.push('Alumni: actual visibility, empty states, sorts, and retained keyboard focus');
 
@@ -89,9 +103,14 @@ async function main() {
         }
         if (route === '/team/') {
           await page.locator('#role-filters button').first().waitFor({ state: 'attached' });
-          assert.equal(await page.locator('.person-card:visible').count(), 20);
+          assert.equal(await page.locator('.person-card:visible').count(), currentCount);
           await page.locator('#people-search').fill('Franziska');
           assert.equal(await page.locator('.person-card:visible').count(), 1);
+          await page.locator('#people-search').fill('');
+          for (const query of ['Julia Silberman', 'BBS Graduate Student']) {
+            await page.locator('#people-search').fill(query);
+            assert.equal(await page.locator('.person-card:visible[data-name="Julia Silberman"]').count(), 1);
+          }
           await page.locator('#people-search').fill('');
           if (width <= 760) {
             await page.locator('#team-role-filter').selectOption('Graduate Students');
@@ -103,7 +122,7 @@ async function main() {
         if (route === '/alumni/' && width <= 760) {
           await page.locator('#alumni-role-filter option[value="Graduate Alumni"]').waitFor({ state: 'attached' });
           await page.locator('#alumni-role-filter').selectOption('Graduate Alumni');
-          assert.equal(await page.locator('.alumni-card:visible').count(), 15);
+          assert.equal(await page.locator('.alumni-card:visible').count(), graduateCount);
           await page.locator('#alumni-role-filter').selectOption('All');
         }
         if (await page.locator('.profile-photo').count()) {
@@ -128,6 +147,13 @@ async function main() {
       await page.setViewportSize({ width, height: 900 });
       await visit('/');
       assert.equal(await page.locator('#home-team-preview .person-card').count(), 8);
+      const general = new URL(await page.locator('[data-contact-route="general"]').getAttribute('href'));
+      assert.equal(general.searchParams.get('cc'), 'james_spencer@hms.harvard.edu');
+      assert.equal(general.searchParams.get('subject'), '[Bernhardt Lab website] General inquiry');
+      const training = new URL(await page.locator('[data-contact-route="training"]').getAttribute('href'));
+      assert.equal(training.searchParams.has('cc'), false);
+      assert.match(training.searchParams.get('body'), /Proposed start date and availability/);
+      assert.deepEqual(await page.locator('.publication-archive-title').evaluateAll(links => links.map(link => ({ title: link.textContent.trim().replace(/\s+/g, ' '), url: link.href }))), selectedPapers.map(item => ({ title: item.title, url: item.articleUrl })));
       const before = await page.locator('#gallery-grid').evaluate(el => el.getBoundingClientRect().height);
       await page.locator('#gallery-grid').scrollIntoViewIfNeeded();
       await page.locator('#gallery-active-image').waitFor();
@@ -161,6 +187,40 @@ async function main() {
     assert.match(await page.locator('#microscopy-animation').getAttribute('src'), /poster\.png$/);
     await checkLayout('Research library');
     results.push('Animation: initially still with reduced motion; explicit play and pause work');
+
+    await visit('/team/julia-silberman/');
+    assert.equal(await page.getByRole('link', { name: 'Contact Julia', exact: true }).getAttribute('href'), 'mailto:juliasilberman@g.harvard.edu');
+    assert.match(await page.locator('main').innerText(), /BBS Graduate Student/);
+    assert.match(await page.locator('main').innerText(), /Jul 2026/);
+    await visit('/team/thomas-bernhardt/');
+    assert.equal(await page.getByRole('link', { name: 'Contact Thomas', exact: true }).getAttribute('href'), 'mailto:thomas_bernhardt@hms.harvard.edu');
+    for (const route of ['/github-flat/team.html', '/github-flat/alumni.html']) {
+      await visit(route);
+      if (route.includes('team.html')) {
+        await page.locator('#role-filters button').first().waitFor({ state: 'attached' });
+        await page.locator('#people-search').fill('Julia');
+        assert.equal(await page.locator('.person-card:visible').count(), 1);
+        await page.getByRole('link', { name: /View full profile/ }).filter({ visible: true }).click();
+        assert.match(page.url(), /team-julia-silberman\.html$/);
+      } else {
+        await page.locator('#alumni-filters button').first().waitFor({ state: 'attached' });
+        await page.locator('#alumni-search').fill('Mary');
+        assert.equal(await page.locator('.alumni-card:visible').count(), 1);
+      }
+    }
+    results.push('Contact routing, Julia profile, curated publications, generated module URLs, and flat-directory controls');
+
+    for (const javaScriptEnabled of [false, true]) {
+      const fallback = await browser.newContext({ javaScriptEnabled, reducedMotion: 'no-preference', viewport: { width: 390, height: 900 } });
+      const fallbackPage = await fallback.newPage();
+      fallbackPage.on('pageerror', error => errors.push(error.message));
+      await fallbackPage.goto(base + '/', { waitUntil: 'domcontentloaded' });
+      assert.equal(await fallbackPage.locator('.publication-archive-item').count(), 6);
+      await fallbackPage.goto(base + '/research/', { waitUntil: 'domcontentloaded' });
+      assert.match(await fallbackPage.locator('#microscopy-animation').getAttribute('src'), /poster\.png$/);
+      await fallback.close();
+    }
+    results.push('Publications remain available without JavaScript; animation starts still under normal motion too');
     assert.deepEqual(errors, [], 'Relevant page errors or missing local assets');
     if (output) fs.writeFileSync(path.join(output, 'browser-checks.json'), JSON.stringify({ results, errors }, null, 2));
     console.log(results.join('\n'));

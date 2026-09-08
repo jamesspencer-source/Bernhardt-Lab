@@ -11,6 +11,7 @@ permissions:
 jobs:
   apply-scheduled-updates:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,17 +24,31 @@ jobs:
       - name: Apply due scheduled updates
         run: python3 scripts/apply_scheduled_updates.py
 
-      - name: Rebuild site
-        run: python3 scripts/build_site.py
-
-      - name: Commit scheduled website updates
+      - name: Detect due changes
+        id: changes
         run: |
-          if git diff --quiet; then
-            echo "No scheduled website updates due."
-            exit 0
+          if git diff --quiet -- data/people.json data/scheduled-updates.json; then
+            echo "due=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "due=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - uses: actions/setup-node@v4
+        if: steps.changes.outputs.due == 'true'
+        with:
+          node-version: "24"
+
+      - name: Install browser test tools
+        if: steps.changes.outputs.due == 'true'
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.62.1
+          npx playwright install --with-deps chromium
+
+      - name: Validate and publish exact scheduled updates
+        if: steps.changes.outputs.due == 'true'
+        env:
+          NODE_PATH: ${{ github.workspace }}/node_modules
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A .github accessibility alumni alumni-profiles assets data docs github-flat people research research-library scripts team *.html robots.txt sitemap.xml
-          git commit -m "site: apply scheduled website updates"
-          git push
+          python3 scripts/publish_site.py --include data/people.json data/scheduled-updates.json --message "site: apply scheduled website updates"
