@@ -100,6 +100,27 @@ class SiteQualityTests(unittest.TestCase):
             self.assertIn('href="mailto:juliasilberman@g.harvard.edu"', profile)
             self.assertIn("BBS Graduate Student", profile)
 
+    def test_liam_approved_details(self):
+        liam = self.by_slug["liam-mcdonough"]
+        self.assertEqual(liam["name"], "Liam McDonough")
+        self.assertEqual(liam["status"], "current")
+        self.assertEqual(liam["labRole"], "Postdoctoral Research Fellow")
+        self.assertEqual(liam["group"], "Postdoctoral Fellows")
+        self.assertEqual(liam["labDates"], "Sep 2026 \u2013 Present")
+        self.assertEqual(liam["email"], "liam_mcdonough@hms.harvard.edu")
+        self.assertEqual(liam["education"], [
+            "PhD in Microbiology (2020\u20132026), Yale University, New Haven, CT",
+            "BS in Biology, summa cum laude (2015\u20132019), Minor in English, Providence College, Providence, RI",
+        ])
+        self.assertEqual(liam["image"], "assets/images/team/liam-mcdonough.jpg")
+        self.assertTrue((site.ROOT / liam["image"]).is_file())
+        self.assertLess((site.ROOT / liam["image"]).stat().st_size, 1_000_000)
+        for flat in (True, False):
+            profile = site.render_current_profile(liam, flat)
+            self.assertIn('href="mailto:liam_mcdonough@hms.harvard.edu"', profile)
+            self.assertIn("Education", profile)
+            self.assertNotIn("Research Interest", profile)
+
     def test_contact_routing_and_direct_profile_email(self):
         for path in (site.ROOT / "index.html", site.FLAT_DIR / "index.html"):
             for route in ("general", "training"):

@@ -17,6 +17,7 @@ const profiles = [
   '/team/thomas-bernhardt/', '/team/franziska-maria-lichtenauer/',
   '/team/betsy-hart/', '/team/james-warner/',
   '/team/julia-silberman/',
+  '/team/liam-mcdonough/',
   '/alumni/monica-markovski/', '/alumni/alison-forchoh/',
 ];
 
@@ -107,6 +108,19 @@ async function main() {
           assert.equal(await page.locator('.person-card:visible').count(), currentCount);
           await page.locator('#people-search').fill('Franziska');
           assert.equal(await page.locator('.person-card:visible').count(), 1);
+          await page.locator('#people-search').fill('');
+          await page.locator('#people-search').fill('Liam McDonough');
+          assert.equal(await page.locator('.person-card:visible').count(), 1);
+          assert.equal(await page.locator('.person-card:visible').getAttribute('data-group'), 'Postdoctoral Fellows');
+          await page.locator('.person-card:visible .person-photo').scrollIntoViewIfNeeded();
+          await page.waitForFunction(() => {
+            const photo = document.querySelector('.person-card[data-name="Liam McDonough"] .person-photo');
+            return photo.complete && photo.naturalWidth > 0;
+          });
+          if (output && [390, 1280].includes(width)) {
+            fs.mkdirSync(output, { recursive: true });
+            await page.locator('.person-card:visible').screenshot({ path: path.join(output, `liam-card-${width}.png`) });
+          }
           await page.locator('#people-search').fill('');
           for (const query of ['Julia Silberman', 'BBS Graduate Student']) {
             await page.locator('#people-search').fill(query);
@@ -200,6 +214,11 @@ async function main() {
     await checkLayout('Research library');
     results.push('Animation: initially still with reduced motion; explicit play and pause work');
 
+    await visit('/team/liam-mcdonough/');
+    assert.equal(await page.getByRole('link', { name: 'Contact Liam', exact: true }).getAttribute('href'), 'mailto:liam_mcdonough@hms.harvard.edu');
+    assert.match(await page.locator('main').innerText(), /Postdoctoral Research Fellow/);
+    assert.match(await page.locator('main').innerText(), /Sep 2026/);
+    assert.deepEqual(await page.locator('.profile-education li').allTextContents(), people.find(person => person.slug === 'liam-mcdonough').education);
     await visit('/team/julia-silberman/');
     assert.equal(await page.getByRole('link', { name: 'Contact Julia', exact: true }).getAttribute('href'), 'mailto:juliasilberman@g.harvard.edu');
     assert.match(await page.locator('main').innerText(), /BBS Graduate Student/);
