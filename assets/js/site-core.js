@@ -80,7 +80,7 @@ function setupNavigation() {
     if (event.key === "Escape") closeNav();
   });
   window.addEventListener("resize", () => {
-    if (window.innerWidth > 760) closeNav();
+    if (window.innerWidth > 1100) closeNav();
   });
 }
 
@@ -142,6 +142,10 @@ function setupSectionNavigationHighlight() {
 
 let revealObserver = null;
 export function observeRevealTargets(root = document) {
+  if (prefersReducedMotion) {
+    root.querySelectorAll(".reveal").forEach((element) => element.classList.add("is-visible"));
+    return;
+  }
   if (!revealObserver) return;
   root.querySelectorAll(".reveal:not(.is-visible)").forEach((element) => revealObserver.observe(element));
 }
@@ -323,7 +327,8 @@ async function setupHeroSlideshow() {
     const normalized = ((slideIndex % total) + total) % total;
     const slide = heroSlides[normalized];
     layer.style.backgroundImage = `url("${responsiveSiteAsset(slide)}")`;
-    layer.style.backgroundPosition = slide.position || "center center";
+    layer.style.setProperty("--slide-position", slide.position || "center center");
+    layer.dataset.image = slide.image.split("/").pop();
   };
 
   const setSlide = (slideIndex) => {
@@ -355,13 +360,18 @@ async function setupHeroSlideshow() {
     if (prefersReducedMotion) {
       toggleButton.disabled = true;
       toggleButton.setAttribute("aria-pressed", "true");
-      if (toggleIcon) toggleIcon.textContent = "•";
+      toggleButton.setAttribute("aria-label", "Automatic image rotation off: reduced motion enabled");
+      toggleButton.title = "Automatic image rotation off: reduced motion enabled";
+      if (toggleIcon) toggleIcon.dataset.icon = "pause";
       if (toggleLabel) toggleLabel.textContent = "Motion off";
       return;
     }
     const paused = !autoplayEnabled;
     toggleButton.setAttribute("aria-pressed", String(paused));
-    if (toggleIcon) toggleIcon.textContent = paused ? "▶" : "⏸";
+    const label = paused ? "Resume background image rotation" : "Pause background image rotation";
+    toggleButton.setAttribute("aria-label", label);
+    toggleButton.title = label;
+    if (toggleIcon) toggleIcon.dataset.icon = paused ? "play" : "pause";
     if (toggleLabel) toggleLabel.textContent = paused ? "Resume motion" : "Pause motion";
   };
 

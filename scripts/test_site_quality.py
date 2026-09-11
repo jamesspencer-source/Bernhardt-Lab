@@ -67,6 +67,19 @@ class SiteQualityTests(unittest.TestCase):
         payload = site.read_json(site.ASSETS_DIR / "data/featured-alumni.json")
         self.assertEqual(payload["items"], list(items.values()))
 
+    def test_homepage_team_navigation_counts_follow_roster(self):
+        template = (site.ROOT / "index.html").read_text()
+        current = site.current_people(self.people)
+        for people in (current[:3], current[:8], current):
+            with self.subTest(member_count=len(people)):
+                rendered = site.replace_template_with_people(template, people, "", False, "landing")
+                self.assertEqual(rendered.count(f"View all {len(people)} lab members"), 2)
+                self.assertNotIn(f"Showing {min(8, len(people))} of {len(people)} lab members", rendered)
+                self.assertNotIn('class="team-preview-count"', rendered)
+                self.assertEqual(rendered.count("person-card--landing"), min(8, len(people)))
+                self.assertLess(rendered.index('class="team-directory-link"'), rendered.index('id="home-team-preview"'))
+                self.assertGreater(rendered.index('class="team-preview-footer"'), rendered.index('generated-home-people-grid:end'))
+
     def test_featured_identity_source_and_default_role_follow_people(self):
         people = copy.deepcopy(self.people)
         neil = next(person for person in people if person["slug"] == "neil-greene")

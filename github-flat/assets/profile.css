@@ -1093,7 +1093,7 @@ body.is-scrolled .site-header {
   cursor: pointer;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1100px) {
   :root {
     --header-height: 4.2rem;
   }

@@ -30,11 +30,11 @@
     <link rel="icon" type="image/png" sizes="32x32" href="assets/images/brands/favicon-32.png?v=20260504b" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/images/brands/apple-touch-icon.png?v=20260504b" />
     <link rel="shortcut icon" href="favicon.ico?v=20260504b" />
-    <link rel="stylesheet" href="assets/styles.css?v=83db1385312e75ab" />
+    <link rel="stylesheet" href="assets/styles.css?v=a492f91e8fa0cb67" />
     <link rel="canonical" href="https://bernhardtlab.com/" />
-  <script type="importmap" id="site-module-map">{"imports":{"./assets/js/alumni-directory.js":"./assets/js/alumni-directory.js?v=63044c595c1e8706","./assets/js/envelope-game-loader.js":"./assets/js/envelope-game-loader.js?v=9451a15ecd7c15b0","./assets/js/featured-alumni.js":"./assets/js/featured-alumni.js?v=778b7ba272c87a67","./assets/js/gallery.js":"./assets/js/gallery.js?v=f7ca24c0768a4f4e","./assets/js/media-playback.js":"./assets/js/media-playback.js?v=29178308dfa53d91","./assets/js/publications.js":"./assets/js/publications.js?v=93e065eb1ab323c0","./assets/js/scientific-media.js":"./assets/js/scientific-media.js?v=7b64ad8b1aa77198","./assets/js/shared.js":"./assets/js/shared.js?v=1da484af23f6ac5b","./assets/js/site-core.js":"./assets/js/site-core.js?v=c877238e4b54bf47","./assets/js/team-directory.js":"./assets/js/team-directory.js?v=b983fc79e8f831aa"}}</script>
+  <script type="importmap" id="site-module-map">{"imports":{"./assets/js/alumni-directory.js":"./assets/js/alumni-directory.js?v=63044c595c1e8706","./assets/js/envelope-game-loader.js":"./assets/js/envelope-game-loader.js?v=9451a15ecd7c15b0","./assets/js/featured-alumni.js":"./assets/js/featured-alumni.js?v=778b7ba272c87a67","./assets/js/gallery.js":"./assets/js/gallery.js?v=f7ca24c0768a4f4e","./assets/js/media-playback.js":"./assets/js/media-playback.js?v=29178308dfa53d91","./assets/js/publications.js":"./assets/js/publications.js?v=93e065eb1ab323c0","./assets/js/scientific-media.js":"./assets/js/scientific-media.js?v=7b64ad8b1aa77198","./assets/js/shared.js":"./assets/js/shared.js?v=1da484af23f6ac5b","./assets/js/site-core.js":"./assets/js/site-core.js?v=1e1f004b9502768c","./assets/js/team-directory.js":"./assets/js/team-directory.js?v=b983fc79e8f831aa"}}</script>
   </head>
-  <body>
+  <body class="homepage-layout">
     <a class="skip-link" href="#main-content">Skip to main content</a>
     <div class="scroll-meter" aria-hidden="true"></div>
     <header class="site-header" id="top">
@@ -71,34 +71,9 @@
           <div class="container hero-layout">
             <div class="hero-copy reveal">
               <h1>Deciphering the molecular mechanisms of bacterial growth.</h1>
-              <p>
-                The Bernhardt lab studies how bacteria build and remodel their cell envelopes with the goal of enhancing
-                our fundamental understanding of bacterial growth. The knowledge gained will enable the development of
-                novel antibiotics to combat the global threat of drug resistant bacterial infections.
-              </p>
               <div class="hero-actions">
                 <a class="button button-primary" href="#team">Meet the team</a>
                 <a class="button button-ghost" href="#publications">See publications</a>
-              </div>
-              <div class="hero-slideshow-controls" role="group" aria-label="Hero background image controls">
-                <button class="hero-control" id="hero-prev" type="button" aria-label="Show previous hero image">
-                  <span class="hero-control-icon" aria-hidden="true">←</span>
-                  <span class="sr-only">Previous image</span>
-                </button>
-                <button
-                  class="hero-control"
-                  id="hero-toggle"
-                  type="button"
-                  aria-pressed="false"
-                  aria-label="Pause background image rotation"
-                >
-                  <span class="hero-control-icon" aria-hidden="true">⏸</span>
-                  <span class="sr-only" id="hero-toggle-label">Pause motion</span>
-                </button>
-                <button class="hero-control" id="hero-next" type="button" aria-label="Show next hero image">
-                  <span class="hero-control-icon" aria-hidden="true">→</span>
-                  <span class="sr-only">Next image</span>
-                </button>
               </div>
             </div>
 
@@ -114,6 +89,20 @@
                 <li>Approach: microbial genetics integrated with imaging, biochemistry, and structural analysis</li>
               </ul>
             </section>
+            <div class="hero-slideshow-controls" role="group" aria-label="Hero background image controls">
+              <button class="hero-control" id="hero-prev" type="button" aria-label="Show previous hero image" title="Previous image">
+                <span class="hero-control-icon" data-icon="chevron-left" aria-hidden="true"></span>
+                <span class="sr-only">Previous image</span>
+              </button>
+              <button class="hero-control" id="hero-toggle" type="button" aria-pressed="false" aria-label="Pause background image rotation" title="Pause image rotation">
+                <span class="hero-control-icon" data-icon="pause" aria-hidden="true"></span>
+                <span class="sr-only" id="hero-toggle-label">Pause motion</span>
+              </button>
+              <button class="hero-control" id="hero-next" type="button" aria-label="Show next hero image" title="Next image">
+                <span class="hero-control-icon" data-icon="chevron-right" aria-hidden="true"></span>
+                <span class="sr-only">Next image</span>
+              </button>
+            </div>
           </div>
         </section>
 
@@ -161,9 +150,16 @@
 
       <section id="about" class="section section-light">
         <div class="container reveal">
-          <div class="section-head">
-            <p class="eyebrow">About The Lab</p>
-            <h2>Fundamental microbiology with translational relevance.</h2>
+          <div class="about-intro">
+            <div class="section-head">
+              <p class="eyebrow">About The Lab</p>
+              <h2>Fundamental microbiology with translational relevance.</h2>
+            </div>
+            <p class="lab-introduction">
+              The Bernhardt lab studies how bacteria build and remodel their cell envelopes with the goal of enhancing
+              our fundamental understanding of bacterial growth. The knowledge gained will enable the development of
+              novel antibiotics to combat the global threat of drug resistant bacterial infections.
+            </p>
           </div>
 
           <div class="about-grid">
@@ -211,15 +207,15 @@
 
       <section id="team" class="section section-people">
         <div class="container">
-          <div class="section-head reveal">
-            <p class="eyebrow">Team</p>
-            <h2>Meet the team.</h2>
+          <div class="team-preview-heading reveal">
+            <div class="section-head">
+              <p class="eyebrow">Team</p>
+              <h2>Meet the team.</h2>
+            </div>
+            <a class="team-directory-link" href="team.html"><span><!-- generated-home-people-count:start -->
+View all 21 lab members
+<!-- generated-home-people-count:end --></span><img src="assets/icons/chevron-right.svg" width="18" height="18" alt="" /></a>
           </div>
-          <p class="team-directory-cta reveal">
-            <a class="button button-primary team-directory-button" href="team.html"><!-- generated-home-people-count:start -->
-Browse full team directory (21)
-<!-- generated-home-people-count:end --></a>
-          </p>
 
           <div id="home-team-preview" class="people-grid" data-people-view="landing">
             <!-- generated-home-people-grid:start -->
@@ -320,6 +316,11 @@ Browse full team directory (21)
             </div>
           </article>
 <!-- generated-home-people-grid:end -->
+          </div>
+          <div class="team-preview-footer">
+            <a class="button button-primary team-directory-button" href="team.html"><span><!-- generated-home-people-footer-link:start -->
+View all 21 lab members
+<!-- generated-home-people-footer-link:end --></span><img src="assets/icons/chevron-right.svg" width="18" height="18" alt="" /></a>
           </div>
         </div>
       </section>
@@ -519,7 +520,7 @@ Browse full team directory (21)
               Harvard Medical School<br />
               Boston, MA 02115
             </p>
-            <p>Email: thomas_bernhardt@hms.harvard.edu</p>
+            <p>Email: <span class="contact-email-address">thomas_bernhardt<wbr>@hms.harvard.edu</span></p>
             <a class="button button-primary" data-contact-route="general" href="mailto:thomas_bernhardt@hms.harvard.edu?cc=james_spencer%40hms.harvard.edu&amp;subject=%5BBernhardt%20Lab%20website%5D%20General%20inquiry">Contact The Lab</a>
             <div class="map-wrap">
               <iframe

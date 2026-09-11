@@ -96,7 +96,7 @@ async function main() {
     await screenshot('alumni-desktop');
     results.push('Alumni: actual visibility, empty states, sorts, and retained keyboard focus');
 
-    for (const width of [320, 390, 768, 1280, 1440]) {
+    for (const width of [320, 390, 768, 1024, 1280, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       for (const route of ['/team/', '/alumni/', ...profiles]) {
         await visit(route);
@@ -162,6 +162,17 @@ async function main() {
       await page.setViewportSize({ width, height: 900 });
       await visit('/');
       assert.equal(await page.locator('#home-team-preview .person-card').count(), 8);
+      assert.equal(await page.locator('.team-preview-count').count(), 0);
+      const teamLinks = page.locator('.team-preview-heading a, .team-preview-footer a');
+      assert.equal(await teamLinks.count(), 2);
+      assert.deepEqual(await teamLinks.allTextContents(), Array(2).fill(`\nView all ${currentCount} lab members\n`));
+      assert.deepEqual(await teamLinks.evaluateAll(links => links.map(link => new URL(link.href).pathname)), ['/team/', '/team/']);
+      const teamAlignment = await page.evaluate(() => {
+        const last = document.querySelector('#home-team-preview .person-card:last-child').getBoundingClientRect();
+        const button = document.querySelector('.team-preview-footer a').getBoundingClientRect();
+        return { left: Math.abs(last.left - button.left), width: Math.abs(last.width - button.width), gap: button.top - last.bottom };
+      });
+      assert.ok(teamAlignment.left < 1 && teamAlignment.width < 1 && teamAlignment.gap >= 20, JSON.stringify({ width, ...teamAlignment }));
       const general = new URL(await page.locator('[data-contact-route="general"]').getAttribute('href'));
       assert.equal(general.searchParams.get('cc'), 'james_spencer@hms.harvard.edu');
       assert.equal(general.searchParams.get('subject'), '[Bernhardt Lab website] General inquiry');
@@ -202,6 +213,52 @@ async function main() {
       assert.equal(await page.locator('#envelope-modal').isVisible(), false);
     }
     results.push('Homepage: eight-person preview, source labels, reserved gallery, keyboard lightbox, V1 modal');
+
+    for (const width of [1672, 1920, 2200, 2560]) {
+      await page.setViewportSize({ width, height: 941 });
+      await visit('/');
+      await checkLayout(`Fluid homepage ${width}px`);
+      const layout = await page.evaluate(() => {
+        const grid = document.querySelector('#home-team-preview');
+        const last = grid.lastElementChild.getBoundingClientRect();
+        const button = document.querySelector('.team-preview-footer a').getBoundingClientRect();
+        return {
+          contentRatio: grid.getBoundingClientRect().width / innerWidth,
+          columns: getComputedStyle(grid).gridTemplateColumns.split(' ').length,
+          aligned: Math.abs(last.left - button.left) < 1 && Math.abs(last.width - button.width) < 1,
+          controls: [...document.querySelectorAll('.hero-control')].map(control => {
+            const r = control.getBoundingClientRect();
+            return r.width >= 44 && r.height >= 44;
+          }),
+        };
+      });
+      assert.ok(layout.contentRatio >= 0.9 && layout.contentRatio <= 0.95);
+      assert.equal(layout.columns, width >= 2200 ? 8 : 4);
+      assert.ok(layout.aligned && layout.controls.every(Boolean));
+    }
+    await page.locator('.team-preview-footer a').click();
+    await page.waitForURL(base + '/team/');
+    assert.equal(await page.locator('#people-grid .person-card').count(), currentCount);
+    results.push('Fluid homepage: proportional gutters, responsive team columns, aligned directory button and touch targets');
+
+    const motionContext = await browser.newContext({ reducedMotion: 'no-preference', viewport: { width: 1672, height: 941 } });
+    try {
+      const motionPage = await motionContext.newPage();
+      motionPage.on('pageerror', error => errors.push(error.message));
+      await motionPage.goto(base + '/', { waitUntil: 'domcontentloaded' });
+      await motionPage.waitForFunction(() => document.querySelector('.hero-slide.is-active')?.dataset.image);
+      await motionPage.locator('#hero-toggle').click();
+      assert.equal(await motionPage.locator('#hero-toggle').getAttribute('aria-pressed'), 'true');
+      assert.equal(await motionPage.locator('#hero-toggle').getAttribute('aria-label'), 'Resume background image rotation');
+      const initialImage = await motionPage.locator('.hero-slide.is-active').getAttribute('data-image');
+      await motionPage.locator('#hero-next').click();
+      assert.notEqual(await motionPage.locator('.hero-slide.is-active').getAttribute('data-image'), initialImage);
+      await motionPage.locator('#hero-prev').click();
+      assert.equal(await motionPage.locator('.hero-slide.is-active').getAttribute('data-image'), initialImage);
+    } finally {
+      await motionContext.close();
+    }
+    results.push('Hero: normal-motion pause, accessible labels, next/previous images');
 
     await visit('/research/');
     const toggle = page.locator('#microscopy-toggle');

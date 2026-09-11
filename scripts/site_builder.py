@@ -48,6 +48,7 @@ CSS_SOURCE_ORDER = [
     "directory.css",
     "gallery.css",
     "header.css",
+    "homepage-layout.css",
 ]
 PROFILE_CSS_SOURCE_ORDER = [
     "fonts.css",
@@ -1215,12 +1216,13 @@ def replace_template_with_people(text: str, people: list[dict[str, Any]], root_p
     displayed = people[:HOME_TEAM_PREVIEW_LIMIT] if view == "landing" else people
     content = render_people_cards(displayed, root_prefix=root_prefix, flat=flat, view=view)
     if view == "landing":
-        text = replace_marker_block(
-            text,
-            "<!-- generated-home-people-count:start -->",
-            "<!-- generated-home-people-count:end -->",
-            f"Browse full team directory ({len(people)})",
-        )
+        for marker in ("count", "footer-link"):
+            text = replace_marker_block(
+                text,
+                f"<!-- generated-home-people-{marker}:start -->",
+                f"<!-- generated-home-people-{marker}:end -->",
+                f"View all {len(people)} lab members",
+            )
         return replace_marker_block(
             text,
             "<!-- generated-home-people-grid:start -->",
@@ -1747,8 +1749,8 @@ def validate_homepage_team_grid(path: Path, expected_cards: int) -> None:
         raise RuntimeError(f"{path}: homepage preview must link to full-directory controls, not duplicate them")
     total_cards = expected_cards
     expected_cards = min(expected_cards, HOME_TEAM_PREVIEW_LIMIT)
-    if f"Browse full team directory ({total_cards})" not in text:
-        raise RuntimeError(f"{path}: homepage must link to the full current-team count")
+    if text.count(f"View all {total_cards} lab members") != 2:
+        raise RuntimeError(f"{path}: homepage must link to the full current-team count above and below the preview")
     start_marker = "<!-- generated-home-people-grid:start -->"
     end_marker = "<!-- generated-home-people-grid:end -->"
     if text.count(start_marker) != 1 or text.count(end_marker) != 1:
