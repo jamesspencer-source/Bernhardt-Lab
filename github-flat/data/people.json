@@ -64,20 +64,20 @@
     },
     {
       "slug": "kathy-suarez",
-      "status": "current",
+      "status": "alumni",
       "name": "Kathy Suarez",
       "labRole": "BBS Graduate Student | NIH F31 Fellow",
-      "group": "Graduate Students",
+      "group": "",
       "bio": "",
       "image": "assets/images/imported/sqs-15e89e9a-1598381898156-68ii3hut-kathy.jpg",
       "focus": {
         "x": 0.564329954954955,
         "y": 0.46258503401360546
       },
-      "labDates": "Jul 2021 \u2013 Present",
+      "labDates": "Jul 2021 \u2013 Sep 2026",
       "currentRole": "",
-      "profileType": "current",
-      "email": "ksuarez@g.harvard.edu",
+      "profileType": "alumni",
+      "email": "",
       "education": [
         "BS, Human Biology, University of California San Diego, La Jolla, CA"
       ],

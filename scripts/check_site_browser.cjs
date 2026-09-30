@@ -18,6 +18,7 @@ const profiles = [
   '/team/betsy-hart/', '/team/james-warner/',
   '/team/julia-silberman/',
   '/team/liam-mcdonough/',
+  '/alumni/kathy-suarez/',
   '/alumni/monica-markovski/', '/alumni/alison-forchoh/',
 ];
 
@@ -70,6 +71,14 @@ async function main() {
     await page.locator('#alumni-filters button').first().waitFor();
     assert.equal(await page.locator('.alumni-card:visible').count(), alumniCount);
     const graduateCount = await page.locator('.alumni-card[data-bucket="Graduate Alumni"]').count();
+    await page.locator('#alumni-search').fill('Kathy Suarez');
+    const kathyCard = page.locator('.alumni-card:visible');
+    assert.equal(await kathyCard.count(), 1);
+    assert.equal(await kathyCard.getAttribute('data-bucket'), 'Graduate Alumni');
+    assert.equal(await kathyCard.getAttribute('data-current-role'), '');
+    assert.equal(await kathyCard.locator('.alumni-current').count(), 0);
+    assert.match(await kathyCard.innerText(), /Jul 2021 \u2013 Sep 2026/);
+    assert.equal(new URL(await kathyCard.locator('a').getAttribute('href'), base + '/alumni/').pathname, '/alumni/kathy-suarez/');
     await page.locator('#alumni-search').fill('Mary');
     assert.equal(await page.locator('.alumni-card:visible').count(), 1);
     assert.match(await page.locator('.alumni-card:visible').innerText(), /Mary-Jane Tsang/);
@@ -102,6 +111,12 @@ async function main() {
         await visit(route);
         if (route.includes('/team/') && route !== '/team/') {
           assert.equal(await page.getByRole('heading', { name: 'Research Interest', exact: true }).count(), 0);
+        }
+        if (route === '/alumni/kathy-suarez/') {
+          assert.equal(await page.getByRole('heading', { name: 'Kathy Suarez', exact: true }).count(), 1);
+          assert.equal(await page.getByRole('heading', { name: 'Current / Latest Role', exact: true }).count(), 0);
+          assert.equal(await page.getByRole('heading', { name: 'Education', exact: true }).count(), 1);
+          assert.equal(await page.locator('a[href="mailto:ksuarez@g.harvard.edu"]').count(), 0);
         }
         if (route === '/team/') {
           await page.locator('#role-filters button').first().waitFor({ state: 'attached' });
@@ -259,6 +274,16 @@ async function main() {
       await motionContext.close();
     }
     results.push('Hero: normal-motion pause, accessible labels, next/previous images');
+
+    for (const route of ['/team/kathy-suarez/', '/kathy-suarez/']) {
+      await visit(route);
+      await page.waitForURL(base + '/alumni/kathy-suarez/');
+    }
+    for (const route of ['/github-flat/team-kathy-suarez.html', '/github-flat/kathy-suarez.html']) {
+      await visit(route);
+      await page.waitForURL(base + '/github-flat/alumni-kathy-suarez.html');
+    }
+    results.push('Kathy: graduate alumni listing, no next-role placeholder, and preserved profile redirects');
 
     await visit('/research/');
     const toggle = page.locator('#microscopy-toggle');

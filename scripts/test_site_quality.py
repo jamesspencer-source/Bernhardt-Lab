@@ -41,6 +41,46 @@ class SiteQualityTests(unittest.TestCase):
         self.assertNotIn("Director", self.by_slug["thao-truong"]["currentRole"])
         self.assertIn("Clinical Associate Professor", self.by_slug["neil-greene"]["currentRole"])
 
+    def test_kathy_alumni_transition(self):
+        kathy = self.by_slug["kathy-suarez"]
+        self.assertEqual(kathy["status"], "alumni")
+        self.assertEqual(kathy["profileType"], "alumni")
+        self.assertEqual(kathy["labDates"], "Jul 2021 \u2013 Sep 2026")
+        self.assertEqual(kathy["labRole"], "BBS Graduate Student | NIH F31 Fellow")
+        self.assertFalse(kathy["group"])
+        self.assertFalse(kathy["email"])
+        self.assertFalse(kathy["currentRole"])
+        self.assertEqual(kathy["education"], [
+            "BS, Human Biology, University of California San Diego, La Jolla, CA",
+        ])
+        self.assertEqual(kathy["image"], "assets/images/imported/sqs-15e89e9a-1598381898156-68ii3hut-kathy.jpg")
+        self.assertNotIn(kathy, site.current_people(self.people))
+        self.assertIn(kathy, site.alumni_people(self.people))
+        for flat in (True, False):
+            profile = site.render_alumni_profile(kathy, flat)
+            self.assertIn("Alumni Profile", profile)
+            self.assertIn("Education", profile)
+            self.assertNotIn("Current / Latest Role", profile)
+            self.assertNotIn("ksuarez@g.harvard.edu", profile)
+        for path in (site.ROOT / "index.html", site.ROOT / "team/index.html",
+                     site.FLAT_DIR / "index.html", site.FLAT_DIR / "team.html"):
+            self.assertNotIn('data-name="Kathy Suarez"', path.read_text())
+        errors = []
+        for path, target in (
+            (site.ROOT / "team/kathy-suarez/index.html", "../../alumni/kathy-suarez/"),
+            (site.ROOT / "kathy-suarez/index.html", "../alumni/kathy-suarez/"),
+            (site.FLAT_DIR / "team-kathy-suarez.html", "alumni-kathy-suarez.html"),
+            (site.FLAT_DIR / "kathy-suarez.html", "alumni-kathy-suarez.html"),
+        ):
+            site.assert_redirect_target(path, target, site.canonical_url("alumni/kathy-suarez"), errors)
+        self.assertEqual(errors, [])
+
+    def test_former_team_redirect_tracks_alumni_transition(self):
+        for target in ("../team/kathy-suarez/", "../team/kathy-suarez/index.html"):
+            self.assertEqual(site.classify_legacy_target(target, {"kathy-suarez"}, set()), ("team", "kathy-suarez"))
+            self.assertEqual(site.classify_legacy_target(target, set(), {"kathy-suarez"}), ("alumni", "kathy-suarez"))
+            self.assertIsNone(site.classify_legacy_target(target, set(), set()))
+
     def test_privacy_and_preview(self):
         current = site.current_people(self.people)
         self.assertEqual(current[0]["slug"], "thomas-bernhardt")

@@ -1396,7 +1396,9 @@ def classify_legacy_target(target: str, current_slugs: set[str], alumni_slugs: s
 
     if normalized.startswith(f"{TEAM_ROUTE}/"):
         slug = normalized.split("/", 1)[1].strip("/")
-        return ("team", slug) if slug in current_slugs else None
+        if slug in current_slugs:
+            return ("team", slug)
+        return ("alumni", slug) if slug in alumni_slugs else None
     if normalized.startswith(f"{ALUMNI_ROUTE}/"):
         slug = normalized.split("/", 1)[1].strip("/")
         return ("alumni", slug) if slug in alumni_slugs else None
