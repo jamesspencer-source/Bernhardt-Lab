@@ -101,10 +101,11 @@ when finished, including on failure. It checks actual filtered-card visibility,
 keyboard focus, mobile selectors, five layout widths, natural photo proportions,
 gallery space, contact routing, Julia's details, shared-module cache versions,
 the flat mirror, no-JavaScript publications, animation controls, and V1 dialog
-opening. It never submits game scores. Keep screenshots outside the public
+opening and the run-ticket/save/restart lifecycle with a simulated leaderboard.
+It never submits real game scores. Keep screenshots outside the public
 repository (CI evidence uses the ignored `output/` directory).
 
-One-time setup with Node.js 20+ and npm available:
+One-time setup with Node.js 24+ and npm available:
 
 ```bash
 npm install --no-save --package-lock=false --ignore-scripts playwright@1.62.1
@@ -119,11 +120,39 @@ builds in a temporary snapshot without `node_modules`, so its check runner also
 resolves the original checkout's `node_modules` through `NODE_PATH`.
 
 The gate runs a second build to verify reproducibility and runs all `test_*.py`
-regressions. Both dry-run and actual publishing require the same browser gate;
+regressions, including importer network and photo-metadata checks, plus the
+leaderboard's Node/SQLite security tests. Both dry-run and actual publishing require the same browser gate;
 there is no silent test bypass. Missing browser tools stop publication before
 staging. GitHub checks pull requests and main pushes and uploads short-lived
 browser evidence. Scheduled personnel updates use this same scoped publisher;
 only their two canonical data files are selected.
+
+### Security maintenance
+
+Public JPEG, PNG and WebP images must not contain camera/editing/private metadata.
+The build permits color profiles and narrowly defined XMP attribution/license
+fields. Before adding a photograph, normalize orientation and review required
+attribution. The optional `scripts/sanitize_public_images.py` utility requires
+Pillow, an explicit ExifTool executable, and a new backup ZIP outside this public
+repository. It removes metadata without recompressing pixels, verifies identical
+decoded pixels and color settings, and restores its own changes if verification
+fails. Store source originals and backups privately, never under `assets/` or
+`github-flat/`. The normal build needs neither Pillow nor ExifTool.
+
+The optional research-media importer uses one bounded public-HTTPS fetcher for
+all network reads. Every redirect and DNS address is checked before connection,
+and the actual connection is pinned to the checked address. Canonical DOI/PMC
+article links are retained without fetching publisher landing pages. Do not
+restore unrestricted redirect-following calls or run this optional importer in
+a privileged automated workflow.
+
+GitHub Actions references are pinned to full commit hashes; Dependabot proposes
+updates. Read-only checks have no write permissions, while scheduled publishing
+jobs run only on main. Keep this separation when adding automation.
+
+Leaderboard releases have a separate D1 backup, additive migration, local
+Cloudflare-runtime test and Worker deployment. See `leaderboard-worker/README.md`.
+The shared board is deliberately casual/unverified, not proof of game results.
 
 Featured alumni selection and approved short role labels remain in
 `data/featured-alumni.json`. Each entry references a `profileSlug`; names,

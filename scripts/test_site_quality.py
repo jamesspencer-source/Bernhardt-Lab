@@ -207,7 +207,11 @@ class SiteQualityTests(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(load_feed(site.ROOT), load_feed(site.FLAT_DIR))
         self.assertNotIn("publications.js", (site.ASSETS_DIR / "main.js").read_text())
-        self.assertFalse((site.ROOT / ".github/workflows/refresh-publications.yml").exists())
+        # A retired, untracked local copy must not be treated as a deployed workflow.
+        import subprocess
+        if (site.ROOT / ".github/workflows/refresh-publications.yml").exists():
+            tracked = subprocess.check_output(["git", "ls-files", "--", ".github/workflows/refresh-publications.yml"], cwd=site.ROOT, text=True)
+            self.assertFalse(tracked.strip())
         self.assertTrue((site.ROOT / ".github/workflows/update-latest-publications.yml").exists())
 
     def test_shared_module_changes_invalidate_only_the_changed_url(self):

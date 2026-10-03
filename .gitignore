@@ -10,6 +10,9 @@ __pycache__/
 .pytest_cache/
 .playwright-cli/
 output/
+.wrangler/
+.dev.vars*
+.env*
 
 # Private/local website material must never enter this public repository.
 archive/

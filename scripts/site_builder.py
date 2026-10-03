@@ -30,7 +30,7 @@ LEGACY_RESEARCH_ROUTE = "research-library"
 FAVICON_VERSION = "20260504b"
 ENVELOPE_CSS_VERSION = "20260710b"
 ENVELOPE_CONFIG_VERSION = "20260318a"
-ENVELOPE_JS_VERSION = "20260710a"
+ENVELOPE_JS_VERSION = "20261002a"
 HASHED_ASSETS = (
     "styles.css", "profile.css", "alumni.css", "main.js", "site.js", "alumni.js",
     "site-freshness.js",
@@ -2043,6 +2043,9 @@ def iter_json_strings(value: Any):
 
 
 def validate_public_images() -> None:
+    from image_metadata import validate_images
+    validate_images(ASSETS_DIR)
+    validate_images(FLAT_DIR / "assets")
     max_image_bytes = 1_000_000
     image_suffixes = {".avif", ".gif", ".jpeg", ".jpg", ".png", ".webp"}
     oversized: set[str] = set()

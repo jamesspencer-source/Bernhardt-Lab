@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
 const { chromium } = require('playwright');
+const checkLeaderboardBrowser = require('./check_leaderboard_browser.cjs');
 
 const base = process.argv[2] || 'http://127.0.0.1:5180';
 const output = process.argv[3];
@@ -258,6 +259,7 @@ async function main() {
 
     const motionContext = await browser.newContext({ reducedMotion: 'no-preference', viewport: { width: 1672, height: 941 } });
     try {
+      await motionContext.route('**/*', route => ['GET', 'HEAD'].includes(route.request().method()) ? route.continue() : route.abort());
       const motionPage = await motionContext.newPage();
       motionPage.on('pageerror', error => errors.push(error.message));
       await motionPage.goto(base + '/', { waitUntil: 'domcontentloaded' });
@@ -322,6 +324,35 @@ async function main() {
       }
     }
     results.push('Contact routing, Julia profile, recent publication dates/links, generated module URLs, and flat-directory controls');
+
+    const securityContext = await browser.newContext({ reducedMotion: 'reduce' });
+    try {
+      await securityContext.route('**/*', route => ['GET', 'HEAD'].includes(route.request().method()) ? route.continue() : route.abort());
+      await securityContext.route('**/assets/data/featured-alumni.json', route => route.fulfill({
+        contentType: 'application/json', body: JSON.stringify({ items: [null, {
+          name: '<img src=x onerror="window.injected=true">', roleInLab: '<script>window.injected=true</script>',
+          labDates: '<b>dates</b>', currentRole: '<svg onload="window.injected=true">',
+          sourceLabel: '<img src=x>', source: 'javascript:window.injected=true',
+          profile: 'javascript:window.injected=true', sourceLinkLabel: '<img src=x>'
+        }, { name: 'Safe Test', profileSlug: 'jackson-buss', currentRole: 'Scientist', source: 'https://example.org/profile' }] })
+      }));
+      const securityPage = await securityContext.newPage();
+      for (const route of ['/', '/github-flat/index.html']) {
+        await securityPage.goto(base + route, { waitUntil: 'domcontentloaded' });
+        await securityPage.locator('#alumni-stage .alumni-item').waitFor();
+        assert.equal(await securityPage.locator('#alumni-stage img, #alumni-stage svg, #alumni-stage script, #alumni-stage a').count(), 0);
+        assert.match(await securityPage.locator('#alumni-stage h3').innerText(), /<img/);
+        assert.equal(await securityPage.evaluate(() => window.injected), undefined);
+        await securityPage.locator('#alumni-next').click();
+        const link = securityPage.getByRole('link', { name: 'Open alumni profile', exact: true });
+        assert.match(await link.getAttribute('href'), /(?:alumni\/jackson-buss\/|alumni-jackson-buss\.html)$/);
+      }
+    } finally { await securityContext.close(); }
+    results.push('Security: featured alumni text is escaped, unsafe links rejected, and canonical/flat profile links preserved');
+
+    const endpoint = JSON.parse(fs.readFileSync(path.join(root, 'data/runtime-config.json'), 'utf8')).leaderboardUrl;
+    await checkLeaderboardBrowser(browser, base, endpoint);
+    results.push('Leaderboard: mocked run tickets, completion, server timestamps, replay lifecycle, and network fallback');
 
     for (const javaScriptEnabled of [false, true]) {
       const fallback = await browser.newContext({ javaScriptEnabled, reducedMotion: 'no-preference', viewport: { width: 390, height: 900 } });

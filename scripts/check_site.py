@@ -34,8 +34,8 @@ def main() -> None:
     parser.add_argument("--evidence", type=Path, help="Optional local-only browser evidence directory")
     args = parser.parse_args()
     node = os.environ.get("NODE_BINARY") or shutil.which("node")
-    if args.browser and not node:
-        raise RuntimeError("Browser checks require Node.js 20+ and Playwright. See docs/site-maintenance.md; no publish was performed.")
+    if not node:
+        raise RuntimeError("Security checks require Node.js 24+. See docs/site-maintenance.md; no publish was performed.")
     if not args.skip_build:
         run([sys.executable, "-B", "scripts/build_site.py"])
     before = tree_state(ROOT)
@@ -43,6 +43,7 @@ def main() -> None:
     if before != tree_state(ROOT):
         raise RuntimeError("A second build changed generated output. Fix build reproducibility before publishing.")
     run([sys.executable, "-B", "-m", "unittest", "discover", "-s", "scripts", "-p", "test_*.py", "-v"])
+    run([node, "--test", "leaderboard-worker/test-worker.mjs"])
     if args.browser:
         server = ThreadingHTTPServer(("127.0.0.1", 0), partial(QuietHandler, directory=str(ROOT)))
         thread = threading.Thread(target=server.serve_forever, daemon=True)

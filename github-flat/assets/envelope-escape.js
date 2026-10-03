@@ -348,6 +348,8 @@
       elapsed: 0,
       score: 0,
       runSeed: 0,
+      runGeneration: 0,
+      runTicket: Promise.resolve(null),
       assemblyCycles: 0,
       lastDamageKind: "",
       responseChoice: "patch",
@@ -1001,6 +1003,10 @@
   }
 
   function updateControlState() {
+    if (modelSelect) {
+      modelSelect.disabled = state.running || state.dying;
+      modelSelect.value = state.running || state.dying ? state.speciesId : state.selectedSpeciesId;
+    }
     if (state.dying) {
       pauseButton.disabled = true;
       restartButton.disabled = true;
@@ -1211,6 +1217,8 @@
     state.currentBoardLabel = mode === "daily" ? "Daily challenge" : "Classic board";
     state.speciesId = mode === "daily" ? state.dailyChallenge.speciesId : state.selectedSpeciesId;
     state.runSeed = createRunSeed(mode);
+    state.runGeneration += 1;
+    state.runTicket = requestRunTicket(state.currentBoard, state.speciesId);
     activeRandom = createSeededRandom(state.runSeed);
     state.elapsed = 0;
     state.score = 0;
@@ -2711,7 +2719,7 @@
       return {
         className: "is-global",
         pill: state.currentMode === "daily" ? "Shared daily board" : "Shared classic board",
-        meta: `${totalEntries} recorded ${totalEntries === 1 ? "run" : "runs"}`,
+        meta: `${totalEntries} recorded ${totalEntries === 1 ? "run" : "runs"} · Casual, unverified scores`,
         summaryPrefix: "Shared board"
       };
     }
@@ -2803,11 +2811,11 @@
     }
   }
 
-  async function postLeaderboardPayload(entry) {
+  async function postLeaderboardPayload(entry, starting = false) {
     const controller = new AbortController();
     const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
     try {
-      const response = await window.fetch(GLOBAL_LEADERBOARD_URL, {
+      const response = await window.fetch(starting ? `${GLOBAL_LEADERBOARD_URL.replace(/\/$/, "")}/runs` : GLOBAL_LEADERBOARD_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(entry),
@@ -2817,6 +2825,17 @@
       return await response.json();
     } finally {
       window.clearTimeout(timeoutId);
+    }
+  }
+
+  async function requestRunTicket(board, species) {
+    if (!GLOBAL_LEADERBOARD_URL) return null;
+    try {
+      const ticket = await postLeaderboardPayload({ board, species }, true);
+      if (ticket?.submissionProtocol !== 2 || ticket.board !== board || ticket.species !== species || typeof ticket.runId !== "string") return null;
+      return ticket;
+    } catch {
+      return null;
     }
   }
 
@@ -2874,6 +2893,8 @@
   }
 
   async function submitScore() {
+    const generation = state.runGeneration;
+    const ticketPromise = state.runTicket;
     const entry = {
       name: getPlayerName(),
       score: Math.round(state.score),
@@ -2901,9 +2922,20 @@
     }
 
     try {
-      const payload = await postLeaderboardPayload(entry);
-      if (!acceptRemoteBoard(state.currentBoard, payload?.board)) {
+      const ticket = await ticketPromise;
+      if (!ticket || ticket.expiresAt <= Date.now()) throw new Error("No current shared run ticket");
+      const payload = await postLeaderboardPayload({ name: entry.name, score: entry.score,
+        species: entry.species, board: entry.board, runId: ticket.runId });
+      if (!acceptRemoteBoard(entry.board, payload?.board) || payload?.entry?.runId !== ticket.runId) {
         throw new Error("Remote board mismatch");
+      }
+      entry.playedAt = payload.entry.playedAt;
+      if (generation !== state.runGeneration) {
+        const cached = readLocalLeaderboard(entry.board).filter(candidate =>
+          candidate.name !== entry.name || candidate.score !== entry.score ||
+          candidate.species !== entry.species || candidate.playedAt !== entry.playedAt);
+        writeLocalLeaderboard(entry.board, [entry, ...cached]);
+        return;
       }
       if (state.currentMode === "daily") state.dailyBoardReady = true;
       state.leaderboard = normalizeLeaderboardEntries(payload?.entries, state.currentBoard);
@@ -2923,9 +2955,11 @@
       rankSummaryEl.textContent = state.lastPlacement.summary;
       renderLeaderboard();
     } catch {
-      state.leaderboard = normalizeLeaderboardEntries([entry, ...readLocalLeaderboard(state.currentBoard)], state.currentBoard);
+      const localEntries = normalizeLeaderboardEntries([entry, ...readLocalLeaderboard(entry.board)], entry.board);
+      writeLocalLeaderboard(entry.board, localEntries);
+      if (generation !== state.runGeneration) return;
+      state.leaderboard = localEntries;
       state.leaderboardMode = "fallback";
-      writeLocalLeaderboard(state.currentBoard, state.leaderboard);
       const rank = findPlacement(state.leaderboard, entry);
       state.lastPlacement = {
         score: entry.score,
@@ -3101,11 +3135,13 @@
     resetInputState();
   });
   modelSelect.addEventListener("change", () => {
+    if (state.running || state.dying) {
+      modelSelect.value = state.speciesId;
+      return;
+    }
     state.selectedSpeciesId = normalizeSpeciesId(modelSelect.value);
     writeStorageText(MODEL_KEY, state.selectedSpeciesId);
-    if (!state.running || state.paused) {
-      state.speciesId = state.selectedSpeciesId;
-    }
+    state.speciesId = state.selectedSpeciesId;
     updateSpeciesInfo();
   });
   if (playerNameInput) {

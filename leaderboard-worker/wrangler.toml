@@ -9,3 +9,24 @@ database_id = "8e2defcf-605a-4c24-8134-9196f8929bfd"
 
 [vars]
 ALLOWED_ORIGINS = "https://bernhardtlab.com,https://www.bernhardtlab.com,https://jamesspencer-source.github.io"
+
+[triggers]
+crons = ["17 * * * *"]
+
+[[ratelimits]]
+name = "WRITE_LIMITER"
+namespace_id = "1846100201"
+simple = { limit = 120, period = 60 }
+
+[[ratelimits]]
+name = "CLIENT_LIMITER"
+namespace_id = "1846100202"
+simple = { limit = 30, period = 60 }
+
+[observability]
+enabled = true
+head_sampling_rate = 0.1
+
+[observability.traces]
+enabled = true
+head_sampling_rate = 0.1

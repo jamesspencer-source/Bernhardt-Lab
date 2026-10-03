@@ -29,6 +29,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 from urllib.parse import urlencode, urljoin
 
 from site_builder import build_site
+from public_http import fetch_public
 
 try:
     from PIL import Image, ImageOps, ImageStat  # type: ignore
@@ -155,21 +156,9 @@ def curl_fetch(url: str, timeout: int, retries: int) -> bytes:
     last_error: Optional[Exception] = None
     for attempt in range(1, retries + 1):
         try:
-            cmd = [
-                "curl",
-                "-L",
-                "--fail",
-                "--silent",
-                "--show-error",
-                "--max-time",
-                str(timeout),
-                "--user-agent",
-                USER_AGENT,
-                url,
-            ]
-            return subprocess.check_output(cmd, stderr=subprocess.STDOUT)
-        except subprocess.CalledProcessError as error:
-            last_error = RuntimeError(error.output.decode("utf-8", errors="ignore").strip() or str(error))
+            return fetch_public(url, timeout, user_agent=USER_AGENT)
+        except (OSError, ValueError) as error:
+            last_error = error
             if attempt < retries:
                 time.sleep(1.2 * attempt)
     raise RuntimeError(f"Request failed for {url}: {last_error}") from last_error
@@ -181,70 +170,6 @@ def fetch_json(url: str, timeout: int, retries: int) -> Dict:
 
 def fetch_text(url: str, timeout: int, retries: int) -> str:
     return curl_fetch(url, timeout, retries).decode("utf-8", errors="ignore")
-
-
-def resolve_effective_url(url: str, timeout: int, retries: int) -> str:
-    candidate = clean_text(url)
-    if not candidate:
-        return ""
-
-    last_error: Optional[Exception] = None
-    for attempt in range(1, retries + 1):
-        try:
-            cmd = [
-                "curl",
-                "-L",
-                "--silent",
-                "--show-error",
-                "--max-time",
-                str(timeout),
-                "--output",
-                "/dev/null",
-                "--write-out",
-                "%{url_effective}",
-                "--user-agent",
-                USER_AGENT,
-                candidate,
-            ]
-            resolved = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8", errors="ignore").strip()
-            return resolved or candidate
-        except subprocess.CalledProcessError as error:
-            last_error = RuntimeError(error.output.decode("utf-8", errors="ignore").strip() or str(error))
-            if attempt < retries:
-                time.sleep(0.7 * attempt)
-
-    if last_error:
-        raise RuntimeError(f"Unable to resolve URL {candidate}: {last_error}") from last_error
-    return candidate
-
-
-def probe_http_status(url: str, timeout: int, retries: int) -> int:
-    if not clean_text(url):
-        return 0
-
-    for _ in range(retries):
-        try:
-            cmd = [
-                "curl",
-                "-L",
-                "--silent",
-                "--show-error",
-                "--max-time",
-                str(timeout),
-                "--output",
-                "/dev/null",
-                "--write-out",
-                "%{http_code}",
-                "--user-agent",
-                USER_AGENT,
-                url,
-            ]
-            code = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode("utf-8", errors="ignore").strip()
-            if code.isdigit():
-                return int(code)
-        except subprocess.CalledProcessError:
-            time.sleep(0.5)
-    return 0
 
 
 def parse_meta_attrs(tag: str) -> Dict[str, str]:
@@ -800,13 +725,7 @@ def choose_article_url(article: Dict, override: Dict, timeout: int, retries: int
 
     doi = clean_text(article.get("doi", ""))
     if doi and not normalize_doi(doi).startswith("10.1101/"):
-        doi_url = f"https://doi.org/{doi}"
-        try:
-            resolved = resolve_effective_url(doi_url, timeout=timeout, retries=retries)
-            if resolved:
-                candidates.append(resolved)
-        except Exception:
-            candidates.append(doi_url)
+        candidates.append(f"https://doi.org/{doi}")
 
     pmcid = clean_text(article.get("pmcid", ""))
     if pmcid:
@@ -821,12 +740,9 @@ def choose_article_url(article: Dict, override: Dict, timeout: int, retries: int
         if has_blocked_article_host(url):
             continue
 
-        status = probe_http_status(url, timeout=timeout, retries=max(1, retries - 1))
-        if status in {404, 410}:
+        if not url.startswith("https://"):
             continue
-        if status >= 500:
-            continue
-
+        # Store the canonical link; choosing a link does not need a network request.
         return url
 
     return ""

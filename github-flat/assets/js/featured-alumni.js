@@ -1,6 +1,17 @@
 import { observeRevealTargets } from "./site-core.js";
 import { alumniProfileHref, assetDataUrl, cleanText, escapeHtml, prefersReducedMotion, requestJson, slugify } from "./shared.js";
 
+function safeLink(value, internal = false) {
+  try {
+    const url = new URL(cleanText(value), document.baseURI);
+    if (!["https:", "http:"].includes(url.protocol) || url.username || url.password) return "";
+    if (internal && (url.origin !== window.location.origin || !/(?:^|\/)(?:alumni\/[a-z0-9-]+\/|alumni-[a-z0-9-]+\.html)$/.test(url.pathname))) return "";
+    return url.href;
+  } catch {
+    return "";
+  }
+}
+
 export async function initFeaturedAlumni() {
   const root = document.getElementById("alumni-grid");
   if (!root) return;
@@ -8,6 +19,7 @@ export async function initFeaturedAlumni() {
   const payload = await requestJson(assetDataUrl("featured-alumni.json"));
   const alumniItems = Array.isArray(payload?.items)
     ? payload.items
+        .filter((item) => item && typeof item === "object" && !Array.isArray(item))
         .map((item) => ({
           ...item,
           name: cleanText(item.name),
@@ -15,8 +27,8 @@ export async function initFeaturedAlumni() {
           currentRole: cleanText(item.currentRole),
           labDates: cleanText(item.labDates),
           sourceLabel: cleanText(item.sourceLabel || "Institutional profile"),
-          source: cleanText(item.source),
-          profile: cleanText(item.profile) || alumniProfileHref(cleanText(item.profileSlug || slugify(item.name))),
+          source: cleanText(item.source) ? safeLink(item.source) : "",
+          profile: safeLink(cleanText(item.profile) || alumniProfileHref(slugify(item.profileSlug || item.name)), true),
         }))
         .filter((item) => item.name)
     : [];
@@ -69,13 +81,13 @@ export async function initFeaturedAlumni() {
     const item = alumniItems[alumniIndex];
     stage.innerHTML = `
       <article class="alumni-item">
-        <p class="alumni-role">${item.roleInLab}</p>
-        <h3>${item.name}</h3>
-        ${item.labDates ? `<p class="alumni-role">Lab dates: ${item.labDates}</p>` : ""}
-        <p class="alumni-current">${item.currentRole}</p>
-        <p class="alumni-source">Source: ${item.sourceLabel || "Institutional profile"}</p>
+        <p class="alumni-role">${escapeHtml(item.roleInLab)}</p>
+        <h3>${escapeHtml(item.name)}</h3>
+        ${item.labDates ? `<p class="alumni-role">Lab dates: ${escapeHtml(item.labDates)}</p>` : ""}
+        <p class="alumni-current">${escapeHtml(item.currentRole)}</p>
+        <p class="alumni-source">Source: ${escapeHtml(item.sourceLabel || "Institutional profile")}</p>
         <div class="alumni-link-row">
-          ${item.profile ? `<a href="${item.profile}">Open alumni profile</a>` : ""}
+          ${item.profile ? `<a href="${escapeHtml(item.profile)}">Open alumni profile</a>` : ""}
           ${item.source ? `<a href="${escapeHtml(item.source)}" target="_blank" rel="noreferrer">${escapeHtml(item.sourceLinkLabel || "View supporting source")}</a>` : ""}
         </div>
       </article>

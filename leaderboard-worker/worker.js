@@ -1,8 +1,6 @@
 const MAX_NAME_LENGTH = 24;
 const MIN_SCORE = 1;
 const MAX_SCORE = 2000000000;
-const MIN_PLAYED_AT = Date.UTC(2000, 0, 1);
-const MAX_CLOCK_SKEW_MS = 10 * 60 * 1000;
 const BOARD_PATTERN = /^(classic|daily-\d{4}-\d{2}-\d{2})$/;
 const SPECIES_CODES = new Set([
   "ecoli",
@@ -95,319 +93,227 @@ function isNameAllowed(value) {
   return !blockedTokens.some((token) => normalized.includes(token));
 }
 
-function normalizeScore(value) {
-  const score = Math.floor(Number(value) || 0);
-  if (!Number.isFinite(score)) return 0;
-  return Math.max(0, Math.min(MAX_SCORE, score));
+const RUN_LIFETIME_MS = 2 * 60 * 60 * 1000;
+const HISTORY_MS = 31 * 24 * 60 * 60 * 1000;
+const MAX_ACTIVE_RUNS = 1000;
+const MAX_SAVED_RUNS = 5000;
+const MAX_BODY_BYTES = 1024;
+const RUN_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+
+class RequestError extends Error {
+  constructor(message, status = 400) {
+    super(message);
+    this.status = status;
+  }
 }
 
-function normalizeSpecies(value) {
-  const key = String(value || "")
-    .trim()
-    .toLowerCase();
-  if (SPECIES_CODES.has(key)) return key;
-  return "unknown";
+function dailyBoard(now) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit"
+  }).formatToParts(now);
+  const part = type => parts.find(item => item.type === type).value;
+  return `daily-${part("year")}-${part("month")}-${part("day")}`;
 }
 
-function normalizePlayedAt(value) {
-  const now = Date.now();
-  const parsed = Math.floor(Number(value) || 0);
-  if (!Number.isFinite(parsed)) return now;
-  if (parsed < MIN_PLAYED_AT) return now;
-  if (parsed > now + MAX_CLOCK_SKEW_MS) return now;
-  return parsed;
-}
-
-function normalizeBoard(value) {
-  const board = String(value || "")
-    .trim()
-    .toLowerCase();
-  return BOARD_PATTERN.test(board) ? board : "classic";
-}
-
-let schemaCapabilities = null;
-let schemaUpgradeAttempted = false;
-
-async function getSchemaCapabilities(env) {
-  if (schemaCapabilities) return schemaCapabilities;
-  const { results } = await env.DB.prepare(`PRAGMA table_info(leaderboard_scores)`).all();
-  const names = new Set((results || []).map((row) => String(row?.name || "").toLowerCase()));
-  schemaCapabilities = {
-    hasSpecies: names.has("species"),
-    hasPlayedAt: names.has("played_at"),
-    hasBoard: names.has("board")
-  };
-  return schemaCapabilities;
-}
-
-async function ensureSchemaUpgraded(env) {
-  if (schemaUpgradeAttempted) return;
-  schemaUpgradeAttempted = true;
-
-  const caps = await getSchemaCapabilities(env);
-
-  if (!caps.hasSpecies) {
-    try {
-      await env.DB.prepare(`ALTER TABLE leaderboard_scores ADD COLUMN species TEXT NOT NULL DEFAULT 'unknown'`).run();
-    } catch {
-      /* no-op */
+function boardName(value = "classic") {
+  if (typeof value !== "string" || !BOARD_PATTERN.test(value)) throw new RequestError("Invalid board");
+  if (value !== "classic") {
+    const date = value.slice(6);
+    const timestamp = Date.parse(date + "T12:00:00Z");
+    if (!Number.isFinite(timestamp) || new Date(timestamp).toISOString().slice(0, 10) !== date) {
+      throw new RequestError("Invalid daily date");
     }
   }
-
-  if (!caps.hasPlayedAt) {
-    try {
-      await env.DB.prepare(`ALTER TABLE leaderboard_scores ADD COLUMN played_at INTEGER NOT NULL DEFAULT 0`).run();
-    } catch {
-      /* no-op */
-    }
-  }
-
-  if (!caps.hasBoard) {
-    try {
-      await env.DB.prepare(`ALTER TABLE leaderboard_scores ADD COLUMN board TEXT NOT NULL DEFAULT 'classic'`).run();
-    } catch {
-      /* no-op */
-    }
-  }
-
-  schemaCapabilities = null;
-  const finalCaps = await getSchemaCapabilities(env);
-
-  if (finalCaps.hasSpecies) {
-    try {
-      await env.DB.prepare(`UPDATE leaderboard_scores SET species = 'unknown' WHERE species IS NULL OR TRIM(species) = ''`).run();
-    } catch {
-      /* no-op */
-    }
-  }
-
-  if (finalCaps.hasPlayedAt) {
-    try {
-      await env.DB.prepare(`UPDATE leaderboard_scores SET played_at = created_at WHERE played_at IS NULL OR played_at <= 0`).run();
-    } catch {
-      /* no-op */
-    }
-  }
-
-  if (finalCaps.hasBoard) {
-    try {
-      await env.DB.prepare(`UPDATE leaderboard_scores SET board = 'classic' WHERE board IS NULL OR TRIM(board) = ''`).run();
-    } catch {
-      /* no-op */
-    }
-  }
+  return value;
 }
 
-async function readTopScores(env, board) {
-  const caps = await getSchemaCapabilities(env);
-  const normalizedBoard = normalizeBoard(board);
-
-  if (!caps.hasBoard && normalizedBoard !== "classic") {
-    return [];
+async function readPayload(request) {
+  if (request.headers.get("Content-Type")?.split(";")[0].trim().toLowerCase() !== "application/json") {
+    throw new RequestError("Content-Type must be application/json", 415);
   }
-
-  const sql = caps.hasSpecies && caps.hasPlayedAt && caps.hasBoard
-    ? `SELECT name, score, created_at AS createdAt, species, played_at AS playedAt, board
-       FROM leaderboard_scores
-       WHERE board = ?1
-       ORDER BY score DESC, played_at ASC, id ASC
-       LIMIT 25`
-    : caps.hasSpecies && caps.hasPlayedAt
-      ? `SELECT name, score, created_at AS createdAt, species, played_at AS playedAt
-         FROM leaderboard_scores
-         ORDER BY score DESC, played_at ASC, id ASC
-         LIMIT 25`
-      : `SELECT name, score, created_at AS createdAt
-         FROM leaderboard_scores
-         ORDER BY score DESC, created_at ASC, id ASC
-         LIMIT 25`;
-  const query = caps.hasBoard ? env.DB.prepare(sql).bind(normalizedBoard) : env.DB.prepare(sql);
-  const { results } = await query.all();
-
-  return (results || []).map((row) => ({
-    name: (() => {
-      const cleaned = normalizeName(row.name) || "Anonymous";
-      return isNameAllowed(cleaned) ? cleaned : "Anonymous";
-    })(),
-    score: normalizeScore(row.score),
-    species: normalizeSpecies(row.species),
-    playedAt: normalizePlayedAt(row.playedAt || row.createdAt),
-    createdAt: normalizePlayedAt(row.playedAt || row.createdAt),
-    board: normalizeBoard(row.board || normalizedBoard)
-  }));
+  const declared = request.headers.get("Content-Length");
+  if (declared !== null && (!/^\d+$/.test(declared) || Number(declared) > MAX_BODY_BYTES)) {
+    throw new RequestError("Request body too large", 413);
+  }
+  if (!request.body) throw new RequestError("Missing JSON body");
+  const reader = request.body.getReader();
+  const chunks = [];
+  let size = 0;
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      size += value.byteLength;
+      if (size > MAX_BODY_BYTES) {
+        await reader.cancel();
+        throw new RequestError("Request body too large", 413);
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const bytes = new Uint8Array(size);
+  let offset = 0;
+  for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
+  let payload;
+  try { payload = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); }
+  catch { throw new RequestError("Invalid JSON body"); }
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+    throw new RequestError("JSON body must be an object");
+  }
+  return payload;
 }
 
-async function countScores(env, board) {
-  const caps = await getSchemaCapabilities(env);
-  const normalizedBoard = normalizeBoard(board);
-
-  if (!caps.hasBoard && normalizedBoard !== "classic") {
-    return 0;
+function validatePayload(payload, starting) {
+  const allowed = new Set(starting ? ["board", "species"] : ["board", "species", "name", "score", "runId"]);
+  if (Object.keys(payload).some(key => !allowed.has(key))) throw new RequestError("Unexpected field");
+  const board = boardName(payload.board);
+  if (typeof payload.species !== "string" || !SPECIES_CODES.has(payload.species)) {
+    throw new RequestError("Invalid species");
   }
-
-  const query = caps.hasBoard
-    ? env.DB.prepare(`SELECT COUNT(*) AS totalEntries FROM leaderboard_scores WHERE board = ?1`).bind(normalizedBoard)
-    : env.DB.prepare(`SELECT COUNT(*) AS totalEntries FROM leaderboard_scores`);
-  const { results } = await query.all();
-  return Math.max(0, Math.floor(Number(results?.[0]?.totalEntries) || 0));
+  if (starting) return { board, species: payload.species };
+  if (typeof payload.runId !== "string" || !RUN_ID_PATTERN.test(payload.runId)) {
+    throw new RequestError("Start a new run before submitting", 409);
+  }
+  if (!Number.isSafeInteger(payload.score) || payload.score < MIN_SCORE || payload.score > MAX_SCORE) {
+    throw new RequestError("Score must be a positive integer");
+  }
+  if (payload.name !== undefined && (typeof payload.name !== "string" || payload.name.length > 128)) {
+    throw new RequestError("Invalid name");
+  }
+  const name = normalizeName(payload.name) || "Anonymous";
+  if (!isNameAllowed(name)) throw new RequestError("Name unavailable", 422);
+  return { ...payload, board, name };
 }
 
-async function computeRank(env, board, score, playedAt, rowId) {
-  const caps = await getSchemaCapabilities(env);
-  const normalizedBoard = normalizeBoard(board);
-  const normalizedScore = normalizeScore(score);
-  const normalizedPlayedAt = normalizePlayedAt(playedAt);
-  const normalizedRowId = Math.max(0, Math.floor(Number(rowId) || 0));
-
-  if (!caps.hasBoard && normalizedBoard !== "classic") {
-    return 1;
+async function limitWrites(request, env) {
+  if (!env.WRITE_LIMITER?.limit || !env.CLIENT_LIMITER?.limit) {
+    throw new RequestError("Shared submissions are temporarily unavailable", 503);
   }
-
-  const sql = caps.hasPlayedAt && caps.hasBoard
-    ? `SELECT COUNT(*) AS placement
-       FROM leaderboard_scores
-       WHERE board = ?1
-         AND (
-           score > ?2
-           OR (score = ?2 AND (played_at < ?3 OR (played_at = ?3 AND id <= ?4)))
-         )`
-    : caps.hasPlayedAt
-      ? `SELECT COUNT(*) AS placement
-         FROM leaderboard_scores
-         WHERE score > ?1
-           OR (score = ?1 AND (played_at < ?2 OR (played_at = ?2 AND id <= ?3)))`
-      : `SELECT COUNT(*) AS placement
-         FROM leaderboard_scores
-         WHERE score > ?1 OR (score = ?1 AND id <= ?2)`;
-
-  const query = caps.hasPlayedAt && caps.hasBoard
-    ? env.DB.prepare(sql).bind(normalizedBoard, normalizedScore, normalizedPlayedAt, normalizedRowId)
-    : caps.hasPlayedAt
-      ? env.DB.prepare(sql).bind(normalizedScore, normalizedPlayedAt, normalizedRowId)
-      : env.DB.prepare(sql).bind(normalizedScore, normalizedRowId);
-  const { results } = await query.all();
-  return Math.max(1, Math.floor(Number(results?.[0]?.placement) || 1));
+  const globalLimit = await env.WRITE_LIMITER.limit({ key: "leaderboard-writes" });
+  // IP is used only for a short-lived rate bucket, never persisted in D1.
+  const clientLimit = await env.CLIENT_LIMITER.limit({ key: request.headers.get("CF-Connecting-IP") || "unknown" });
+  if (!globalLimit.success || !clientLimit.success) throw new RequestError("Please wait before submitting again", 429);
 }
 
-async function insertScore(env, board, name, score, species, playedAt) {
-  const now = Date.now();
-  const caps = await getSchemaCapabilities(env);
-  const normalizedBoard = normalizeBoard(board);
-  const normalizedPlayedAt = normalizePlayedAt(playedAt);
-  let insertedRowId = 0;
+async function hasRunSchema(env) {
+  const { results } = await env.DB.prepare("PRAGMA table_info(leaderboard_runs)").all();
+  const names = new Set(results.map(row => row.name));
+  return ["id", "board", "species", "started_at", "expires_at", "submitted_at", "name", "score"]
+    .every(name => names.has(name));
+}
 
-  if (caps.hasSpecies && caps.hasPlayedAt && caps.hasBoard) {
-    const result = await env.DB.prepare(
-      `INSERT INTO leaderboard_scores (name, score, created_at, species, played_at, board)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6)`
-    )
-      .bind(name, score, now, normalizeSpecies(species), normalizedPlayedAt, normalizedBoard)
-      .run();
-    insertedRowId = Math.max(0, Math.floor(Number(result?.meta?.last_row_id) || 0));
-  } else if (caps.hasSpecies && caps.hasPlayedAt) {
-    const result = await env.DB.prepare(
-      `INSERT INTO leaderboard_scores (name, score, created_at, species, played_at)
-       VALUES (?1, ?2, ?3, ?4, ?5)`
-    )
-      .bind(name, score, now, normalizeSpecies(species), normalizedPlayedAt)
-      .run();
-    insertedRowId = Math.max(0, Math.floor(Number(result?.meta?.last_row_id) || 0));
-  } else {
-    const result = await env.DB.prepare(
-      `INSERT INTO leaderboard_scores (name, score, created_at)
-       VALUES (?1, ?2, ?3)`
-    )
-      .bind(name, score, now)
-      .run();
-    insertedRowId = Math.max(0, Math.floor(Number(result?.meta?.last_row_id) || 0));
+async function cleanup(env, now) {
+  // This table contains only new casual runs; historical scores are never pruned by new submissions.
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM leaderboard_runs WHERE score IS NULL AND expires_at < ?1").bind(now),
+    env.DB.prepare("DELETE FROM leaderboard_runs WHERE score IS NOT NULL AND submitted_at < ?1").bind(now - HISTORY_MS),
+    env.DB.prepare(`DELETE FROM leaderboard_runs WHERE score IS NOT NULL AND id IN (
+      SELECT id FROM (SELECT id, ROW_NUMBER() OVER (PARTITION BY board ORDER BY score DESC, submitted_at ASC, id ASC) AS position
+      FROM leaderboard_runs WHERE score IS NOT NULL) WHERE position > 500)`),
+    env.DB.prepare(`DELETE FROM leaderboard_runs WHERE score IS NOT NULL AND id NOT IN (
+      SELECT id FROM leaderboard_runs WHERE score IS NOT NULL ORDER BY submitted_at DESC, id DESC LIMIT ${MAX_SAVED_RUNS})`)
+  ]);
+}
+
+async function startRun(env, entry, now) {
+  if (entry.board !== "classic" && entry.board !== dailyBoard(now)) {
+    throw new RequestError("Daily runs must start on today's board");
   }
+  await cleanup(env, now);
+  const runId = crypto.randomUUID();
+  const expiresAt = now + RUN_LIFETIME_MS;
+  const result = await env.DB.prepare(`INSERT INTO leaderboard_runs (id, board, species, started_at, expires_at)
+    SELECT ?1, ?2, ?3, ?4, ?5 WHERE (SELECT COUNT(*) FROM leaderboard_runs WHERE score IS NULL) < ?6`)
+    .bind(runId, entry.board, entry.species, now, expiresAt, MAX_ACTIVE_RUNS).run();
+  if (!result.meta.changes) throw new RequestError("Shared board is busy; please try again later", 503);
+  return { runId, board: entry.board, species: entry.species, expiresAt, submissionProtocol: 2, ranking: "casual-unverified" };
+}
 
-  if (Math.random() < 0.1) {
-    const cleanupQuery = caps.hasBoard
-      ? env.DB.prepare(
-          `DELETE FROM leaderboard_scores
-           WHERE board = ?1
-             AND id NOT IN (
-               SELECT id
-               FROM leaderboard_scores
-               WHERE board = ?1
-               ORDER BY score DESC, played_at ASC, id ASC
-               LIMIT 500
-             )`
-        ).bind(normalizedBoard)
-      : env.DB.prepare(
-          `DELETE FROM leaderboard_scores
-           WHERE id NOT IN (
-             SELECT id
-             FROM leaderboard_scores
-             ORDER BY score DESC, created_at ASC, id ASC
-             LIMIT 500
-           )`
-        );
-    await cleanupQuery.run();
+async function submitRun(env, entry, now) {
+  const run = await env.DB.prepare("SELECT * FROM leaderboard_runs WHERE id = ?1").bind(entry.runId).first();
+  if (!run || run.expires_at < now || run.board !== entry.board || run.species !== entry.species) {
+    throw new RequestError("Run expired or does not match this board", 409);
   }
+  if (run.score !== null && (run.score !== entry.score || run.name !== entry.name)) {
+    throw new RequestError("This run has already been submitted", 409);
+  }
+  const seconds = Math.max(0, (now - run.started_at) / 1000);
+  // A conservative abuse ceiling, not proof of gameplay. Paused time is allowed.
+  if (seconds < 2 || entry.score > 500 + seconds * 300) throw new RequestError("Score is not plausible for this run", 422);
+  await env.DB.prepare(`UPDATE leaderboard_runs SET name = ?1, score = ?2, submitted_at = ?3
+    WHERE id = ?4 AND score IS NULL AND expires_at >= ?3`).bind(entry.name, entry.score, now, entry.runId).run();
+  const saved = await env.DB.prepare("SELECT * FROM leaderboard_runs WHERE id = ?1").bind(entry.runId).first();
+  if (!saved || saved.name !== entry.name || saved.score !== entry.score) throw new RequestError("Run already submitted", 409);
+  await cleanup(env, now);
+  return { name: saved.name, score: saved.score, species: saved.species, board: saved.board,
+    playedAt: saved.submitted_at, createdAt: saved.submitted_at, runId: saved.id };
+}
 
-  return {
-    rowId: insertedRowId,
-    playedAt: normalizedPlayedAt,
-    board: normalizedBoard
-  };
+async function legacyRows(env, board) {
+  const { results: columns } = await env.DB.prepare("PRAGMA table_info(leaderboard_scores)").all();
+  const names = new Set(columns.map(row => row.name));
+  if (!names.has("name") || !names.has("score") || !names.has("created_at") || (!names.has("board") && board !== "classic")) return [];
+  const played = names.has("played_at") ? "COALESCE(NULLIF(played_at, 0), created_at)" : "created_at";
+  const species = names.has("species") ? "species" : "'unknown'";
+  const boardColumn = names.has("board") ? "board" : "'classic'";
+  let query = env.DB.prepare(`SELECT name, score, ${species} AS species, ${played} AS playedAt,
+    created_at AS createdAt, ${boardColumn} AS board FROM leaderboard_scores
+    ${names.has("board") ? "WHERE board = ?1" : ""} ORDER BY score DESC, ${played} ASC, id ASC LIMIT 500`);
+  if (names.has("board")) query = query.bind(board);
+  return (await query.all()).results;
+}
+
+async function boardSnapshot(env, board, ready, now) {
+  const entries = await legacyRows(env, board);
+  if (ready) {
+    const { results } = await env.DB.prepare(`SELECT id AS runId, name, score, species, board,
+      submitted_at AS playedAt, submitted_at AS createdAt FROM leaderboard_runs
+      WHERE board = ?1 AND score IS NOT NULL AND submitted_at >= ?2 ORDER BY score DESC, submitted_at ASC, id ASC LIMIT 500`)
+      .bind(board, now - HISTORY_MS).all();
+    entries.push(...results);
+  }
+  entries.sort((a, b) => b.score - a.score || a.playedAt - b.playedAt || String(a.runId || "").localeCompare(String(b.runId || "")));
+  return { entries: entries.slice(0, 25).map(entry => ({
+    ...entry, name: isNameAllowed(entry.name) ? normalizeName(entry.name) || "Anonymous" : "Anonymous"
+  })), totalEntries: entries.length, updatedAt: now, board,
+    submissionProtocol: ready ? 2 : 0, ranking: "casual-unverified" };
 }
 
 export default {
   async fetch(request, env) {
-    const url = new URL(request.url);
-    const path = url.pathname.replace(/\/+$/, "") || "/";
-    const isPublicPath = path === "/leaderboard" || path === "/api/leaderboard";
-
-    if (request.method === "OPTIONS") {
-      return new Response(null, {
-        status: 204,
-        headers: getCorsHeaders(request, env)
-      });
-    }
-
-    if (!isPublicPath) {
-      return jsonResponse({ error: "Not found" }, request, env, 404);
-    }
-
-    await ensureSchemaUpgraded(env);
-
-    if (request.method === "GET") {
-      const board = normalizeBoard(url.searchParams.get("board"));
-      const entries = await readTopScores(env, board);
-      const totalEntries = await countScores(env, board);
-      return jsonResponse({ entries, totalEntries, updatedAt: Date.now(), board }, request, env, 200);
-    }
-
-    if (request.method === "POST") {
-      let payload = {};
-      try {
-        payload = await request.json();
-      } catch {
-        return jsonResponse({ error: "Invalid JSON body" }, request, env, 400);
+    const path = new URL(request.url).pathname.replace(/\/+$/, "") || "/";
+    const starting = path === "/leaderboard/runs" || path === "/api/leaderboard/runs";
+    const scores = path === "/leaderboard" || path === "/api/leaderboard";
+    if (!starting && !scores) return jsonResponse({ error: "Not found" }, request, env, 404);
+    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: getCorsHeaders(request, env) });
+    try {
+      const now = Date.now();
+      if (request.method === "GET" && scores) {
+        const board = boardName(new URL(request.url).searchParams.get("board") ?? undefined);
+        return jsonResponse(await boardSnapshot(env, board, await hasRunSchema(env), now), request, env);
       }
-
-      const name = normalizeName(payload.name) || "Anonymous";
-      const score = normalizeScore(payload.score);
-      const species = normalizeSpecies(payload.species);
-      const playedAt = normalizePlayedAt(payload.playedAt);
-      const board = normalizeBoard(payload.board);
-
-      if (score < MIN_SCORE) {
-        return jsonResponse({ error: "Score must be a positive integer" }, request, env, 400);
-      }
-      if (!isNameAllowed(name)) {
-        return jsonResponse({ error: "Name unavailable", errorCode: "invalid_name" }, request, env, 422);
-      }
-
-      const inserted = await insertScore(env, board, name, score, species, playedAt);
-      const entries = await readTopScores(env, board);
-      const totalEntries = await countScores(env, board);
-      const rank = await computeRank(env, board, score, inserted.playedAt, inserted.rowId);
-      return jsonResponse({ ok: true, entries, rank, totalEntries, updatedAt: Date.now(), board }, request, env, 201);
+      if (request.method !== "POST") throw new RequestError("Method not allowed", 405);
+      await limitWrites(request, env);
+      const entry = validatePayload(await readPayload(request), starting);
+      if (!await hasRunSchema(env)) throw new RequestError("Shared submissions need a database update", 503);
+      if (starting) return jsonResponse(await startRun(env, entry, now), request, env, 201);
+      const saved = await submitRun(env, entry, now);
+      const snapshot = await boardSnapshot(env, entry.board, true, now);
+      const { results } = await env.DB.prepare(`SELECT COUNT(*) AS ahead FROM leaderboard_runs
+        WHERE board = ?1 AND score IS NOT NULL AND submitted_at >= ?2
+        AND (score > ?3 OR (score = ?3 AND (submitted_at < ?4 OR (submitted_at = ?4 AND id < ?5))))`)
+        .bind(entry.board, now - HISTORY_MS, saved.score, saved.playedAt, saved.runId).all();
+      const oldAhead = (await legacyRows(env, entry.board)).filter(row => row.score > saved.score ||
+        (row.score === saved.score && row.playedAt <= saved.playedAt)).length;
+      return jsonResponse({ ...snapshot, ok: true, entry: saved, rank: 1 + oldAhead + results[0].ahead }, request, env, 201);
+    } catch (error) {
+      const status = error instanceof RequestError ? error.status : 503;
+      return jsonResponse({ error: error instanceof RequestError ? error.message : "Shared board temporarily unavailable" }, request, env, status);
     }
-
-    return jsonResponse({ error: "Method not allowed" }, request, env, 405);
+  },
+  async scheduled(_event, env) {
+    if (await hasRunSchema(env)) await cleanup(env, Date.now());
   }
 };

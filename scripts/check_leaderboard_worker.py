@@ -9,7 +9,8 @@ import subprocess
 import sys
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any, Dict
 
@@ -62,7 +63,7 @@ def load_endpoint(root: Path, override: str) -> str:
 
 
 def daily_board_name() -> str:
-    return f"daily-{datetime.now(timezone.utc).date().isoformat()}"
+    return f"daily-{datetime.now(ZoneInfo('America/New_York')).date().isoformat()}"
 
 
 def validate_payload(board: str, payload: Dict[str, Any], require_board_routing: bool) -> list[str]:
