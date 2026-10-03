@@ -5,6 +5,27 @@
   "count": 6,
   "items": [
     {
+      "pmid": "42821347",
+      "doi": "10.1073/pnas.2529250123",
+      "title": "The mycomembrane proteins PorH and ProtX are inserted at polar growth zones and linked to the cell wall",
+      "journal": "PNAS",
+      "publishedAt": "2026-10-01",
+      "authors": [
+        "Hart EM",
+        "de Bruin DA",
+        "Marando VM",
+        "Arnau Alemany M",
+        "Snow ED",
+        "Schultz BJ",
+        "Kuru E",
+        "Walker S",
+        "Vettiger A",
+        "Bernhardt TG"
+      ],
+      "authorsShort": "Hart EM, de Bruin DA, Marando VM, et al.",
+      "articleUrl": "https://doi.org/10.1073/pnas.2529250123"
+    },
+    {
       "pmid": "42399561",
       "doi": "10.1038/s41564-026-02403-6",
       "title": "The penicillin-binding protein PBP1b fortifies the Escherichia coli division site against osmotic rupture",
@@ -102,29 +123,7 @@
       ],
       "authorsShort": "Shlosman I, Vettiger A, Bernhardt TG, et al.",
       "articleUrl": "https://doi.org/10.1038/s41467-025-62051-y"
-    },
-    {
-      "pmid": "40258142",
-      "doi": "10.1073/pnas.2414342122",
-      "title": "A diverse single-stranded DNA-annealing protein library enables efficient genome editing across bacterial phyla",
-      "journal": "PNAS",
-      "publishedAt": "2025-04-21",
-      "authors": [
-        "Filsinger GT",
-        "Mychack A",
-        "Lyerly E",
-        "Henriksen C",
-        "Bartlett TM",
-        "Kuchwara H",
-        "Eitzinger S",
-        "Bernhardt TG",
-        "Walker S",
-        "Church GM",
-        "Wannier TM"
-      ],
-      "authorsShort": "Filsinger GT, Mychack A, Lyerly E, et al.",
-      "articleUrl": "https://doi.org/10.1073/pnas.2414342122"
     }
   ],
-  "generatedAt": "2026-09-08T14:06:18+00:00"
+  "generatedAt": "2026-10-03T02:59:54+00:00"
 }
