@@ -5,6 +5,26 @@
   "count": 6,
   "items": [
     {
+      "pmid": "42873186",
+      "doi": "10.1083/jcb.202601063",
+      "title": "MapZ phosphorylation drives EzrA recruitment to the future division site of Streptococcus pneumoniae",
+      "journal": "The Journal of cell biology",
+      "publishedAt": "2026-10-14",
+      "authors": [
+        "Lenoir C",
+        "Millat H",
+        "Falcou C",
+        "Freton C",
+        "Lavergne JP",
+        "Morlot C",
+        "Bernhardt TG",
+        "Ducret A",
+        "Grangeasse C"
+      ],
+      "authorsShort": "Lenoir C, Millat H, Falcou C, et al.",
+      "articleUrl": "https://doi.org/10.1083/jcb.202601063"
+    },
+    {
       "pmid": "42821347",
       "doi": "10.1073/pnas.2529250123",
       "title": "The mycomembrane proteins PorH and ProtX are inserted at polar growth zones and linked to the cell wall",
@@ -107,23 +127,7 @@
       ],
       "authorsShort": "Gilman MSA, Shlosman I, Guerra DDS, et al.",
       "articleUrl": "https://doi.org/10.1073/pnas.2514198122"
-    },
-    {
-      "pmid": "40691462",
-      "doi": "10.1038/s41467-025-62051-y",
-      "title": "The hit-and-run of cell wall synthesis: LpoB transiently binds and activates PBP1b through a conserved allosteric switch",
-      "journal": "Nature Communications",
-      "publishedAt": "2025-07-21",
-      "authors": [
-        "Shlosman I",
-        "Vettiger A",
-        "Bernhardt TG",
-        "Kruse AC",
-        "Loparo JJ"
-      ],
-      "authorsShort": "Shlosman I, Vettiger A, Bernhardt TG, et al.",
-      "articleUrl": "https://doi.org/10.1038/s41467-025-62051-y"
     }
   ],
-  "generatedAt": "2026-10-03T02:59:54+00:00"
+  "generatedAt": "2026-10-19T17:03:37+00:00"
 }
