@@ -1,6 +1,7 @@
 name = "bernhardt-lab-leaderboard"
 main = "worker.js"
 compatibility_date = "2025-01-15"
+# Configure RUN_CLIENT_SECRET as a private Worker secret, never a plain-text var.
 
 [[d1_databases]]
 binding = "DB"

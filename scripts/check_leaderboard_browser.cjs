@@ -11,6 +11,7 @@ module.exports = async function checkLeaderboardBrowser(browser, base, endpoint)
   let failCompletion = false;
   let releaseCompletion;
   let rejectStart = false;
+  let failReads = false;
   const epoch = Date.parse('2026-10-02T12:00:00Z');
   const serverTime = epoch + 600_000;
   try {
@@ -21,11 +22,12 @@ module.exports = async function checkLeaderboardBrowser(browser, base, endpoint)
       if (url.origin === new URL(base).origin) return route.continue();
       if (!request.url().startsWith(endpoint)) return route.abort();
       const reply = body => route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
-      if (request.method() === 'GET') return reply({ board: url.searchParams.get('board'), entries: remoteEntries, submissionProtocol: 2 });
+      if (request.method() === 'GET') return failReads ? route.fulfill({ status: 503, body: '{}' })
+        : reply({ board: url.searchParams.get('board'), entries: remoteEntries, submissionProtocol: 2 });
       const body = request.postDataJSON();
       if (url.pathname.endsWith('/runs')) {
         starts.push(body);
-        if (rejectStart) return route.fulfill({ status: 503, body: '{}' });
+        if (rejectStart) return route.fulfill({ status: 429, body: '{}' });
         return reply({ ...body, runId: crypto.randomUUID(), expiresAt: epoch + 7_200_000, submissionProtocol: 2 });
       }
       completions.push(body);
@@ -114,10 +116,45 @@ module.exports = async function checkLeaderboardBrowser(browser, base, endpoint)
 
     rejectStart = true;
     holdCompletion = false;
+    const rejectedStartTime = await page.evaluate(() => Date.now());
     await startRun('#envelope-restart');
     await page.clock.runFor(1000);
     assert.equal(await page.locator('#envelope-overlay').isVisible(), false, 'Ticket failure must not block gameplay');
     assert.equal(completions.length, 3);
+    for (let step = 0; step < 360 && !await page.locator('#envelope-overlay').isVisible(); step++) {
+      await page.clock.runFor(1000);
+    }
+    await page.locator('#envelope-rank-summary').filter({ hasText: /Saved on the local fallback board/ }).waitFor();
+    assert.equal(completions.length, 3, 'A rejected start must not submit a score without a ticket');
+    const rejectedStartFallback = await page.evaluate(() => JSON.parse(localStorage.getItem('bernhardt-envelope-escape-board-v2-classic')));
+    const localOnly = rejectedStartFallback.find(entry => entry.name === 'Ada' && entry.playedAt >= rejectedStartTime && entry.playedAt !== serverTime);
+    assert.ok(localOnly,
+      'The completed run must still save locally after allocation is limited');
+    remoteEntries.length = 0;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      await page.locator('#envelope-close').click();
+      await page.locator('#envelope-trigger').click();
+      await page.locator('#envelope-leaderboard-meta.is-global').waitFor();
+      assert.match(await page.locator('#envelope-leaderboard-list').innerText(), /No scores recorded yet/);
+      const cached = await page.evaluate(() => JSON.parse(localStorage.getItem('bernhardt-envelope-escape-board-v2-classic')));
+      assert.equal(cached.filter(entry => entry.playedAt === localOnly.playedAt).length, 1,
+        'Successful refresh must retain, not duplicate or publicly rank, the local-only result');
+    }
+    failReads = true;
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.locator('#envelope-trigger').click();
+    await page.locator('#envelope-leaderboard-meta.is-fallback').waitFor();
+    const retained = await page.evaluate(() => JSON.parse(localStorage.getItem('bernhardt-envelope-escape-board-v2-classic')));
+    assert.ok(retained.some(entry => entry.playedAt === localOnly.playedAt), 'Fallback must survive reload');
+    assert.match(await page.locator('#envelope-leaderboard-list').innerText(), /Ada/);
+    failReads = false;
+    rejectStart = false;
+    await startRun();
+    await finishRun(4);
+    await page.locator('#envelope-rank-summary').filter({ hasText: /Classic board saved at 1st/ }).waitFor();
+    const afterNewSuccess = await page.evaluate(() => JSON.parse(localStorage.getItem('bernhardt-envelope-escape-board-v2-classic')));
+    assert.ok(afterNewSuccess.some(entry => entry.playedAt === localOnly.playedAt),
+      'A later successful shared submission must preserve the earlier local result');
     assert.deepEqual(errors, []);
   } finally {
     if (releaseCompletion) releaseCompletion();

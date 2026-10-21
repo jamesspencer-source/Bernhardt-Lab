@@ -7,6 +7,7 @@ import worker from './worker.js';
 const now = Date.now();
 function environment(legacy = false) {
   const sqlite = new DatabaseSync(':memory:');
+  sqlite.exec('PRAGMA foreign_keys = ON');
   sqlite.exec(readFileSync(new URL('./schema.sql', import.meta.url), 'utf8'));
   if (!legacy) sqlite.exec(readFileSync(new URL('./security-schema.sql', import.meta.url), 'utf8'));
   const DB = {
@@ -26,12 +27,13 @@ function environment(legacy = false) {
       catch (error) { sqlite.exec('ROLLBACK'); throw error; }
     }
   };
-  return { DB, sqlite, WRITE_LIMITER: { async limit() { return { success: true }; } },
+  return { DB, sqlite, RUN_CLIENT_SECRET: 'local-test-only-reservation-key-32-bytes',
+    WRITE_LIMITER: { async limit() { return { success: true }; } },
     CLIENT_LIMITER: { async limit() { return { success: true }; } } };
 }
 async function call(env, path = '/leaderboard', body, headers = {}) {
   const response = await worker.fetch(new Request('https://game.test' + path, body === undefined ? {} : {
-    method: 'POST', headers: { 'Content-Type': 'application/json', ...headers }, body: JSON.stringify(body)
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '192.0.2.1', ...headers }, body: JSON.stringify(body)
   }), env);
   return { status: response.status, body: await response.json() };
 }
@@ -93,10 +95,10 @@ test('daily dates use New York and issued runs survive midnight, not expiry', as
   } finally { Date.now = original; }
 });
 
-test('limiter rejects before database work and fails closed if missing', async () => {
+test('client limiter rejects before database work and fails closed if missing', async () => {
   const env = environment();
   env.DB.prepare = () => { throw new Error('must not reach database'); };
-  env.WRITE_LIMITER.limit = async () => ({ success: false });
+  env.CLIENT_LIMITER.limit = async () => ({ success: false });
   assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' })).status, 429);
   delete env.WRITE_LIMITER;
   assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' })).status, 503);
@@ -149,4 +151,173 @@ test('abandoned run budget is enforced atomically', async () => {
   for (let i = 0; i < 1000; i++) insert.run(crypto.randomUUID(), 'classic', 'ecoli', now, now + 3600000);
   assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' })).status, 503);
   assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_runs').get().n, 1000);
+});
+
+test('a client rejection never consumes shared allowance on any write alias', async () => {
+  const env = environment();
+  let sharedCalls = 0;
+  env.CLIENT_LIMITER.limit = async ({ key }) => ({ success: key !== '192.0.2.1' });
+  env.WRITE_LIMITER.limit = async () => { sharedCalls++; return { success: true }; };
+  for (let i = 0; i < 120; i++) {
+    const path = ['/leaderboard/runs', '/api/leaderboard/runs/', '/leaderboard', '/api/leaderboard/'][i % 4];
+    assert.equal((await call(env, path, null)).status, 429);
+  }
+  assert.equal(sharedCalls, 0);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_runs').get().n, 0);
+  assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' },
+    { 'CF-Connecting-IP': '192.0.2.2' })).status, 201);
+  assert.equal(sharedCalls, 1);
+  delete env.CLIENT_LIMITER;
+  assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' })).status, 503);
+  assert.equal(sharedCalls, 1);
+});
+
+test('concurrent reservations share one client cap across aliases, boards, species and midnight', async () => {
+  const original = Date.now;
+  let clock = Date.parse('2026-11-01T03:59:50Z');
+  Date.now = () => clock;
+  try {
+    const env = environment();
+    const replies = await Promise.all(Array.from({ length: 64 }, (_, i) =>
+      call(env, i % 2 ? '/api/leaderboard/runs/' : '/leaderboard/runs', {
+        board: i % 3 ? 'classic' : 'daily-2026-10-31', species: i % 2 ? 'ecoli' : 'saureus'
+      })));
+    assert.equal(replies.filter(reply => reply.status === 201).length, 32);
+    assert.equal(replies.filter(reply => reply.status === 429).length, 32);
+    assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_runs').get().n, 32);
+    assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_run_clients').get().n, 32);
+    clock += 30000;
+    assert.equal((await call(env, '/api/leaderboard/runs', { board: 'daily-2026-11-01', species: 'ecoli' })).status, 429);
+    assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' },
+      { 'CF-Connecting-IP': '192.0.2.2' })).status, 201);
+    const keys = env.sqlite.prepare('SELECT DISTINCT client_key FROM leaderboard_run_clients').all();
+    assert.equal(keys.length, 2);
+    for (const row of keys) assert.match(row.client_key, /^[0-9a-f]{64}$/);
+    assert.notEqual(keys[0].client_key, keys[1].client_key);
+    assert.doesNotMatch(JSON.stringify((await call(env)).body), /client_key|192\.0\.2/);
+  } finally { Date.now = original; }
+});
+
+test('completion releases only its reservation and stays valid after a network change', async () => {
+  const env = environment();
+  const entry = await ticket(env);
+  for (let i = 1; i < 32; i++) await ticket(env);
+  assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' })).status, 429);
+  const moved = { 'CF-Connecting-IP': '192.0.2.200' };
+  assert.equal((await call(env, '/api/leaderboard', entry, moved)).status, 201);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_run_clients').get().n, 31);
+  await ticket(env);
+  assert.equal((await call(env, '/leaderboard', entry, moved)).status, 201);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_run_clients').get().n, 32);
+  assert.equal((await call(env, '/leaderboard', { ...entry, score: 201 }, moved)).status, 409);
+  assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' })).status, 429);
+});
+
+test('expiry frees private allocation state without touching saved scores', async () => {
+  const env = environment();
+  const entry = await ticket(env);
+  assert.equal((await call(env, '/leaderboard', entry)).status, 201);
+  for (let i = 0; i < 32; i++) await ticket(env);
+  env.sqlite.prepare('UPDATE leaderboard_runs SET expires_at = ? WHERE score IS NULL').run(Date.now() - 1);
+  await worker.scheduled({}, env);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_run_clients').get().n, 0);
+  assert.equal((await call(env)).body.entries[0].name, entry.name);
+  assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' })).status, 201);
+});
+
+test('global admission remains atomic across different clients', async () => {
+  const env = environment();
+  const insert = env.sqlite.prepare('INSERT INTO leaderboard_runs (id,board,species,started_at,expires_at) VALUES (?,?,?,?,?)');
+  for (let i = 0; i < 999; i++) insert.run(crypto.randomUUID(), 'classic', 'ecoli', now, now + 3600000);
+  const replies = await Promise.all(Array.from({ length: 8 }, (_, i) =>
+    call(env, '/api/leaderboard/runs/', { species: 'ecoli' }, { 'CF-Connecting-IP': '192.0.2.' + (i + 1) })));
+  assert.equal(replies.filter(reply => reply.status === 201).length, 1);
+  assert.equal(replies.filter(reply => reply.status === 503).length, 7);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_runs').get().n, 1000);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_run_clients').get().n, 1);
+});
+
+test('additive migration preserves old tickets and missing allocation setup fails closed only for starts', async () => {
+  const env = environment();
+  env.sqlite.exec('DROP TRIGGER release_completed_run_client; DROP TABLE leaderboard_run_clients');
+  const id = crypto.randomUUID();
+  env.sqlite.prepare('INSERT INTO leaderboard_runs VALUES (?,?,?,?,?,?,?,?)')
+    .run(id, 'classic', 'ecoli', Date.now() - 10000, Date.now() + 3600000, null, null, null);
+  const entry = { runId: id, board: 'classic', species: 'ecoli', name: 'Before migration', score: 200 };
+  assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' })).status, 503);
+  assert.equal((await call(env, '/leaderboard', entry)).status, 201);
+  for (let i = 0; i < 2; i++) env.sqlite.exec(readFileSync(new URL('./security-schema.sql', import.meta.url), 'utf8'));
+  assert.equal((await call(env)).body.entries[0].name, entry.name);
+  const pending = await ticket(env);
+  for (const secret of [undefined, '', 'too-short']) {
+    env.RUN_CLIENT_SECRET = secret;
+    assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' })).status, 503);
+  }
+  assert.equal((await call(env, '/leaderboard', pending)).status, 201);
+  assert.equal((await call(env, '/leaderboard', entry)).status, 201);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_run_clients').get().n, 0);
+});
+
+test('failed reservation-link writes roll back the run rather than leaking global capacity', async () => {
+  const env = environment();
+  env.sqlite.exec("CREATE TRIGGER reject_test_client BEFORE INSERT ON leaderboard_run_clients BEGIN SELECT RAISE(ABORT, 'test failure'); END");
+  assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' })).status, 503);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_runs').get().n, 0);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_run_clients').get().n, 0);
+});
+
+test('IPv6 privacy addresses share one network reservation allowance', async () => {
+  const env = environment();
+  for (let i = 1; i <= 64; i++) {
+    const ip = i % 2 ? `2001:db8:abcd:12::${i.toString(16)}` : `2001:0DB8:ABCD:0012:0:0:0:${i.toString(16)}`;
+    assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' },
+      { 'CF-Connecting-IP': ip })).status, i <= 32 ? 201 : 429);
+  }
+  assert.equal(env.sqlite.prepare('SELECT COUNT(DISTINCT client_key) AS n FROM leaderboard_run_clients').get().n, 1);
+  assert.equal((await call(env, '/api/leaderboard/runs/', { species: 'ecoli' },
+    { 'CF-Connecting-IP': '2001:db8:abcd:13::1' })).status, 201);
+});
+
+test('full client allocations are rejected before charging the shared allowance', async () => {
+  const env = environment();
+  const clients = ['192.0.2.1', '192.0.2.2', '192.0.2.3', '192.0.2.4'];
+  for (const ip of clients) for (let i = 0; i < 32; i++) {
+    assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' }, { 'CF-Connecting-IP': ip })).status, 201);
+  }
+  let sharedCalls = 0;
+  env.WRITE_LIMITER.limit = async () => ({ success: ++sharedCalls <= 120 });
+  for (let i = 0; i < 120; i++) {
+    assert.equal((await call(env, '/api/leaderboard/runs/', { species: 'ecoli' },
+      { 'CF-Connecting-IP': clients[i % clients.length] })).status, 429);
+  }
+  assert.equal(sharedCalls, 0);
+  assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' },
+    { 'CF-Connecting-IP': '192.0.2.5' })).status, 201);
+});
+
+test('rate buckets normalize IPv6 networks and mapped IPv4 without merging unrelated clients', async () => {
+  const env = environment();
+  const keys = [];
+  env.CLIENT_LIMITER.limit = async ({ key }) => { keys.push(key); return { success: false }; };
+  for (const ip of ['2001:db8:1234:abcd::1', '2001:0DB8:1234:ABCD:ffff::2',
+    '2001:db8:1234:abce::1', '::ffff:192.0.2.1', '::ffff:c000:201', '192.0.2.1', '192.0.2.2', '', 'invalid']) {
+    assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' }, { 'CF-Connecting-IP': ip })).status, 429);
+  }
+  assert.equal(keys[0], keys[1]);
+  assert.notEqual(keys[1], keys[2]);
+  assert.equal(keys[3], keys[4]);
+  assert.equal(keys[4], keys[5]);
+  assert.notEqual(keys[5], keys[6]);
+  assert.equal(keys[7], keys[8]);
+});
+
+test('shared limiter rejection prevents allocation and completion writes', async () => {
+  const env = environment();
+  const entry = await ticket(env);
+  env.WRITE_LIMITER.limit = async () => ({ success: false });
+  assert.equal((await call(env, '/leaderboard/runs', { species: 'ecoli' })).status, 429);
+  assert.equal((await call(env, '/leaderboard', entry)).status, 429);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_runs').get().n, 1);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_runs WHERE score IS NOT NULL').get().n, 0);
+  assert.equal(env.sqlite.prepare('SELECT COUNT(*) AS n FROM leaderboard_run_clients').get().n, 1);
 });

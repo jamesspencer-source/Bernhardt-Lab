@@ -3,3 +3,6 @@ allowBuilds:
   workerd: true
 minimumReleaseAgeExclude:
   - wrangler@4.147.0
+overrides:
+  # GHSA-wq5f-xc86-pv6w: patch Miniflare's image decoder without changing its API.
+  'sharp@<0.35.5': 0.35.5

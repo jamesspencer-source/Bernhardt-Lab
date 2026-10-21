@@ -846,6 +846,15 @@
     writeStorageJson(getLocalBoardKey(board), normalizeLeaderboardEntries(entries, board));
   }
 
+  function cacheRemoteLeaderboard(board, entries) {
+    const remote = normalizeLeaderboardEntries(entries, board);
+    const identity = entry => JSON.stringify([entry.name, entry.score, entry.species, entry.playedAt, entry.board]);
+    const remoteKeys = new Set(remote.map(identity));
+    const retained = readLocalLeaderboard(board).filter(entry => !remoteKeys.has(identity(entry)));
+    // Keep offline results locally without mixing them into the shared ranking.
+    writeLocalLeaderboard(board, [...remote, ...retained]);
+  }
+
   function normalizeLeaderboardEntries(entries, board) {
     const normalizedBoard = normalizeBoard(board);
     return (Array.isArray(entries) ? entries : [])
@@ -2881,7 +2890,7 @@
         board: normalizedBoard
       };
       state.leaderboardMode = "global";
-      writeLocalLeaderboard(normalizedBoard, state.leaderboard);
+      cacheRemoteLeaderboard(normalizedBoard, state.leaderboard);
       renderLeaderboard();
     } catch {
       if (requestId !== state.leaderboardRequestId || normalizedBoard !== state.currentBoard) {
@@ -2931,10 +2940,7 @@
       }
       entry.playedAt = payload.entry.playedAt;
       if (generation !== state.runGeneration) {
-        const cached = readLocalLeaderboard(entry.board).filter(candidate =>
-          candidate.name !== entry.name || candidate.score !== entry.score ||
-          candidate.species !== entry.species || candidate.playedAt !== entry.playedAt);
-        writeLocalLeaderboard(entry.board, [entry, ...cached]);
+        cacheRemoteLeaderboard(entry.board, [entry]);
         return;
       }
       if (state.currentMode === "daily") state.dailyBoardReady = true;
@@ -2945,7 +2951,7 @@
         board: state.currentBoard
       };
       state.leaderboardMode = "global";
-      writeLocalLeaderboard(state.currentBoard, state.leaderboard);
+      cacheRemoteLeaderboard(state.currentBoard, state.leaderboard);
       const rank = Math.max(1, Math.floor(Number(payload?.rank) || computeLocalRank(state.leaderboard, entry)));
       state.lastPlacement = {
         score: entry.score,

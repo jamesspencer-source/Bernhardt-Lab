@@ -96,6 +96,7 @@ function isNameAllowed(value) {
 const RUN_LIFETIME_MS = 2 * 60 * 60 * 1000;
 const HISTORY_MS = 31 * 24 * 60 * 60 * 1000;
 const MAX_ACTIVE_RUNS = 1000;
+const MAX_CLIENT_ACTIVE_RUNS = 32;
 const MAX_SAVED_RUNS = 5000;
 const MAX_BODY_BYTES = 1024;
 const RUN_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
@@ -187,14 +188,54 @@ function validatePayload(payload, starting) {
   return { ...payload, board, name };
 }
 
-async function limitWrites(request, env) {
+function clientNetwork(request) {
+  const ip = request.headers.get("CF-Connecting-IP") || "";
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(ip)) {
+    const octets = ip.split(".").map(Number);
+    return octets.every(value => value <= 255) ? octets.join(".") : "unknown";
+  }
+  try {
+    // The URL parser validates/canonicalizes IPv6; group privacy addresses by /64.
+    const host = new URL(`http://[${ip}]/`).hostname.slice(1, -1);
+    const [left, right] = host.split("::");
+    const first = left ? left.split(":") : [];
+    const last = right ? right.split(":") : [];
+    const words = (right === undefined ? first : [...first, ...Array(8 - first.length - last.length).fill("0"), ...last])
+      .map(value => parseInt(value, 16));
+    if (words.length !== 8 || words.some(value => !Number.isInteger(value))) return "unknown";
+    if (words.slice(0, 5).every(value => value === 0) && words[5] === 0xffff) {
+      return [words[6] >> 8, words[6] & 255, words[7] >> 8, words[7] & 255].join(".");
+    }
+    return words.slice(0, 4).map(value => value.toString(16)).join(":") + "::/64";
+  } catch {
+    return "unknown";
+  }
+}
+
+async function limitClientWrites(request, env) {
   if (!env.WRITE_LIMITER?.limit || !env.CLIENT_LIMITER?.limit) {
     throw new RequestError("Shared submissions are temporarily unavailable", 503);
   }
+  // Raw network identifiers are used transiently, never persisted in D1.
+  const clientLimit = await env.CLIENT_LIMITER.limit({ key: clientNetwork(request) });
+  if (!clientLimit.success) throw new RequestError("Please wait before submitting again", 429);
+}
+
+async function limitSharedWrites(env) {
   const globalLimit = await env.WRITE_LIMITER.limit({ key: "leaderboard-writes" });
-  // IP is used only for a short-lived rate bucket, never persisted in D1.
-  const clientLimit = await env.CLIENT_LIMITER.limit({ key: request.headers.get("CF-Connecting-IP") || "unknown" });
-  if (!globalLimit.success || !clientLimit.success) throw new RequestError("Please wait before submitting again", 429);
+  if (!globalLimit.success) throw new RequestError("Please wait before submitting again", 429);
+}
+
+async function reservationClientKey(request, env) {
+  if (typeof env.RUN_CLIENT_SECRET !== "string" || env.RUN_CLIENT_SECRET.length < 32) {
+    throw new RequestError("Shared run creation is temporarily unavailable", 503);
+  }
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", encoder.encode(env.RUN_CLIENT_SECRET),
+    { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const message = "leaderboard-reservation:" + clientNetwork(request);
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(message));
+  return Array.from(new Uint8Array(signature), byte => byte.toString(16).padStart(2, "0")).join("");
 }
 
 async function hasRunSchema(env) {
@@ -217,17 +258,38 @@ async function cleanup(env, now) {
   ]);
 }
 
-async function startRun(env, entry, now) {
+async function startRun(request, env, entry, now) {
   if (entry.board !== "classic" && entry.board !== dailyBoard(now)) {
     throw new RequestError("Daily runs must start on today's board");
   }
+  const clientKey = await reservationClientKey(request, env);
+  // Reject an already-full client before charging shared capacity or doing writes.
+  // The atomic INSERT below remains the authority when concurrent starts race.
+  const active = await env.DB.prepare(`SELECT COUNT(*) AS n FROM leaderboard_run_clients AS clients
+    JOIN leaderboard_runs AS runs ON runs.id = clients.run_id
+    WHERE clients.client_key = ?1 AND runs.score IS NULL AND runs.expires_at >= ?2`).bind(clientKey, now).first();
+  if (active.n >= MAX_CLIENT_ACTIVE_RUNS) {
+    throw new RequestError("Too many unfinished runs from this network; finish a run or try again later", 429);
+  }
+  await limitSharedWrites(env);
   await cleanup(env, now);
   const runId = crypto.randomUUID();
   const expiresAt = now + RUN_LIFETIME_MS;
-  const result = await env.DB.prepare(`INSERT INTO leaderboard_runs (id, board, species, started_at, expires_at)
-    SELECT ?1, ?2, ?3, ?4, ?5 WHERE (SELECT COUNT(*) FROM leaderboard_runs WHERE score IS NULL) < ?6`)
-    .bind(runId, entry.board, entry.species, now, expiresAt, MAX_ACTIVE_RUNS).run();
-  if (!result.meta.changes) throw new RequestError("Shared board is busy; please try again later", 503);
+  // Both admission checks and the private reservation link commit as one transaction.
+  const [result] = await env.DB.batch([
+    env.DB.prepare(`INSERT INTO leaderboard_runs (id, board, species, started_at, expires_at)
+      SELECT ?1, ?2, ?3, ?4, ?5
+      WHERE (SELECT COUNT(*) FROM leaderboard_runs WHERE score IS NULL) < ?6
+        AND (SELECT COUNT(*) FROM leaderboard_run_clients WHERE client_key = ?7) < ?8`)
+      .bind(runId, entry.board, entry.species, now, expiresAt, MAX_ACTIVE_RUNS, clientKey, MAX_CLIENT_ACTIVE_RUNS),
+    env.DB.prepare(`INSERT INTO leaderboard_run_clients (run_id, client_key)
+      SELECT id, ?2 FROM leaderboard_runs WHERE id = ?1`).bind(runId, clientKey)
+  ]);
+  if (!result.meta.changes) {
+    const pending = await env.DB.prepare("SELECT COUNT(*) AS n FROM leaderboard_runs WHERE score IS NULL").first();
+    if (pending.n >= MAX_ACTIVE_RUNS) throw new RequestError("Shared board is busy; please try again later", 503);
+    throw new RequestError("Too many unfinished runs from this network; finish a run or try again later", 429);
+  }
   return { runId, board: entry.board, species: entry.species, expiresAt, submissionProtocol: 2, ranking: "casual-unverified" };
 }
 
@@ -295,10 +357,11 @@ export default {
         return jsonResponse(await boardSnapshot(env, board, await hasRunSchema(env), now), request, env);
       }
       if (request.method !== "POST") throw new RequestError("Method not allowed", 405);
-      await limitWrites(request, env);
+      await limitClientWrites(request, env);
       const entry = validatePayload(await readPayload(request), starting);
       if (!await hasRunSchema(env)) throw new RequestError("Shared submissions need a database update", 503);
-      if (starting) return jsonResponse(await startRun(env, entry, now), request, env, 201);
+      if (starting) return jsonResponse(await startRun(request, env, entry, now), request, env, 201);
+      await limitSharedWrites(env);
       const saved = await submitRun(env, entry, now);
       const snapshot = await boardSnapshot(env, entry.board, true, now);
       const { results } = await env.DB.prepare(`SELECT COUNT(*) AS ahead FROM leaderboard_runs
