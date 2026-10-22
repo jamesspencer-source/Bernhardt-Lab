@@ -206,10 +206,20 @@ async function main() {
       await checkLayout(`Recent publications ${width}px`, '#publications');
       if (output) {
         fs.mkdirSync(output, { recursive: true });
-        await page.locator('#publications').screenshot({
-          path: path.join(output, `publications-${width}.png`),
-          style: '.site-header, .site-header * { visibility: hidden !important; }',
+        // Screenshot stylesheets are blocked by CSP; use the allowed style attribute.
+        const header = page.locator('.site-header');
+        const visibility = await header.evaluate(element => {
+          const previous = element.style.visibility;
+          element.style.visibility = 'hidden';
+          return previous;
         });
+        try {
+          await page.locator('#publications').screenshot({
+            path: path.join(output, `publications-${width}.png`),
+          });
+        } finally {
+          await header.evaluate((element, previous) => { element.style.visibility = previous; }, visibility);
+        }
       }
       if (width === 320) continue;
       const before = await page.locator('#gallery-grid').evaluate(el => el.getBoundingClientRect().height);
