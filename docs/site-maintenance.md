@@ -76,7 +76,9 @@ Use this for the normal website workflow. It will:
 - refuse unrelated working changes or generated edits that do not match that build
 - stage only the exact source and generated files shown in the output plan
 - commit only if a real website diff remains
-- push to `origin main`
+- push the exact commit to a temporary `release/site-...` branch
+- wait for GitHub Actions' `site-quality` check on that commit
+- update `origin main` only after success, without force pushing
 
 Use `--include` with exact repository-relative source file paths, never directory names. For larger releases, use `--manifest /path/to/reviewed-source-files.json`, containing a JSON array of those paths. Do not include `github-flat/` or generated CSS: the isolated build determines those outputs. A dry run leaves the checkout and index untouched. The publisher does not clean or delete numbered duplicates; use a clean review checkout if unrelated work is present. After publishing, verify GitHub Pages and the changed live URLs before calling the change live.
 
@@ -124,8 +126,23 @@ regressions, including importer network and photo-metadata checks, plus the
 leaderboard's Node/SQLite security tests. Both dry-run and actual publishing require the same browser gate;
 there is no silent test bypass. Missing browser tools stop publication before
 staging. GitHub checks pull requests and main pushes and uploads short-lived
-browser evidence. Scheduled personnel updates use this same scoped publisher;
+browser evidence. It also checks release branches before publication.
+Scheduled personnel updates use this same scoped publisher;
 only their two canonical data files are selected.
+
+The protected-main ruleset should require `site-quality` from GitHub Actions,
+block deletions and force pushes, and have no bypass actors. A separate
+mandatory approving reviewer is not needed for this single-maintainer workflow.
+If checks fail or time out, main is unchanged and the release branch remains
+available for diagnosis. If main advanced while testing, the non-force push
+fails; reconcile and retest rather than overriding it.
+
+Scheduled publishers use their short-lived `GITHUB_TOKEN` to dispatch the
+quality workflow explicitly, because token-authored branch pushes do not
+automatically start another workflow. Only these main-only publishing jobs
+receive `actions: write` and `pages: write`; checks remain read-only.
+They request a Pages build after the checked commit reaches main. No new
+long-lived credential or broad branch-protection bypass is required.
 
 ### Security maintenance
 
@@ -149,6 +166,23 @@ a privileged automated workflow.
 GitHub Actions references are pinned to full commit hashes; Dependabot proposes
 updates. Read-only checks have no write permissions, while scheduled publishing
 jobs run only on main. Keep this separation when adding automation.
+
+Every generated HTML page, including redirects and the flat mirror, receives
+a Content Security Policy and an explicit referrer policy. The builder hashes
+approved inline scripts and import maps; arbitrary inline scripts, inline event
+handlers, external scripts, plugin objects and unexpected connections are
+blocked. The existing YouTube and Google Maps frames and configured leaderboard
+origin remain allowed. Inline element styling remains permitted for layout and
+game animation. Browser regressions test both normal use and blocked injection.
+
+These policies use HTML metadata, which works on the existing GitHub Pages
+deployment without DNS changes. It does not supply HSTS, X-Content-Type-Options,
+frame-ancestors or report-only HTTP headers. Those require a separately reviewed
+hosting or edge configuration; do not describe them as deployed.
+
+The unused Squarespace import script has been retired. Its private recovery
+copy is outside the repository. For future imports, use the bounded fetcher
+and image-metadata safeguards above rather than restoring the old downloader.
 
 Leaderboard releases have a separate D1 backup, additive migration, local
 Cloudflare-runtime test and Worker deployment. See `leaderboard-worker/README.md`.

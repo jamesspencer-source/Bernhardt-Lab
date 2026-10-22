@@ -196,6 +196,11 @@ class WorkflowSecurityTests(unittest.TestCase):
                     self.assertRegex(action, r"^[\w.-]+/[\w./-]+@[0-9a-f]{40}$")
                 if "contents: write" in content:
                     self.assertIn("github.ref == 'refs/heads/main'", content)
+                    self.assertIn("scripts/publish_site.py", content)
+                    self.assertIn("GH_TOKEN: ${{ github.token }}", content)
+                    self.assertIn("actions: write", content)
+                    self.assertIn("pages: write", content)
+                    self.assertNotRegex(content, r"(?m)^\s+git push\s*$")
 
 
 if __name__ == "__main__":

@@ -14,6 +14,7 @@ import sys
 import tarfile
 import tempfile
 from pathlib import Path, PurePosixPath
+from release_gate import release_checked_commit
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT_FILES = {
@@ -242,7 +243,7 @@ def main(argv: list[str] | None = None) -> int:
             raise RuntimeError("The staged file list does not match the reviewed output plan; commit aborted.")
         subprocess.run(["git", "diff", "--cached", "--check"], cwd=ROOT, check=True)
         subprocess.run(["git", "commit", "-m", args.message], cwd=ROOT, check=True)
-        subprocess.run(["git", "push", "origin", "main"], cwd=ROOT, check=True)
+        release_checked_commit(ROOT, git_output("rev-parse", "HEAD"))
         print("[publish] Pushed reviewed changes. Verify GitHub Pages and the live URLs before declaring them live.")
     return 0
 

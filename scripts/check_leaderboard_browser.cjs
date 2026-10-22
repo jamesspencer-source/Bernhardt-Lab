@@ -43,6 +43,9 @@ module.exports = async function checkLeaderboardBrowser(browser, base, endpoint)
     }, new URL(base).origin);
     const page = await context.newPage();
     page.on('pageerror', error => errors.push(error.message));
+    page.on('console', message => {
+      if (/violates.*Content Security Policy|Refused to.*Content Security Policy/i.test(message.text())) errors.push(message.text());
+    });
     await page.clock.install({ time: epoch });
     await page.goto(base + '/', { waitUntil: 'domcontentloaded' });
     await page.locator('#envelope-trigger').click();

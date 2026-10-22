@@ -12,9 +12,11 @@ jobs:
   apply-scheduled-updates:
     permissions:
       contents: write
+      actions: write
+      pages: write
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -51,6 +53,7 @@ jobs:
         if: steps.changes.outputs.due == 'true'
         env:
           NODE_PATH: ${{ github.workspace }}/node_modules
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

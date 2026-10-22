@@ -12,8 +12,11 @@ jobs:
   refresh-video-stats:
     permissions:
       contents: write
+      actions: write
+      pages: write
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 35
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -26,14 +29,32 @@ jobs:
       - name: Refresh featured video stats
         run: python scripts/refresh_youtube_video_stats.py --video-id RxHTaTmPlwQ
 
-      - name: Commit refreshed video stats
+      - name: Detect changed video stats
+        id: changes
         run: |
           if git diff --quiet -- assets/data/youtube-video-stats.json github-flat/assets/data/youtube-video-stats.json; then
-            echo "No video stat changes detected."
-            exit 0
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "updated=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: steps.changes.outputs.updated == 'true'
+        with:
+          node-version: "24"
+
+      - name: Install browser test tools
+        if: steps.changes.outputs.updated == 'true'
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.62.1
+          npx playwright install --with-deps chromium
+
+      - name: Validate and publish exact video stats update
+        if: steps.changes.outputs.updated == 'true'
+        env:
+          NODE_PATH: ${{ github.workspace }}/node_modules
+          GH_TOKEN: ${{ github.token }}
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/data/youtube-video-stats.json github-flat/assets/data/youtube-video-stats.json
-          git commit -m "chore: refresh featured video view stats"
-          git push
+          python3 scripts/publish_site.py --include assets/data/youtube-video-stats.json --message "chore: refresh featured video view stats"

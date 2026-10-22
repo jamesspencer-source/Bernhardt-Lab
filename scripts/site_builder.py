@@ -14,6 +14,7 @@ from urllib.parse import quote, unquote, urlencode, urlparse
 
 from validate_tom_compliance import validate_tom_compliance
 from publication_data import date_label, load_feed
+from browser_policy import apply_browser_policy
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -2277,6 +2278,9 @@ def build_site() -> None:
     sync_asset_references()
     write_sitemaps(people)
     cleanup_flat_generated_noise()
+    leaderboard_url = read_json(DATA_DIR / "runtime-config.json")["leaderboardUrl"]
+    for path in iter_public_html_paths():
+        write_text(path, apply_browser_policy(read_text(path), leaderboard_url))
     expected_cards = len(current_people(people))
     validate_homepage_team_grid(ROOT / "index.html", expected_cards)
     validate_homepage_team_grid(FLAT_DIR / "index.html", expected_cards)

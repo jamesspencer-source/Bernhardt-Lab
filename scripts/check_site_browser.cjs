@@ -31,6 +31,11 @@ async function main() {
     const context = await browser.newContext({ reducedMotion: 'reduce' });
     const page = await context.newPage();
     page.on('pageerror', error => errors.push(error.message));
+    page.on('console', message => {
+      if (/violates.*Content Security Policy|Refused to.*Content Security Policy/i.test(message.text())) {
+        errors.push(message.text());
+      }
+    });
     page.on('response', response => {
       if (response.url().startsWith(base) && response.status() >= 400) {
         errors.push(`${response.status()} ${response.url()}`);
@@ -353,6 +358,33 @@ async function main() {
     const endpoint = JSON.parse(fs.readFileSync(path.join(root, 'data/runtime-config.json'), 'utf8')).leaderboardUrl;
     await checkLeaderboardBrowser(browser, base, endpoint);
     results.push('Leaderboard: mocked run tickets, completion, server timestamps, replay lifecycle, and network fallback');
+
+    const policyContext = await browser.newContext();
+    try {
+      const policyPage = await policyContext.newPage();
+      const attempts = [];
+      await policyPage.exposeFunction('policyViolation', directive => attempts.push(directive));
+      await policyPage.addInitScript(() => {
+        document.addEventListener('securitypolicyviolation', event => window.policyViolation(event.effectiveDirective));
+      });
+      await policyPage.goto(base + '/team/thomas-bernhardt/', { waitUntil: 'domcontentloaded' });
+      await policyPage.evaluate(() => {
+        const script = document.createElement('script');
+        script.textContent = 'window.unapprovedInlineRan = true;';
+        document.body.append(script);
+        const button = document.createElement('button');
+        button.setAttribute('onclick', 'window.unapprovedHandlerRan = true;');
+        document.body.append(button);
+        button.click();
+        fetch('https://example.invalid/unapproved').catch(() => {});
+      });
+      await policyPage.waitForFunction(() => window.unapprovedInlineRan === undefined && window.unapprovedHandlerRan === undefined);
+      await policyPage.waitForTimeout(150);
+      assert.ok(attempts.includes('script-src-elem'), 'CSP blocks unapproved inline scripts');
+      assert.ok(attempts.includes('script-src-attr'), 'CSP blocks inline event handlers');
+      assert.ok(attempts.includes('connect-src'), 'CSP blocks unexpected connections');
+    } finally { await policyContext.close(); }
+    results.push('Browser policy: approved scripts work; injected scripts, handlers, and unexpected connections are blocked');
 
     for (const javaScriptEnabled of [false, true]) {
       const fallback = await browser.newContext({ javaScriptEnabled, reducedMotion: 'no-preference', viewport: { width: 390, height: 900 } });

@@ -174,12 +174,16 @@ Update archive scientific media:
 ## Git / push expectations
 
 - Push using SSH.
-- Push from `main`.
+- Start publishing from `main`. The publisher pushes a release branch first,
+  waits for the exact commit's GitHub quality check, and only then updates main.
+  Do not bypass this gate or force push.
 - Before committing, make sure you are in the repo root, not inside `github-flat/`.
 - Default workflow for this repo: after completing a scoped change, run the relevant verification, commit it, and push it to `main` unless the user explicitly asks not to or there is a concrete blocker such as unrelated dirty changes, merge conflicts, or a failed check.
 - The preferred command-driven path is `python3 scripts/publish_site.py --include <exact-source-files>`.
 - The publisher builds selected source changes in isolation, refuses unrelated modifications, and stages only the exact reproducible output. It never deletes numbered siblings or sweeps directories into a commit. Run `--dry-run` before publishing; keep the manifest outside the public project when it contains private operator context.
 - Confirm the resulting Pages deployment and changed live URLs after pushing.
+- Preserve the main-only scheduled publishers and their explicit quality-workflow
+  dispatch. Do not give publishing bots a branch-protection bypass.
 - If a push is blocked, report the blocker clearly instead of leaving the repo half-finished without explanation.
 
 ## Related docs
