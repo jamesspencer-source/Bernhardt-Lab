@@ -365,6 +365,32 @@ async function main() {
     } finally { await securityContext.close(); }
     results.push('Security: featured alumni text is escaped, unsafe links rejected, and canonical/flat profile links preserved');
 
+    const fallbackContext = await browser.newContext({ reducedMotion: 'reduce' });
+    try {
+      await fallbackContext.route('**/*', route => ['GET', 'HEAD'].includes(route.request().method()) ? route.continue() : route.abort());
+      const fallbackPage = await fallbackContext.newPage();
+      for (const status of [200, 503]) {
+        const feed = '**/assets/data/featured-alumni.json';
+        await fallbackContext.route(feed, route => route.fulfill({
+          status, contentType: 'application/json', body: JSON.stringify({ items: [] })
+        }));
+        for (const [source, destination] of [['/', '/alumni/'], ['/github-flat/index.html', '/github-flat/alumni.html']]) {
+          await fallbackPage.goto(base + source, { waitUntil: 'domcontentloaded' });
+          const directory = fallbackPage.getByRole('link', { name: 'full alumni directory', exact: true });
+          await directory.waitFor();
+          assert.equal(new URL(await directory.getAttribute('href'), fallbackPage.url()).pathname, destination);
+          await directory.click();
+          await fallbackPage.waitForURL(base + destination);
+          assert.equal(await fallbackPage.locator('.alumni-card').count(), alumniCount);
+          const sue = fallbackPage.locator('.alumni-card[data-name="Sue Sim"]');
+          assert.equal(await sue.getByRole('link', { name: 'Open alumni profile', exact: true }).count(), 1);
+          assert.equal(await sue.getByRole('link', { name: 'View external profile', exact: true }).count(), 0);
+        }
+        await fallbackContext.unroute(feed);
+      }
+    } finally { await fallbackContext.close(); }
+    results.push('Broken-link regression: empty/failed alumni feed links to working canonical and flat directories; retired external profile link omitted');
+
     const endpoint = JSON.parse(fs.readFileSync(path.join(root, 'data/runtime-config.json'), 'utf8')).leaderboardUrl;
     await checkLeaderboardBrowser(browser, base, endpoint);
     results.push('Leaderboard: mocked run tickets, completion, server timestamps, replay lifecycle, and network fallback');

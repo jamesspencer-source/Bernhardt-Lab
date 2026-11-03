@@ -130,6 +130,29 @@ class SiteQualityTests(unittest.TestCase):
         self.assertEqual(item["currentRole"], neil["currentRole"])
         self.assertEqual(item["source"], neil["verification"]["url"])
 
+    def test_retired_external_profile_keeps_alumni_record(self):
+        sue = self.by_slug["sue-sim"]
+        self.assertEqual(sue["name"], "Sue Sim")
+        self.assertEqual(sue["currentRole"], "Postdoctoral Scholar, Cardiovascular Research Institute, UCSF School of Medicine")
+        self.assertEqual(sue["profileSummary"], "I used biochemical approaches to study bacterial cell wall biogenesis.")
+        self.assertFalse(sue["verification"]["url"])
+        for flat in (False, True):
+            with self.subTest(flat=flat):
+                for rendered in (site.render_alumni_profile(sue, flat), site.render_alumni_cards([sue], "", flat)):
+                    self.assertIn("Sue Sim", rendered)
+                    self.assertIn("Bernhardt lab records", rendered)
+                    self.assertNotIn("profiles.ucsf.edu/sue.sim", rendered)
+                    self.assertNotIn("View external profile", rendered)
+                    self.assertNotIn('href=""', rendered)
+
+    def test_legacy_media_feed_does_not_link_to_unrelated_paper(self):
+        for root in (site.ROOT, site.FLAT_DIR):
+            payload = site.read_json(root / "assets/data/research-in-motion.json")
+            for item in payload["items"]:
+                self.assertNotEqual(item.get("pmid"), "35851384")
+                self.assertNotEqual(item.get("doi"), "10.1038/s41467-022-31261-y")
+                self.assertNotIn("PMC9308384", item.get("articleUrl", ""))
+
     def test_featured_duplicate_fields_and_slugs_are_rejected(self):
         items = site.load_featured_alumni_items()
         with patch.object(site, "load_featured_alumni_items", return_value=[{**items[0], "name": "Stale name"}]), self.assertRaisesRegex(RuntimeError, "duplicated or unknown"):

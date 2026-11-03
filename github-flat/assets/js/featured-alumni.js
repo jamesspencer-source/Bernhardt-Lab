@@ -1,5 +1,5 @@
 import { observeRevealTargets } from "./site-core.js";
-import { alumniProfileHref, assetDataUrl, cleanText, escapeHtml, prefersReducedMotion, requestJson, slugify } from "./shared.js";
+import { alumniProfileHref, assetDataUrl, buildMode, cleanText, escapeHtml, prefersReducedMotion, requestJson, slugify } from "./shared.js";
 
 function safeLink(value, internal = false) {
   try {
@@ -36,7 +36,7 @@ export async function initFeaturedAlumni() {
   if (!alumniItems.length) {
     root.innerHTML = `
       <p class="publication-footnote reveal">
-        Featured alumni highlights are temporarily unavailable. Browse the <a href="alumni/">full alumni directory</a>.
+        Featured alumni highlights are temporarily unavailable. Browse the <a href="${buildMode() === "flat" ? "alumni.html" : "alumni/"}">full alumni directory</a>.
       </p>
     `;
     observeRevealTargets(root);
