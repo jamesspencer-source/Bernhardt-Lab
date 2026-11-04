@@ -82,8 +82,14 @@ The first suite exercises real SQLite including legacy schemas, bounds,
 timestamps, concurrency and replay. The runtime suite uses local Miniflare/D1
 and real Cloudflare rate-limit bindings, with external metadata fetching and
 outbound requests disabled. Neither writes to the public board.
+The runtime command also checks Miniflare's HTTP dependency and Wrangler's
+bundled HTTP client against a loopback-only server, using a temporary home and
+dummy credentials. It covers normal and compressed responses, cancellation,
+and malformed responses from GHSA-xjj6-f33q-929c without uncaught stream errors.
+Wrangler 4.153.0 and its matching Miniflare version include Undici 7.30.1;
+upgrading only the external dependency leaves Wrangler's bundled copy exposed.
 The workspace override keeps `sharp` at its patched version for
-GHSA-wq5f-xc86-pv6w without changing the pinned Wrangler/Miniflare APIs. Recheck
+GHSA-wq5f-xc86-pv6w. These are development tools, not production Worker imports. Recheck
 `pnpm audit` when refreshing these development dependencies.
 
 Before deploying, confirm `wrangler whoami` and the existing Worker version's
