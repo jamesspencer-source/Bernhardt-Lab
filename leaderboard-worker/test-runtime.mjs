@@ -12,6 +12,14 @@ async function migrate(db) {
   }
 }
 
+async function postJson(mf, path, body, ip = '192.0.2.1') {
+  const response = await mf.dispatchFetch('https://test.invalid' + path, {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': ip }, body: JSON.stringify(body)
+  });
+  // Consume each stream before further requests can release its HTTP resources.
+  return { status: response.status, body: await response.json() };
+}
+
 test('Cloudflare runtime: D1 atomic replay, real rate bindings and additive schema', async () => {
   const mf = new Miniflare(convertV4MiniflareOptions({
     modules: true, scriptPath: fileURLToPath(new URL('./worker.js', import.meta.url)),
@@ -28,16 +36,14 @@ test('Cloudflare runtime: D1 atomic replay, real rate bindings and additive sche
     const db = await mf.getD1Database('DB');
     await migrate(db);
     await db.prepare("INSERT INTO leaderboard_scores (name,score,created_at) VALUES ('Historic',100,1)").run();
-    const post = (path, body) => mf.dispatchFetch('https://test.invalid' + path, {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '192.0.2.1' }, body: JSON.stringify(body)
-    });
+    const post = (path, body, ip) => postJson(mf, path, body, ip);
     const started = await post('/leaderboard/runs', { board: 'classic', species: 'ecoli' });
     assert.equal(started.status, 201);
-    const { runId } = await started.json();
+    const { runId } = started.body;
     await db.prepare('UPDATE leaderboard_runs SET started_at = started_at - 10000 WHERE id = ?').bind(runId).run();
     const entry = { runId, board: 'classic', species: 'ecoli', name: 'Local test', score: 200 };
     const replies = await Promise.all(['/leaderboard', '/api/leaderboard/'].map(path => post(path, entry)));
-    for (const response of replies) assert.equal(response.status, 201, await response.text());
+    for (const response of replies) assert.equal(response.status, 201, JSON.stringify(response.body));
     assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM leaderboard_runs WHERE score IS NOT NULL').first()).n, 1);
     assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM leaderboard_scores').first()).n, 1);
     assert.equal((await post('/leaderboard', { ...entry, score: 201 })).status, 409);
@@ -48,16 +54,10 @@ test('Cloudflare runtime: D1 atomic replay, real rate bindings and additive sche
     }
     assert(throttled, 'real limiter must reject excess requests');
     for (let i = 0; i < 125; i++) assert.equal((await post('/api/leaderboard/runs/', null)).status, 429);
-    const other = await mf.dispatchFetch('https://test.invalid/leaderboard/runs', {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': '192.0.2.2' },
-      body: JSON.stringify({ species: 'ecoli' })
-    });
+    const other = await post('/leaderboard/runs', { species: 'ecoli' }, '192.0.2.2');
     assert.equal(other.status, 201, 'a blocked client must not exhaust the shared allowance');
     for (let i = 1; i <= 31; i++) {
-      const reply = await mf.dispatchFetch('https://test.invalid/leaderboard/runs', {
-        method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': `2001:db8:abcd:12::${i.toString(16)}` },
-        body: JSON.stringify({ species: 'ecoli' })
-      });
+      const reply = await post('/leaderboard/runs', { species: 'ecoli' }, `2001:db8:abcd:12::${i.toString(16)}`);
       assert.equal(reply.status, i <= 30 ? 201 : 429, 'real rate binding must group IPv6 privacy addresses');
     }
   } finally {
@@ -82,9 +82,7 @@ test('Cloudflare runtime: concurrent client allocation, release and private-stat
     await migrate(db);
     await db.prepare("INSERT INTO leaderboard_scores (name,score,created_at) VALUES ('Historic',100,1)").run();
     await migrate(db);
-    const post = (path, body, ip = '192.0.2.1') => mf.dispatchFetch('https://test.invalid' + path, {
-      method: 'POST', headers: { 'Content-Type': 'application/json', 'CF-Connecting-IP': ip }, body: JSON.stringify(body)
-    });
+    const post = (path, body, ip) => postJson(mf, path, body, ip);
     const replies = await Promise.all(Array.from({ length: 64 }, (_, i) =>
       post(i % 2 ? '/leaderboard/runs' : '/api/leaderboard/runs/', { species: 'ecoli' })));
     const started = replies.filter(reply => reply.status === 201);
@@ -93,7 +91,7 @@ test('Cloudflare runtime: concurrent client allocation, release and private-stat
     assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM leaderboard_runs').first()).n, 32);
     assert.equal((await db.prepare('SELECT COUNT(*) AS n FROM leaderboard_run_clients').first()).n, 32);
     for (let i = 0; i < 125; i++) assert.equal((await post('/leaderboard/runs', { species: 'ecoli' })).status, 429);
-    const { runId } = await started[0].json();
+    const { runId } = started[0].body;
     assert.equal((await post('/leaderboard/runs', { species: 'ecoli' }, '192.0.2.2')).status, 201);
     await db.prepare('UPDATE leaderboard_runs SET started_at = started_at - 10000 WHERE id = ?').bind(runId).run();
     const entry = { runId, species: 'ecoli', board: 'classic', name: 'Local test', score: 200 };
