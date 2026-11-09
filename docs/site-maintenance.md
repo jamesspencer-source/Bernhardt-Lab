@@ -44,14 +44,14 @@ Legacy routes are redirect-only compatibility outputs. Keep `/people/`, `/people
 
 ## Canonical sources
 
-- People and alumni: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/people.json`
-- Gallery: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/gallery.json`
-- Featured alumni: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/featured-alumni.json`
-- Saved approved publication collection: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/curated-publications.json`
-- Recent homepage citations: `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/data/recent-publications.json`
-- Scientific media archive highlights: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/scientific-media.json`
-- Shared homepage/site copy: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/site-copy.json`
-- Runtime config such as the public leaderboard URL: `/Users/james/Documents/GitHub/Bernhardt-Lab/data/runtime-config.json`
+- People and alumni: `/Users/james/Developer/GitHub/Bernhardt-Lab/data/people.json`
+- Gallery: `/Users/james/Developer/GitHub/Bernhardt-Lab/data/gallery.json`
+- Featured alumni: `/Users/james/Developer/GitHub/Bernhardt-Lab/data/featured-alumni.json`
+- Saved approved publication collection: `/Users/james/Developer/GitHub/Bernhardt-Lab/data/curated-publications.json`
+- Recent homepage citations: `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/data/recent-publications.json`
+- Scientific media archive highlights: `/Users/james/Developer/GitHub/Bernhardt-Lab/data/scientific-media.json`
+- Shared homepage/site copy: `/Users/james/Developer/GitHub/Bernhardt-Lab/data/site-copy.json`
+- Runtime config such as the public leaderboard URL: `/Users/james/Developer/GitHub/Bernhardt-Lab/data/runtime-config.json`
 
 ## Rebuild command
 

@@ -7,7 +7,7 @@ Start here if you are a fresh Codex thread or any engineer opening this repo wit
 This repository contains the static Bernhardt Lab website, published via GitHub Pages.
 
 - Canonical working directory:
-  `/Users/james/Documents/GitHub/Bernhardt-Lab`
+  `/Users/james/Developer/GitHub/Bernhardt-Lab`
 - Current public site URL:
   `https://bernhardtlab.com/`
 
