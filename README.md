@@ -37,30 +37,30 @@ Legacy paths such as `/people/`, `/research-library/`, root-level profile slugs,
 
 Edit these first:
 
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/people.json`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/gallery.json`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/featured-alumni.json`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/curated-publications.json`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/scientific-media.json`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/site-copy.json`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/runtime-config.json`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/data/people.json`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/data/gallery.json`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/data/featured-alumni.json`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/data/curated-publications.json`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/data/scientific-media.json`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/data/site-copy.json`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/data/runtime-config.json`
 
 Generated or entrypoint files you should usually not hand-edit directly:
 
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/styles.css`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/profile.css`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/alumni.css`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape-config.js`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/github-flat/**`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/styles.css`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/profile.css`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/alumni.css`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/envelope-escape-config.js`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/github-flat/**`
 
 Frontend entrypoints:
 
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/main.js`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/alumni.js`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/main.js`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/alumni.js`
 
 Those entrypoints now import smaller feature modules from:
 
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/js/`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/js/`
 
 ## Build the site
 
@@ -185,9 +185,9 @@ index.html?envelopeLegacy=1
 
 Active source and generated config:
 
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape.js`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape.css`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape-config.js`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/envelope-escape.js`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/envelope-escape.css`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/envelope-escape-config.js`
 
 Develop any replacement game in an isolated branch until it passes desktop and mobile browser playtesting and is clearly ready to replace V1.
 
@@ -195,7 +195,7 @@ Develop any replacement game in an isolated branch until it passes desktop and m
 
 The public leaderboard endpoint now comes from:
 
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/data/runtime-config.json`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/data/runtime-config.json`
 
 `assets/envelope-escape-config.js` and the flat mirror are generated from that source during the build.
 
@@ -242,17 +242,17 @@ Do not hand-edit:
 
 ## Key pages and assets
 
-- Homepage: `/Users/james/Documents/GitHub/Bernhardt-Lab/index.html`
-- Team directory: `/Users/james/Documents/GitHub/Bernhardt-Lab/team/index.html`
-- Alumni directory: `/Users/james/Documents/GitHub/Bernhardt-Lab/alumni/index.html`
-- Shared layout styling source: `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/css/`
-- Profile styling: `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/profile.css`
-- Production game code: `/Users/james/Documents/GitHub/Bernhardt-Lab/assets/envelope-escape.js`
-- Leaderboard worker: `/Users/james/Documents/GitHub/Bernhardt-Lab/leaderboard-worker/`
+- Homepage: `/Users/james/Developer/GitHub/Bernhardt-Lab/index.html`
+- Team directory: `/Users/james/Developer/GitHub/Bernhardt-Lab/team/index.html`
+- Alumni directory: `/Users/james/Developer/GitHub/Bernhardt-Lab/alumni/index.html`
+- Shared layout styling source: `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/css/`
+- Profile styling: `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/profile.css`
+- Production game code: `/Users/james/Developer/GitHub/Bernhardt-Lab/assets/envelope-escape.js`
+- Leaderboard worker: `/Users/james/Developer/GitHub/Bernhardt-Lab/leaderboard-worker/`
 
 ## Maintenance notes
 
 For a plain-language maintenance workflow, see:
 
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/docs/site-maintenance.md`
-- `/Users/james/Documents/GitHub/Bernhardt-Lab/docs/editorial-style-guide.md`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/docs/site-maintenance.md`
+- `/Users/james/Developer/GitHub/Bernhardt-Lab/docs/editorial-style-guide.md`
