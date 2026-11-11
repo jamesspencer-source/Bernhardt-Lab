@@ -15,16 +15,18 @@ Where `AGENTS.md` or `README.md` says "Codex", read it as any coding assistant. 
 - Files named like `tokens 2.css` or `hms-quad 3.jpg` under `github-flat/` are Finder or iCloud conflict copies of generated output. They are junk: never commit them, and clear them before publishing. They appeared while the checkout lived in the iCloud-synced Documents folder; the repos moved to ~/Developer/GitHub on 2026-11-09, so any new copies mean the folder is being synced again.
 - Site content changes go through the publisher. Anything else (workflows, docs, dependencies, this file) goes through a pull request so the `site-quality` check runs before merge.
 
-### Local toolchain (James's Mac, checked 2026-11-11)
+### Local toolchain (check at the start of a job; do not record the results here)
 
-- Python: the system `python3` is 3.9; CI uses 3.11. Scripts must stay compatible with both. The full build is reproducible under 3.9.
-- Node: the nvm default is 20. The browser gate expects Node 24: `~/.nvm/versions/node/v24.14.1/bin/node`, passed as `NODE_BINARY`.
-- Playwright 1.62.1 and its Chromium are installed for this repo (`node_modules/playwright`, browsers in `~/Library/Caches/ms-playwright`). The publisher stops without the browser gate, so if either goes missing, repeat the one-time setup in `docs/site-maintenance.md` before any publish.
-- The `gh` CLI is installed (`~/.local/bin/gh`, 2.103.3) and logged in as `jamesspencer-source` over SSH. Its token has no `workflow` scope, so API calls that touch `.github/workflows` are refused. Use it to open pull requests and read checks. Merging is always James's click on GitHub.
+This section states what the project needs, not what one computer has installed, so it stays true when a tool is added or removed. Verify each item before a job that depends on it, and tell James if one is missing.
+
+- Python: CI uses 3.11 and the macOS system `python3` is 3.9. Scripts must stay compatible with both, and the full build is reproducible under 3.9. Check: `python3 --version`.
+- Node: the browser gate expects Node 24, passed as `NODE_BINARY`. The shell default may be older. Check: `node --version`, then `ls ~/.nvm/versions/node/` to find a Node 24 binary.
+- Playwright 1.62.1 and its Chromium must be installed for this repo before any publish, because the publisher stops without the browser gate. Check: `grep '"version"' node_modules/playwright/package.json` and `ls ~/Library/Caches/ms-playwright`. If either is missing, repeat the one-time setup in `docs/site-maintenance.md`.
+- The `gh` CLI opens pull requests and reads checks. Check: `gh auth status`. A token without the `workflow` scope is refused on API calls that touch `.github/workflows`. If `gh` is unavailable, pull requests and Actions are handled in the GitHub web UI. Merging is always James's click on GitHub.
 
 ### Repository state worth knowing
 
-- `main` is protected by a repository ruleset created on 2026-11-09 ("Protect main: require site-quality, no force-push, no deletion"). It requires the `site-quality` check from GitHub Actions, blocks force-pushes and deletion, and has no bypass actors, as `docs/site-maintenance.md` describes.
+- `main` should be protected by the ruleset `docs/site-maintenance.md` describes: `site-quality` required, no force-pushes, no deletion, no bypass actors. Check: `gh api repos/{owner}/{repo}/rulesets`. If it is missing or inactive, tell James before publishing.
 - Branch names: `claude/<topic>` for Claude Code work. `release/site-*` branches are created by the publisher and are safe to delete once merged. `codex/*` branches are historical Codex work.
-- Sibling folders: as of 2026-11-11 this checkout is the only copy of the repo in `~/Developer/GitHub`. The former `Bernhardt-Lab-game-next` worktree and `Bernhardt-Lab-review-fixes` clone are gone, and `codex/envelope-platformer-next` exists only on GitHub as an unmerged experiment. Work in this checkout.
+- Sibling folders: work in this checkout only. Check: `git worktree list` should show a single entry. Treat any other copy of this repo beside it as stale and do not work there. `codex/envelope-platformer-next` on GitHub is an unmerged experiment.
 - A stash labelled "PRIVATE ARCHIVE" holds pre-September-2026 generated pages. Leave it alone unless James asks.
